@@ -28,3 +28,5 @@ replay_pid*
 .project
 .settings/
 
+/src/test/java/org/beilstein/chemxtract/test.java
+/src/test/resources/test/

@@ -37,7 +37,9 @@ public class BracketVisitor extends CDVisitor {
   @Override
   public void visitBracketedGroup(CDBracket bracket) {
     if (CDBracketUsage.MultipleGroup.equals(bracket.getBracketUsage()) &&
-      bracket.getBracketedObjects().get(0) instanceof CDAtom
+            bracket.getBracketedObjects() != null &&
+            !bracket.getBracketedObjects().isEmpty() &&
+            bracket.getBracketedObjects().get(0) instanceof CDAtom
     ) {
       multipleGroups.add(bracket);
     }

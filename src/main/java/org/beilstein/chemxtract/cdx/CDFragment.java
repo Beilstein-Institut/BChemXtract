@@ -216,11 +216,12 @@ public class CDFragment extends CDObject {
   public boolean isValid() {
     return this.atoms.size() >= 2 ||
             this.atoms.stream().anyMatch(a ->
-              a.getNodeType() == CDNodeType.Element ||
+                    (a.getNodeType() == CDNodeType.Element ||
                       a.getNodeType() == CDNodeType.GenericNickname ||
                       a.getNodeType() == CDNodeType.Fragment ||
                       a.getNodeType() == CDNodeType.Nickname ||
-                      a.getNodeType() == CDNodeType.AnonymousAlternativeGroup
+                      a.getNodeType() == CDNodeType.AnonymousAlternativeGroup) &&
+                            a.getChemicalWarning() == null
             );
   }
 }

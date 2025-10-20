@@ -29,9 +29,9 @@ public class Definitions {
     //hide implicit public constructor
   }
 
-  public static final String RGROUP_LABEL_STRING = "^(?:R|X|Ar|E|L)\\d*\\b";
+  public static final String RGROUP_LABEL_STRING = "^(?:R|X|Y|Ar|E|L)\\d*\\b";
   public static final Pattern RGROUP_LABEL_PATTERN = Pattern.compile(RGROUP_LABEL_STRING);
-  public static final String RGROUP_STRING = "\\b(R|X|Ar|E|L)\\b\\s*=\\s*(.+)";
+  public static final String RGROUP_STRING = "\\b(R|X|Y|Ar|E|L)\\b\\s*=\\s*(.+)";
   public static final Pattern RGROUP_PATTERN =Pattern.compile(RGROUP_STRING);
   public static final String ABBREVIATION_PATH = "/org/beilstein/chemxtract/lookups/abbreviations.smi";
   public static final int ABBREVIATION_SIZE = 400;

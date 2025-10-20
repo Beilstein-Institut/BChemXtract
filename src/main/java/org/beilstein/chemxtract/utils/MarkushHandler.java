@@ -6,9 +6,11 @@ import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import java.io.IOException;
 import java.util.*;
@@ -64,7 +66,7 @@ public class MarkushHandler {
    * @throws InvalidSmilesException if a SMILES string is invalid
    */
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
-          throws CloneNotSupportedException, IOException, InvalidSmilesException {
+          throws CloneNotSupportedException, IOException, CDKException {
 
     List<IAtomContainer> atomContainers = new ArrayList<>();
 
@@ -178,12 +180,16 @@ public class MarkushHandler {
    * @throws CloneNotSupportedException if cloning fails
    */
   private void replaceRGroup(IAtomContainer atomContainer, String residueKey, String smiles) throws
-          InvalidSmilesException, CloneNotSupportedException {
-        IAtomContainer extendedStructure = smilesParser.parseSmiles(smiles);
-    if (smiles.chars().filter(c -> '*' == c).count() == 2){
+          CDKException, CloneNotSupportedException {
+    IAtomContainer extendedStructure = smilesParser.parseSmiles(smiles);
+    AtomContainerManipulator.suppressHydrogens(extendedStructure);
+    long nStars = smiles.chars().filter(c -> '*' == c).count();
+    if (nStars == 2){
       replaceDualBondedResidue(atomContainer, extendedStructure, residueKey);
-    } else {
+    } else if(nStars == 1) {
       replaceSingleBondedResidue(atomContainer, extendedStructure, residueKey);
+    } else {
+      logger.info("Unlinkable residue found: " + smiles);
     }
   }
 

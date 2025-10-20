@@ -123,17 +123,17 @@
       </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-bundle</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.openscience.cdk</groupId>-->
+<!--      <artifactId>cdk-bundle</artifactId>-->
+<!--      <version>${cdk.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>xml-apis</groupId>-->
+<!--          <artifactId>xml-apis</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
 
     <!-- ================= Tests =========================== -->
     <dependency>
@@ -157,8 +157,44 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- ================= Logging =========================== -->
+    <!-- SLF4J is used as the logging facade -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.30</version>
+    </dependency>
 
+    <!-- Legacy code uses commons-logging API, so we need this bridge -->
+    <!-- There is no need to include commons-logging anymore -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>1.7.30</version>
+      <scope>compile</scope>
+    </dependency>
 
+    <!-- Log4j2 is the used as the logging implementation for the slf4j facade -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.16.0</version>
+    </dependency>
+
+    <!-- Needed to allow the access to the context path inside log4j2.xml -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-web</artifactId>
+      <version>2.16.0</version>
+    </dependency>
+
+    <!-- The Log4j 2 SLF4J Binding allows applications coded to the SLF4J
+      API to use Log4j 2 as the implementation. -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>2.16.0</version>
+    </dependency>
 
 
   </dependencies>
