@@ -245,6 +245,11 @@ public class FragmentConverter {
         continue;
       }
 
+      // set coordinates all to the coordinates of the connection point
+      for (IAtom expandedAtom : expandedStructure.atoms()){
+        expandedAtom.setPoint2d(pseudoAtom.getPoint2d());
+      }
+
       if (expandedStructure.getAtomCount() == 1) {
         replaceSingleAtom(atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove);
       } else {
