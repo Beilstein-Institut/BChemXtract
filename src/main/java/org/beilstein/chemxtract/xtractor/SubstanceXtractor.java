@@ -197,7 +197,13 @@ public class SubstanceXtractor {
     SgroupHandler.addMultipleGroupBrackets(fragment, page);
 
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
-    IAtomContainer atomContainer = fragmentConverter.convert(fragment);
+    IAtomContainer atomContainer = null;
+    try {
+      atomContainer = fragmentConverter.convert(fragment);
+    } catch (IllegalArgumentException e) {
+      logger.error(e.getMessage());
+      return substances;
+    }
 
     MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
 
@@ -219,7 +225,7 @@ public class SubstanceXtractor {
         }
         return substances;
       }
-    } catch (CloneNotSupportedException e) {
+    } catch (IOException | CloneNotSupportedException e) {
       logger.error(e.getMessage());
     }
     BCXSubstance substance = createAndFillBCXSubstance(atomContainer);

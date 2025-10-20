@@ -65,7 +65,7 @@ public class BondVisitor extends CDVisitor {
               .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
               .findFirst()
               .orElseThrow(() ->
-                      new IllegalStateException("Missing external connection point in fragment: " + fragment));
+                      new IllegalArgumentException("Missing external connection point in fragment: " + fragment));
 
       CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
 
