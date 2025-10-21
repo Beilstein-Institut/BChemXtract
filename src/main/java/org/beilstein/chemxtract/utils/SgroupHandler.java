@@ -69,12 +69,16 @@ public class SgroupHandler {
    * @param atom           The {@code CDAtom} to be duplicated and connected.
    */
   private static void addAndConnectSingleMultipleGroupAtom(CDFragment fragment, CDBracket bracket, CDAtom atom) {
-    CDBond crossingBond = bracket.getBracketAttachments()
-            .get(0)
-            .getCrossingBonds()
-            .get(0)
-            .getBond();
+    CDBond crossingBond = bracket.getBracketAttachments().stream()
+            .filter(a -> !a.getCrossingBonds().isEmpty())
+            .findFirst()                                    // Optional<CDBracketAttachment>
+            .flatMap(a -> a.getCrossingBonds().stream()
+                    .findFirst()                     // Optional<CrossingBond>
+                    .map(CDCrossingBond::getBond))      // Optional<CDBond>
+            .orElse(null);
 
+    if (crossingBond == null)
+      return;
 
     int repeatCount = (int) bracket.getRepeatCount();
     CDAtom atom1 = atom;
