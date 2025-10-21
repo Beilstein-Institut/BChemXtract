@@ -47,7 +47,6 @@ public class ExtractionTest {
     assertNotNull(document);
 
     BCXSubstanceInfo info = new BCXSubstanceInfo();
-//    List<BCXSubstance> substances = ChemInfConverterUtils.getUniqueArticleSubstancesOfCdDocument(document, info);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info);
     assertThat(info.getNoFragments()).isEqualTo(14);
@@ -77,16 +76,13 @@ public class ExtractionTest {
   }
 
   @Test
-  public void testExtractReactions() throws IOException, CDKException, CloneNotSupportedException {
+  public void testExtractReactions() throws IOException {
     String fileName = "test_fixture.cdx";
     InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
     assertNotNull(document);
-
-//    CDReactionConverter converter = new CDReactionConverter();
-//    List<BCXReaction> reactions = converter.convertReactions(document);
 
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXReaction> reactions = xtractor.xtract(document);

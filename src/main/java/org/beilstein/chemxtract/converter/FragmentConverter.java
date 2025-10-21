@@ -187,6 +187,7 @@ public class FragmentConverter {
               if (formsAllene(connectedBonds)) {
                 dot.setNodeType(CDNodeType.Element);
                 dot.setText(null);
+                dot.setChemicalWarning(null);
               }
             });
   }
@@ -203,7 +204,20 @@ public class FragmentConverter {
   private IAtomContainer createAtomContainer(IAtom[] atoms, IBond[] bonds) {
     IAtomContainer atomContainer = builder.newAtomContainer();
     atomContainer.setAtoms(atoms);
-    atomContainer.setBonds(bonds);
+
+    // only bonds with atoms that are part of the atom container will be added
+    for (IBond bond : bonds) {
+      IAtom a0 = bond.getAtom(0);
+      IAtom a1 = bond.getAtom(1); // always exists for a valid bond
+
+      int idx0 = atomContainer.indexOf(a0);
+      int idx1 = atomContainer.indexOf(a1);
+
+      if (idx0 >= 0 && idx1 >= 0 && !atomContainer.contains(bond)) {
+        atomContainer.addBond(bond);
+      }
+    }
+
     resubstituteAbbreviation(atomContainer);
     return atomContainer;
   }

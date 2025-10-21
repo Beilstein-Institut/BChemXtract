@@ -186,10 +186,8 @@ public class MarkushHandler {
     long nStars = smiles.chars().filter(c -> '*' == c).count();
     if (nStars == 2){
       replaceDualBondedResidue(atomContainer, extendedStructure, residueKey);
-    } else if(nStars == 1) {
-      replaceSingleBondedResidue(atomContainer, extendedStructure, residueKey);
     } else {
-      logger.info("Unlinkable residue found: " + smiles);
+      replaceSingleBondedResidue(atomContainer, extendedStructure, residueKey);
     }
   }
 
@@ -332,7 +330,8 @@ public class MarkushHandler {
       }
     }
     if (connectionPoints.size() != 1) {
-      throw new IllegalStateException("Expected exactly one connection point for abbreviation: " + pseudoAtom);
+      logger.error("More than one or none connection point found.");
+      return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
     // Find bond between pseudoAtom and its origin

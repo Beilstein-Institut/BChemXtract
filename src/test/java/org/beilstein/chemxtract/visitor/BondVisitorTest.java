@@ -101,7 +101,7 @@ public class BondVisitorTest {
     verify(bond).setEnd(connected);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void missingExternalConnectionPointThrowsTest() {
     CDFragment nested = mock(CDFragment.class);
     when(nested.getAtoms()).thenReturn(Collections.emptyList());

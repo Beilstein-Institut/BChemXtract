@@ -1,23 +1,17 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import org.beilstein.chemxtract.cdx.CDDocument;
-import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class IntegrationTest {
   @Test
@@ -449,18 +443,5 @@ public class IntegrationTest {
     smiles.forEach(s -> {
       Assert.assertTrue(expectedSmiles.contains(s));
     });
-  }
-
-  @Test
-  public void test() throws IOException {
-    String fileName = "m27512485-i2.cdx";
-    InputStream in = this.getClass().getResourceAsStream( "/" +fileName);
-    Assert.assertNotNull(in);
-    CDDocument document = CDXReader.readDocument(in);
-    Assert.assertNotNull(document);
-
-    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
-    List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), true);
-
   }
 }
