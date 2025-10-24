@@ -28,47 +28,47 @@ public enum CDGraphicType{
   /** Undefined. */
   Undefined,
   /**
-   * Line. ({@link org.beilstein.boa.io.cdx.CDGraphic#getLineType()} should be present.
-   * {@link org.beilstein.boa.io.cdx.CDGraphic#getArrowType()} may also be present.)
-   * The two points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()}
+   * Line. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present.
+   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.)
+   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
    * represent the start and end of the line.
    */
   Line,
   /**
-   * Arc. ({@link org.beilstein.boa.io.cdx.CDGraphic#getLineType()} should be present.
-   * {@link org.beilstein.boa.io.cdx.CDGraphic#getArcAngularSize()} should be present.
-   * {@link org.beilstein.boa.io.cdx.CDGraphic#getArrowType()} may also be present.) The
-   * two points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()}
+   * Arc. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present.
+   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArcAngularSize()} should be present.
+   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.) The
+   * two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
    * represent the center and end of he arc.
    */
   Arc,
   /**
-   * Rectangle. ({@link org.beilstein.boa.io.cdx.CDGraphic#getRectangleType()} should be present)
-   * The two points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()} represent
+   * Rectangle. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getRectangleType()} should be present)
+   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent
    * two opposing corners of the rectangle.
    */
   Rectangle,
   /**
-   * Oval. ({@link org.beilstein.boa.io.cdx.CDGraphic#getOvalType()} should be present) The two points
-   * stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()} represent the center and
+   * Oval. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOvalType()} should be present) The two points
+   * stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the center and
    * semimajor end of the oval.
    */
   Oval,
   /**
-   * Orbital. ({@link org.beilstein.boa.io.cdx.CDGraphic#getOrbitalType()} should be present) The two
-   * points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()} represent the center
+   * Orbital. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOrbitalType()} should be present) The two
+   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the center
    * and end of the orbital.
    */
   Orbital,
   /**
-   * Bracket. ({@link org.beilstein.boa.io.cdx.CDGraphic#getBracketType()} should be present) The two
-   * points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()} represent the two
+   * Bracket. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getBracketType()} should be present) The two
+   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the two
    * ends of the bracket.
    */
   Bracket,
   /**
-   * Symbol. ({@link org.beilstein.boa.io.cdx.CDGraphic#getSymbolType()} should be present) The two
-   * points stored within the {@link org.beilstein.boa.io.cdx.CDGraphic#getBounds()} represent the
+   * Symbol. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getSymbolType()} should be present) The two
+   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the
    * center of the symbol and a second point indicating the symbol's size.
    */
   Symbol;
