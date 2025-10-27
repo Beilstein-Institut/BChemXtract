@@ -39,6 +39,7 @@ import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 import java.io.IOException;
@@ -255,7 +256,9 @@ public class SubstanceXtractor {
     // add AtomContainer
     substance.setAtomContainer(atomContainer);
     // set SMILES
-    substance.setSmiles(ChemicalUtils.createAbsoluteSmiles(atomContainer));
+    String smiles = Optional.ofNullable(ChemicalUtils.createAbsoluteSmiles(atomContainer))
+            .orElseGet(() -> ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical));
+    substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
     // set InChI, InChIKey and AuxInfo
     InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
