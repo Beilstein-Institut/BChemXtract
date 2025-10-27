@@ -74,7 +74,7 @@ public class BondVisitor extends CDVisitor {
       else
         bond.setEnd(conAtom);
     }
-    if (onlyElementsAtBond(bond) || isAbbreviationAtBond(bond) || isRGroupBond(bond))
+    if (onlyElementsAtBond(bond) || isRGroupBond(bond) || isAbbreviationAtBond(bond))
       bonds.add(bond);
   }
 
@@ -96,8 +96,8 @@ public class BondVisitor extends CDVisitor {
    * @return true if one or both ends are abbreviations, false otherwise
    */
   private boolean isAbbreviationAtBond(CDBond bond) {
-    return (CDNodeType.Unspecified.equals(bond.getBegin().getNodeType()) && bond.getBegin().getChemicalWarning() != null)||
-            (CDNodeType.Unspecified.equals(bond.getEnd().getNodeType()) && bond.getEnd().getChemicalWarning() != null);
+    return (!CDNodeType.Element.equals(bond.getBegin().getNodeType()) && bond.getBegin().getChemicalWarning() != null)||
+            (!CDNodeType.Element.equals(bond.getEnd().getNodeType()) && bond.getEnd().getChemicalWarning() != null);
   }
 
   /**
@@ -123,7 +123,7 @@ public class BondVisitor extends CDVisitor {
             .filter(b -> external.equals(b.getBegin()) || external.equals(b.getEnd()))
             .findFirst()
             .orElseThrow(() ->
-                    new IllegalStateException("No bond connected to external atom: " + external));
+                    new IllegalArgumentException("No bond connected to external atom: " + external));
     return external.equals(exBond.getBegin()) ? exBond.getEnd() : exBond.getBegin();
   }
 

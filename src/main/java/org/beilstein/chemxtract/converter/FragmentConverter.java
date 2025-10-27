@@ -315,7 +315,8 @@ public class FragmentConverter {
       }
     }
     if (connectionPoints.size() != 1) {
-      throw new IllegalStateException("Expected exactly one connection point for abbreviation: " + pseudoAtom);
+      logger.error("Expected exactly one connection point for abbreviation.");
+      return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
     // Find bond between pseudoAtom and its origin

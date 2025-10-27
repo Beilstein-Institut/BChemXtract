@@ -115,7 +115,7 @@ public class BondVisitorTest {
     new BondVisitor(fragment);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void noBondForExternalThrowsTest() {
     CDAtom external = mock(CDAtom.class);
     CDFragment nested = mock(CDFragment.class);
