@@ -851,13 +851,13 @@ public class CDXConstants {
   // Embedded pictures.
 
   /**
-   * The section information (SectionHandle) of the Macintosh Publish & Subscribe edition embedded
+   * The section information (SectionHandle) of the Macintosh Publish and Subscribe edition embedded
    * in the CDX picture object. (Unformatted)
    */
   public static final int CDXProp_Picture_Edition = 0x0A60;
 
   /**
-   * The alias information of the Macintosh Publish & Subscribe edition embedded in the CDX picture
+   * The alias information of the Macintosh Publish and Subscribe edition embedded in the CDX picture
    * object. (Unformatted)
    */
   public static final int CDXProp_Picture_EditionAlias = 0x0A61;
