@@ -253,8 +253,8 @@ public class MarkushHandler {
   private void replaceDualBondedResidue(IAtomContainer atomContainer, IAtomContainer extendedStructure, String residueKey)
           throws CloneNotSupportedException {
     Set<IAtom> visitedAtoms = new HashSet<>();
-    List<IBond> bondsToRemove = new ArrayList<>();
-    List<IAtom> atomsToRemove = new ArrayList<>();
+    Set<IBond> bondsToRemove = new HashSet<>();
+    Set<IAtom> atomsToRemove = new HashSet<>();
 
     for (IAtom atom : atomContainer.atoms()) {
       if (!(atom instanceof IPseudoAtom pseudoAtom)) continue;
@@ -262,10 +262,15 @@ public class MarkushHandler {
       if (!visitedAtoms.add(pseudoAtom)) continue; // already processed
       IAtomContainer extendedClone = extendedStructure.clone();
 
+      List<IAtom> pseudos = new ArrayList<>();
+      pseudos.add(pseudoAtom);
       IAtom nearestOtherResidue = ChemicalUtils.findNearestResidueAtom(pseudoAtom, atomContainer);
-      visitedAtoms.add(nearestOtherResidue);
+      if (nearestOtherResidue != null) {
+        visitedAtoms.add(nearestOtherResidue);
+        pseudos.add(nearestOtherResidue);
+      }
 
-      reconnectResidue(atomContainer, extendedClone, List.of(pseudoAtom, nearestOtherResidue), bondsToRemove, atomsToRemove);
+      reconnectResidue(atomContainer, extendedClone, pseudos, bondsToRemove, atomsToRemove);
     }
     for (IBond bond : bondsToRemove) {
       atomContainer.removeBond(bond);
@@ -285,7 +290,7 @@ public class MarkushHandler {
    * @param atomsToRemove list of atoms to remove after reconnection
    */
   private void reconnectResidue(IAtomContainer atomContainer, IAtomContainer extendedStructure, List<IAtom> pseudoAtoms,
-          List<IBond> bondsToRemove, List<IAtom> atomsToRemove) {
+          Set<IBond> bondsToRemove, Set<IAtom> atomsToRemove) {
     atomContainer.add(extendedStructure);
     List<IAtom> connectionPoints = new ArrayList<>();
 
@@ -308,6 +313,13 @@ public class MarkushHandler {
       atomsToRemove.add(rAtom);
       atomsToRemove.add(conPoint);
     }
+
+    for(IAtom conPoint : connectionPoints) {
+      atomsToRemove.add(conPoint);
+      if (conPoint.bonds().iterator().hasNext()) {
+        bondsToRemove.add(conPoint.bonds().iterator().next());
+      }
+    }
   }
 
   /**
@@ -327,7 +339,11 @@ public class MarkushHandler {
     connectedBonds.forEach(bond ->
             bond.setAtoms(new IAtom[] { bond.getOther(pseudoAtom), newAtom }));
     newAtom.setValency(connectedBonds.size());
-    newAtom.setImplicitHydrogenCount(Math.max(newAtom.getImplicitHydrogenCount() - connectedBonds.size(), 0));
+    int bondOrderSum = 0;
+    for (IBond bond : connectedBonds) {
+      bondOrderSum += bond.getOrder().numeric();
+    }
+    newAtom.setImplicitHydrogenCount(Math.max(newAtom.getImplicitHydrogenCount() - bondOrderSum, 0));
 
     atomsToRemove.add(pseudoAtom);
   }
