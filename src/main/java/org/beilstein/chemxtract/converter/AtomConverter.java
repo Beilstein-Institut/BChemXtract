@@ -209,6 +209,7 @@ public class AtomConverter {
       y = -point3D.getY();
       z = point3D.getZ();
       atom.setPoint3d(new Point3d(x, y, z));
+      atom.setPoint2d(new Point2d(x, y));
     } else if (source.getPosition2D() != null) {
       CDPoint2D point2D = source.getPosition2D();
       x = point2D.getX();
