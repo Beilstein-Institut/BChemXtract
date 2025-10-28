@@ -8,6 +8,8 @@ This open-science repository aims to provide a pure-Java implementation for read
 meaningful chemical structures and reactions from the parsed file. Structures and reactions are enriched with calculated chemical descriptors such as InChI and SMILES
 (or RInChI and reaction smiles respectively).
 
+**Please note**, that while the structure extraction part is relatively mature, the reaction extraction is still in an experimental stage.
+
 ## ChemDraw file specification
 The implementation of the parser was originally developed against the ChemDraw file specification that was published online for years at www.cambridgesoft.com.
 The website is offline nowadays, however the specification can still be browsed here:
@@ -17,20 +19,29 @@ The website is offline nowadays, however the specification can still be browsed 
 ## Getting started
 Some concepts of the parser and extraction software are given in the [documentation](doc/CONCEPTS.md). Simple code snippets are given on the [HOWTO page](doc/HOWTO.md).
 
-### Extracting structures
-Loads the given CDX file, extracts structures and creates a PNG depiction in the current working directory.
+### Building the sources
+Clone this repository, change to the project directory and type:
 
 ```
 mvn clean package
+```
+
+### Installing using Maven
+To use in your own code, add this dependency to your project's POM file:
+
+```
+<dependency>
+  <groupId>org.beilstein</groupId>
+  <artifactId>bchemxtract</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
+## Usage
+To extract all structures from a CDX file and save structure depictions to the current working directory, type:
+
+```
 java -jar target/chemxtract-1.0.jar org.beilstein.chemxtract.samples.BCXTractSubstances <CDX file>
-```
-
-### Extracting reactions
-Loads the given CDX file, extracts reactions and creates a PNG depiction in the current working directory.
-
-```
-mvn clean package
-java -jar target/chemxtract-1.0.jar org.beilstein.chemxtract.samples.BCXTractReactions <CDX file>
 ```
 
 ## Contributing
