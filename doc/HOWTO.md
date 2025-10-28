@@ -1,5 +1,7 @@
 # HOWTO
 
+This document contains some code snippets of how to use the libary in your own code.
+
 ## Extracting substances
 
 ```

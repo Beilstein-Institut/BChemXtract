@@ -8,6 +8,8 @@
   <packaging>jar</packaging>
   <name>BChemXtract</name>
   <version>1.0-SNAPSHOT</version>
+  <url>https://github.com/Beilstein-Institut/BChemXtract</url>
+  <description>A pure-Java extractor of ChemDraw structures.</description>
 
 
   <properties>

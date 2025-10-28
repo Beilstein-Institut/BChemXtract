@@ -11,7 +11,7 @@ The latter ones are read by the extraction software and validated through a set 
 
 At the end of the workflow, the extraction software returns a set of substance or reaction objects that contain all the valid chemical logic from the drawing, either extracted or calculated:
 - Substances contain an InChI, InChI key, SMILES and molecular formula.
-- Reactions contain their products, reactants and agents as well as a RInChI and RInChI key.
+- Reactions contain the substances participating in the reaction as well as a RInChI and RInChI key.
 
 ![Overall architecture](ChemXtract_Architecture.png)
 
