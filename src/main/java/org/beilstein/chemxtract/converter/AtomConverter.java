@@ -33,10 +33,7 @@ import org.openscience.cdk.Isotope;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.interfaces.IIsotope;
-import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.IChemObjectReader;
 import org.openscience.cdk.tools.periodictable.PeriodicTable;
 
@@ -126,7 +123,7 @@ public class AtomConverter {
     // set coordinates
     setCoordinates(atom, cdAtom);
     // set formal charge
-    atom.setFormalCharge(cdAtom.getCharge());
+    setCharge(atom, cdAtom.getCharge());
     // check for isotopes
     if (!isHydrogenIsotope(label)) {
       try {
@@ -242,6 +239,24 @@ public class AtomConverter {
     IIsotope iso = new Isotope(atom.getSymbol(), massNumber);
     Isotopes isofac = Isotopes.getInstance();
     isofac.configure(atom, iso);
+  }
+
+  /**
+   * Sets the formal charge of the given atom, clamping the value to the
+   * range of a signed byte ({@link Byte#MIN_VALUE} … {@link Byte#MAX_VALUE}).
+   *
+   * @param atom   the atom whose formal charge is to be set
+   * @param charge the desired formal-charge value; will be clamped if it
+   *               lies outside the byte range
+   */
+  private void setCharge(IAtom atom, int charge) {
+    if(charge < Byte.MIN_VALUE){
+      atom.setFormalCharge((int) Byte.MIN_VALUE);
+    } else if (charge > Byte.MAX_VALUE) {
+      atom.setFormalCharge((int) Byte.MAX_VALUE);
+    } else {
+      atom.setFormalCharge(charge);
+    }
   }
 
   /**
