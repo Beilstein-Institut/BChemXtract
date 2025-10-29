@@ -37,15 +37,16 @@ import java.util.BitSet;
  * (5–6 atoms) with exactly one ring oxygen, all single bonds, and multiple
  * oxygen substituents (–OH or –OR groups). This approximates common
  * monosaccharide ring structures such as furanoses and pyranoses.
- * <p>
  *
- * <h3>Example usage:</h3>
- * <pre>{@code
+ * <h2>Example usage:</h2>
+ * <pre>
+ * {@code
  * IAtomContainer mol = ...; // load or build a molecule
  * if (SugarRings.containsSugarRings(mol)) {
  *     System.out.println("Molecule contains a sugar ring!");
  * }
- * }</pre>
+ * }
+ * </pre>
  */
 //TODO needs to check for chair config by turns, just ‘sugar’ is not enough.
 public final class SugarRings {

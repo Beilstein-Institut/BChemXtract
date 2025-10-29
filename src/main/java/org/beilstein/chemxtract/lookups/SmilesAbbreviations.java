@@ -101,7 +101,7 @@ public class SmilesAbbreviations {
 
   /**
    * Return complete Abbreviation SMILES lookup map
-   * @return Map<String, String>
+   * @return the lookup table
    * @throws IOException if the lookup table cannot be initialized
    */
   public static Map<String, String> getSmilesLookup() throws IOException {

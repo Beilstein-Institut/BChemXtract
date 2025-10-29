@@ -33,7 +33,6 @@ import java.util.Set;
 /**
  * Singleton utility class that provides access to a predefined set of
  * unwanted or excluded words used for text and label filtering.
- * <p>
  *
  * <h2>Purpose</h2>
  * This class is used to filter out common or 'non-chemical' words
@@ -41,10 +40,13 @@ import java.util.Set;
  * arrows or in fragment annotations.
  *
  * <h2>Example Usage:</h2>
- * <pre>{@code
+ * <pre>
+ * {@code
  * if (!UnwantedWords.contains("solution")) {
  *     // treat as potential chemical label
  * }
+ * }
+ * </pre>
  */
 public class UnwantedWords {
 

@@ -239,7 +239,7 @@ public class CDDocumentUtils {
    *
    * @param fragment The fragment to check
    * @return {@code true} if the fragment contains an R-group, otherwise {@code false}
-   * @Deprecated use CDFragment.hasRGroup instead
+   * @deprecated use CDFragment.hasRGroup instead
    */
   @Deprecated
   public static boolean containsRGroup(CDFragment fragment) {
