@@ -21,19 +21,16 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * ChemDraw point.
- */
+/** ChemDraw point. */
 public class CDPoint2D {
 
   /** The X-coordinate of the point. */
   private float x;
+
   /** The Y-coordinate of the point. */
   private float y;
 
-  public CDPoint2D() {
-
-  }
+  public CDPoint2D() {}
 
   public CDPoint2D(float x, float y) {
     setX(x);
@@ -71,5 +68,4 @@ public class CDPoint2D {
   public boolean equalsTolerance(CDPoint2D other) {
     return Math.abs(other.getX() - x) < 0.01f && Math.abs(other.getY() - y) < 0.01f;
   }
-
 }

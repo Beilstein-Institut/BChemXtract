@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of orbital object.
- */
-public enum CDOrbitalType{
+/** The type of orbital object. */
+public enum CDOrbitalType {
   /** s orbital */
   s,
   /** Oval-shaped sigma or pi orbital */

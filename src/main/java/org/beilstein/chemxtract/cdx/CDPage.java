@@ -21,15 +21,12 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * The drawing canvas that contains all other objects of the drawing.
- */
+/** The drawing canvas that contains all other objects of the drawing. */
 public class CDPage extends CDObject {
   private List<CDGroup> groups = new ArrayList<>();
   private List<CDFragment> fragments = new ArrayList<>();
@@ -388,5 +385,4 @@ public class CDPage extends CDObject {
       reactionScheme.accept(visitor);
     }
   }
-
 }

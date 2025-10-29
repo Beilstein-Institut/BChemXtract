@@ -21,48 +21,60 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.beilstein.chemxtract.cdx.datatypes.*;
 
 /**
- * A bond defines a connection between atoms and corresponds to a chemical bond.
- * Each bond has a begin and end atom.
+ * A bond defines a connection between atoms and corresponds to a chemical bond. Each bond has a
+ * begin and end atom.
  */
 public class CDBond extends CDObject {
   /** The atom at the first end of the bond. */
   private CDAtom begin;
+
   /** The atom at the second end of the bond. */
   private CDAtom end;
+
   /**
    * The offset within the label of the atom on the first end of the bond to which this bond is
    * attached (zero-based).
    */
   private int beginAttach = -1;
+
   /**
    * The offset within the label of the atom on the second end of the bond to which this bond is
    * attached (zero-based).
    */
   private int endAttach = -1;
+
   /** The primary display type of the bond. */
   private CDBondDisplay bondDisplay = CDBondDisplay.Solid;
+
   /** The secondary display type of the bond. */
   private CDBondDisplay bondDisplay2 = CDBondDisplay.Solid;
+
   /** The positioning type of the bond. */
   private CDBondDoublePosition bondDoublePosition = CDBondDoublePosition.AutoLeft;
+
   /** The bond order of the bond. */
   private CDBondOrder bondOrder = CDBondOrder.Single;
+
   /** The bonds that cross the bond. */
   private Set<CDBond> crossingBonds;
+
   /** The reaction participation of the bond. */
-  private CDBondReactionParticipation reactionParticipation = CDBondReactionParticipation.Unspecified;
+  private CDBondReactionParticipation reactionParticipation =
+      CDBondReactionParticipation.Unspecified;
+
   /** The absolute stereochemistry of the bond. */
   private CDBondCIPType stereochemistry = CDBondCIPType.Undetermined;
+
   /** The topology of the bond. */
   private CDBondTopology topology = CDBondTopology.Unspecified;
+
   /** Ordered list of attached bond IDs; plays a role in retaining stereochemistry. */
   private List<CDBond> bondCircularOrdering;
 
@@ -177,7 +189,7 @@ public class CDBond extends CDObject {
   }
 
   public CDBond() {
-    //empty constructor
+    // empty constructor
   }
 
   public CDBond(CDBond other) {
@@ -197,7 +209,7 @@ public class CDBond extends CDObject {
     this.reactionParticipation = other.reactionParticipation;
     this.stereochemistry = other.stereochemistry;
     this.topology = other.topology;
-    this.bondCircularOrdering = other.bondCircularOrdering != null ? new ArrayList<>(other.bondCircularOrdering) : null;
+    this.bondCircularOrdering =
+        other.bondCircularOrdering != null ? new ArrayList<>(other.bondCircularOrdering) : null;
   }
-
 }

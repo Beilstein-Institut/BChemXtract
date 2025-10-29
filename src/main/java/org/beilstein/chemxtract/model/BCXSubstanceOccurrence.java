@@ -23,22 +23,19 @@ package org.beilstein.chemxtract.model;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
- * A holder for substance coordinates (original CDX coordinates). While the same substance
- * is considered unique across one or more CDX schemes (due to its unique Inchi key), it 
- * may have several occurrences with different coordinates within one or more CDX schemes.
+ * A holder for substance coordinates (original CDX coordinates). While the same substance is
+ * considered unique across one or more CDX schemes (due to its unique Inchi key), it may have
+ * several occurrences with different coordinates within one or more CDX schemes.
  */
 public class BCXSubstanceOccurrence implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = -142252683267224832L;
+  @Serial private static final long serialVersionUID = -142252683267224832L;
 
-  /**
-   * The coordinates in the CDX file
-   */
+  /** The coordinates in the CDX file */
   private float cdxTop;
+
   private float cdxLeft;
   private float cdxBottom;
   private float cdxRight;
@@ -124,5 +121,4 @@ public class BCXSubstanceOccurrence implements Serializable {
     }
     return true;
   }
-
 }

@@ -21,31 +21,28 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.io.XMLEntityCatalog;
-import org.beilstein.chemxtract.io.XMLObject;
-import org.beilstein.chemxtract.io.XMLUtils;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.io.XMLEntityCatalog;
+import org.beilstein.chemxtract.io.XMLObject;
+import org.beilstein.chemxtract.io.XMLUtils;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
-
-/**
- * Reader for ChemDraw CDXML files.
- */
+/** Reader for ChemDraw CDXML files. */
 public class CDXMLReader {
   private static final Log logger = LogFactory.getLog(CDXMLReader.class);
 
   private RefManager refManager = new RefManager();
-  private Map<Integer,CDColor> colors = new HashMap<>();
-  private Map<Integer,CDFont> fonts = new HashMap<>();
+  private Map<Integer, CDColor> colors = new HashMap<>();
+  private Map<Integer, CDFont> fonts = new HashMap<>();
 
   protected static final boolean RIGID = false;
 
@@ -53,7 +50,7 @@ public class CDXMLReader {
 
   /**
    * This method reads a {@link CDDocument} from a {@link InputStream}.
-   * 
+   *
    * @param in {@link InputStream} from which the input are read
    * @return ChemDraw document instance
    * @throws IOException Occurs if the reader couldn't read the input from the {@link InputStream}
@@ -137,7 +134,6 @@ public class CDXMLReader {
         handleMissingObject(object);
       }
     }
-
   }
 
   private void createFontObject(XMLObject root) throws IOException {
@@ -201,9 +197,13 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Bond_ShowRxn)) {
         document.getSettings().setShowBondReaction(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_LabelLineHeight)) {
-        document.getSettings().setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
+        document
+            .getSettings()
+            .setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_CaptionLineHeight)) {
-        document.getSettings().setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
+        document
+            .getSettings()
+            .setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_InterpretChemically)) {
         document.getSettings().setInterpretChemically(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_MacPrintInfo)) {
@@ -229,7 +229,10 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_HashSpacing)) {
         document.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_CaptionJustification)) {
-        document.getSettings().setCaptionJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
+        document
+            .getSettings()
+            .setCaptionJustification(
+                CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_FractionalWidths)) {
         document.setFractionalWidths(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Magnification)) {
@@ -243,15 +246,22 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
         document.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        document.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        document
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
-        document.getSettings().setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        document
+            .getSettings()
+            .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_LabelStyleColor)) {
         document.getSettings().setLabelColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_CaptionStyleColor)) {
         document.getSettings().setCaptionColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_LabelJustification)) {
-        document.getSettings().setLabelJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
+        document
+            .getSettings()
+            .setLabelJustification(
+                CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_FixInplaceExtent)) {
         document.setFixInPlaceExtent(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_FixInplaceGap)) {
@@ -354,7 +364,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_HeightPages)) {
         page.setHeightPages(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_DrawingSpaceType)) {
-        page.setDrawingSpaceType(CDXMLUtils.convertStringToDrawingSpaceType(root.getAttribute(name)));
+        page.setDrawingSpaceType(
+            CDXMLUtils.convertStringToDrawingSpaceType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Width)) {
         page.setWidth(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_Height)) {
@@ -438,7 +449,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Mole_Weight)) {
         fragment.setWeight(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_Frag_ConnectionOrder)) {
-        fragment.setConnectionOrder(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDAtom.class, refManager));
+        fragment.setConnectionOrder(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_Frag_SequenceType)) {
         fragment.setSequenceType(CDXMLUtils.convertStringToSequenceType(root.getAttribute(name)));
       } else {
@@ -541,13 +554,19 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Atom_Geometry)) {
         node.setAtomGeometry(CDXMLUtils.convertStringToAtomGeometry(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Atom_BondOrdering)) {
-        node.setBondOrdering(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDBond.class, refManager));
+        node.setBondOrdering(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), CDBond.class, refManager));
       } else if (name.equals(CDXMLProp_Node_Attachments)) {
-        node.setAttachedAtoms(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDAtom.class, refManager));
+        node.setAttachedAtoms(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_Atom_GenericNickname)) {
         node.setLabelText(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_Atom_AltGroupID)) {
-        node.setAltGroup(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAltGroup.class, refManager));
+        node.setAltGroup(
+            CDXMLUtils.convertStringToObjectRef(
+                root.getAttribute(name), CDAltGroup.class, refManager));
       } else if (name.equals(CDXMLProp_Atom_RestrictSubstituentsUpTo)) {
         node.setSubstituentCount(root.getAttributeAsInt(name));
         node.setSubstituentType(CDAtomSubstituentType.SubstituentsUpTo);
@@ -575,7 +594,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Atom_IsotopicAbundance)) {
         node.setIsotopicAbundance(CDXMLUtils.convertStringToAbundance(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Atom_ExternalConnectionType)) {
-        node.setAttachmentPointType(CDXMLUtils.convertStringToExternalConnectionType(root.getAttribute(name)));
+        node.setAttachmentPointType(
+            CDXMLUtils.convertStringToExternalConnectionType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Atom_GenericList)) {
         node.setGenericList(CDXMLUtils.getAttributeAsGenericList(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_LineWidth)) {
@@ -585,7 +605,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         node.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        node.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        node.getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_MarginWidth)) {
         node.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_ShowTerminalCarbonLabels)) {
@@ -650,15 +671,19 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Bond_Display2)) {
         bond.setBondDisplay2(CDXMLUtils.convertStringToBondDisplay(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Bond_DoublePosition)) {
-        bond.setBondDoublePosition(CDXMLUtils.convertStringToBondDoublePosition(root.getAttribute(name)));
+        bond.setBondDoublePosition(
+            CDXMLUtils.convertStringToBondDoublePosition(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Bond_Begin)) {
-        bond.setBegin(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
+        bond.setBegin(
+            CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_Bond_End)) {
-        bond.setEnd(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
+        bond.setEnd(
+            CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_Bond_RestrictTopology)) {
         bond.setTopology(CDXMLUtils.convertStringToBondTopology(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Bond_RestrictRxnParticipation)) {
-        bond.setReactionParticipation(CDXMLUtils.convertStringToBondReactionParticipation(root.getAttribute(name)));
+        bond.setReactionParticipation(
+            CDXMLUtils.convertStringToBondReactionParticipation(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Bond_BeginAttach)) {
         bond.setBeginAttach(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_Bond_EndAttach)) {
@@ -666,14 +691,18 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Bond_CIPStereochemistry)) {
         bond.setStereochemistry(CDXMLUtils.convertStringToBondCIPType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Bond_BondOrdering)) {
-        bond.setBondCircularOrdering(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDBond.class, refManager));
+        bond.setBondCircularOrdering(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), CDBond.class, refManager));
       } else if (name.equals(CDXMLProp_Bond_ShowQuery)) {
         bond.getSettings().setShowBondQuery(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Bond_ShowStereo)) {
         bond.getSettings().setShowBondStereo(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Bond_CrossingBonds)) {
         bond.setCrossingBonds(
-                new HashSet<CDBond>(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDBond.class, refManager)));
+            new HashSet<CDBond>(
+                CDXMLUtils.convertStringToObjectRefList(
+                    root.getAttribute(name), CDBond.class, refManager)));
       } else if (name.equals(CDXMLProp_Bond_ShowRxn)) {
         bond.getSettings().setShowBondReaction(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_BondSpacing)) {
@@ -693,7 +722,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         bond.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        bond.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        bond.getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_BondSpacingAbs)) {
         bond.getSettings().setBondSpacingAbs(root.getAttributeAsFloat(name));
       } else {
@@ -857,13 +887,17 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelAlignment)) {
         text.setLabelAlignment(CDXMLUtils.convertStringToLabelDisplay(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_LabelLineHeight)) {
-        text.getSettings().setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
+        text.getSettings()
+            .setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_CaptionLineHeight)) {
-        text.getSettings().setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
+        text.getSettings()
+            .setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_InterpretChemically)) {
         text.getSettings().setInterpretChemically(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_CaptionJustification)) {
-        text.getSettings().setCaptionJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
+        text.getSettings()
+            .setCaptionJustification(
+                CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_LabelStyleFont)) {
         text.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_CaptionStyleFont)) {
@@ -873,15 +907,19 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
         text.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        text.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        text.getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
-        text.getSettings().setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        text.getSettings()
+            .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_LabelStyleColor)) {
         text.getSettings().setLabelColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_CaptionStyleColor)) {
         text.getSettings().setCaptionColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_LabelJustification)) {
-        text.getSettings().setLabelJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
+        text.getSettings()
+            .setLabelJustification(
+                CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ForegroundColor)) {
         text.setColor(readColorAttribute(root, name));
       } else {
@@ -891,7 +929,10 @@ public class CDXMLReader {
     }
 
     if (root.hasAttribute(CDXMLProp_Justification)) {
-      text.getSettings().setLabelJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(CDXMLProp_Justification)));
+      text.getSettings()
+          .setLabelJustification(
+              CDXMLUtils.convertStringToTextJustification(
+                  root.getAttribute(CDXMLProp_Justification)));
     }
 
     populateChildren(root);
@@ -925,7 +966,9 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_SupercededBy)) {
-        graphic.setSupersededBy(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDObject.class, refManager));
+        graphic.setSupersededBy(
+            CDXMLUtils.convertStringToObjectRef(
+                root.getAttribute(name), CDObject.class, refManager));
       } else if (name.equals(CDXMLProp_ZOrder)) {
         graphic.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -957,7 +1000,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
         graphic.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
-        graphic.getSettings().setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        graphic
+            .getSettings()
+            .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_Graphic_Type)) {
         graphic.setGraphicType(CDXMLUtils.convertStringToGraphicType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Line_Type)) {
@@ -983,9 +1028,11 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Bracket_Usage)) {
         graphic.setBracketUsage(CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Polymer_RepeatPattern)) {
-        graphic.setPolymerRepeatPattern(CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
+        graphic.setPolymerRepeatPattern(
+            CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Polymer_FlipType)) {
-        graphic.setPolymerFlipType(CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
+        graphic.setPolymerFlipType(
+            CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_MajorAxisEnd3D)) {
         graphic.setMajorAxisEnd3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_MinorAxisEnd3D)) {
@@ -1023,7 +1070,9 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_BackgroundColor)) {
         area.setBackgroundColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_BasisObjects)) {
-        area.setBasisObjects(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), CDBond.class, refManager));
+        area.setBasisObjects(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), CDBond.class, refManager));
       } else {
         handleMissingAttribute(root, name);
       }
@@ -1086,7 +1135,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
         graphic.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
-        graphic.getSettings().setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        graphic
+            .getSettings()
+            .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_Line_Type)) {
         graphic.setLineType(CDXMLUtils.convertStringToLineType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Curve_FillType)) {
@@ -1110,15 +1161,17 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_ArrowHeadType)) {
         graphic.setArrowHeadType(CDXMLUtils.convertStringToArrowheadType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ArrowHeadHead)) {
-        graphic.setArrowHeadPositionStart(CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
+        graphic.setArrowHeadPositionStart(
+            CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ArrowHeadTail)) {
-        graphic.setArrowHeadPositionTail(CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
+        graphic.setArrowHeadPositionTail(
+            CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ArrowShaftSpacing)) {
         graphic.setShaftSpacing(root.getAttributeAsFloat(name) / 100f);
       } else if (name.equals(CDXMLProp_NoGo)) {
         graphic.setNoGoType(CDXMLUtils.convertStringToNoGoType(root.getAttribute(name)));
       } else if (name.equals("FadePercent")) {
-        //empty
+        // empty
       } else {
         handleMissingAttribute(root, name);
       }
@@ -1155,13 +1208,18 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_Bracket_Usage)) {
-        bracketedGroup.setBracketUsage(CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
+        bracketedGroup.setBracketUsage(
+            CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Polymer_RepeatPattern)) {
-        bracketedGroup.setPolymerRepeatPattern(CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
+        bracketedGroup.setPolymerRepeatPattern(
+            CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Polymer_FlipType)) {
-        bracketedGroup.setPolymerFlipType(CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
+        bracketedGroup.setPolymerFlipType(
+            CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_BracketedObjects)) {
-        bracketedGroup.setBracketedObjects(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        bracketedGroup.setBracketedObjects(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_Bracket_RepeatCount)) {
         bracketedGroup.setRepeatCount(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_Bracket_ComponentOrder)) {
@@ -1203,7 +1261,9 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_Bracket_GraphicID)) {
-        bracketAttachment.setGraphic(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDGraphic.class, refManager));
+        bracketAttachment.setGraphic(
+            CDXMLUtils.convertStringToObjectRef(
+                root.getAttribute(name), CDGraphic.class, refManager));
       } else {
 
         handleMissingAttribute(root, name);
@@ -1234,9 +1294,11 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_Bracket_BondID)) {
-        crossingBond.setBond(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDBond.class, refManager));
+        crossingBond.setBond(
+            CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDBond.class, refManager));
       } else if (name.equals(CDXMLProp_Bracket_InnerAtomID)) {
-        crossingBond.setInnerAtom(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
+        crossingBond.setInnerAtom(
+            CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
       } else {
 
         handleMissingAttribute(root, name);
@@ -1269,7 +1331,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_2DPosition)) {
         splitter.setPosition2D(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_PageDefinition)) {
-        splitter.setPageDefinition(CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
+        splitter.setPageDefinition(
+            CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
       } else {
 
         handleMissingAttribute(root, name);
@@ -1335,7 +1398,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         plate.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        plate.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        plate
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_TLC_OriginFraction)) {
         plate.setOriginFraction(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_TLC_SolventFrontFraction)) {
@@ -1486,13 +1551,18 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         constraint.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        constraint.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        constraint
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_LabelStyleColor)) {
         constraint.getSettings().setLabelColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_BasisObjects)) {
-        constraint.setBasisObjects(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        constraint.setBasisObjects(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ConstraintType)) {
-        constraint.setConstraintType(CDXMLUtils.convertStringToConstraintType(root.getAttribute(name)));
+        constraint.setConstraintType(
+            CDXMLUtils.convertStringToConstraintType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ConstraintMin)) {
         constraint.setMinRange(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_ConstraintMax)) {
@@ -1548,15 +1618,20 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         geometry.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        geometry.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        geometry
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_LabelStyleColor)) {
         geometry.getSettings().setLabelColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_GeometricFeature)) {
-        geometry.setGeometricType(CDXMLUtils.convertStringToGeometricFeature(root.getAttribute(name)));
+        geometry.setGeometricType(
+            CDXMLUtils.convertStringToGeometricFeature(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_RelationValue)) {
         geometry.setRelationValue(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_BasisObjects)) {
-        geometry.setBasisObjects(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        geometry.setBasisObjects(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_PointIsDirected)) {
         geometry.setPointIsDirected(root.getAttributeAsBoolean(name));
       } else {
@@ -1721,7 +1796,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         spectrum.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        spectrum.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        spectrum
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else if (name.equals(CDXMLProp_Spectrum_XSpacing)) {
         spectrum.setXSpacing(root.getAttributeAsDouble(name));
       } else if (name.equals(CDXMLProp_Spectrum_XLow)) {
@@ -1786,25 +1863,41 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map)) {
-        reactionStep.setAtomMap(CDXMLUtils.convertStringtoObjectRefMap(root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
+        reactionStep.setAtomMap(
+            CDXMLUtils.convertStringtoObjectRefMap(
+                root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Reactants)) {
-        reactionStep.setReactants(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setReactants(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Products)) {
-        reactionStep.setProducts(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setProducts(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Plusses)) {
-        reactionStep.setPlusses(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setPlusses(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Arrows)) {
-        reactionStep.setArrows(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setArrows(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_ObjectsAboveArrow)) {
-        reactionStep.setObjectsAboveArrow(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setObjectsAboveArrow(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_ObjectsBelowArrow)) {
-        reactionStep.setObjectsBelowArrow(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        reactionStep.setObjectsBelowArrow(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map_Manual)) {
-        reactionStep
-                .setAtomMapManual(CDXMLUtils.convertStringtoObjectRefMap(root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
+        reactionStep.setAtomMapManual(
+            CDXMLUtils.convertStringtoObjectRefMap(
+                root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
       } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map_Auto)) {
-        reactionStep
-                .setAtomMapAuto(CDXMLUtils.convertStringtoObjectRefMap(root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
+        reactionStep.setAtomMapAuto(
+            CDXMLUtils.convertStringtoObjectRefMap(
+                root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
       } else {
 
         handleMissingAttribute(root, name);
@@ -1888,15 +1981,18 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Visible)) {
         namedAlternativeGroup.setVisible(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_BoundingBox)) {
-        namedAlternativeGroup.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
+        namedAlternativeGroup.setBounds(
+            CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ForegroundColor)) {
         namedAlternativeGroup.setColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_BackgroundColor)) {
         namedAlternativeGroup.getSettings().setBackgroundColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_NamedAlternativeGroup_TextFrame)) {
-        namedAlternativeGroup.setTextFrame(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
+        namedAlternativeGroup.setTextFrame(
+            CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_NamedAlternativeGroup_GroupFrame)) {
-        namedAlternativeGroup.setGroupFrame(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
+        namedAlternativeGroup.setGroupFrame(
+            CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_NamedAlternativeGroup_Valence)) {
         namedAlternativeGroup.setValence(root.getAttributeAsInt(name));
       } else {
@@ -1956,7 +2052,9 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_LabelStyleSize)) {
         table.getSettings().setLabelSize(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_LabelStyleFace)) {
-        table.getSettings().setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
+        table
+            .getSettings()
+            .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
       } else {
 
         handleMissingAttribute(root, name);
@@ -2009,17 +2107,21 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_BackgroundColor)) {
         embeddedObject.getSettings().setBackgroundColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_Picture_Edition)) {
-        embeddedObject.setPictureEdition(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
+        embeddedObject.setPictureEdition(
+            CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Picture_EditionAlias)) {
-        embeddedObject.setPictureEditionAlias(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
+        embeddedObject.setPictureEditionAlias(
+            CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_MacPICT)) {
         embeddedObject.setMacPICT(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_WindowsMetafile)) {
-        embeddedObject.setWindowsMetafile(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
+        embeddedObject.setWindowsMetafile(
+            CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_OLEObject)) {
         embeddedObject.setOleObject(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_EnhancedMetafile)) {
-        embeddedObject.setEnhancedMetafile(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
+        embeddedObject.setEnhancedMetafile(
+            CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_CompressedWindowsMetafile)) {
         compressedWindowsMetafile = Base64.getMimeDecoder().decode(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_CompressedOLEObject)) {
@@ -2088,19 +2190,19 @@ public class CDXMLReader {
     }
 
     // work-around to fix wrong EMFs, which are WMFs
-//    if (embeddedObject.getEnhancedMetafile() != null) {
-//      try {
-//        new EmfMetafile(new ByteArrayInputStream(embeddedObject.getEnhancedMetafile()));
-//      } catch (Exception e) {
-//        try {
-//          new WmfMetafile(new ByteArrayInputStream(embeddedObject.getEnhancedMetafile()));
-//          embeddedObject.setWindowsMetafile(embeddedObject.getEnhancedMetafile());
-//          embeddedObject.setEnhancedMetafile(null);
-//        } catch (Exception e2) {
-//          // do nothing
-//        }
-//      }
-//    }
+    //    if (embeddedObject.getEnhancedMetafile() != null) {
+    //      try {
+    //        new EmfMetafile(new ByteArrayInputStream(embeddedObject.getEnhancedMetafile()));
+    //      } catch (Exception e) {
+    //        try {
+    //          new WmfMetafile(new ByteArrayInputStream(embeddedObject.getEnhancedMetafile()));
+    //          embeddedObject.setWindowsMetafile(embeddedObject.getEnhancedMetafile());
+    //          embeddedObject.setEnhancedMetafile(null);
+    //        } catch (Exception e2) {
+    //          // do nothing
+    //        }
+    //      }
+    //    }
 
     populateChildren(root);
   }
@@ -2160,9 +2262,11 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_ArrowHeadType)) {
         spline.setArrowHeadType(CDXMLUtils.convertStringToArrowheadType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ArrowHeadHead)) {
-        spline.setArrowHeadPositionAtStart(CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
+        spline.setArrowHeadPositionAtStart(
+            CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ArrowHeadTail)) {
-        spline.setArrowHeadPositionAtEnd(CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
+        spline.setArrowHeadPositionAtEnd(
+            CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Closed)) {
         spline.setClosed(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Curve_FillType)) {
@@ -2176,7 +2280,8 @@ public class CDXMLReader {
     }
 
     if (root.hasAttribute(CDXMLProp_Curve_Type)) {
-      CDSplineType curveType = CDXUtils.convertIntToSplineType(root.getAttributeAsInt(CDXMLProp_Curve_Type));
+      CDSplineType curveType =
+          CDXUtils.convertIntToSplineType(root.getAttributeAsInt(CDXMLProp_Curve_Type));
       spline.setFillType(curveType.getFillType());
       spline.setLineType(curveType.getLineType());
       spline.setClosed(curveType.isClosed());
@@ -2210,7 +2315,8 @@ public class CDXMLReader {
     // read first type of property
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_ObjectTag_Type)) {
-        objectTag.setObjectTagType(CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
+        objectTag.setObjectTagType(
+            CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
       }
     }
 
@@ -2222,7 +2328,8 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_Name)) {
         objectTag.setName(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_ObjectTag_Type)) {
-        objectTag.setObjectTagType(CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
+        objectTag.setObjectTagType(
+            CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_ObjectTag_Tracking)) {
         objectTag.setTracking(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_ObjectTag_Persistent)) {
@@ -2246,7 +2353,8 @@ public class CDXMLReader {
             throw new IOException();
         }
       } else if (name.equals(CDXMLProp_Positioning)) {
-        objectTag.setPositioningType(CDXMLUtils.convertStringToPositioningType(root.getAttribute(name)));
+        objectTag.setPositioningType(
+            CDXMLUtils.convertStringToPositioningType(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_PositioningAngle)) {
         objectTag.setPositioningAngle(root.getAttributeAsFloat(name));
       } else if (name.equals(CDXMLProp_PositioningOffset)) {
@@ -2281,11 +2389,14 @@ public class CDXMLReader {
       if (name.equals(CDXMLProp_Id)) {
         // ignore
       } else if (name.equals(CDXMLProp_BasisObjects)) {
-        chemicalProperty.setBasisObjects(CDXMLUtils.convertStringToObjectRefList(root.getAttribute(name), Object.class, refManager));
+        chemicalProperty.setBasisObjects(
+            CDXMLUtils.convertStringToObjectRefList(
+                root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ChemicalPropertyType)) {
         chemicalProperty.setType(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_ChemicalPropertyDisplayID)) {
-        chemicalProperty.setDisplay(CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), Object.class, refManager));
+        chemicalProperty.setDisplay(
+            CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLProp_ChemicalPropertyIsActive)) {
         chemicalProperty.setActive(root.getAttributeAsBoolean(name));
       } else {
@@ -2379,21 +2490,33 @@ public class CDXMLReader {
   }
 
   private CDStyledString createStyledString(XMLObject object) throws IOException {
-    CDFont font = object.hasAttribute(CDXMLProp_Font) ? fonts.get(object.getAttributeAsInt(CDXMLProp_Font)) : null;
-    float size = object.hasAttribute(CDXMLProp_FontSize) ? object.getAttributeAsFloat(CDXMLProp_FontSize) : 0;
+    CDFont font =
+        object.hasAttribute(CDXMLProp_Font)
+            ? fonts.get(object.getAttributeAsInt(CDXMLProp_Font))
+            : null;
+    float size =
+        object.hasAttribute(CDXMLProp_FontSize)
+            ? object.getAttributeAsFloat(CDXMLProp_FontSize)
+            : 0;
     CDFontFace fontType =
-            object.hasAttribute(CDXMLProp_FontFace) ? CDXUtils.convertIntToFontFace(object.getAttributeAsInt(CDXMLProp_FontFace))
-                    : new CDFontFace();
+        object.hasAttribute(CDXMLProp_FontFace)
+            ? CDXUtils.convertIntToFontFace(object.getAttributeAsInt(CDXMLProp_FontFace))
+            : new CDFontFace();
     CDColor color = readColorAttribute(object, CDXMLProp_ForegroundColor);
 
     CDStyledString string = new CDStyledString();
-    string.getChunks().add(new CDStyledString.CDXChunk(font, size, fontType, color, object.getTextsAsString()));
+    string
+        .getChunks()
+        .add(new CDStyledString.CDXChunk(font, size, fontType, color, object.getTextsAsString()));
     return string;
   }
 
-  private void createRepresent(XMLObject object, Map<String,Object> represents) throws IOException {
+  private void createRepresent(XMLObject object, Map<String, Object> represents)
+      throws IOException {
     String name = object.getAttribute(CDXMLProp_Attribute);
-    Object value = CDXMLUtils.convertStringToObjectRef(object.getAttribute(CDXMLProp_Object), Object.class, refManager);
+    Object value =
+        CDXMLUtils.convertStringToObjectRef(
+            object.getAttribute(CDXMLProp_Object), Object.class, refManager);
     if (value == null) {
       throw new IOException("Found null object as repesent value");
     }
@@ -2406,7 +2529,6 @@ public class CDXMLReader {
         return colors.get(object.getAttributeAsInt(name));
       }
       logger.warn("Could not resolve color index to color: " + object.getAttributeAsInt(name));
-
     }
     return null;
   }
@@ -2433,7 +2555,8 @@ public class CDXMLReader {
   }
 
   private void handleMissingObject(XMLObject object) throws IOException {
-    String message = "Encountered unexpected element \'" + object.getName() + "\' at " + object.getLocation();
+    String message =
+        "Encountered unexpected element \'" + object.getName() + "\' at " + object.getLocation();
 
     logger.warn(message);
     if (object.getName().equals("annotation")) {
@@ -2443,13 +2566,20 @@ public class CDXMLReader {
   }
 
   private void handleMissingAttribute(XMLObject object, String attribute) throws IOException {
-    String message = "Encountered unexpected attribute \'" + attribute + "\' at element \'" + object.getName() + "\'" + " (value=" +
-            object.getAttributes().get(attribute) + ") at " + object.getLocation();
+    String message =
+        "Encountered unexpected attribute \'"
+            + attribute
+            + "\' at element \'"
+            + object.getName()
+            + "\'"
+            + " (value="
+            + object.getAttributes().get(attribute)
+            + ") at "
+            + object.getLocation();
 
     if (RIGID) {
       throw new IOException(message);
     }
     logger.warn(message);
   }
-
 }

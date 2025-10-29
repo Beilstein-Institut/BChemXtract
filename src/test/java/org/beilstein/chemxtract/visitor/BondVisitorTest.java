@@ -21,17 +21,16 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class BondVisitorTest {
 
@@ -61,10 +60,13 @@ public class BondVisitorTest {
 
   @Test
   public void simpleBondAddedTest() {
-    doAnswer(invocation -> {
-      ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
-      return null;
-    }).when(fragment).accept(any());
+    doAnswer(
+            invocation -> {
+              ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
+              return null;
+            })
+        .when(fragment)
+        .accept(any());
 
     BondVisitor visitor = new BondVisitor(fragment);
     assertEquals(1, visitor.getBonds().size());
@@ -87,10 +89,13 @@ public class BondVisitorTest {
 
     when(atom1.getFragments()).thenReturn(Collections.singletonList(nested));
 
-    doAnswer(invocation -> {
-      ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
-      return null;
-    }).when(fragment).accept(any());
+    doAnswer(
+            invocation -> {
+              ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
+              return null;
+            })
+        .when(fragment)
+        .accept(any());
 
     BondVisitor visitor = new BondVisitor(fragment);
     assertEquals(1, visitor.getBonds().size());
@@ -112,10 +117,13 @@ public class BondVisitorTest {
 
     when(atom2.getFragments()).thenReturn(Collections.singletonList(nested));
 
-    doAnswer(invocation -> {
-      ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
-      return null;
-    }).when(fragment).accept(any());
+    doAnswer(
+            invocation -> {
+              ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
+              return null;
+            })
+        .when(fragment)
+        .accept(any());
 
     BondVisitor visitor = new BondVisitor(fragment);
     assertEquals(1, visitor.getBonds().size());
@@ -128,10 +136,13 @@ public class BondVisitorTest {
     when(nested.getAtoms()).thenReturn(Collections.emptyList());
     when(atom1.getFragments()).thenReturn(Collections.singletonList(nested));
 
-    doAnswer(invocation -> {
-      ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
-      return null;
-    }).when(fragment).accept(any());
+    doAnswer(
+            invocation -> {
+              ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
+              return null;
+            })
+        .when(fragment)
+        .accept(any());
 
     new BondVisitor(fragment);
   }
@@ -147,10 +158,13 @@ public class BondVisitorTest {
 
     when(atom1.getFragments()).thenReturn(Collections.singletonList(nested));
 
-    doAnswer(invocation -> {
-      ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
-      return null;
-    }).when(fragment).accept(any());
+    doAnswer(
+            invocation -> {
+              ((BondVisitor) invocation.getArguments()[0]).visitBond(bond);
+              return null;
+            })
+        .when(fragment)
+        .accept(any());
 
     new BondVisitor(fragment);
   }

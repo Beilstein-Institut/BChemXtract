@@ -21,6 +21,10 @@
  */
 package org.beilstein.chemxtract.converter;
 
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Consumer;
+import javax.vecmath.Point2d;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
@@ -38,23 +42,18 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
 
-import javax.vecmath.Point2d;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
-
 /**
  * Converts ChemDraw {@link CDReactionStep} objects into CDK {@link IReaction} instances.
- * <p>
- * The {@code ReactionConverter} acts as a bridge between ChemDraw's reaction model
- * and the CDK representation. It transforms reactants,
- * products, and agents into {@link IAtomContainer} structures, determines reaction
- * directionality, and collects unrecognized textual agents for reporting.
- * </p>
+ *
+ * <p>The {@code ReactionConverter} acts as a bridge between ChemDraw's reaction model and the CDK
+ * representation. It transforms reactants, products, and agents into {@link IAtomContainer}
+ * structures, determines reaction directionality, and collects unrecognized textual agents for
+ * reporting.
  *
  * <h2>Usage</h2>
- * The converter requires a mapping of ChemDraw fragments to CDK atom containers
- * (typically produced by {@link org.beilstein.chemxtract.xtractor.ReactionXtractor}). It uses this mapping to
+ *
+ * The converter requires a mapping of ChemDraw fragments to CDK atom containers (typically produced
+ * by {@link org.beilstein.chemxtract.xtractor.ReactionXtractor}). It uses this mapping to
  * reconstruct the full {@link IReaction} object.
  *
  * <pre>{@code
@@ -67,19 +66,19 @@ public class ReactionConverter {
   private final IChemObjectBuilder builder;
   private final SmilesParser smilesParser;
   private static final Log logger = LogFactory.getLog(ReactionConverter.class);
-  private final Map<CDFragment,BCXSubstance> fragmentsAtomContainerMap;
+  private final Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap;
   private final Set<String> unknowns;
 
   /**
-   * Constructs a {@code ReactionConverter} with the specified fragment–substance mapping and
-   * CDK object builder.
+   * Constructs a {@code ReactionConverter} with the specified fragment–substance mapping and CDK
+   * object builder.
    *
    * @param fragmentsAtomContainerMap a mapping between {@link CDFragment} instances and their
-   *                                  corresponding {@link BCXSubstance} representations
+   *     corresponding {@link BCXSubstance} representations
    * @param builder the {@link IChemObjectBuilder} used to create CDK chemical objects
    */
-  public ReactionConverter(Map<CDFragment,BCXSubstance> fragmentsAtomContainerMap,
-          IChemObjectBuilder builder){
+  public ReactionConverter(
+      Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap, IChemObjectBuilder builder) {
     this.fragmentsAtomContainerMap = fragmentsAtomContainerMap;
     this.builder = builder;
     this.smilesParser = new SmilesParser(this.builder);
@@ -88,6 +87,7 @@ public class ReactionConverter {
 
   /**
    * Converts a {@link CDReactionStep} from ChemDraw into a CDK {@link IReaction} object.
+   *
    * <p>
    *
    * @param reactionStep the ChemDraw {@link CDReactionStep} to convert
@@ -104,30 +104,33 @@ public class ReactionConverter {
       logger.error("Conversion of a reaction component has failed.", e);
       return null;
     }
-    cdkReaction.setDirection(getReactionDirection(reactionStep, cdkReaction.getReactants(), cdkReaction.getProducts()));
+    cdkReaction.setDirection(
+        getReactionDirection(reactionStep, cdkReaction.getReactants(), cdkReaction.getProducts()));
     return cdkReaction;
   }
 
   /**
-   * Processes a list of reaction components and adds them to both the internal CDK {@link IReaction}
-   * and the BOA {@link BCXReaction} representation.
-   * <p>
-   * This method supports {@link CDFragment}, {@link CDGroup}, and {@link String} components. If a
-   * {@code String} component matches a known abbreviation, it will be parsed using a SMILES parser
-   * and converted into a {@link BCXReactionComponent}. If not recognized, the component will be logged and added
-   * to the {@code unkowns} list.
-   * </p>
+   * Processes a list of reaction components and adds them to both the internal CDK {@link
+   * IReaction} and the BOA {@link BCXReaction} representation.
+   *
+   * <p>This method supports {@link CDFragment}, {@link CDGroup}, and {@link String} components. If
+   * a {@code String} component matches a known abbreviation, it will be parsed using a SMILES
+   * parser and converted into a {@link BCXReactionComponent}. If not recognized, the component will
+   * be logged and added to the {@code unkowns} list.
    *
    * @param components the list of components (reactants, products, or agents)
-   * @param addCdkComponent a consumer that adds an {@link IAtomContainer} to the internal CDK reaction
+   * @param addCdkComponent a consumer that adds an {@link IAtomContainer} to the internal CDK
+   *     reaction
    * @throws CDKException if an error occurs while parsing SMILES or generating InChI identifiers
    */
-  private void processReactionComponents(List<Object> components,
-          Consumer<IAtomContainer> addCdkComponent) throws CDKException, IOException {
+  private void processReactionComponents(
+      List<Object> components, Consumer<IAtomContainer> addCdkComponent)
+      throws CDKException, IOException {
 
     for (Object component : components) {
 
-      if (component instanceof CDFragment fragment && fragmentsAtomContainerMap.containsKey(fragment)) {
+      if (component instanceof CDFragment fragment
+          && fragmentsAtomContainerMap.containsKey(fragment)) {
         addCdkComponent.accept(fragmentsAtomContainerMap.get(fragment).getAtomContainer());
       } else if (component instanceof CDGroup group) {
         // At the moment do not handle grouped reaction fragments
@@ -153,7 +156,8 @@ public class ReactionConverter {
   }
 
   /**
-   * Determines the direction of a chemical reaction based on the reaction step and graphical arrow representation.
+   * Determines the direction of a chemical reaction based on the reaction step and graphical arrow
+   * representation.
    *
    * @param reactionStep the {@code CDReactionStep} containing the reaction details
    * @param reactants the set of reactant molecules
@@ -161,15 +165,19 @@ public class ReactionConverter {
    * @return the determined {@code IReaction.Direction} for the reaction
    * @throws NullPointerException if {@code reactionStep} is null
    */
-  private IReaction.Direction getReactionDirection(CDReactionStep reactionStep, IAtomContainerSet reactants, IAtomContainerSet products) {
+  private IReaction.Direction getReactionDirection(
+      CDReactionStep reactionStep, IAtomContainerSet reactants, IAtomContainerSet products) {
     Objects.requireNonNull(reactionStep, "CDReactionStep must not be null.");
 
     List<Object> arrows = reactionStep.getArrows();
 
-    if (arrows.get(0) instanceof CDGraphic graphic && graphic.getSupersededBy() instanceof CDArrow arrow) {
-      if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfLeft && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfLeft)
+    if (arrows.get(0) instanceof CDGraphic graphic
+        && graphic.getSupersededBy() instanceof CDArrow arrow) {
+      if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfLeft
+          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfLeft)
         return IReaction.Direction.BIDIRECTIONAL;
-      if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfRight && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfRight)
+      if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfRight
+          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfRight)
         return IReaction.Direction.BIDIRECTIONAL;
 
       CDPoint3D head = arrow.getHead3D();
@@ -177,8 +185,7 @@ public class ReactionConverter {
       double distToReactants = this.getDistanceToCompounds2D(reactants, head);
       double distToProducts = this.getDistanceToCompounds2D(products, head);
 
-      if (distToReactants < distToProducts)
-        return IReaction.Direction.BACKWARD;
+      if (distToReactants < distToProducts) return IReaction.Direction.BACKWARD;
     }
     return IReaction.Direction.FORWARD;
   }
@@ -186,9 +193,9 @@ public class ReactionConverter {
   /**
    * Calculates the squared distance from a given 3D point (projected onto 2D) to the closest atom
    * in a set of compounds.
-   * <p>
-   * The Z-coordinate of the point is ignored, and the Y-coordinate is inverted to align with
-   * the 2D coordinate system used in the atom containers.
+   *
+   * <p>The Z-coordinate of the point is ignored, and the Y-coordinate is inverted to align with the
+   * 2D coordinate system used in the atom containers.
    *
    * @param compounds the set of atom containers (compounds) to check for proximity
    * @param head the 3D point (typically representing a head or reference point) to measure from
@@ -205,7 +212,9 @@ public class ReactionConverter {
         if (atom.getPoint2d() != null)
           atomDistSquared = this.getPoint2DDistanceSquared(headPoint, atom.getPoint2d());
         else
-          atomDistSquared = this.getPoint2DDistanceSquared(headPoint, new Point2d(atom.getPoint3d().x, atom.getPoint3d().y));
+          atomDistSquared =
+              this.getPoint2DDistanceSquared(
+                  headPoint, new Point2d(atom.getPoint3d().x, atom.getPoint3d().y));
         distClosestCompound = Math.min(distClosestCompound, atomDistSquared);
       }
     }
@@ -214,9 +223,9 @@ public class ReactionConverter {
 
   /**
    * Calculates the squared Euclidean distance between two 2D points.
-   * <p>
-   * This method avoids the square root calculation, making it more efficient
-   * when comparing distances rather than needing the exact distance.
+   *
+   * <p>This method avoids the square root calculation, making it more efficient when comparing
+   * distances rather than needing the exact distance.
    *
    * @param point1 the first 2D point
    * @param point2 the second 2D point
@@ -224,16 +233,16 @@ public class ReactionConverter {
    */
   private double getPoint2DDistanceSquared(Point2d point1, Point2d point2) {
     return (point2.x - point1.x) * (point2.x - point1.x)
-            + (point2.y - point1.y) * (point2.y - point1.y);
+        + (point2.y - point1.y) * (point2.y - point1.y);
   }
 
   /**
    * Extracts and returns the set of agent compounds (substances above or below the reaction arrow)
    * from a given reaction step.
-   * <p>
-   * This method processes various object types that may represent agents, such as
-   * {@code CDFragment}, {@code CDGroup}, {@code CDText}, and {@code String}. In the case of
-   * simple text-based agents, they are treated as textual labels.
+   *
+   * <p>This method processes various object types that may represent agents, such as {@code
+   * CDFragment}, {@code CDGroup}, {@code CDText}, and {@code String}. In the case of simple
+   * text-based agents, they are treated as textual labels.
    *
    * @param reactionStep the reaction step from which to extract agents
    * @return an {@code IAtomContainerSet} representing the agents
@@ -249,12 +258,10 @@ public class ReactionConverter {
     for (Object object : objects) {
       if (object instanceof CDFragment fragment) {
         if (fragment.getAtoms().size() == 1
-                && fragment.getAtoms().get(0).getNodeType() == CDNodeType.Unspecified
-                && fragment.getAtoms().get(0).getText() != null
-        ) {
+            && fragment.getAtoms().get(0).getNodeType() == CDNodeType.Unspecified
+            && fragment.getAtoms().get(0).getText() != null) {
           agents.add(fragment.getAtoms().get(0).getText().getText().getText());
-        } else
-          agents.add(fragment);
+        } else agents.add(fragment);
       } else if (object instanceof String agentName) {
         agents.add(agentName);
       } else if (object instanceof CDText cdText) {
@@ -272,10 +279,9 @@ public class ReactionConverter {
 
   /**
    * Splits and filters agent strings into meaningful components.
-   * <p>
-   * Removes numeric values and common unwanted words using {@link Definitions#AGENTS_SPLIT_REGEX}
-   * and {@link UnwantedWords}.
-   * </p>
+   *
+   * <p>Removes numeric values and common unwanted words using {@link
+   * Definitions#AGENTS_SPLIT_REGEX} and {@link UnwantedWords}.
    *
    * @param agentsString the raw agent label text
    * @return a filtered list of agent strings
@@ -286,9 +292,10 @@ public class ReactionConverter {
     }
     String[] possibleAgents = agentsString.split(Definitions.AGENTS_SPLIT_REGEX);
     return Arrays.stream(possibleAgents)
-            .filter(a -> a.length() > 1)
-            .filter(a -> !a.matches("-?\\d+(\\.\\d+)?"))
-            .filter(a -> {
+        .filter(a -> a.length() > 1)
+        .filter(a -> !a.matches("-?\\d+(\\.\\d+)?"))
+        .filter(
+            a -> {
               try {
                 return !UnwantedWords.contains(a);
               } catch (IOException e) {
@@ -296,15 +303,15 @@ public class ReactionConverter {
                 return false;
               }
             })
-            .toList();
+        .toList();
   }
 
   /**
-   * Returns the set of unknown agent strings that could not be resolved or converted
-   * during compound processing.
-   * <p>
-   * These typically represent agent labels that were not found in the abbreviation map
-   * and could not be parsed as valid chemical structures.
+   * Returns the set of unknown agent strings that could not be resolved or converted during
+   * compound processing.
+   *
+   * <p>These typically represent agent labels that were not found in the abbreviation map and could
+   * not be parsed as valid chemical structures.
    *
    * @return a set of unresolved or unrecognized agent strings
    */

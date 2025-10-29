@@ -31,14 +31,19 @@ import java.util.List;
 public class CDXObject {
   /** Tag of the object. */
   private int tag;
+
   /** Unique id of the object. */
   private int id;
+
   /** Position of the object in the stream. */
   private int position;
+
   /** List of child objects. */
   private List<CDXObject> objects = new ArrayList<>();
+
   /** List of properties for this object. */
   private List<CDXProperty> properties = new ArrayList<>();
+
   /** User-defined object, used to store the mapping to real objects. */
   private Object instance;
 
@@ -89,5 +94,4 @@ public class CDXObject {
   public void setProperties(List<CDXProperty> properties) {
     this.properties = properties;
   }
-
 }

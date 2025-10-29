@@ -21,39 +21,51 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * Font face definition. This class hold the various style attributes for text.
- */
+/** Font face definition. This class hold the various style attributes for text. */
 public class CDFontFace {
   /** Bond text style attribute. */
   private boolean bold = false;
+
   /** Italic text style attribute. */
   private boolean italic = false;
+
   /** Underline text style attribute. */
   private boolean underline = false;
+
   /** Outline text style attribute. */
   private boolean outline = false;
+
   /** Shadow text style attribute. */
   private boolean shadow = false;
+
   /** Subscript text style attribute. */
   private boolean subscript = false;
+
   /** Superscript text style attribute. */
   private boolean superscript = false;
+
   /** Formula text style attribute. */
   private boolean formula = false;
 
   /**
    * Return true, if the font face has no additional style attributes.
-   * 
+   *
    * @return true, if the font face has no additional style attributes
    */
   public boolean isPlain() {
-    return !isBold() && !isItalic() && !isUnderline() && !isOutline() && !isShadow() && !isSubscript() && !isSuperscript() && !isFormula();
+    return !isBold()
+        && !isItalic()
+        && !isUnderline()
+        && !isOutline()
+        && !isShadow()
+        && !isSubscript()
+        && !isSuperscript()
+        && !isFormula();
   }
 
   /**
    * Remove all additional style attributes.
-   * 
+   *
    * @param plain True, if all additional style attributes should be removed
    */
   public void setPlain(boolean plain) {
@@ -222,5 +234,4 @@ public class CDFontFace {
     sb.append("]");
     return sb.toString();
   }
-
 }

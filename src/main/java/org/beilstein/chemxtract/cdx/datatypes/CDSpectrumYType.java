@@ -21,32 +21,30 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of units the Y-axis represents.
- */
-public enum CDSpectrumYType{
+/** The type of units the Y-axis represents. */
+public enum CDSpectrumYType {
   /** The axis type is unknown. Not recommended. */
   Unknown,
   /**
-   * Axis is in absorbance units, and consequently has a baseline of 0.0 with
-   * peaks pointing up. Only for IR spectra.
+   * Axis is in absorbance units, and consequently has a baseline of 0.0 with peaks pointing up.
+   * Only for IR spectra.
    */
   Absorbance,
   /**
-   * Axis is in transmittance units. The baseline is at 1.0 and peaks points
-   * down to a value of 0.0 being no transmission. Only for IR spectra.
+   * Axis is in transmittance units. The baseline is at 1.0 and peaks points down to a value of 0.0
+   * being no transmission. Only for IR spectra.
    */
   Transmittance,
   /**
-   * Axis is in transmittance units*100. The baseline is at 100% and peaks
-   * points down to a value of 0.0 being no transmission. Only for IR spectra.
+   * Axis is in transmittance units*100. The baseline is at 100% and peaks points down to a value of
+   * 0.0 being no transmission. Only for IR spectra.
    */
   PercentTransmittance,
   /** Axis is some other type. */
   Other,
   /**
-   * Axis is unscaled -- essentially, the absolute values have no meaning and
-   * only relative values matter.
+   * Axis is unscaled -- essentially, the absolute values have no meaning and only relative values
+   * matter.
    */
   ArbitraryUnits;
 }

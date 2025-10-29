@@ -21,43 +21,51 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
-/**
- * This represents a Thin Layer Chromatography plate and consists of severyal TLC lanes.
- */
+/** This represents a Thin Layer Chromatography plate and consists of severyal TLC lanes. */
 public class CDTLCPlate extends CDObject {
   /** The bottom-left corner of TLC plate (possibly in a rotated frame). */
   private CDPoint2D bottomLeft;
+
   /** The bottom-right corner of TLC plate (possibly in a rotated frame). */
   private CDPoint2D bottomRight;
+
   /** The lanes contained within this TLC plate. */
   private List<CDTLCLane> lanes = new ArrayList<>();
+
   /**
    * the positioning of the origin, as a decimal fraction of the distance from the bottom to the top
    * of the TLC plate.
    */
   private double originFraction;
+
   /** Whether the borders of the TLC Plate will be drawn. */
   private boolean showBorders = false;
+
   /** Whether the origin will be drawn. */
   private boolean showOrigin = false;
+
   /** Whether tick marks will be drawn at the sides of the TLC plate. */
   private boolean showSideTicks = false;
+
   /** Whether the solvent front will be drawn. */
   private boolean showSolventFront = false;
+
   /**
    * The positioning of the solvent front, as a decimal fraction of the distance from the bottom to
    * the top of the TLC plate.
    */
   private double solventFrontFraction;
+
   /** The top-left corner of the TLC plate (possibly in a rotated frame). */
   private CDPoint2D topLeft;
+
   /** The top-right corner of TLC plate (possibly in a rotated frame). */
   private CDPoint2D topRight;
+
   /** Whether the background of the TLC Plate will be omitted. */
   private boolean transparent = false;
 

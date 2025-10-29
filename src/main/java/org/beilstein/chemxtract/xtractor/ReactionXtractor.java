@@ -21,6 +21,8 @@
  */
 package org.beilstein.chemxtract.xtractor;
 
+import java.io.IOException;
+import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
@@ -38,15 +40,12 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
 
-import java.io.IOException;
-import java.util.*;
-
 /**
  * Class for extracting chemical reactions from a {@link CDDocument}.
- * <p>
- * This class traverses ChemDraw pages, fragments, and reaction steps to construct
- * {@link BCXReaction} objects, which contain reactants, products, agents, and
- * associated identifiers such as InChI and InChIKey.
+ *
+ * <p>This class traverses ChemDraw pages, fragments, and reaction steps to construct {@link
+ * BCXReaction} objects, which contain reactants, products, agents, and associated identifiers such
+ * as InChI and InChIKey.
  */
 public class ReactionXtractor {
 
@@ -63,20 +62,17 @@ public class ReactionXtractor {
     this.builder = builder;
   }
 
-  /**
-   * Constructs a {@code ReactionXtractor} using the default CDK object builder.
-   */
+  /** Constructs a {@code ReactionXtractor} using the default CDK object builder. */
   public ReactionXtractor() {
     this(DefaultChemObjectBuilder.getInstance());
   }
 
   /**
    * Extracts all reactions from the given ChemDraw document.
-   * <p>
-   * For each page, fragments are visited and converted into {@link BCXReactionComponent}s.
-   * Reaction steps are then converted to {@link BCXReaction} objects with reactants,
-   * products, and agents linked to their corresponding components.
-   * </p>
+   *
+   * <p>For each page, fragments are visited and converted into {@link BCXReactionComponent}s.
+   * Reaction steps are then converted to {@link BCXReaction} objects with reactants, products, and
+   * agents linked to their corresponding components.
    *
    * @param document the ChemDraw {@link CDDocument} to extract reactions from
    * @return a list of extracted {@link BCXReaction} objects
@@ -93,13 +89,16 @@ public class ReactionXtractor {
       Map<IAtomContainer, BCXReactionComponent> atomContainerReactionComponentMap = new HashMap<>();
       for (CDFragment fragment : fragments) {
         try {
-          Optional<BCXSubstance> substance = Optional.ofNullable(substanceXtractor.xtractSubstance(fragment, page));
+          Optional<BCXSubstance> substance =
+              Optional.ofNullable(substanceXtractor.xtractSubstance(fragment, page));
           if (substance.isEmpty()) {
             continue;
           }
           fragmentSubstanceMap.putIfAbsent(fragment, substance.get());
-          BCXReactionComponent component = convertToReactionComponent(fragment, substance.get().getAtomContainer());
-          atomContainerReactionComponentMap.putIfAbsent(substance.get().getAtomContainer(), component);
+          BCXReactionComponent component =
+              convertToReactionComponent(fragment, substance.get().getAtomContainer());
+          atomContainerReactionComponentMap.putIfAbsent(
+              substance.get().getAtomContainer(), component);
         } catch (CDKException | IOException e) {
           logger.error(e.getMessage());
         }
@@ -108,7 +107,8 @@ public class ReactionXtractor {
       List<CDReactionStep> steps = rsVisitor.getReactionSteps();
       for (CDReactionStep step : steps) {
         try {
-          ReactionConverter reactionConverter = new ReactionConverter(fragmentSubstanceMap, builder);
+          ReactionConverter reactionConverter =
+              new ReactionConverter(fragmentSubstanceMap, builder);
           IReaction cdkReaction = reactionConverter.convert(step);
           BCXReaction reaction = createBcxReaction(cdkReaction, atomContainerReactionComponentMap);
           reactions.add(reaction);
@@ -116,21 +116,22 @@ public class ReactionXtractor {
         } catch (CDKException e) {
           logger.error(e.getMessage());
         }
-
       }
     }
     return reactions;
   }
 
   /**
-   * Converts a CDK {@link IReaction} and its mapping of {@link IAtomContainer} to
-   * {@link BCXReactionComponent} into a {@link BCXReaction} with proper identifiers and components.
+   * Converts a CDK {@link IReaction} and its mapping of {@link IAtomContainer} to {@link
+   * BCXReactionComponent} into a {@link BCXReaction} with proper identifiers and components.
    *
    * @param cdkReaction the CDK {@link IReaction} to convert
    * @param atomContainerBCXReactionComponentMap a mapping of atom containers to reaction components
    * @return a {@link BCXReaction} containing all reactants, products, and agents
    */
-  private BCXReaction createBcxReaction(IReaction cdkReaction, Map<IAtomContainer, BCXReactionComponent> atomContainerBCXReactionComponentMap) {
+  private BCXReaction createBcxReaction(
+      IReaction cdkReaction,
+      Map<IAtomContainer, BCXReactionComponent> atomContainerBCXReactionComponentMap) {
     BCXReaction reaction = new BCXReaction();
     reaction.setReactionSmiles(ChemicalUtils.createAbsoluteReactionSmiles(cdkReaction));
     reaction.setRinchi(ChemicalUtils.getRInChI(cdkReaction));
@@ -141,28 +142,30 @@ public class ReactionXtractor {
     for (IAtomContainer reactant : cdkReaction.getReactants()) {
       reaction.addReactant(atomContainerBCXReactionComponentMap.get(reactant));
     }
-    for(IAtomContainer product : cdkReaction.getProducts()) {
+    for (IAtomContainer product : cdkReaction.getProducts()) {
       reaction.addProduct(atomContainerBCXReactionComponentMap.get(product));
     }
-    for(IAtomContainer agent : cdkReaction.getAgents()) {
+    for (IAtomContainer agent : cdkReaction.getAgents()) {
       reaction.addAgent(atomContainerBCXReactionComponentMap.get(agent));
     }
     return reaction;
   }
 
   /**
-   * Converts a {@link CDFragment} and its associated {@link IAtomContainer} into a {@link BCXReactionComponent}.
-   * <p>
-   * This method attempts to generate InChI and InChIKey identifiers from the given atom container,
-   * and extracts the fragment's spatial bounds to populate the {@code ReactionComponent}.
-   * </p>
+   * Converts a {@link CDFragment} and its associated {@link IAtomContainer} into a {@link
+   * BCXReactionComponent}.
+   *
+   * <p>This method attempts to generate InChI and InChIKey identifiers from the given atom
+   * container, and extracts the fragment's spatial bounds to populate the {@code
+   * ReactionComponent}.
    *
    * @param fragment the {@code CDFragment} representing the source structure
    * @param atomContainer the corresponding CDK {@code IAtomContainer} for structure data
    * @return a {@link BCXReactionComponent} containing InChI information and layout bounds
    * @throws CDKException if InChI generation fails critically (non-recoverable)
    */
-  private BCXReactionComponent convertToReactionComponent(CDFragment fragment, IAtomContainer atomContainer) throws CDKException {
+  private BCXReactionComponent convertToReactionComponent(
+      CDFragment fragment, IAtomContainer atomContainer) throws CDKException {
     BCXReactionComponent component = new BCXReactionComponent();
     try {
       InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);

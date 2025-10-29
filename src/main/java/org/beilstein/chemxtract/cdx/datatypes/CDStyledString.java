@@ -24,9 +24,7 @@ package org.beilstein.chemxtract.cdx.datatypes;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class allows to store chunks of text with different text styles.
- */
+/** This class allows to store chunks of text with different text styles. */
 public class CDStyledString {
   /** Text chunks. */
   private List<CDXChunk> chunks = new ArrayList<>();
@@ -52,18 +50,20 @@ public class CDStyledString {
     return "StyledString:\"" + getText() + "\"";
   }
 
-  /**
-   * This class stores a chunk of text and additional style attributes.
-   */
+  /** This class stores a chunk of text and additional style attributes. */
   public static class CDXChunk {
     /** Text font. */
     private final CDFont font;
+
     /** Font size. */
     private final float fontSize;
+
     /** Font face. */
     private final CDFontFace fontType;
+
     /** Text color. */
     private final CDColor color;
+
     /** Text. */
     private final String text;
 

@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDCharSet{
+public enum CDCharSet {
   Unknown(null),
   EBCDICOEM(null),
   MSDOSUS("US-ASCII"),
@@ -55,7 +55,7 @@ public enum CDCharSet{
   UnicodeISO10646("UTF-8"),
   Win31EasternEuropean("windows-1250"),
   Win31Cyrillic("windows-1251"),
-  Win31Latin1(/*"ISO-8859-1"*/"windows-1252"),
+  Win31Latin1(/*"ISO-8859-1"*/ "windows-1252"),
   Win31Greek("ISO-8859-7"),
   Win31Turkish("ISO-8859-9"),
   Hebrew("windows-1255"),
@@ -64,7 +64,7 @@ public enum CDCharSet{
   Vietnamese("windows-1258"),
   KoreanJohab(null),
   MacRoman("x-MacRoman"),
-  MacJapanese(/*"x-MacJapanese"*/"Shift_JIS"),
+  MacJapanese(/*"x-MacJapanese"*/ "Shift_JIS"),
   MacTradChinese("x-IBM950"),
   MacKorean(null),
   MacArabic("x-MacArabic"),
@@ -108,5 +108,4 @@ public enum CDCharSet{
   public String getCharSet() {
     return charSet;
   }
-
 }

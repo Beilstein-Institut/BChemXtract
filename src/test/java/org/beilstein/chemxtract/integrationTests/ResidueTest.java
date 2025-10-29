@@ -21,13 +21,11 @@
  */
 package org.beilstein.chemxtract.integrationTests;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
@@ -53,7 +51,5 @@ public class ResidueTest {
     for (BCXSubstance substance : substances) {
       System.out.println("extracted: " + substance.getMolecularFormula());
     }
-
   }
-
 }

@@ -21,31 +21,29 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A named property that may be assigned to any ChemDraw object.
- */
+/** A named property that may be assigned to any ChemDraw object. */
 public class CDObjectTag extends CDObject {
   /** The type of the object tag. */
   private CDObjectTagType objectTagType;
+
   /** Whether the tag will be preserved when the document is saved. */
   private boolean persistent = true;
-  /**
-   * The angle (in radians) at which this tag is positioned (if positioned by angle).
-   */
+
+  /** The angle (in radians) at which this tag is positioned (if positioned by angle). */
   private float positioningAngle;
-  /**
-   * The offset by which this tag is positioned (if positioned by offset or absolute).
-   */
+
+  /** The offset by which this tag is positioned (if positioned by offset or absolute). */
   private CDPoint2D positioningOffset;
+
   /** A description of how the tag is positioned relative to its owner. */
   private CDPositioningType positioningType = CDPositioningType.Auto;
+
   /**
    * Whether placing the mouse over the object tag will cause other objects with matching tags also
    * to become highlighted.
@@ -135,5 +133,4 @@ public class CDObjectTag extends CDObject {
       text.accept(visitor);
     }
   }
-
 }

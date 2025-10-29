@@ -25,9 +25,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumClass;
 import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumXType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumYType;
 
-/**
- * This object stores an NMR, MS, IR or other types of spectrum. 
- */
+/** This object stores an NMR, MS, IR or other types of spectrum. */
 public class CDSpectrum extends CDObject {
   private double xSpacing;
   private double xLow;
@@ -125,5 +123,4 @@ public class CDSpectrum extends CDObject {
     visitor.visitSpectrum(this);
     super.accept(visitor);
   }
-
 }

@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.zip.DataFormatException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
@@ -74,15 +73,14 @@ import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 import org.beilstein.chemxtract.io.IOUtils;
 
 /**
- * Reader for ChemDraw CDX files. Converts a binary file into an in-memory 
- * tree of model objects.
+ * Reader for ChemDraw CDX files. Converts a binary file into an in-memory tree of model objects.
  */
 public class CDXReader {
   private static final Log logger = LogFactory.getLog(CDXReader.class);
 
   private RefManager refManager = new RefManager();
-  private Map<Integer,CDColor> colors = new HashMap<>();
-  private Map<Integer,CDFont> fonts = new HashMap<>();
+  private Map<Integer, CDColor> colors = new HashMap<>();
+  private Map<Integer, CDFont> fonts = new HashMap<>();
 
   protected static final boolean RIGID = false;
 
@@ -90,7 +88,7 @@ public class CDXReader {
 
   /**
    * This method reads a {@link CDDocument} from a {@link InputStream}.
-   * 
+   *
    * @param in {@link InputStream} from which the input are read
    * @return ChemDraw document instance
    * @throws IOException Occurs if the reader couldn't read the input from the {@link InputStream}
@@ -100,7 +98,7 @@ public class CDXReader {
     byte[] bytes = IOUtils.readBytes(in);
     CDXReader reader = new CDXReader();
     logger.debug("Create object tree");
-    CDXObject object = CDXUtils.readCDXDocument(bytes, new int[] { 0 });
+    CDXObject object = CDXUtils.readCDXDocument(bytes, new int[] {0});
 
     logger.debug("Create model tree");
     CDDocument document = reader.createDocumentObject(object);
@@ -690,7 +688,8 @@ public class CDXReader {
           node.setBondOrdering(property.getDataAsObjectRefArray(CDBond.class, refManager));
           break;
         case CDXProp_Node_Attachments:
-          node.setAttachedAtoms(property.getDataAsObjectRefArrayWithCounts(CDAtom.class, refManager));
+          node.setAttachedAtoms(
+              property.getDataAsObjectRefArrayWithCounts(CDAtom.class, refManager));
           break;
         case CDXProp_Atom_GenericNickname:
           node.setLabelText(property.getDataAsUnstyledString(fonts, colors));
@@ -779,7 +778,9 @@ public class CDXReader {
 
     populateChildren(root);
 
-    if (node.getNodeType() == CDNodeType.GenericNickname && node.getLabelText() == null && node.getText() != null) {
+    if (node.getNodeType() == CDNodeType.GenericNickname
+        && node.getLabelText() == null
+        && node.getText() != null) {
       node.setLabelText(node.getText().getText().getText());
     }
   }
@@ -874,7 +875,8 @@ public class CDXReader {
           bond.getSettings().setShowBondStereo(property.getDataAsBoolean());
           break;
         case CDXProp_Bond_CrossingBonds:
-          bond.setCrossingBonds(new HashSet<CDBond>(property.getDataAsObjectRefArray(CDBond.class, refManager)));
+          bond.setCrossingBonds(
+              new HashSet<CDBond>(property.getDataAsObjectRefArray(CDBond.class, refManager)));
           break;
         case CDXProp_Bond_ShowRxn:
           bond.getSettings().setShowBondReaction(property.getDataAsBoolean());
@@ -932,7 +934,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -1530,7 +1531,8 @@ public class CDXReader {
           bracketedGroup.setPolymerFlipType(readPolymerFlipTypeProperty(property));
           break;
         case CDXProp_BracketedObjects:
-          bracketedGroup.setBracketedObjects(property.getDataAsObjectRefArray(Object.class, refManager));
+          bracketedGroup.setBracketedObjects(
+              property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXProp_Bracket_RepeatCount:
           bracketedGroup.setRepeatCount(property.getDataAsFloat64());
@@ -1596,7 +1598,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -1634,7 +1635,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -2021,7 +2021,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -2108,7 +2107,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -2250,7 +2248,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -2266,7 +2263,8 @@ public class CDXReader {
       handleProperty(property);
       switch (property.getTag()) {
         case CDXProp_ReactionStep_Atom_Map:
-          reactionStep.setAtomMap(property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
+          reactionStep.setAtomMap(
+              property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
         case CDXProp_ReactionStep_Reactants:
           reactionStep.setReactants(property.getDataAsObjectRefArray(Object.class, refManager));
@@ -2281,16 +2279,20 @@ public class CDXReader {
           reactionStep.setArrows(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXProp_ReactionStep_ObjectsAboveArrow:
-          reactionStep.setObjectsAboveArrow(property.getDataAsObjectRefArray(Object.class, refManager));
+          reactionStep.setObjectsAboveArrow(
+              property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXProp_ReactionStep_ObjectsBelowArrow:
-          reactionStep.setObjectsBelowArrow(property.getDataAsObjectRefArray(Object.class, refManager));
+          reactionStep.setObjectsBelowArrow(
+              property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXProp_ReactionStep_Atom_Map_Manual:
-          reactionStep.setAtomMapManual(property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
+          reactionStep.setAtomMapManual(
+              property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
         case CDXProp_ReactionStep_Atom_Map_Auto:
-          reactionStep.setAtomMapAuto(property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
+          reactionStep.setAtomMapAuto(
+              property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
 
         default:
@@ -2326,7 +2328,6 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-
         default:
           handleMissingTag(property);
       }
@@ -2389,7 +2390,9 @@ public class CDXReader {
           namedAlternativeGroup.setColor(property.getDataAsColorRef(colors));
           break;
         case CDXProp_BackgroundColor:
-          namedAlternativeGroup.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
+          namedAlternativeGroup
+              .getSettings()
+              .setBackgroundColor(property.getDataAsColorRef(colors));
           break;
         case CDXProp_NamedAlternativeGroup_TextFrame:
           namedAlternativeGroup.setTextFrame(property.getDataAsRectangle());
@@ -2613,19 +2616,19 @@ public class CDXReader {
     }
 
     // work-around to fix wrong EMFs, which are WMFs
-//    if (picture.getEnhancedMetafile() != null) {
-//      try {
-//        new EmfMetafile(new ByteArrayInputStream(picture.getEnhancedMetafile()));
-//      } catch (Exception e) {
-//        try {
-//          new WmfMetafile(new ByteArrayInputStream(picture.getEnhancedMetafile()));
-//          picture.setWindowsMetafile(picture.getEnhancedMetafile());
-//          picture.setEnhancedMetafile(null);
-//        } catch (Exception e2) {
-//          // do nothing
-//        }
-//      }
-//    }
+    //    if (picture.getEnhancedMetafile() != null) {
+    //      try {
+    //        new EmfMetafile(new ByteArrayInputStream(picture.getEnhancedMetafile()));
+    //      } catch (Exception e) {
+    //        try {
+    //          new WmfMetafile(new ByteArrayInputStream(picture.getEnhancedMetafile()));
+    //          picture.setWindowsMetafile(picture.getEnhancedMetafile());
+    //          picture.setEnhancedMetafile(null);
+    //        } catch (Exception e2) {
+    //          // do nothing
+    //        }
+    //      }
+    //    }
 
     populateChildren(root);
   }
@@ -2822,7 +2825,6 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-
         default:
           handleMissingTag(object);
       }
@@ -2838,7 +2840,8 @@ public class CDXReader {
       handleProperty(property);
       switch (property.getTag()) {
         case CDXProp_BasisObjects:
-          chemicalProperty.setBasisObjects(property.getDataAsObjectRefArray(Object.class, refManager));
+          chemicalProperty.setBasisObjects(
+              property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXProp_ChemicalPropertyType:
           chemicalProperty.setType(property.getDataAsInt32());
@@ -2861,7 +2864,11 @@ public class CDXReader {
   private void populateChildren(CDXObject root) throws IOException {
     for (CDXObject object : root.getObjects()) {
       if (object.getInstance() == null) {
-        logger.warn("Omit object with tag 0x" + Integer.toHexString(object.getTag()) + " not recognized at " + getPositionAsString(object));
+        logger.warn(
+            "Omit object with tag 0x"
+                + Integer.toHexString(object.getTag())
+                + " not recognized at "
+                + getPositionAsString(object));
         continue;
       }
       switch (object.getTag()) {
@@ -2977,28 +2984,55 @@ public class CDXReader {
 
   private void handleCreation(String name, CDXObject object) {
     if (logger.isDebugEnabled()) {
-      logger.debug("create " + name + " object with id " + object.getId() + "(0x" + Integer.toHexString(object.getId()) + ") at " +
-              getPositionAsString(object));
+      logger.debug(
+          "create "
+              + name
+              + " object with id "
+              + object.getId()
+              + "(0x"
+              + Integer.toHexString(object.getId())
+              + ") at "
+              + getPositionAsString(object));
     }
   }
 
   private void handlePopulation(String name, CDXObject object) {
     if (logger.isDebugEnabled()) {
-      logger.debug("populate " + name + " object with id " + object.getId() + "(0x" + Integer.toHexString(object.getId()) + ") at " +
-              getPositionAsString(object));
+      logger.debug(
+          "populate "
+              + name
+              + " object with id "
+              + object.getId()
+              + "(0x"
+              + Integer.toHexString(object.getId())
+              + ") at "
+              + getPositionAsString(object));
     }
   }
 
   private void handleProperty(CDXProperty property) {
     if (logger.isDebugEnabled()) {
-      logger.debug("handle tag " + property.getTag() + " (0x" + Integer.toHexString(property.getTag()) + ") at " +
-              getPositionAsString(property) + " with length " + property.getLength() + "(0x" + Integer.toHexString(property.getLength()) +
-              ")");
+      logger.debug(
+          "handle tag "
+              + property.getTag()
+              + " (0x"
+              + Integer.toHexString(property.getTag())
+              + ") at "
+              + getPositionAsString(property)
+              + " with length "
+              + property.getLength()
+              + "(0x"
+              + Integer.toHexString(property.getLength())
+              + ")");
     }
   }
 
   private void handleMissingTag(CDXObject object) throws IOException {
-    String message = "Object with tag 0x" + Integer.toHexString(object.getTag()) + " not recognized at " + getPositionAsString(object);
+    String message =
+        "Object with tag 0x"
+            + Integer.toHexString(object.getTag())
+            + " not recognized at "
+            + getPositionAsString(object);
     if (RIGID) {
       throw new IOException(message);
     }
@@ -3006,12 +3040,16 @@ public class CDXReader {
   }
 
   private void handleMissingTag(CDXProperty property) throws IOException {
-    String message = "Property with tag 0x" + Integer.toHexString(property.getTag()) + " and with length " + property.getLength() +
-            " not recognized at " + getPositionAsString(property);
+    String message =
+        "Property with tag 0x"
+            + Integer.toHexString(property.getTag())
+            + " and with length "
+            + property.getLength()
+            + " not recognized at "
+            + getPositionAsString(property);
     if (RIGID) {
       throw new IOException(message);
     }
     logger.warn(message);
   }
-
 }

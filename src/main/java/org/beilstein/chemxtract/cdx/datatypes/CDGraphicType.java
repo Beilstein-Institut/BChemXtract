@@ -21,55 +21,54 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of graphical object.
- */
-public enum CDGraphicType{
+/** The type of graphical object. */
+public enum CDGraphicType {
   /** Undefined. */
   Undefined,
   /**
-   * Line. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present.
-   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.)
-   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
-   * represent the start and end of the line.
+   * Line. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present. {@link
+   * org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.) The two points
+   * stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the
+   * start and end of the line.
    */
   Line,
   /**
-   * Arc. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present.
-   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArcAngularSize()} should be present.
-   * {@link org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.) The
-   * two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
-   * represent the center and end of he arc.
+   * Arc. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getLineType()} should be present. {@link
+   * org.beilstein.chemxtract.cdx.CDGraphic#getArcAngularSize()} should be present. {@link
+   * org.beilstein.chemxtract.cdx.CDGraphic#getArrowType()} may also be present.) The two points
+   * stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the
+   * center and end of he arc.
    */
   Arc,
   /**
-   * Rectangle. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getRectangleType()} should be present)
-   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent
-   * two opposing corners of the rectangle.
+   * Rectangle. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getRectangleType()} should be
+   * present) The two points stored within the {@link
+   * org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent two opposing corners of the
+   * rectangle.
    */
   Rectangle,
   /**
-   * Oval. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOvalType()} should be present) The two points
-   * stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the center and
-   * semimajor end of the oval.
+   * Oval. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOvalType()} should be present) The two
+   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent
+   * the center and semimajor end of the oval.
    */
   Oval,
   /**
-   * Orbital. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOrbitalType()} should be present) The two
-   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the center
-   * and end of the orbital.
+   * Orbital. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getOrbitalType()} should be present)
+   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
+   * represent the center and end of the orbital.
    */
   Orbital,
   /**
-   * Bracket. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getBracketType()} should be present) The two
-   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the two
-   * ends of the bracket.
+   * Bracket. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getBracketType()} should be present)
+   * The two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
+   * represent the two ends of the bracket.
    */
   Bracket,
   /**
-   * Symbol. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getSymbolType()} should be present) The two
-   * points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()} represent the
-   * center of the symbol and a second point indicating the symbol's size.
+   * Symbol. ({@link org.beilstein.chemxtract.cdx.CDGraphic#getSymbolType()} should be present) The
+   * two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
+   * represent the center of the symbol and a second point indicating the symbol's size.
    */
   Symbol;
 }

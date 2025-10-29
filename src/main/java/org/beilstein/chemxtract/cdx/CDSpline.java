@@ -21,26 +21,34 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
-
 import java.util.List;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
 
-/**
- * This object represents a Bezier curve.
- */
+/** This object represents a Bezier curve. */
 public class CDSpline extends CDObject {
   /** The position of the arrowhead at the end of the spline. */
   private CDArrowHeadPositionType arrowHeadPositionAtEnd = CDArrowHeadPositionType.Unspecified;
+
   /** The position of the arrowhead at the start of the spline. */
   private CDArrowHeadPositionType arrowHeadPositionAtStart = CDArrowHeadPositionType.Unspecified;
+
   /** The type of the arrowhead, for splines with arrowheads. */
   private CDArrowHeadType arrowHeadType = CDArrowHeadType.Solid;
+
   /** The fill type of the spline. */
   private CDFillType fillType = CDFillType.Unspecified;
+
   /** The line type of the spline. */
   private CDLineType lineType = new CDLineType();
+
   /** The points used to describe the spline. */
   private List<CDPoint2D> points2D;
+
   private List<CDPoint3D> points3D;
 
   private boolean closed = false;
@@ -114,5 +122,4 @@ public class CDSpline extends CDObject {
     visitor.visitCurve(this);
     super.accept(visitor);
   }
-
 }

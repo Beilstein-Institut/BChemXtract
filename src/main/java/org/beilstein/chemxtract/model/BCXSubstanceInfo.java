@@ -25,27 +25,19 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * A minimal statistics object about substance extraction. May exist in the scope
- * of one CDX scheme.
+ * A minimal statistics object about substance extraction. May exist in the scope of one CDX scheme.
  */
 public class BCXSubstanceInfo implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = 3821837888603010882L;
+  @Serial private static final long serialVersionUID = 3821837888603010882L;
 
-  /**
-   * Number of fragments in CDX
-   */
+  /** Number of fragments in CDX */
   private int noFragments;
 
-  /**
-   * Number of extractable fragments with Inchi
-   */
+  /** Number of extractable fragments with Inchi */
   private int noInchis;
 
-  /**
-   * Number of distinct Inchis, i.e. substances
-   */
+  /** Number of distinct Inchis, i.e. substances */
   private int noSubstances;
 
   public BCXSubstanceInfo() {
@@ -85,7 +77,12 @@ public class BCXSubstanceInfo implements Serializable {
 
   @Override
   public String toString() {
-    return "BCXSubstanceInfo [noFragments=" + noFragments + ", noInchis=" + noInchis + ", noSubstances=" + noSubstances + "]";
+    return "BCXSubstanceInfo [noFragments="
+        + noFragments
+        + ", noInchis="
+        + noInchis
+        + ", noSubstances="
+        + noSubstances
+        + "]";
   }
-
 }

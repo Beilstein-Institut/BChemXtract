@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * An RGB color.
- */
+/** An RGB color. */
 public class CDColor {
 
   private static final float DELTA = 0.001f;
@@ -114,5 +112,4 @@ public class CDColor {
   public String toString() {
     return "Color[red=" + myRed + " green=" + myGreen + " blue=" + myBlue + "]";
   }
-
 }

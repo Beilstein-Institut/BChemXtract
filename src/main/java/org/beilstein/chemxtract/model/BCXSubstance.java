@@ -21,65 +21,46 @@
  */
 package org.beilstein.chemxtract.model;
 
-import org.openscience.cdk.interfaces.IAtomContainer;
-
 import java.io.Serializable;
 import java.util.*;
+import org.openscience.cdk.interfaces.IAtomContainer;
 
-/**
- * A substance with structure and Inchi that could be extracted from a CDX file.
- */
+/** A substance with structure and Inchi that could be extracted from a CDX file. */
 public class BCXSubstance implements Serializable {
 
   private static final long serialVersionUID = -7849256075801495625L;
 
-  /**
-   * Inchi
-   */
+  /** Inchi */
   private String inchi;
 
-  /**
-   * Business key
-   */
+  /** Business key */
   private String inchiKey;
 
-  /**
-   * Canonical smiles
-   */
+  /** Canonical smiles */
   private String smiles;
 
-  /**
-   * Extended smiles with coordinates
-   */
+  /** Extended smiles with coordinates */
   private String extendedSmiles;
 
-  /**
-   * Generated IUPAC name
-   */
+  /** Generated IUPAC name */
   private String iupacName;
 
-  /**
-   * Generated mol formula
-   */
+  /** Generated mol formula */
   private String molecularFormula;
 
-  /**
-   * Aux info collected during Inchi generation
-   */
+  /** Aux info collected during Inchi generation */
   private String auxInfo;
 
   private IAtomContainer atomContainer;
 
-  /**
-   * The occurrences of the substance within the manuscript 
-   */
+  /** The occurrences of the substance within the manuscript */
   private Set<BCXSubstanceOccurrence> occurrences = new HashSet<BCXSubstanceOccurrence>();
 
   /**
-   * The abbreviations used in this substance. A map of String to String with the SMILES being the key
-   * and the text label of the abbreviation being the value
+   * The abbreviations used in this substance. A map of String to String with the SMILES being the
+   * key and the text label of the abbreviation being the value
    */
-  private Map<String,String> abbreviations = new HashMap<String,String>();
+  private Map<String, String> abbreviations = new HashMap<String, String>();
 
   public BCXSubstance() {
     super();
@@ -158,11 +139,11 @@ public class BCXSubstance implements Serializable {
     this.occurrences.add(occurrence);
   }
 
-  public Map<String,String> getAbbreviations() {
+  public Map<String, String> getAbbreviations() {
     return abbreviations;
   }
 
-  public void setAbbreviations(Map<String,String> abbreviations) {
+  public void setAbbreviations(Map<String, String> abbreviations) {
     this.abbreviations = abbreviations;
   }
 

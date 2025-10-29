@@ -21,6 +21,12 @@
  */
 package org.beilstein.chemxtract.converter;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -37,23 +43,17 @@ import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.IChemObjectReader;
 import org.openscience.cdk.tools.periodictable.PeriodicTable;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 /**
- * Converts {@link CDAtom} instances (e.g. from ChemDraw/CDX or CDXML) into CDK {@link IAtom} objects.
- * <p>
- * The {@code AtomConverter} handles various ChemDraw node types such as elements,
- * pseudo atoms, external connection points, and chemical abbreviations.
- * It also takes care of isotope configuration (including deuterium and tritium),
- * coordinate conversion between ChemDraw and CDK coordinate systems.
- * </p>
+ * Converts {@link CDAtom} instances (e.g. from ChemDraw/CDX or CDXML) into CDK {@link IAtom}
+ * objects.
  *
- * <p><b>Usage example:</b></p>
+ * <p>The {@code AtomConverter} handles various ChemDraw node types such as elements, pseudo atoms,
+ * external connection points, and chemical abbreviations. It also takes care of isotope
+ * configuration (including deuterium and tritium), coordinate conversion between ChemDraw and CDK
+ * coordinate systems.
+ *
+ * <p><b>Usage example:</b>
+ *
  * <pre>{@code
  * IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
  * AtomConverter converter = new AtomConverter(builder);
@@ -68,12 +68,11 @@ public class AtomConverter {
   private final Map<CDAtom, IAtom> atomMap;
 
   /**
-   * Constructs an {@code AtomConverter} with the given {@link IChemObjectBuilder}
-   * and mode.
+   * Constructs an {@code AtomConverter} with the given {@link IChemObjectBuilder} and mode.
    *
    * @param builder the CDK {@link IChemObjectBuilder} used to instantiate atoms
-   * @param mode    the parsing mode determining how strictly to interpret atom symbols;
-   *                see {@link IChemObjectReader.Mode}
+   * @param mode the parsing mode determining how strictly to interpret atom symbols; see {@link
+   *     IChemObjectReader.Mode}
    */
   public AtomConverter(IChemObjectBuilder builder, IChemObjectReader.Mode mode) {
     this.builder = builder;
@@ -82,8 +81,8 @@ public class AtomConverter {
   }
 
   /**
-   * Constructs an {@code AtomConverter} using the given {@link IChemObjectBuilder}
-   * and defaulting to {@link IChemObjectReader.Mode#RELAXED}.
+   * Constructs an {@code AtomConverter} using the given {@link IChemObjectBuilder} and defaulting
+   * to {@link IChemObjectReader.Mode#RELAXED}.
    *
    * @param builder the CDK {@link IChemObjectBuilder} used to instantiate atoms
    */
@@ -93,17 +92,15 @@ public class AtomConverter {
 
   /**
    * Converts a {@link CDAtom} to a CDK {@link IAtom}.
-   * <p>
-   * This method determines the correct atom type ({@link IAtom} or {@link IPseudoAtom})
-   * based on the ChemDraw node type and label, sets its coordinates, charge,
-   * and isotope information. Deuterium (D) and tritium (T) are automatically
-   * converted to hydrogen atoms with the appropriate mass number.
-   * </p>
+   *
+   * <p>This method determines the correct atom type ({@link IAtom} or {@link IPseudoAtom}) based on
+   * the ChemDraw node type and label, sets its coordinates, charge, and isotope information.
+   * Deuterium (D) and tritium (T) are automatically converted to hydrogen atoms with the
+   * appropriate mass number.
    *
    * @param cdAtom the source ChemDraw atom to convert
    * @return the created {@link IAtom} instance
-   * @throws CDKException if atom creation fails or invalid symbols are encountered
-   *                      in strict mode
+   * @throws CDKException if atom creation fails or invalid symbols are encountered in strict mode
    */
   public IAtom convert(CDAtom cdAtom) throws CDKException {
     String atomSymbol = PeriodicTable.getSymbol(cdAtom.getElementNumber());
@@ -139,14 +136,13 @@ public class AtomConverter {
 
   /**
    * Creates a new {@link IAtom} based on the provided atomic symbol and label.
-   * <p>
-   * Handles isotopic hydrogen (D and T), unknown symbols, and pseudo-atoms.
-   * In {@link IChemObjectReader.Mode#STRICT} mode, encountering an invalid symbol
-   * results in a {@link CDKException}.
-   * </p>
+   *
+   * <p>Handles isotopic hydrogen (D and T), unknown symbols, and pseudo-atoms. In {@link
+   * IChemObjectReader.Mode#STRICT} mode, encountering an invalid symbol results in a {@link
+   * CDKException}.
    *
    * @param symbol the chemical symbol
-   * @param label  the textual label possibly representing isotopes or abbreviations
+   * @param label the textual label possibly representing isotopes or abbreviations
    * @return the created {@link IAtom} or {@link IPseudoAtom} if the symbol is invalid
    * @throws CDKException if strict mode is enabled and an invalid symbol is encountered
    */
@@ -171,8 +167,10 @@ public class AtomConverter {
         return atom;
       }
     } catch (IllegalArgumentException | IOException e) {
-      logger.error("Unexpected behaviour in creating an atom with symbol: " + symbol +
-              ". PseudoAtom will be created.");
+      logger.error(
+          "Unexpected behaviour in creating an atom with symbol: "
+              + symbol
+              + ". PseudoAtom will be created.");
       logger.error(e.getMessage());
     }
     logger.info("Unknown symbol, PseudoAtom created for " + symbol + ".");
@@ -184,15 +182,13 @@ public class AtomConverter {
     return atom;
   }
 
-
   /**
    * Sets 2D or 3D coordinates of the CDK atom based on the source {@link CDAtom}.
-   * <p>
-   * Note: ChemDraw uses an inverted Y-axis compared to CDK,
-   * so the Y coordinate is negated during conversion.
-   * </p>
    *
-   * @param atom   the target {@link IAtom}
+   * <p>Note: ChemDraw uses an inverted Y-axis compared to CDK, so the Y coordinate is negated
+   * during conversion.
+   *
+   * @param atom the target {@link IAtom}
    * @param source the source {@link CDAtom} containing position data
    */
   private void setCoordinates(IAtom atom, CDAtom source) {
@@ -216,8 +212,8 @@ public class AtomConverter {
   }
 
   /**
-   * Checks if the given symbol represents a hydrogen isotope
-   * (deuterium {@code "D"} or tritium {@code "T"}).
+   * Checks if the given symbol represents a hydrogen isotope (deuterium {@code "D"} or tritium
+   * {@code "T"}).
    *
    * @param symbol the atom label or symbol
    * @return {@code true} if the symbol is {@code "D"} or {@code "T"}; otherwise {@code false}
@@ -226,15 +222,14 @@ public class AtomConverter {
     return "D".equals(symbol) || "T".equals(symbol);
   }
 
-
   /**
-  * Configures an {@link IAtom} with the given isotope information using
-  * {@link Isotopes} from the CDK database.
-  *
-  * @param atom        the atom to configure
-  * @param massNumber  the isotope mass number
-  * @throws IOException if the isotope configuration cannot be performed
-  */
+   * Configures an {@link IAtom} with the given isotope information using {@link Isotopes} from the
+   * CDK database.
+   *
+   * @param atom the atom to configure
+   * @param massNumber the isotope mass number
+   * @throws IOException if the isotope configuration cannot be performed
+   */
   void configureIsotope(IAtom atom, int massNumber) throws IOException {
     IIsotope iso = new Isotope(atom.getSymbol(), massNumber);
     Isotopes isofac = Isotopes.getInstance();
@@ -242,15 +237,15 @@ public class AtomConverter {
   }
 
   /**
-   * Sets the formal charge of the given atom, clamping the value to the
-   * range of a signed byte ({@link Byte#MIN_VALUE} … {@link Byte#MAX_VALUE}).
+   * Sets the formal charge of the given atom, clamping the value to the range of a signed byte
+   * ({@link Byte#MIN_VALUE} … {@link Byte#MAX_VALUE}).
    *
-   * @param atom   the atom whose formal charge is to be set
-   * @param charge the desired formal-charge value; will be clamped if it
-   *               lies outside the byte range
+   * @param atom the atom whose formal charge is to be set
+   * @param charge the desired formal-charge value; will be clamped if it lies outside the byte
+   *     range
    */
   private void setCharge(IAtom atom, int charge) {
-    if(charge < Byte.MIN_VALUE){
+    if (charge < Byte.MIN_VALUE) {
       atom.setFormalCharge((int) Byte.MIN_VALUE);
     } else if (charge > Byte.MAX_VALUE) {
       atom.setFormalCharge((int) Byte.MAX_VALUE);
@@ -267,33 +262,34 @@ public class AtomConverter {
    */
   private String resolveTextLabel(CDAtom cdAtom) {
     return Optional.ofNullable(cdAtom.getText())
-            .map(CDText::getText)
-            .map(CDStyledString::getText)
-            .orElseGet(() ->
-                    Optional.ofNullable(cdAtom.getLabelText())
-                            .orElse(PeriodicTable.getSymbol(cdAtom.getElementNumber()))
-            );
+        .map(CDText::getText)
+        .map(CDStyledString::getText)
+        .orElseGet(
+            () ->
+                Optional.ofNullable(cdAtom.getLabelText())
+                    .orElse(PeriodicTable.getSymbol(cdAtom.getElementNumber())));
   }
 
   /**
-   * Determines whether the given {@link CDAtom} represents a ChemDraw abbreviation
-   * or unrecognized label, based on its {@code chemicalWarning} property.
+   * Determines whether the given {@link CDAtom} represents a ChemDraw abbreviation or unrecognized
+   * label, based on its {@code chemicalWarning} property.
    *
    * @param cdAtom the source atom
-   * @return {@code true} if ChemDraw indicated the label cannot be interpreted;
-   *         otherwise {@code false}
+   * @return {@code true} if ChemDraw indicated the label cannot be interpreted; otherwise {@code
+   *     false}
    */
   private boolean isAbbreviation(CDAtom cdAtom) {
     return Optional.ofNullable(cdAtom.getChemicalWarning())
-            .map("ChemDraw can't interpret this label."::equals)
-            .orElseGet(() -> false);
+        .map("ChemDraw can't interpret this label."::equals)
+        .orElseGet(() -> false);
   }
 
   /**
-   * Returns the internal mapping between source {@link CDAtom} and created
-   * {@link IAtom}.
+   * Returns the internal mapping between source {@link CDAtom} and created {@link IAtom}.
    *
    * @return an unmodifiable view of the atom map
    */
-  public Map<CDAtom, IAtom> getAtomMap() { return atomMap; }
+  public Map<CDAtom, IAtom> getAtomMap() {
+    return atomMap;
+  }
 }

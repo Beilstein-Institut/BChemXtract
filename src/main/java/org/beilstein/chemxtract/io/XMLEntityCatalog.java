@@ -21,12 +21,6 @@
  */
 package org.beilstein.chemxtract.io;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +28,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * This class represents a catalog for XML entities, which is used for a XML parser to map System
@@ -42,12 +41,12 @@ import java.util.Map.Entry;
 public class XMLEntityCatalog implements EntityResolver {
   private static final Log logger = LogFactory.getLog(XMLEntityCatalog.class);
 
-  private final Map<String,String> publicIdURLs = new HashMap<>();
-  private final Map<String,String> systemIdURLs = new HashMap<>();
+  private final Map<String, String> publicIdURLs = new HashMap<>();
+  private final Map<String, String> systemIdURLs = new HashMap<>();
 
   /**
    * Add an entry for a Public ID.
-   * 
+   *
    * @param publicId Public ID
    * @param url URL
    */
@@ -57,7 +56,7 @@ public class XMLEntityCatalog implements EntityResolver {
 
   /**
    * Add an entry for a System ID
-   * 
+   *
    * @param systemId System ID
    * @param url URL
    */
@@ -69,7 +68,8 @@ public class XMLEntityCatalog implements EntityResolver {
    * @see org.xml.sax.EntityResolver#resolveEntity(java.lang.String, java.lang.String)
    */
   @Override
-  public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+  public InputSource resolveEntity(String publicId, String systemId)
+      throws SAXException, IOException {
     logger.debug("Resolving input source for public id:" + publicId + " and system id:" + systemId);
 
     // resolve public id or system id to URL
@@ -78,7 +78,7 @@ public class XMLEntityCatalog implements EntityResolver {
       url = systemIdURLs.get(systemId);
     }
     if (url == null && systemId != null && systemId.length() > 0) {
-      for (Entry<String,String> entry : systemIdURLs.entrySet()) {
+      for (Entry<String, String> entry : systemIdURLs.entrySet()) {
         if (entry.getKey().startsWith("*") && systemId.endsWith(entry.getKey().substring(1))) {
           url = entry.getValue();
           break;

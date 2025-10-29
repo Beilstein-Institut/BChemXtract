@@ -21,17 +21,16 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSequenceType;
 import org.beilstein.chemxtract.utils.Definitions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 /**
- * A container with chemical semantics. Usually represents a 
- * chemical substance and contains atoms and bonds.
+ * A container with chemical semantics. Usually represents a chemical substance and contains atoms
+ * and bonds.
  */
 public class CDFragment extends CDObject {
   private List<CDAtom> atoms = new ArrayList<>();
@@ -41,20 +40,32 @@ public class CDFragment extends CDObject {
   private List<CDText> texts = new ArrayList<>();
   private List<CDArrow> arrows = new ArrayList<>();
   private List<CDColoredMolecularArea> coloredMolecularAreas = new ArrayList<>();
+
   /** Indicates whether the fragment is a racemic mixture. */
   private boolean racemic = false;
+
   /** Indicates whether the stereochemistry is absolute. */
   private boolean absolute = false;
+
   /** Indicates whether the stereochemistry is relative. */
   private boolean relative = false;
-  /** The chemical formula. It is not disclosed by CambridgeSoft how this is encoded. Consequently,
-   the byte values are stored. */
+
+  /**
+   * The chemical formula. It is not disclosed by CambridgeSoft how this is encoded. Consequently,
+   * the byte values are stored.
+   */
   private byte[] formula;
+
   /** Molecular weight. */
   private double weight;
+
   /** An ordered list of attachment points within a fragment. */
   private List<CDAtom> connectionOrder = new ArrayList<>();
-  /** This property is not documented in the CambridgeSoft documentation; its meaning is currently, unkown. */
+
+  /**
+   * This property is not documented in the CambridgeSoft documentation; its meaning is currently,
+   * unkown.
+   */
   private CDSequenceType sequenceType = CDSequenceType.Unknown;
 
   public List<CDAtom> getAtoms() {
@@ -195,33 +206,35 @@ public class CDFragment extends CDObject {
 
   public boolean hasRGroup() {
     return atoms.stream()
-            .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
-            .filter(Objects::nonNull)
-            .anyMatch(text -> Definitions.RGROUP_LABEL_PATTERN.matcher(text).find());
+        .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
+        .filter(Objects::nonNull)
+        .anyMatch(text -> Definitions.RGROUP_LABEL_PATTERN.matcher(text).find());
   }
 
   public List<String> getRGroups() {
     return atoms.stream()
-            .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
-            .filter(Objects::nonNull)
-            .filter(text -> Definitions.RGROUP_PATTERN.matcher(text).find())
-            .toList();
+        .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
+        .filter(Objects::nonNull)
+        .filter(text -> Definitions.RGROUP_PATTERN.matcher(text).find())
+        .toList();
   }
 
   /**
    * Checks if fragment is valid.
    *
-   * @return {@code true} if fragment is valid (i.e., contains at least two atoms), otherwise {@code false}.
+   * @return {@code true} if fragment is valid (i.e., contains at least two atoms), otherwise {@code
+   *     false}.
    */
   public boolean isValid() {
-    return this.atoms.size() >= 2 ||
-            this.atoms.stream().anyMatch(a ->
-                    (a.getNodeType() == CDNodeType.Element ||
-                      a.getNodeType() == CDNodeType.GenericNickname ||
-                      a.getNodeType() == CDNodeType.Fragment ||
-                      a.getNodeType() == CDNodeType.Nickname ||
-                      a.getNodeType() == CDNodeType.AnonymousAlternativeGroup) &&
-                            a.getChemicalWarning() == null
-            );
+    return this.atoms.size() >= 2
+        || this.atoms.stream()
+            .anyMatch(
+                a ->
+                    (a.getNodeType() == CDNodeType.Element
+                            || a.getNodeType() == CDNodeType.GenericNickname
+                            || a.getNodeType() == CDNodeType.Fragment
+                            || a.getNodeType() == CDNodeType.Nickname
+                            || a.getNodeType() == CDNodeType.AnonymousAlternativeGroup)
+                        && a.getChemicalWarning() == null);
   }
 }

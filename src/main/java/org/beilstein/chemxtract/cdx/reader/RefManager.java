@@ -21,20 +21,17 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-/**
- * Object reference manger, used by {@link CDXReader} and {@link CDXMLReader}.
- */
+/** Object reference manger, used by {@link CDXReader} and {@link CDXMLReader}. */
 public class RefManager {
   private static final Log logger = LogFactory.getLog(RefManager.class);
 
-  private Map<Integer,Object> references = new HashMap<>();
+  private Map<Integer, Object> references = new HashMap<>();
 
   @SuppressWarnings("unchecked")
   public <T> T getObjectRef(int id, Class<T> clazz, boolean rigid) throws IOException {
@@ -43,7 +40,12 @@ public class RefManager {
     }
     Object object = references.get(id);
     if (object == null) {
-      String message = "Object for id " + Integer.toHexString(id) + " and class " + clazz.getName() + " not found";
+      String message =
+          "Object for id "
+              + Integer.toHexString(id)
+              + " and class "
+              + clazz.getName()
+              + " not found";
 
       if (rigid) {
         throw new IOException(message);
@@ -60,8 +62,13 @@ public class RefManager {
       object = container.next;
     }
     if (!clazz.isAssignableFrom(object.getClass())) {
-      String message = "Object with id 0x" + Integer.toHexString(id) + " is not instance of " + clazz.getName() + " instead instance of " +
-              object.getClass().getName();
+      String message =
+          "Object with id 0x"
+              + Integer.toHexString(id)
+              + " is not instance of "
+              + clazz.getName()
+              + " instead instance of "
+              + object.getClass().getName();
 
       if (rigid) {
         throw new IOException(message);
@@ -78,7 +85,8 @@ public class RefManager {
         if (!(references.get(id) instanceof ReferenceContainer)) {
           references.put(id, new ReferenceContainer(references.get(id), null));
         }
-        references.put(id, new ReferenceContainer(reference, (ReferenceContainer) references.get(id)));
+        references.put(
+            id, new ReferenceContainer(reference, (ReferenceContainer) references.get(id)));
       } else {
         references.put(id, reference);
       }
@@ -94,5 +102,4 @@ public class RefManager {
       this.next = next;
     }
   }
-
 }

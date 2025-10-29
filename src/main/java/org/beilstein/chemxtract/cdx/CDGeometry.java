@@ -21,18 +21,17 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDGeometryType;
 
-import java.util.List;
-
-/**
- * A geometry relationship between several objects.
- */
+/** A geometry relationship between several objects. */
 public class CDGeometry extends CDObject {
   /** The objects used to define this geometry. */
   private List<Object> basisObjects;
+
   /** The type of the geometry. */
   private CDGeometryType geometricType = CDGeometryType.Undefined;
+
   /** The the value (if any) associated with this geometry. */
   private double relationValue;
 
@@ -84,5 +83,4 @@ public class CDGeometry extends CDObject {
     visitor.visitGeometry(this);
     super.accept(visitor);
   }
-
 }

@@ -21,29 +21,33 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.CDColor;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 
-/**
- * Abstract class for all drawable ChemDraw objects.
- */
+/** Abstract class for all drawable ChemDraw objects. */
 public abstract class CDObject {
   /** The object's object tags. */
   private List<CDObjectTag> objectTags = new ArrayList<>();
+
   /** The relative back-to-front ordering of the object. */
   private int zOrder;
+
   /** Whether chemical warnings are ignored for this object. */
   private boolean ignoreWarnings = false;
+
   /** The chemical warning string for this object. */
   private String chemicalWarning;
+
   /** Whether the ChemDraw object is visible. */
   private boolean visible = true;
+
   /** The rectangle bounding the object. */
   private CDRectangle bounds;
+
   /** The color of the ChemDraw object. */
   private CDColor color;
+
   /** The settings object. */
   private final CDSettings settings = new CDSettings();
 

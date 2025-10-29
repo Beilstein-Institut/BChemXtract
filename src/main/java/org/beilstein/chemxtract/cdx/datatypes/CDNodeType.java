@@ -21,36 +21,30 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of a node object.
- */
-public enum CDNodeType{
-  /**
-   * A node of unspecified type. 
-   */
+/** The type of a node object. */
+public enum CDNodeType {
+  /** A node of unspecified type. */
   Unspecified,
   /**
    * A node consisting either of one chemical element or of one heavy element and attached
-   * hydrogens. 
+   * hydrogens.
    */
   Element,
-  /**
-   * An element list node (e.g. [O,S]) representing a node with alternative elements. 
-   */
+  /** An element list node (e.g. [O,S]) representing a node with alternative elements. */
   ElementList,
   /**
    * A special type of element list node representing a group of elements of a common attribute as a
-   * nickname instead of representing each element in a list. 
+   * nickname instead of representing each element in a list.
    */
   ElementListNickname,
   /**
    * A molecular fragment represented by a single symbol, such as Ph. For example, Ph commonly
-   * represents a monosubstituted phenyl ring, C6H5. 
+   * represents a monosubstituted phenyl ring, C6H5.
    */
   Nickname,
   /**
    * An interpretable label, such as CH(CH<sub>2</sub>OH)<sub>2</sub>, which may include elements,
-   * nicknames, or named alternative groups. 
+   * nicknames, or named alternative groups.
    */
   Fragment,
   /**
@@ -58,35 +52,27 @@ public enum CDNodeType{
    * isomers.
    */
   Formula,
-  /**
-   * A large or infinite set of alternative fragments, which may be defined by example. 
-   */
+  /** A large or infinite set of alternative fragments, which may be defined by example. */
   GenericNickname,
   /**
    * A set of alternative fragments defined by enumeration, such as CH<sub>3</sub>,
-   * CH<sub>2</sub>OH, Ph. 
+   * CH<sub>2</sub>OH, Ph.
    */
   AnonymousAlternativeGroup,
-  /**
-   * A set of fragments grouped together and given a name. 
-   */
+  /** A set of fragments grouped together and given a name. */
   NamedAlternativeGroup,
-  /**
-   * The endpoint of a bonding to a set of atoms, such as in p-allyl and p-aryl bonding. 
-   */
+  /** The endpoint of a bonding to a set of atoms, such as in p-allyl and p-aryl bonding. */
   MultiAttachment,
-  /**
-   * A node representing alternative positional isomers. 
-   */
+  /** A node representing alternative positional isomers. */
   VariableAttachment,
   /**
    * An external connection point node is used in defining fragments for fragment nicknames and
-   * named alternative groups. 
+   * named alternative groups.
    */
   ExternalConnectionPoint,
   /**
    * A node containing a single element or generic nickname, repeated some number of times in a
-   * chain, as in [CH2]1-5 (which indicates an alkyl chain of at most 5 carbons). 
+   * chain, as in [CH2]1-5 (which indicates an alkyl chain of at most 5 carbons).
    */
   LinkNode;
 }

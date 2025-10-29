@@ -24,9 +24,7 @@ package org.beilstein.chemxtract.cdx;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A table that is made up of several page objects (the cell content).
- */
+/** A table that is made up of several page objects (the cell content). */
 public class CDTable extends CDObject {
   private List<CDPage> pages = new ArrayList<>();
 
@@ -46,5 +44,4 @@ public class CDTable extends CDObject {
     }
     super.accept(visitor);
   }
-
 }

@@ -21,32 +21,37 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.beilstein.chemxtract.cdx.datatypes.*;
 
 /**
- * This object represents a graphical object without chemical meaning, like
- * a line, spline, circle or box.
+ * This object represents a graphical object without chemical meaning, like a line, spline, circle
+ * or box.
  */
 public class CDGraphic extends CDObject {
   /** The overall type of the graphic. */
   private CDGraphicType graphicType = CDGraphicType.Undefined;
+
   /** The line type of the graphics that are lines. */
   private CDLineType lineType = new CDLineType();
+
   /** The end point of the major axis of the object. */
   private CDPoint3D majorAxisEnd3D;
+
   /** The end point of the minor axis of the object. */
   private CDPoint3D minorAxisEnd3D;
+
   /** The orbital type of the graphics that are orbital. */
   private CDOrbitalType orbitalType;
+
   /** The oval type of the graphics that are ovals. */
   private CDOvalType ovalType = new CDOvalType();
+
   /** The rectangle type of the graphics that are rectangles. */
   private CDRectangleType rectangleType = new CDRectangleType();
 
-  private Map<String,Object> represents = new HashMap<>();
+  private Map<String, Object> represents = new HashMap<>();
   private CDObject supersededBy = null;
   private CDPoint3D head3D;
   private CDPoint3D tail3D;
@@ -63,19 +68,20 @@ public class CDGraphic extends CDObject {
 
   private int fadePercent = 100;
 
-  // curve 
+  // curve
   private CDFillType fillType;
 
   /** The size of the object's shadow. */
   private float shadowSize;
+
   /** The radius of the rounded corner of a rounded rectangle. */
   private float cornerRadius;
 
-  public Map<String,Object> getRepresents() {
+  public Map<String, Object> getRepresents() {
     return represents;
   }
 
-  public void setRepresents(Map<String,Object> represents) {
+  public void setRepresents(Map<String, Object> represents) {
     this.represents = represents;
   }
 

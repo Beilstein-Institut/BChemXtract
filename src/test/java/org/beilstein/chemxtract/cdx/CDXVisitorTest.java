@@ -27,17 +27,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.reader.CDXMLReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Implements an object "visiting" all CD objects within the tree. Each visited object accepts the visitor
- * and invokes its corresponding method. Depending on what the visitor's subclass (this) overrides,
- * the visited object may change state or add itself, therefore presenting an alternative to recursively
- * and actively traversing the tree.
+ * Implements an object "visiting" all CD objects within the tree. Each visited object accepts the
+ * visitor and invokes its corresponding method. Depending on what the visitor's subclass (this)
+ * overrides, the visited object may change state or add itself, therefore presenting an alternative
+ * to recursively and actively traversing the tree.
  */
 public class CDXVisitorTest extends CDVisitor {
 

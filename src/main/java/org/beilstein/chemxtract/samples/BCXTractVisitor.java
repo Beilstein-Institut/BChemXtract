@@ -24,20 +24,17 @@ package org.beilstein.chemxtract.samples;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 
-/**
- * A simple showcase for a visitor. Prints out statistics about atoms.
- */
+/** A simple showcase for a visitor. Prints out statistics about atoms. */
 public class BCXTractVisitor extends CDVisitor {
 
   private int visitedAtoms;
-  
+
   public static void main(String[] args) throws Exception {
     if (args.length != 1) {
       System.err.println("Input CDX file must be given as argument.");
@@ -62,8 +59,7 @@ public class BCXTractVisitor extends CDVisitor {
       CDPage page = pages.get(0);
       page.accept(this);
       System.out.println("\nVisited " + visitedAtoms + " atoms in total.");
-    }
-    else {
+    } else {
       System.out.println("Nothing to do.");
     }
   }
@@ -73,8 +69,8 @@ public class BCXTractVisitor extends CDVisitor {
     System.out.println("\nAtom\n=======================");
     System.out.println(" Element#: " + atom.getElementNumber());
     System.out.println(" Charge  : " + atom.getCharge());
-    System.out.println(" Text    : " + (atom.getText() == null ? "" : atom.getText().getText().getText()));
+    System.out.println(
+        " Text    : " + (atom.getText() == null ? "" : atom.getText().getText().getText()));
     visitedAtoms++;
   }
-  
 }

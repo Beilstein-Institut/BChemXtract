@@ -21,15 +21,15 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * ChemDraw 3D point.
- */
+/** ChemDraw 3D point. */
 public class CDPoint3D {
 
   /** The X-coordinate of the point. */
   private float x;
+
   /** The Y-coordinate of the point. */
   private float y;
+
   /** The Z-coordinate of the point. */
   private float z;
 
@@ -66,7 +66,7 @@ public class CDPoint3D {
   }
 
   public float[] getValues() {
-    return new float[] { x, y, z };
+    return new float[] {x, y, z};
   }
 
   @Override
@@ -82,5 +82,4 @@ public class CDPoint3D {
     sb.append("]");
     return sb.toString();
   }
-
 }

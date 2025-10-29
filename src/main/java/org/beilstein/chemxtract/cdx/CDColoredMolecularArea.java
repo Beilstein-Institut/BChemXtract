@@ -21,13 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 
-import java.util.List;
-
-/**
- * A colored molecular area between bonds, usually the inside of a ring.
- */
+/** A colored molecular area between bonds, usually the inside of a ring. */
 public class CDColoredMolecularArea extends CDObject {
 
   CDColor backgroundColor;
@@ -48,5 +45,4 @@ public class CDColoredMolecularArea extends CDObject {
   public void setBasisObjects(List<CDBond> basisObjects) {
     this.basisObjects = basisObjects;
   }
-
 }

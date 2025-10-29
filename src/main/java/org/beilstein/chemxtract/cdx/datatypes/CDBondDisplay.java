@@ -22,13 +22,12 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
- * The display type of a bond object. ChemDraw does not support all display
- * values (unsupport values are provided for future compatibility). For single
- * bonds, all but Dot and DashDot are supported. For double bonds, Solid, Dash,
- * and Bold are supported, and Wavy is treated as a double-either (crossed)
- * bond. For triple and quadruple bonds, only Solid is supported.
+ * The display type of a bond object. ChemDraw does not support all display values (unsupport values
+ * are provided for future compatibility). For single bonds, all but Dot and DashDot are supported.
+ * For double bonds, Solid, Dash, and Bold are supported, and Wavy is treated as a double-either
+ * (crossed) bond. For triple and quadruple bonds, only Solid is supported.
  */
-public enum CDBondDisplay{
+public enum CDBondDisplay {
   /** Solid bond */
   Solid,
   /** Dashed bond */

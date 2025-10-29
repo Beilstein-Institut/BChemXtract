@@ -21,26 +21,24 @@
  */
 package org.beilstein.chemxtract.converter;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.datatypes.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.openscience.cdk.silent.PseudoAtom;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.io.IChemObjectReader;
+import org.openscience.cdk.silent.PseudoAtom;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-
-import java.io.IOException;
-
-import static org.junit.Assert.*;
-
 public class AtomConverterTest {
-  
+
   private IChemObjectBuilder builder;
 
   @Before
@@ -124,9 +122,9 @@ public class AtomConverterTest {
     Point3d p = atom.getPoint3d();
 
     assertNotNull(p);
-    assertEquals(1.0, p.x,  0.0001);
-    assertEquals(-2.0, p.y,  0.0001); // inverted
-    assertEquals(3.0, p.z,  0.0001);
+    assertEquals(1.0, p.x, 0.0001);
+    assertEquals(-2.0, p.y, 0.0001); // inverted
+    assertEquals(3.0, p.z, 0.0001);
   }
 
   @Test
@@ -139,8 +137,8 @@ public class AtomConverterTest {
     Point2d p = atom.getPoint2d();
 
     assertNotNull(p);
-    assertEquals(4.0, p.x,  0.0001);
-    assertEquals(-5.0, p.y,  0.0001); // inverted
+    assertEquals(4.0, p.x, 0.0001);
+    assertEquals(-5.0, p.y, 0.0001); // inverted
   }
 
   @Test

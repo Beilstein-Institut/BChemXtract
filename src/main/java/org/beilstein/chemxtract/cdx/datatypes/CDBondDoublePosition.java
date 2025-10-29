@@ -21,32 +21,30 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The position of the second line of a double bond.
- */
-public enum CDBondDoublePosition{
+/** The position of the second line of a double bond. */
+public enum CDBondDoublePosition {
   /** Double bond is centered, but was positioned automatically by the program */
   AutoCenter,
   /**
-   * Double bond is on the right (viewing from the "begin" atom to the "end"
-   * atom), but was positioned automatically by the program
+   * Double bond is on the right (viewing from the "begin" atom to the "end" atom), but was
+   * positioned automatically by the program
    */
   AutoRight,
   /**
-   * Double bond is on the left (viewing from the "begin" atom to the "end"
-   * atom), but was positioned automatically by the program
+   * Double bond is on the left (viewing from the "begin" atom to the "end" atom), but was
+   * positioned automatically by the program
    */
   AutoLeft,
   /** Double bond is centered, and was positioned manually by the user */
   UserCenter,
   /**
-   * Double bond is on the right (viewing from the "begin" atom to the "end"
-   * atom), and was positioned manually by the user
+   * Double bond is on the right (viewing from the "begin" atom to the "end" atom), and was
+   * positioned manually by the user
    */
   UserRight,
   /**
-   * Double bond is on the left (viewing from the "begin" atom to the "end"
-   * atom), and was positioned manually by the user
+   * Double bond is on the left (viewing from the "begin" atom to the "end" atom), and was
+   * positioned manually by the user
    */
   UserLeft;
 }

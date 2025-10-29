@@ -23,6 +23,10 @@ package org.beilstein.chemxtract.utils;
 
 import io.github.dan2097.jnainchi.InchiFlag;
 import io.github.dan2097.jnainchi.InchiStatus;
+import java.util.HashSet;
+import java.util.Set;
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openscience.cdk.aromaticity.Kekulization;
@@ -38,15 +42,9 @@ import org.openscience.cdk.rinchi.RInChIGenerator;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * Utility class providing static methods for common chemical operations
- * such as generating InChI, SMILES, CXSMILES, and RInChI representations
- * for molecules and reactions.
+ * Utility class providing static methods for common chemical operations such as generating InChI,
+ * SMILES, CXSMILES, and RInChI representations for molecules and reactions.
  */
 public class ChemicalUtils {
 
@@ -60,14 +58,14 @@ public class ChemicalUtils {
    * Generates an InChI representation for the given AtomContainer.
    *
    * @param atomContainer AtomContainer for which the InChI representation is generated
-   * @return InChIGenerator representing the InChI representation of the AtomContainer, returns null if
-   *          InChI generation fails
+   * @return InChIGenerator representing the InChI representation of the AtomContainer, returns null
+   *     if InChI generation fails
    * @throws CDKException If InChI generation encounters an error or warning
    */
   public static InChIGenerator getInChI(IAtomContainer atomContainer) throws CDKException {
     InChIGeneratorFactory factory = InChIGeneratorFactory.getInstance();
     StringBuilder options = new StringBuilder();
-    InchiFlag[] opts = new InchiFlag[] { InchiFlag.Polymers, InchiFlag.NPZz };
+    InchiFlag[] opts = new InchiFlag[] {InchiFlag.Polymers, InchiFlag.NPZz};
     for (InchiFlag opt : opts) {
       options.append(" ").append(opt);
     }
@@ -78,7 +76,8 @@ public class ChemicalUtils {
       logger.warn("InChI warning: " + gen.getMessage());
     } else if (status != InchiStatus.SUCCESS) {
       // InChI generation failed
-      CDKException exception = new CDKException("InChI failed: " + status.toString() + " [" + gen.getMessage() + "]");
+      CDKException exception =
+          new CDKException("InChI failed: " + status.toString() + " [" + gen.getMessage() + "]");
       logger.error(exception);
       throw exception;
     }
@@ -107,7 +106,7 @@ public class ChemicalUtils {
     // flag absolute generates a canonical SMILES with stereochemistry and atomic masses (isomers)
     SmilesGenerator smilesGen = new SmilesGenerator(flavor);
     try {
-     smiles = smilesGen.create(reaction);
+      smiles = smilesGen.create(reaction);
     } catch (CDKException | NullPointerException | IllegalArgumentException anException) {
       logger.error(anException.getMessage());
     }
@@ -125,17 +124,16 @@ public class ChemicalUtils {
   }
 
   /**
-   * Creates a CXSMILES with coordinates for the given AtomContainer.
-   * Only if all atoms have coordinates SMILES will be returned otherwise null is returned.
+   * Creates a CXSMILES with coordinates for the given AtomContainer. Only if all atoms have
+   * coordinates SMILES will be returned otherwise null is returned.
    *
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
    * @return CXSMILES with coordinates, if all atoms have coordinates, otherwise null.
    */
-  public static String createExtendedSmiles(IAtomContainer atomContainer){
+  public static String createExtendedSmiles(IAtomContainer atomContainer) {
     for (IAtom atom : atomContainer.atoms()) {
-      if((atom.getPoint2d() == null && atom.getPoint3d() == null) ||
-              hasDuplicateCoordinates(atomContainer)
-      ){
+      if ((atom.getPoint2d() == null && atom.getPoint3d() == null)
+          || hasDuplicateCoordinates(atomContainer)) {
         return null;
       }
     }
@@ -187,7 +185,11 @@ public class ChemicalUtils {
         smiles = smilesGen.create(clone);
         logger.info("Kekulized structure: " + smiles);
       }
-    } catch (CDKException | NullPointerException | IllegalArgumentException | CloneNotSupportedException | IllegalStateException anException) {
+    } catch (CDKException
+        | NullPointerException
+        | IllegalArgumentException
+        | CloneNotSupportedException
+        | IllegalStateException anException) {
       logger.error(anException + "; molecule name: " + atomContainer.getID(), anException);
     }
     return smiles;

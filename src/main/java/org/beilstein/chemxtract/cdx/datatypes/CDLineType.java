@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of a line object.
- */
+/** The type of a line object. */
 public class CDLineType {
 
   private boolean dashed = false;
@@ -113,5 +111,4 @@ public class CDLineType {
     sb.append("]");
     return sb.toString();
   }
-
 }

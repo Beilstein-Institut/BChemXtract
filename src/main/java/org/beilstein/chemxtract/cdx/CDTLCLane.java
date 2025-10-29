@@ -24,10 +24,7 @@ package org.beilstein.chemxtract.cdx;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents a lane of spots arranged vertically on a TLC
- * plate.
- */
+/** Represents a lane of spots arranged vertically on a TLC plate. */
 public class CDTLCLane {
 
   /** The spots contained within this TLC lane. */
@@ -59,5 +56,4 @@ public class CDTLCLane {
   public void setVisible(boolean visible) {
     this.visible = visible;
   }
-
 }

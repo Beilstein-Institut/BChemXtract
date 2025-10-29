@@ -24,9 +24,7 @@ package org.beilstein.chemxtract.cdx;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Specifies an external connection for a bracket.
- */
+/** Specifies an external connection for a bracket. */
 public class CDBracketAttachment {
 
   private List<CDCrossingBond> crossingBonds = new ArrayList<>();
@@ -47,5 +45,4 @@ public class CDBracketAttachment {
   public void setGraphic(CDGraphic graphic) {
     this.graphic = graphic;
   }
-
 }

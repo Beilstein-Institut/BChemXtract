@@ -26,13 +26,14 @@ import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
 
 /**
- * Groups information about the edge of an object. Usually appears in page
- * objects that are part of a table.
+ * Groups information about the edge of an object. Usually appears in page objects that are part of
+ * a table.
  */
 public class CDBorder {
 
   /** The color of the border line. */
   private CDColor color;
+
   /** The width of the border line, in points. */
   private float width;
 
@@ -70,5 +71,4 @@ public class CDBorder {
   public void setLineType(CDLineType lineType) {
     this.lineType = lineType;
   }
-
 }

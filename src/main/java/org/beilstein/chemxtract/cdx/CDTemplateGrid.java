@@ -23,9 +23,7 @@ package org.beilstein.chemxtract.cdx;
 
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
-/**
- * Used for ChemDraw templates.
- */
+/** Used for ChemDraw templates. */
 public class CDTemplateGrid {
 
   private CDPoint2D extent;
@@ -64,5 +62,4 @@ public class CDTemplateGrid {
   public void setNumColumns(int numColumns) {
     this.numColumns = numColumns;
   }
-
 }

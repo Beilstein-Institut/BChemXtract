@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of a bracket object.
- */
-public enum CDBracketType{
+/** The type of a bracket object. */
+public enum CDBracketType {
   /** Round-pair */
   @Deprecated
   RoundPair,

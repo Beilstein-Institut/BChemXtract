@@ -21,6 +21,8 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -28,19 +30,14 @@ import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.utils.Definitions;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Visitor class for traversing a ChemDraw fragment and collecting bond-related information.
- */
+/** Visitor class for traversing a ChemDraw fragment and collecting bond-related information. */
 public class BondVisitor extends CDVisitor {
 
   private final List<CDBond> bonds;
 
   /**
-   * Constructs a {@code BondVisitor} and immediately traverses the provided fragment
-   * to collect relevant bonds.
+   * Constructs a {@code BondVisitor} and immediately traverses the provided fragment to collect
+   * relevant bonds.
    *
    * @param fragment the {@link CDFragment} to traverse
    */
@@ -57,22 +54,24 @@ public class BondVisitor extends CDVisitor {
   @Override
   public void visitBond(CDBond bond) {
 
-    // if one of the bonded atoms is fragment, add bonds of fragment and reconnect fragment to structure
+    // if one of the bonded atoms is fragment, add bonds of fragment and reconnect fragment to
+    // structure
     if (hasNestedFragment(bond)) {
       CDFragment fragment = getNestedFragment(bond);
 
-      CDAtom extCon = fragment.getAtoms().stream()
+      CDAtom extCon =
+          fragment.getAtoms().stream()
               .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
               .findFirst()
-              .orElseThrow(() ->
-                      new IllegalArgumentException("Missing external connection point in fragment: " + fragment));
+              .orElseThrow(
+                  () ->
+                      new IllegalArgumentException(
+                          "Missing external connection point in fragment: " + fragment));
 
       CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
 
-      if (!bond.getBegin().getFragments().isEmpty())
-        bond.setBegin(conAtom);
-      else
-        bond.setEnd(conAtom);
+      if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
+      else bond.setEnd(conAtom);
     }
     if (onlyElementsAtBond(bond) || isRGroupBond(bond) || isAbbreviationAtBond(bond))
       bonds.add(bond);
@@ -85,8 +84,8 @@ public class BondVisitor extends CDVisitor {
    * @return true if both ends of the bond are element atoms, false otherwise
    */
   private boolean onlyElementsAtBond(CDBond bond) {
-    return CDNodeType.Element.equals(bond.getEnd().getNodeType()) &&
-            CDNodeType.Element.equals(bond.getBegin().getNodeType());
+    return CDNodeType.Element.equals(bond.getEnd().getNodeType())
+        && CDNodeType.Element.equals(bond.getBegin().getNodeType());
   }
 
   /**
@@ -96,8 +95,10 @@ public class BondVisitor extends CDVisitor {
    * @return true if one or both ends are abbreviations, false otherwise
    */
   private boolean isAbbreviationAtBond(CDBond bond) {
-    return (!CDNodeType.Element.equals(bond.getBegin().getNodeType()) && bond.getBegin().getChemicalWarning() != null)||
-            (!CDNodeType.Element.equals(bond.getEnd().getNodeType()) && bond.getEnd().getChemicalWarning() != null);
+    return (!CDNodeType.Element.equals(bond.getBegin().getNodeType())
+            && bond.getBegin().getChemicalWarning() != null)
+        || (!CDNodeType.Element.equals(bond.getEnd().getNodeType())
+            && bond.getEnd().getChemicalWarning() != null);
   }
 
   /**
@@ -107,8 +108,18 @@ public class BondVisitor extends CDVisitor {
    * @return true if one or both ends are R-group labeled atoms, false otherwise
    */
   private boolean isRGroupBond(CDBond bond) {
-     return (bond.getBegin().getText() != null && bond.getBegin().getText().getText().getText().matches(Definitions.RGROUP_LABEL_STRING)) ||
-             (bond.getEnd().getText() != null && bond.getEnd().getText().getText().getText().matches(Definitions.RGROUP_LABEL_STRING));
+    return (bond.getBegin().getText() != null
+            && bond.getBegin()
+                .getText()
+                .getText()
+                .getText()
+                .matches(Definitions.RGROUP_LABEL_STRING))
+        || (bond.getEnd().getText() != null
+            && bond.getEnd()
+                .getText()
+                .getText()
+                .getText()
+                .matches(Definitions.RGROUP_LABEL_STRING));
   }
 
   /**
@@ -119,11 +130,14 @@ public class BondVisitor extends CDVisitor {
    * @return the atom in the fragment connected to the external atom
    */
   private CDAtom resolveConnectionAtom(CDFragment fragment, CDAtom external) {
-    CDBond exBond = fragment.getBonds().stream()
+    CDBond exBond =
+        fragment.getBonds().stream()
             .filter(b -> external.equals(b.getBegin()) || external.equals(b.getEnd()))
             .findFirst()
-            .orElseThrow(() ->
-                    new IllegalArgumentException("No bond connected to external atom: " + external));
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "No bond connected to external atom: " + external));
     return external.equals(exBond.getBegin()) ? exBond.getEnd() : exBond.getBegin();
   }
 
@@ -134,8 +148,8 @@ public class BondVisitor extends CDVisitor {
    * @return true if either end has nested fragments, false otherwise
    */
   private boolean hasNestedFragment(CDBond bond) {
-    return (bond.getBegin() != null &&!bond.getBegin().getFragments().isEmpty()) ||
-            (bond.getEnd() != null && !bond.getEnd().getFragments().isEmpty());
+    return (bond.getBegin() != null && !bond.getBegin().getFragments().isEmpty())
+        || (bond.getEnd() != null && !bond.getEnd().getFragments().isEmpty());
   }
 
   /**
@@ -146,8 +160,8 @@ public class BondVisitor extends CDVisitor {
    */
   private CDFragment getNestedFragment(CDBond bond) {
     return !bond.getBegin().getFragments().isEmpty()
-            ? bond.getBegin().getFragments().get(0)
-            : bond.getEnd().getFragments().get(0);
+        ? bond.getBegin().getFragments().get(0)
+        : bond.getEnd().getFragments().get(0);
   }
 
   /**

@@ -21,39 +21,31 @@
  */
 package org.beilstein.chemxtract.converter;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
-import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.isomorphism.matchers.Expr;
-import org.openscience.cdk.isomorphism.matchers.QueryBond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
-
-import java.lang.reflect.Method;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class BondConverterTest {
 
   private BondConverter converter;
   private IChemObjectBuilder builder;
-  private Map<CDAtom,IAtom> atomMap;
+  private Map<CDAtom, IAtom> atomMap;
   private CDAtom cdAtom1;
   private CDAtom cdAtom2;
   private IAtom atom1;
@@ -225,16 +217,20 @@ public class BondConverterTest {
   @Test
   public void testQueryBonds() throws Exception {
     CDBond bond1 = mockBond(CDBondOrder.SingleOrDouble, null, null);
-    assertTrue(converter.convert(bond1) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
+    assertTrue(
+        converter.convert(bond1) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
 
     CDBond bond2 = mockBond(CDBondOrder.SingleOrAromatic, null, null);
-    assertTrue(converter.convert(bond2) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
+    assertTrue(
+        converter.convert(bond2) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
 
     CDBond bond3 = mockBond(CDBondOrder.DoubleOrAromatic, null, null);
-    assertTrue(converter.convert(bond3) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
+    assertTrue(
+        converter.convert(bond3) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
 
     CDBond bond4 = mockBond(CDBondOrder.Any, null, null);
-    assertTrue(converter.convert(bond4) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
+    assertTrue(
+        converter.convert(bond4) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
   }
 
   @Test

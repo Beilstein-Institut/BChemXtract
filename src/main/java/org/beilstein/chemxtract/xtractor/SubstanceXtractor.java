@@ -19,8 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
- package org.beilstein.chemxtract.xtractor;
+package org.beilstein.chemxtract.xtractor;
 
+import java.io.IOException;
+import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
@@ -42,15 +44,12 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
-import java.io.IOException;
-import java.util.*;
-
 /**
  * Class for extracting chemical substances from a {@link CDDocument}.
- * <p>
- * The {@code SubstanceXtractor} traverses ChemDraw pages and fragments, converting
- * them into {@link BCXSubstance} objects with associated chemical information
- * such as SMILES, InChI, InChIKey, molecular formula, and occurrences in the document.
+ *
+ * <p>The {@code SubstanceXtractor} traverses ChemDraw pages and fragments, converting them into
+ * {@link BCXSubstance} objects with associated chemical information such as SMILES, InChI,
+ * InChIKey, molecular formula, and occurrences in the document.
  */
 public class SubstanceXtractor {
 
@@ -66,26 +65,24 @@ public class SubstanceXtractor {
     this.builder = builder;
   }
 
-  /**
-   * Constructs a {@code SubstanceXtractor} using the default CDK object builder.
-   */
+  /** Constructs a {@code SubstanceXtractor} using the default CDK object builder. */
   public SubstanceXtractor() {
     this(DefaultChemObjectBuilder.getInstance());
   }
 
   /**
    * Extracts all chemical substances from the given ChemDraw document.
-   * <p>
-   * Each fragment is processed and converted into one or more {@link BCXSubstance}
-   * objects, optionally resolving R-groups if specified.
-   * </p>
+   *
+   * <p>Each fragment is processed and converted into one or more {@link BCXSubstance} objects,
+   * optionally resolving R-groups if specified.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata (e.g., number of fragments)
    * @param resolveRGroups if {@code true}, R-groups are resolved to generate all possible variants
    * @return a list of extracted {@link BCXSubstance} objects
    */
-  public List<BCXSubstance> xtract(CDDocument document, BCXSubstanceInfo substanceInfo, boolean resolveRGroups) {
+  public List<BCXSubstance> xtract(
+      CDDocument document, BCXSubstanceInfo substanceInfo, boolean resolveRGroups) {
     Objects.requireNonNull(document, "Document must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
     for (CDPage page : document.getPages()) {
@@ -99,7 +96,6 @@ public class SubstanceXtractor {
           logger.error("Could not extract structures from fragment.");
         }
       }
-
     }
     return substances;
   }
@@ -117,29 +113,30 @@ public class SubstanceXtractor {
 
   /**
    * Extracts unique chemical substances from the given document.
-   * <p>
-   * Substances are considered unique based on their InChI identifiers.
-   * </p>
+   *
+   * <p>Substances are considered unique based on their InChI identifiers.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
    * @param resolveRGroups if {@code true}, R-groups are resolved
    * @return a list of unique {@link BCXSubstance} objects
    */
-  public List<BCXSubstance> xtractUnique(CDDocument document, BCXSubstanceInfo substanceInfo, boolean resolveRGroups) {
+  public List<BCXSubstance> xtractUnique(
+      CDDocument document, BCXSubstanceInfo substanceInfo, boolean resolveRGroups) {
     List<BCXSubstance> substances = xtract(document, substanceInfo, resolveRGroups);
     List<BCXSubstance> result = new ArrayList<>();
     substanceInfo.setNoInchis(
-            (int) substances.stream().
-                    filter(s -> s.getInchi() != null && !s.getInchi().isEmpty())
-                    .count()
-    );
+        (int)
+            substances.stream()
+                .filter(s -> s.getInchi() != null && !s.getInchi().isEmpty())
+                .count());
     Set<String> seen = new HashSet<>(substanceInfo.getNoInchis());
-    substances.forEach(s -> {
-      if (seen.add(s.getInchi())) {
-        result.add(s);
-      }
-    });
+    substances.forEach(
+        s -> {
+          if (seen.add(s.getInchi())) {
+            result.add(s);
+          }
+        });
     substanceInfo.setNoSubstances(result.size());
     return result;
   }
@@ -164,19 +161,18 @@ public class SubstanceXtractor {
    * @throws CDKException if CDK processing fails
    * @throws IOException if IO operations fail
    */
-  protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page) throws CDKException, IOException {
+  protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page)
+      throws CDKException, IOException {
     List<BCXSubstance> substances = xtractSubstances(fragment, page, false);
-    if (!substances.isEmpty())
-      return substances.get(0);
-    else
-      return null;
+    if (!substances.isEmpty()) return substances.get(0);
+    else return null;
   }
 
   /**
    * Extracts all {@link BCXSubstance} objects from a fragment.
-   * <p>
-   * Handles multi-atom groups, R-groups (if requested), and adds fragment occurrences and abbreviations.
-   * </p>
+   *
+   * <p>Handles multi-atom groups, R-groups (if requested), and adds fragment occurrences and
+   * abbreviations.
    *
    * @param fragment the {@link CDFragment} to process
    * @param page the {@link CDPage} containing the fragment
@@ -185,7 +181,8 @@ public class SubstanceXtractor {
    * @throws IOException if IO operations fail
    * @throws CDKException if CDK operations fail
    */
-  protected List<BCXSubstance> xtractSubstances(CDFragment fragment, CDPage page, boolean resolveRGroups) throws IOException, CDKException {
+  protected List<BCXSubstance> xtractSubstances(
+      CDFragment fragment, CDPage page, boolean resolveRGroups) throws IOException, CDKException {
     Objects.requireNonNull(fragment, "Fragment must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
 
@@ -218,7 +215,8 @@ public class SubstanceXtractor {
           if (boundsOptional.isPresent()) {
             CDRectangle bounds = boundsOptional.get();
             BCXSubstanceOccurrence occurrence =
-                    new BCXSubstanceOccurrence(bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
+                new BCXSubstanceOccurrence(
+                    bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
             substance.addOccurrence(occurrence);
           }
           addAbbreviations(substance, fragment);
@@ -235,7 +233,8 @@ public class SubstanceXtractor {
     if (boundsOptional.isPresent()) {
       CDRectangle bounds = boundsOptional.get();
       BCXSubstanceOccurrence occurrence =
-               new BCXSubstanceOccurrence(bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
+          new BCXSubstanceOccurrence(
+              bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
       substance.addOccurrence(occurrence);
     }
     addAbbreviations(substance, fragment);
@@ -256,7 +255,8 @@ public class SubstanceXtractor {
     // add AtomContainer
     substance.setAtomContainer(atomContainer);
     // set SMILES
-    String smiles = Optional.ofNullable(ChemicalUtils.createAbsoluteSmiles(atomContainer))
+    String smiles =
+        Optional.ofNullable(ChemicalUtils.createAbsoluteSmiles(atomContainer))
             .orElseGet(() -> ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical));
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
@@ -268,7 +268,8 @@ public class SubstanceXtractor {
       substance.setAuxInfo(gen.getAuxInfo());
     }
     // set molecular formula
-    IMolecularFormula molecularFormula = MolecularFormulaManipulator.getMolecularFormula(atomContainer);
+    IMolecularFormula molecularFormula =
+        MolecularFormulaManipulator.getMolecularFormula(atomContainer);
     substance.setMolecularFormula(MolecularFormulaManipulator.getString(molecularFormula));
     return substance;
   }
@@ -292,7 +293,8 @@ public class SubstanceXtractor {
       substance.addAbbreviation(smiles, abbreviation);
     }
 
-    for (Map.Entry<String, CDFragment> entry : fragmentConverter.getNicknames(fragment).entrySet()) {
+    for (Map.Entry<String, CDFragment> entry :
+        fragmentConverter.getNicknames(fragment).entrySet()) {
       String nickname = entry.getKey();
       CDFragment nested = entry.getValue();
       IAtomContainer nestedAc;

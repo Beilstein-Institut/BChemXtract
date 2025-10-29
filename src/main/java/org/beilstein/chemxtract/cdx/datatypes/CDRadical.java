@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The atomic radical attribute of an atom.
- */
-public enum CDRadical{
+/** The atomic radical attribute of an atom. */
+public enum CDRadical {
   /** Not a radical */
   None,
   /** Radical singlet (diradical) */

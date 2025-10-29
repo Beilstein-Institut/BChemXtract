@@ -21,17 +21,16 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class AtomVisitorTest {
 

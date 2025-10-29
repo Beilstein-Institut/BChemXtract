@@ -23,11 +23,10 @@ package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
  * The change of stereochemistry of an atom during a reaction.
- * <p>
- * The value stored in this property corresponds exactly to the
- * Inversion/Retention flag in ISIS.
+ *
+ * <p>The value stored in this property corresponds exactly to the Inversion/Retention flag in ISIS.
  */
-public enum CDReactionStereo{
+public enum CDReactionStereo {
   /** Unspecified change in stereochemistry. */
   Unspecified,
   /** Absolute stereochemistry does not change during the reaction. */

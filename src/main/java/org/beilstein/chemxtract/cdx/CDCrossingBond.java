@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-/**
- * This bond connects a bracket to an external atom. 
- */
+/** This bond connects a bracket to an external atom. */
 public class CDCrossingBond {
 
   private CDBond bond;
@@ -44,5 +42,4 @@ public class CDCrossingBond {
   public void setInnerAtom(CDAtom innerAtom) {
     this.innerAtom = innerAtom;
   }
-
 }

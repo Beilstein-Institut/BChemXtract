@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDNoGoType{
+public enum CDNoGoType {
   Unspecified,
   None,
   Cross,

@@ -21,23 +21,20 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.CDRectangle;
-import org.beilstein.chemxtract.cdx.CDSettings;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cdx.CDSettings;
+import org.beilstein.chemxtract.cdx.datatypes.*;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
-
-/**
- * This holds various methods to convert values for the CDXML file format.
- */
+/** This holds various methods to convert values for the CDXML file format. */
 public class CDXMLUtils {
   private static final Log logger = LogFactory.getLog(CDXMLUtils.class);
 
@@ -49,11 +46,13 @@ public class CDXMLUtils {
     return (CDJustification) convertStringToEnum(value, CDXMLTextJustification);
   }
 
-  public static String convertDrawingSpaceTypeToString(CDDrawingSpaceType value) throws IOException {
+  public static String convertDrawingSpaceTypeToString(CDDrawingSpaceType value)
+      throws IOException {
     return convertEnumToString(value, CDXMLDrawingSpaceType);
   }
 
-  public static CDDrawingSpaceType convertStringToDrawingSpaceType(String value) throws IOException {
+  public static CDDrawingSpaceType convertStringToDrawingSpaceType(String value)
+      throws IOException {
     return (CDDrawingSpaceType) convertStringToEnum(value, CDXMLDrawingSpaceType);
   }
 
@@ -129,11 +128,13 @@ public class CDXMLUtils {
     return (CDIsotopicAbundance) convertStringToEnum(value, CDXMLAbundance);
   }
 
-  public static String convertExternalConnectionTypeToString(CDExternalConnectionType value) throws IOException {
+  public static String convertExternalConnectionTypeToString(CDExternalConnectionType value)
+      throws IOException {
     return convertEnumToString(value, CDXMLExternalConnectionType);
   }
 
-  public static CDExternalConnectionType convertStringToExternalConnectionType(String value) throws IOException {
+  public static CDExternalConnectionType convertStringToExternalConnectionType(String value)
+      throws IOException {
     return (CDExternalConnectionType) convertStringToEnum(value, CDXMLExternalConnectionType);
   }
 
@@ -169,11 +170,13 @@ public class CDXMLUtils {
     return (CDBondDisplay) convertStringToEnum(value, CDXMLBondDisplay);
   }
 
-  public static String convertBondDoublePositionToString(CDBondDoublePosition value) throws IOException {
+  public static String convertBondDoublePositionToString(CDBondDoublePosition value)
+      throws IOException {
     return convertEnumToString(value, CDXMLBondDoublePosition);
   }
 
-  public static CDBondDoublePosition convertStringToBondDoublePosition(String value) throws IOException {
+  public static CDBondDoublePosition convertStringToBondDoublePosition(String value)
+      throws IOException {
     return (CDBondDoublePosition) convertStringToEnum(value, CDXMLBondDoublePosition);
   }
 
@@ -185,11 +188,13 @@ public class CDXMLUtils {
     return (CDBondTopology) convertStringToEnum(value, CDXMLBondTopology);
   }
 
-  public static String convertBondReactionParticipationToString(CDBondReactionParticipation value) throws IOException {
+  public static String convertBondReactionParticipationToString(CDBondReactionParticipation value)
+      throws IOException {
     return convertEnumToString(value, CDXMLBondReactionParticipation);
   }
 
-  public static CDBondReactionParticipation convertStringToBondReactionParticipation(String value) throws IOException {
+  public static CDBondReactionParticipation convertStringToBondReactionParticipation(String value)
+      throws IOException {
     return (CDBondReactionParticipation) convertStringToEnum(value, CDXMLBondReactionParticipation);
   }
 
@@ -394,11 +399,13 @@ public class CDXMLUtils {
     return (CDBracketUsage) convertStringToEnum(value, CDXMLBracketUsage);
   }
 
-  public static String convertPolymerRepeatPatternToString(CDPolymerRepeatPattern value) throws IOException {
+  public static String convertPolymerRepeatPatternToString(CDPolymerRepeatPattern value)
+      throws IOException {
     return convertEnumToString(value, CDXMLPolymerRepeatPattern);
   }
 
-  public static CDPolymerRepeatPattern convertStringToPolymerRepeatPattern(String value) throws IOException {
+  public static CDPolymerRepeatPattern convertStringToPolymerRepeatPattern(String value)
+      throws IOException {
     return (CDPolymerRepeatPattern) convertStringToEnum(value, CDXMLPolymerRepeatPattern);
   }
 
@@ -552,7 +559,7 @@ public class CDXMLUtils {
   private static List<String> convertStringToStringList(String value) {
     List<String> list = new ArrayList<>(Arrays.asList(value.split(" ")));
     // remove empty elements
-    for (Iterator<String> iterator = list.iterator(); iterator.hasNext();) {
+    for (Iterator<String> iterator = list.iterator(); iterator.hasNext(); ) {
       String string = iterator.next();
       if (string == null || string.length() == 0) {
         iterator.remove();
@@ -562,7 +569,13 @@ public class CDXMLUtils {
   }
 
   public static String convertRectangleToString(CDRectangle value) {
-    return value.getLeft() + " " + value.getTop() + " " + value.getRight() + " " + value.getBottom();
+    return value.getLeft()
+        + " "
+        + value.getTop()
+        + " "
+        + value.getRight()
+        + " "
+        + value.getBottom();
   }
 
   public static CDRectangle convertStringToRectangle(String value) {
@@ -735,7 +748,8 @@ public class CDXMLUtils {
     return (int) Float.parseFloat(value);
   }
 
-  public static String convertObjectRefToString(Object value, Map<Object,Integer> references) throws IOException {
+  public static String convertObjectRefToString(Object value, Map<Object, Integer> references)
+      throws IOException {
     if (references.get(value) == null) {
       throw new IOException("Reference wasn't collected in the first place");
     }
@@ -743,11 +757,12 @@ public class CDXMLUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> T convertStringToObjectRef(String value, Class<T> clazz, RefManager refManager) throws IOException {
+  public static <T> T convertStringToObjectRef(String value, Class<T> clazz, RefManager refManager)
+      throws IOException {
     return refManager.getObjectRef(Integer.parseInt(value), clazz, CDXMLReader.RIGID);
   }
 
-  public static String convertObjectRefList(List<?> value, Map<Object,Integer> references) {
+  public static String convertObjectRefList(List<?> value, Map<Object, Integer> references) {
     StringBuilder sb = new StringBuilder();
     for (Object element : value) {
       if (sb.length() > 0) {
@@ -758,7 +773,8 @@ public class CDXMLUtils {
     return sb.toString();
   }
 
-  public static <T> List<T> convertStringToObjectRefList(String value, Class<T> clazz, RefManager refManager) throws IOException {
+  public static <T> List<T> convertStringToObjectRefList(
+      String value, Class<T> clazz, RefManager refManager) throws IOException {
     List<Integer> intList = convertStringToIntList(value);
     List<T> array = new ArrayList<>(intList.size());
     for (Integer ref : intList) {
@@ -770,7 +786,8 @@ public class CDXMLUtils {
     return array;
   }
 
-  public static String convertObjectRefMapToString(Map<?,?> values, Map<Object,Integer> references) {
+  public static String convertObjectRefMapToString(
+      Map<?, ?> values, Map<Object, Integer> references) {
     StringBuilder sb = new StringBuilder();
     for (Object key : values.keySet()) {
       if (sb.length() > 0) {
@@ -783,13 +800,13 @@ public class CDXMLUtils {
     return sb.toString();
   }
 
-  public static <K,V> Map<K,V> convertStringtoObjectRefMap(String value, Class<K> clazz1, Class<V> clazz2, RefManager refManager)
-    throws IOException {
+  public static <K, V> Map<K, V> convertStringtoObjectRefMap(
+      String value, Class<K> clazz1, Class<V> clazz2, RefManager refManager) throws IOException {
     List<Integer> intList = convertStringToIntList(value);
     if (intList.size() % 2 != 0) {
       throw new IOException("Cannot calculate map length for size of " + intList.size());
     }
-    Map<K,V> map = new HashMap<>();
+    Map<K, V> map = new HashMap<>();
     for (int i = 0; i < intList.size(); i += 2) {
       K keyObject = refManager.getObjectRef(intList.get(i), clazz1, CDXMLReader.RIGID);
       V valueObject = refManager.getObjectRef(intList.get(i + 1), clazz2, CDXMLReader.RIGID);
@@ -831,5 +848,4 @@ public class CDXMLUtils {
   public static CDNoGoType convertStringToNoGoType(String value) throws IOException {
     return (CDNoGoType) convertStringToEnum(value, CDXMLNoGoType);
   }
-
 }

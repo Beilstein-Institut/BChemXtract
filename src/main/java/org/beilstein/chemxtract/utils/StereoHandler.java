@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
+import java.util.*;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
@@ -32,16 +33,13 @@ import org.openscience.cdk.stereo.Projection;
 import org.openscience.cdk.stereo.StereoElementFactory;
 import org.openscience.cdk.stereo.TetrahedralChirality;
 
-import java.util.*;
-
 /**
  * Utility class for setting stereochemistry in CDK {@link IAtomContainer} objects.
- * <p>
- * This class provides methods to extract, interpret, and set stereochemical elements,
- * including tetrahedral chirality and bond stereochemistry, based on 2D or 3D coordinates.
- * It handles special cases for sugars and adjusts stereochemistry for atoms with duplicate
- * coordinates. Wavy bonds are filtered out when adding stereo elements to the container.
- * </p>
+ *
+ * <p>This class provides methods to extract, interpret, and set stereochemical elements, including
+ * tetrahedral chirality and bond stereochemistry, based on 2D or 3D coordinates. It handles special
+ * cases for sugars and adjusts stereochemistry for atoms with duplicate coordinates. Wavy bonds are
+ * filtered out when adding stereo elements to the container.
  */
 public class StereoHandler {
 
@@ -50,35 +48,36 @@ public class StereoHandler {
   }
 
   /**
-   * Sets stereochemistry elements on the given {@link IAtomContainer} based on the provided
-   * mapping between {@link CDAtom}/{@link CDBond} objects and CDK {@link IAtom}/{@link IBond} objects.
-   * <p>
-   * Sugar stereochemistry is handled differently from non-sugar stereochemistry.
-   * Wavy bonds are filtered out from the generated stereo elements.
-   * </p>
+   * Sets stereochemistry elements on the given {@link IAtomContainer} based on the provided mapping
+   * between {@link CDAtom}/{@link CDBond} objects and CDK {@link IAtom}/{@link IBond} objects.
+   *
+   * <p>Sugar stereochemistry is handled differently from non-sugar stereochemistry. Wavy bonds are
+   * filtered out from the generated stereo elements.
    *
    * @param atomContainer the {@link IAtomContainer} to set stereochemistry on
    * @param bondMap mapping of {@link CDBond} to {@link IBond} used to identify wavy bonds
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom} used for tetrahedral stereochemistry
    */
-  public static void setStereo(IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
+  public static void setStereo(
+      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
     List<IStereoElement> stereoElements = getStereoElements(atomContainer, atomMap);
     filterWavyBonds(stereoElements, bondMap);
     stereoElements.forEach(atomContainer::addStereoElement);
   }
 
   /**
-   * Determines and returns all stereochemical elements for the given atom container.
-   * Handles sugars differently from non-sugar structures.
+   * Determines and returns all stereochemical elements for the given atom container. Handles sugars
+   * differently from non-sugar structures.
    *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom} for tetrahedral stereochemistry
    * @return list of stereochemical elements
    */
-  private static List<IStereoElement> getStereoElements(IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
+  private static List<IStereoElement> getStereoElements(
+      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     return SugarRings.containsSugarRings(atomContainer)
-            ? extractSugarStereoElements(atomContainer)
-            : extractNonSugarStereoElements(atomContainer, atomMap);
+        ? extractSugarStereoElements(atomContainer)
+        : extractNonSugarStereoElements(atomContainer, atomMap);
   }
 
   /**
@@ -89,43 +88,42 @@ public class StereoHandler {
    */
   private static List<IStereoElement> extractSugarStereoElements(IAtomContainer atomContainer) {
     return selectFactory(atomContainer)
-            .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
-            .createAll();
+        .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
+        .createAll();
   }
 
   /**
    * Extracts stereochemical elements for non-sugar molecules.
-   * <p>
-   * Sets bond stereo from display types if necessary and determines tetrahedral
-   * chirality from {@link CDAtom} CIP types if coordinates are duplicated or
-   * stereo elements are empty.
-   * </p>
+   *
+   * <p>Sets bond stereo from display types if necessary and determines tetrahedral chirality from
+   * {@link CDAtom} CIP types if coordinates are duplicated or stereo elements are empty.
    *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom} for tetrahedral stereochemistry
    * @return list of stereochemical elements
    */
-  private static List<IStereoElement> extractNonSugarStereoElements(IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
+  private static List<IStereoElement> extractNonSugarStereoElements(
+      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     setBondStereoByDisplayType(atomContainer); // TODO can be removed when using cdk v2.12 or higher
     List<IStereoElement> elements = selectFactory(atomContainer).createAll();
-    if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()){
-//      return
-      elements.addAll( setTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
+    if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
+      //      return
+      elements.addAll(setTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
     }
     return elements;
   }
 
   /**
-   * Selects an appropriate {@link StereoElementFactory} based on whether
-   * the atom container has 3D or 2D coordinates.
+   * Selects an appropriate {@link StereoElementFactory} based on whether the atom container has 3D
+   * or 2D coordinates.
    *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @return a {@link StereoElementFactory} instance for 2D or 3D
    */
   private static StereoElementFactory selectFactory(IAtomContainer atomContainer) {
     return (atomContainer.getAtom(0).getPoint3d() != null)
-            ? StereoElementFactory.using3DCoordinates(atomContainer)
-            : StereoElementFactory.using2DCoordinates(atomContainer);
+        ? StereoElementFactory.using3DCoordinates(atomContainer)
+        : StereoElementFactory.using2DCoordinates(atomContainer);
   }
 
   /**
@@ -134,16 +132,23 @@ public class StereoHandler {
    * @param stereoElements list of stereochemical elements to filter
    * @param bondMap mapping of {@link CDBond} to {@link IBond} used to identify wavy bonds
    */
-  private static void filterWavyBonds(List<IStereoElement> stereoElements, Map<CDBond, IBond> bondMap) {
-    List<IBond> wavyBonds = bondMap.entrySet()
-            .stream()
+  private static void filterWavyBonds(
+      List<IStereoElement> stereoElements, Map<CDBond, IBond> bondMap) {
+    List<IBond> wavyBonds =
+        bondMap.entrySet().stream()
             .filter(entry -> entry.getKey().getBondDisplay() == CDBondDisplay.Wavy)
             .map(Map.Entry::getValue)
             .toList();
-    List<IStereoElement> wavyElements = stereoElements.stream()
-            .filter(element -> (element.getFocus() instanceof IAtom atom &&
-                    wavyBonds.stream().anyMatch(bond ->
-                            bond.getBegin().equals(atom) || bond.getEnd().equals(atom)))).toList();
+    List<IStereoElement> wavyElements =
+        stereoElements.stream()
+            .filter(
+                element ->
+                    (element.getFocus() instanceof IAtom atom
+                        && wavyBonds.stream()
+                            .anyMatch(
+                                bond ->
+                                    bond.getBegin().equals(atom) || bond.getEnd().equals(atom))))
+            .toList();
     stereoElements.removeAll(wavyElements);
   }
 
@@ -154,7 +159,8 @@ public class StereoHandler {
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom}
    * @return list of tetrahedral chirality stereo elements
    */
-  private static List<IStereoElement> setTetrahedralStereoByCDAtomCIPType(IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
+  private static List<IStereoElement> setTetrahedralStereoByCDAtomCIPType(
+      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     List<IStereoElement> stereoElements = new ArrayList<>();
     for (Map.Entry<CDAtom, IAtom> entry : atomMap.entrySet()) {
       CDAtom cdAtom = entry.getKey();

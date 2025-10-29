@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The characteristics of node label display.
- */
-public enum CDLabelDisplay{
+/** The characteristics of node label display. */
+public enum CDLabelDisplay {
   /** Label is aligned automatically */
   Auto,
   /** Label is left-aligned */

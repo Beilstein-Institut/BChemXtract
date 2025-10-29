@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * How the object should be positioned with respect to its containing object.
- */
-public enum CDPositioningType{
+/** How the object should be positioned with respect to its containing object. */
+public enum CDPositioningType {
   Auto,
   Angle,
   Offset,

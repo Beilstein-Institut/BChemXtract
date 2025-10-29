@@ -21,16 +21,17 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-/**
- * ChemDraw rectangle.
- */
+/** ChemDraw rectangle. */
 public class CDRectangle {
   /** The top edge of the rectangle. */
   private float top;
+
   /** The left edge of the rectangle. */
   private float left;
+
   /** The bottom edge of the rectangle. */
   private float bottom;
+
   /** The right edge of the rectangle. */
   private float right;
 

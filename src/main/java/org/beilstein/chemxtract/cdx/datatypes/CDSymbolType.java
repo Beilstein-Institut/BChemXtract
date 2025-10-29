@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of symbol object.
- */
-public enum CDSymbolType{
+/** The type of symbol object. */
+public enum CDSymbolType {
   /** Lone-pair */
   LonePair,
   /** Elecron */

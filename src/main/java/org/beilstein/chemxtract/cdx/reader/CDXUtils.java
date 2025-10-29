@@ -21,21 +21,20 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.io.IOUtils;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.io.IOUtils;
 
 /**
- * This class provides a set of static helper methods to do binary conversions 
- * and convert CDX constant values to Java enums.
+ * This class provides a set of static helper methods to do binary conversions and convert CDX
+ * constant values to Java enums.
  */
 public class CDXUtils {
   private static final Log logger = LogFactory.getLog(CDXUtils.class);
@@ -45,7 +44,8 @@ public class CDXUtils {
   }
 
   /**
-   * The main entry for reading a binary CDX document. 
+   * The main entry for reading a binary CDX document.
+   *
    * @param bytes
    * @param position
    * @return
@@ -68,21 +68,36 @@ public class CDXUtils {
 
     int tag = CDXUtils.readUInt16(bytes, position[0]);
     if (logger.isDebugEnabled()) {
-      logger.debug("read root tag=" + Integer.toHexString(tag) + " position=" + Integer.toHexString(position[0]));
+      logger.debug(
+          "read root tag="
+              + Integer.toHexString(tag)
+              + " position="
+              + Integer.toHexString(position[0]));
     }
     position[0] += 2;
 
     return readCDXObject(tag, bytes, position);
   }
 
-  private static CDXObject readCDXObject(int rootTag, byte[] bytes, int[] position) throws IOException {
+  private static CDXObject readCDXObject(int rootTag, byte[] bytes, int[] position)
+      throws IOException {
     // read object id
     int id = CDXUtils.readInt32(bytes, position[0]);
     position[0] += 4;
 
     if (logger.isDebugEnabled()) {
-      logger.debug("read object with tag 0x" + Integer.toHexString(rootTag) + " and  id " + id + "(0x" + Integer.toHexString(id) + ") at " +
-              (position[0] - 6) + "(0x" + Integer.toHexString(position[0] - 6) + ")");
+      logger.debug(
+          "read object with tag 0x"
+              + Integer.toHexString(rootTag)
+              + " and  id "
+              + id
+              + "(0x"
+              + Integer.toHexString(id)
+              + ") at "
+              + (position[0] - 6)
+              + "(0x"
+              + Integer.toHexString(position[0] - 6)
+              + ")");
     }
 
     CDXObject object = new CDXObject();
@@ -95,7 +110,14 @@ public class CDXUtils {
       int tag = CDXUtils.readUInt16(bytes, position[0]);
       position[0] += 2;
       if (logger.isDebugEnabled()) {
-        logger.debug("read tag=0x" + Integer.toHexString(tag) + " at " + position[0] + "(0x" + Integer.toHexString(position[0]) + ")");
+        logger.debug(
+            "read tag=0x"
+                + Integer.toHexString(tag)
+                + " at "
+                + position[0]
+                + "(0x"
+                + Integer.toHexString(position[0])
+                + ")");
       }
       if (tag == CDXProp_EndObject) {
         break;
@@ -111,10 +133,17 @@ public class CDXUtils {
     return object;
   }
 
-  private static CDXProperty readCDXProperty(int tag, byte[] bytes, int[] position) throws IOException {
+  private static CDXProperty readCDXProperty(int tag, byte[] bytes, int[] position)
+      throws IOException {
     if (logger.isDebugEnabled()) {
-      logger.debug("read property with tag 0x" + Integer.toHexString(tag) + " at " + (position[0] - 2) + "(0x" +
-              Integer.toHexString(position[0] - 2) + ")");
+      logger.debug(
+          "read property with tag 0x"
+              + Integer.toHexString(tag)
+              + " at "
+              + (position[0] - 2)
+              + "(0x"
+              + Integer.toHexString(position[0] - 2)
+              + ")");
     }
 
     CDXProperty property = new CDXProperty();
@@ -134,7 +163,8 @@ public class CDXUtils {
     property.setLength(length);
 
     if (position[0] + length >= bytes.length) {
-      throw new IOException("Property size doesn't fit into the remaining data at " + getPositionAsString(property));
+      throw new IOException(
+          "Property size doesn't fit into the remaining data at " + getPositionAsString(property));
     }
 
     // read data
@@ -166,19 +196,28 @@ public class CDXUtils {
   }
 
   public static int readInt32(byte[] bytes, int offset) {
-    return bytes[offset + 0] & 0xff | (bytes[offset + 1] & 0xff) << 8 | (bytes[offset + 2] & 0xff) << 16 | (bytes[offset + 3] & 0xff) << 24;
+    return bytes[offset + 0] & 0xff
+        | (bytes[offset + 1] & 0xff) << 8
+        | (bytes[offset + 2] & 0xff) << 16
+        | (bytes[offset + 3] & 0xff) << 24;
   }
 
   public static long readUInt32(byte[] bytes, int offset) {
-    return bytes[offset + 0] & 0x00000000000000ffL | (bytes[offset + 1] & 0x00000000000000ffL) << 8 |
-            (bytes[offset + 2] & 0x00000000000000ffL) << 16 | (bytes[offset + 3] & 0x00000000000000ffL) << 24;
+    return bytes[offset + 0] & 0x00000000000000ffL
+        | (bytes[offset + 1] & 0x00000000000000ffL) << 8
+        | (bytes[offset + 2] & 0x00000000000000ffL) << 16
+        | (bytes[offset + 3] & 0x00000000000000ffL) << 24;
   }
 
   public static long readInt64(byte[] bytes, int offset) {
-    return bytes[offset + 0] & 0x00000000000000ffL | (bytes[offset + 1] & 0x00000000000000ffL) << 8 |
-            (bytes[offset + 2] & 0x00000000000000ffL) << 16 | (bytes[offset + 3] & 0x00000000000000ffL) << 24 |
-            (bytes[offset + 4] & 0x00000000000000ffL) << 32 | (bytes[offset + 5] & 0x00000000000000ffL) << 40 |
-            (bytes[offset + 6] & 0x00000000000000ffL) << 48 | (bytes[offset + 7] & 0x00000000000000ffL) << 56;
+    return bytes[offset + 0] & 0x00000000000000ffL
+        | (bytes[offset + 1] & 0x00000000000000ffL) << 8
+        | (bytes[offset + 2] & 0x00000000000000ffL) << 16
+        | (bytes[offset + 3] & 0x00000000000000ffL) << 24
+        | (bytes[offset + 4] & 0x00000000000000ffL) << 32
+        | (bytes[offset + 5] & 0x00000000000000ffL) << 40
+        | (bytes[offset + 6] & 0x00000000000000ffL) << 48
+        | (bytes[offset + 7] & 0x00000000000000ffL) << 56;
   }
 
   public static double readFloat64(byte[] bytes, int offset) {
@@ -329,11 +368,16 @@ public class CDXUtils {
       case CDXCIPBond_Z:
         return CDBondCIPType.Z;
     }
-    handleUnrecognizedValue("Bond CIP type 0x" + Integer.toHexString(type) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bond CIP type 0x"
+            + Integer.toHexString(type)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBondCIPType.Undetermined;
   }
 
-  public static CDJustification readTextJustifcationProperty(CDXProperty property) throws IOException {
+  public static CDJustification readTextJustifcationProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsInt8();
     switch (value) {
       case CDXTextJustification_Right:
@@ -353,11 +397,16 @@ public class CDXUtils {
       case CDXTextJustification_BestInitial:
         return CDJustification.BestInitial;
     }
-    handleUnrecognizedValue("Text justification 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Text justification 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDJustification.Auto;
   }
 
-  public static CDPageDefinition readPageDefinitionProperty(CDXProperty property) throws IOException {
+  public static CDPageDefinition readPageDefinitionProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXPageDefinition_Undefined:
@@ -383,11 +432,16 @@ public class CDXUtils {
       case CDXPageDefinition_UserDefined:
         return CDPageDefinition.UserDefined;
     }
-    handleUnrecognizedValue("Page definition 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Page definition 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDPageDefinition.Undefined;
   }
 
-  public static CDDrawingSpaceType readDrawingSpaceTypeProperty(CDXProperty property) throws IOException {
+  public static CDDrawingSpaceType readDrawingSpaceTypeProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXDrawingSpace_Pages:
@@ -395,7 +449,11 @@ public class CDXUtils {
       case CDXDrawingSpace_Poster:
         return CDDrawingSpaceType.Poster;
     }
-    handleUnrecognizedValue("Drawing space type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Drawing space type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDDrawingSpaceType.Pages;
   }
 
@@ -409,11 +467,16 @@ public class CDXUtils {
       case CDXUnsaturation_MustBePresent:
         return CDUnsaturation.MustBePresent;
     }
-    handleUnrecognizedValue("Unsaturation 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Unsaturation 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDUnsaturation.Unspecified;
   }
 
-  public static CDExternalConnectionType readExternalConnectionTypeProperty(CDXProperty property) throws IOException {
+  public static CDExternalConnectionType readExternalConnectionTypeProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXExternalConnection_Unspecified:
@@ -430,7 +493,10 @@ public class CDXUtils {
         return CDExternalConnectionType.Residue;
     }
     handleUnrecognizedValue(
-            "External connection type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+        "External connection type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDExternalConnectionType.Unspecified;
   }
 
@@ -450,7 +516,11 @@ public class CDXUtils {
       case CDXAbundance_Nonnatural:
         return CDIsotopicAbundance.Nonnatural;
     }
-    handleUnrecognizedValue("Abundance 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Abundance 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDIsotopicAbundance.Unspecified;
   }
 
@@ -466,7 +536,11 @@ public class CDXUtils {
       case CDXTranslation_Any:
         return CDTranslation.Any;
     }
-    handleUnrecognizedValue("Translation 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Translation 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
@@ -488,7 +562,11 @@ public class CDXUtils {
       case CDXCIPAtom_Unspecified:
         return CDAtomCIPType.Unspecified;
     }
-    handleUnrecognizedValue("Atom CIP type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Atom CIP type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDAtomCIPType.Unspecified;
   }
 
@@ -530,11 +608,16 @@ public class CDXUtils {
       case CDXAtomGeometry_10Ligand:
         return CDAtomGeometry.TenLigand;
     }
-    handleUnrecognizedValue("Atom geometry 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Atom geometry 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDAtomGeometry.Unknown;
   }
 
-  public static CDReactionStereo readReactionStereoProperty(CDXProperty property) throws IOException {
+  public static CDReactionStereo readReactionStereoProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXReactionStereo_Unspecified:
@@ -544,7 +627,11 @@ public class CDXUtils {
       case CDXReactionStereo_Retention:
         return CDReactionStereo.Retention;
     }
-    handleUnrecognizedValue("Reaction stereo 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Reaction stereo 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDReactionStereo.Unspecified;
   }
 
@@ -560,7 +647,11 @@ public class CDXUtils {
       case CDXRadical_Triplet:
         return CDRadical.Triplet;
     }
-    handleUnrecognizedValue("Radical 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Radical 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDRadical.None;
   }
 
@@ -586,7 +677,11 @@ public class CDXUtils {
       case CDXLabelDisplay_BestInitial:
         return CDLabelDisplay.BestInitial;
     }
-    handleUnrecognizedValue("Radical 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Radical 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDLabelDisplay.Auto;
   }
 
@@ -622,11 +717,16 @@ public class CDXUtils {
       case CDXNodeType_LinkNode:
         return CDNodeType.LinkNode;
     }
-    handleUnrecognizedValue("Node type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Node type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDNodeType.Unspecified;
   }
 
-  public static CDBondReactionParticipation readBondReactionParticipationProperty(CDXProperty property) throws IOException {
+  public static CDBondReactionParticipation readBondReactionParticipationProperty(
+      CDXProperty property) throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXBondReactionParticipation_Unspecified:
@@ -647,7 +747,10 @@ public class CDXUtils {
         return CDBondReactionParticipation.Unmapped;
     }
     handleUnrecognizedValue(
-            "Bond reaction participation 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+        "Bond reaction participation 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBondReactionParticipation.Unspecified;
   }
 
@@ -663,11 +766,16 @@ public class CDXUtils {
       case CDXBondTopology_RingOrChain:
         return CDBondTopology.RingOrChain;
     }
-    handleUnrecognizedValue("Bond topology 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bond topology 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBondTopology.Unspecified;
   }
 
-  public static CDBondDoublePosition readBondDoublePositionProperty(CDXProperty property) throws IOException {
+  public static CDBondDoublePosition readBondDoublePositionProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsInt16();
     switch (value) {
       case CDXBondDoublePosition_AutoCenter:
@@ -683,7 +791,11 @@ public class CDXUtils {
       case CDXBondDoublePosition_UserLeft:
         return CDBondDoublePosition.UserLeft;
     }
-    handleUnrecognizedValue("Bond double position 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bond double position 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
@@ -721,7 +833,11 @@ public class CDXUtils {
       case CDXBondDisplay_DashDot:
         return CDBondDisplay.DashDot;
     }
-    handleUnrecognizedValue("Bond display 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bond display 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBondDisplay.Solid;
   }
 
@@ -769,7 +885,11 @@ public class CDXUtils {
       case CDXBondOrder_Any:
         return CDBondOrder.Any;
     }
-    handleUnrecognizedValue("Bonder order 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bonder order 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBondOrder.Single;
   }
 
@@ -793,7 +913,11 @@ public class CDXUtils {
       case CDXGraphicType_Symbol:
         return CDGraphicType.Symbol;
     }
-    handleUnrecognizedValue("Graphic type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Graphic type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDGraphicType.Undefined;
   }
 
@@ -831,7 +955,11 @@ public class CDXUtils {
       case CDXArrowType_RetroSynthetic:
         return CDArrowType.RetroSynthetic;
     }
-    handleUnrecognizedValue("Arrow type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Arrow type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDArrowType.NoHead;
   }
 
@@ -901,7 +1029,11 @@ public class CDXUtils {
       case CDXFillType_Faded:
         return CDFillType.Faded;
     }
-    handleUnrecognizedValue("Fill type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Fill type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDFillType.Unspecified;
   }
 
@@ -953,7 +1085,11 @@ public class CDXUtils {
       case CDXOrbitalType_dxyFilled:
         return CDOrbitalType.dxyFilled;
     }
-    handleUnrecognizedValue("Orbital type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Orbital type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
@@ -973,7 +1109,11 @@ public class CDXUtils {
       case CDXBracketType_Round:
         return CDBracketType.Round;
     }
-    handleUnrecognizedValue("Bracket type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bracket type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
@@ -1007,7 +1147,11 @@ public class CDXUtils {
       case CDXSymbolType_Relative:
         return CDSymbolType.Relative;
     }
-    handleUnrecognizedValue("Symbol type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Symbol type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
@@ -1053,11 +1197,16 @@ public class CDXUtils {
       case CDXBracketUsage_Unused2:
         return CDBracketUsage.Unused2;
     }
-    handleUnrecognizedValue("Bracket usage 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Bracket usage 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDBracketUsage.Unspecified;
   }
 
-  public static CDPolymerRepeatPattern readPolymerRepeatPatternProperty(CDXProperty property) throws IOException {
+  public static CDPolymerRepeatPattern readPolymerRepeatPatternProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt();
     switch (value) {
       case CDXPolymerRepeatPattern_HeadToTail:
@@ -1068,11 +1217,15 @@ public class CDXUtils {
         return CDPolymerRepeatPattern.EitherUnknown;
     }
     handleUnrecognizedValue(
-            "Polymer repeat pattern 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+        "Polymer repeat pattern 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return null;
   }
 
-  public static CDPolymerFlipType readPolymerFlipTypeProperty(CDXProperty property) throws IOException {
+  public static CDPolymerFlipType readPolymerFlipTypeProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt();
     switch (value) {
       case CDXPolymerFlipType_Unspecified:
@@ -1082,11 +1235,16 @@ public class CDXUtils {
       case CDXPolymerFlipType_Flip:
         return CDPolymerFlipType.Flip;
     }
-    handleUnrecognizedValue("Polymer flip type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Polymer flip type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDPolymerFlipType.Unspecified;
   }
 
-  public static CDGeometryType readGeometricFeatureProperty(CDXProperty property) throws IOException {
+  public static CDGeometryType readGeometricFeatureProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXGeometricFeature_Undefined:
@@ -1108,11 +1266,16 @@ public class CDXUtils {
       case CDXGeometricFeature_NormalFromPointPlane:
         return CDGeometryType.NormalFromPointPlane;
     }
-    handleUnrecognizedValue("Geometric feature 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Geometric feature 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDGeometryType.Undefined;
   }
 
-  public static CDConstraintType readConstraintTypeProperty(CDXProperty property) throws IOException {
+  public static CDConstraintType readConstraintTypeProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXConstraintType_Undefined:
@@ -1124,7 +1287,11 @@ public class CDXUtils {
       case CDXConstraintType_ExclusionSphere:
         return CDConstraintType.ExclusionSphere;
     }
-    handleUnrecognizedValue("Constraint type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Constraint type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDConstraintType.Undefined;
   }
 
@@ -1142,7 +1309,11 @@ public class CDXUtils {
       case CDXSideType_Right:
         return CDSideType.Right;
     }
-    handleUnrecognizedValue("Side type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Side type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDSideType.Undefined;
   }
 
@@ -1158,11 +1329,16 @@ public class CDXUtils {
       case CDXObjectTagType_String:
         return CDObjectTagType.String;
     }
-    handleUnrecognizedValue("Object tag type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Object tag type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDObjectTagType.Undefined;
   }
 
-  public static CDPositioningType readPositioningTypeProperty(CDXProperty property) throws IOException {
+  public static CDPositioningType readPositioningTypeProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt8();
     switch (value) {
       case CDXPositioningType_Auto:
@@ -1174,7 +1350,11 @@ public class CDXUtils {
       case CDXPositioningType_Absolute:
         return CDPositioningType.Absolute;
     }
-    handleUnrecognizedValue("Positioning type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Positioning type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDPositioningType.Auto;
   }
 
@@ -1202,7 +1382,11 @@ public class CDXUtils {
       case CDXSpectrumClass_Atomic:
         return CDSpectrumClass.Atomic;
     }
-    handleUnrecognizedValue("Spectrum class 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Spectrum class 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDSpectrumClass.Unknown;
   }
 
@@ -1224,7 +1408,11 @@ public class CDXUtils {
       case CDXSpectrumXType_Other:
         return CDSpectrumXType.Other;
     }
-    handleUnrecognizedValue("Spectrum x type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Spectrum x type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDSpectrumXType.Unknown;
   }
 
@@ -1244,7 +1432,11 @@ public class CDXUtils {
       case CDXSpectrumYType_ArbitraryUnits:
         return CDSpectrumYType.ArbitraryUnits;
     }
-    handleUnrecognizedValue("Spectrum y type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Spectrum y type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDSpectrumYType.Unknown;
   }
 
@@ -1264,7 +1456,11 @@ public class CDXUtils {
       case CDXRingBondCount_SpiroOrHigher:
         return CDRingBondCount.Unspecified;
     }
-    handleUnrecognizedValue("Ring bond count 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Ring bond count 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDRingBondCount.Unspecified;
   }
 
@@ -1289,11 +1485,16 @@ public class CDXUtils {
       case CDXArrowheadType_Angle:
         return CDArrowHeadType.Angle;
     }
-    handleUnrecognizedValue("Arrow head type 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Arrow head type 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDArrowHeadType.Solid;
   }
 
-  public static CDArrowHeadPositionType readArrowheadProperty(CDXProperty property) throws IOException {
+  public static CDArrowHeadPositionType readArrowheadProperty(CDXProperty property)
+      throws IOException {
     int value = property.getDataAsUInt16();
     switch (value) {
       case CDXArrowhead_Unspecified:
@@ -1307,7 +1508,11 @@ public class CDXUtils {
       case CDXArrowhead_HalfRight:
         return CDArrowHeadPositionType.HalfRight;
     }
-    handleUnrecognizedValue("Arrow head 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Arrow head 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDArrowHeadPositionType.Unspecified;
   }
 
@@ -1323,7 +1528,11 @@ public class CDXUtils {
       case CDXArrowNoGo_Hash:
         return CDNoGoType.Hash;
     }
-    handleUnrecognizedValue("Arrow no go 0x" + Integer.toHexString(value) + " not recognized at " + getPositionAsString(property));
+    handleUnrecognizedValue(
+        "Arrow no go 0x"
+            + Integer.toHexString(value)
+            + " not recognized at "
+            + getPositionAsString(property));
     return CDNoGoType.Unspecified;
   }
 
@@ -1426,12 +1635,12 @@ public class CDXUtils {
       if (t == null) {
         continue;
       }
-      //if (!t.contains("°")) continue;
+      // if (!t.contains("°")) continue;
       if (!t.contains("\u00B0")) {
         continue; // degree sign
       }
-      //if (!t.contains("\u00B7")) continue; // middle dot
-      //t += (char)13;
+      // if (!t.contains("\u00B7")) continue; // middle dot
+      // t += (char)13;
       List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
       for (int i : calculatedLineStarts) {
         if (!definedLineStarts.contains(i)) {
@@ -1503,11 +1712,11 @@ public class CDXUtils {
       if (t == null) {
         continue;
       }
-      //if (!t.contains("°")) continue;
+      // if (!t.contains("°")) continue;
       if (!t.contains("\u00B0")) {
         continue; // degree sign
       }
-      //if (!t.contains("\u00B7")) continue; // middle dot
+      // if (!t.contains("\u00B7")) continue; // middle dot
       t += (char) 13;
       List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
       boolean erroneous = false;
@@ -1531,5 +1740,4 @@ public class CDXUtils {
     }
     return result;
   }
-
 }

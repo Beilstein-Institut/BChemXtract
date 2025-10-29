@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of a graphic object that represents a circle or ellipse.
- */
+/** The type of a graphic object that represents a circle or ellipse. */
 public class CDOvalType {
   private boolean circle = false;
   private boolean shaded = false;
@@ -160,5 +158,4 @@ public class CDOvalType {
     sb.append("]");
     return sb.toString();
   }
-
 }

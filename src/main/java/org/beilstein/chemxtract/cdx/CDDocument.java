@@ -21,18 +21,16 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
-/**
- * The root of the CDX object model. Contains at least one page object.
- */
+/** The root of the CDX object model. Contains at least one page object. */
 public class CDDocument {
   /** The magnification level for the control as a percentage. */
   private float magnification;
+
   /** The name of the document. */
   private String name;
 
@@ -240,5 +238,4 @@ public class CDDocument {
   public CDSettings getSettings() {
     return settings;
   }
-
 }

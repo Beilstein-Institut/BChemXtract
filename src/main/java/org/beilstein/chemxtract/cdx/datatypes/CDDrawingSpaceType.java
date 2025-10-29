@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDDrawingSpaceType{
+public enum CDDrawingSpaceType {
   Pages,
   Poster;
 }

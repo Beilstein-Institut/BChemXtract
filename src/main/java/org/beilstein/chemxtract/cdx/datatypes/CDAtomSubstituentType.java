@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDAtomSubstituentType{
+public enum CDAtomSubstituentType {
   None,
   FreeSites,
   SubstituentsUpTo,

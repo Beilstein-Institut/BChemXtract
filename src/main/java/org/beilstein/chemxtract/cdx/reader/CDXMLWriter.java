@@ -21,41 +21,36 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.io.IOUtils;
-import org.beilstein.chemxtract.cdx.datatypes.*;
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.cdx.datatypes.*;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
+import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
 
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.*;
+import java.util.Map.Entry;
 import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.*;
-import java.util.Map.Entry;
+import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.io.IOUtils;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
-
-/**
- * Experimental writer for ChemDraw CDXML files.
- */
-//TODO ColoredMolecularAreas
+/** Experimental writer for ChemDraw CDXML files. */
+// TODO ColoredMolecularAreas
 public class CDXMLWriter {
   private ContentHandler handler;
 
-  private Map<Object,Integer> references = new LinkedHashMap<>();
-  private Map<CDColor,Integer> colors = new LinkedHashMap<>();
-  private Map<Integer,CDColor> colorsInverse = new LinkedHashMap<>();
-  private Map<CDFont,Integer> fonts = new LinkedHashMap<>();
-  private Map<Integer,CDFont> fontsInverse = new LinkedHashMap<>();
+  private Map<Object, Integer> references = new LinkedHashMap<>();
+  private Map<CDColor, Integer> colors = new LinkedHashMap<>();
+  private Map<Integer, CDColor> colorsInverse = new LinkedHashMap<>();
+  private Map<CDFont, Integer> fonts = new LinkedHashMap<>();
+  private Map<Integer, CDFont> fontsInverse = new LinkedHashMap<>();
 
   private CDXMLWriter(ContentHandler handler) {
     this.handler = handler;
@@ -93,16 +88,18 @@ public class CDXMLWriter {
 
   /**
    * This method writes the {@link CDDocument} into a {@link OutputStream}.
-   * 
+   *
    * @param document ChemDraw document, which should be written
    * @param out {@link OutputStream}, which retrieves the generated output
    * @return The generated output as text string
-   * @throws IOException Occurs if the writer couldn't write the output into the
-   *           {@link OutputStream}
+   * @throws IOException Occurs if the writer couldn't write the output into the {@link
+   *     OutputStream}
    * @throws IOException Occurs if an exception occur during the generation of the output
    */
-  public static String writeDocument(CDDocument document, OutputStream out) throws IOException, IOException {
-    SAXTransformerFactory serializerfactory = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+  public static String writeDocument(CDDocument document, OutputStream out)
+      throws IOException, IOException {
+    SAXTransformerFactory serializerfactory =
+        (SAXTransformerFactory) SAXTransformerFactory.newInstance();
 
     try {
       serializerfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -200,7 +197,8 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_ChainAngle, document.getSettings().getChainAngle());
     addAttribute(attributes, CDXMLProp_BondSpacing, document.getSettings().getBondSpacing());
     if (document.getSettings().getBondSpacingAbs() > 0) {
-      addAttribute(attributes, CDXMLProp_BondSpacingAbs, document.getSettings().getBondSpacingAbs());
+      addAttribute(
+          attributes, CDXMLProp_BondSpacingAbs, document.getSettings().getBondSpacingAbs());
     }
     addAttribute(attributes, CDXMLProp_BondLength, document.getSettings().getBondLength());
     addAttribute(attributes, CDXMLProp_BoldWidth, document.getSettings().getBoldWidth());
@@ -211,55 +209,79 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_LabelStyleSize, document.getSettings().getLabelSize());
     addAttribute(attributes, CDXMLProp_LabelStyleFace, document.getSettings().getLabelFace());
     addAttribute(attributes, CDXMLProp_LabelStyleColor, document.getSettings().getLabelColor());
-    addLineHeightAttribute(attributes, CDXMLProp_LabelLineHeight, document.getSettings().getLabelLineHeight());
+    addLineHeightAttribute(
+        attributes, CDXMLProp_LabelLineHeight, document.getSettings().getLabelLineHeight());
     if (document.getSettings().getLabelJustification() != CDJustification.Left) {
-      addAttribute(attributes, CDXMLProp_LabelJustification, document.getSettings().getLabelJustification());
+      addAttribute(
+          attributes, CDXMLProp_LabelJustification, document.getSettings().getLabelJustification());
     }
     addAttribute(attributes, CDXMLProp_CaptionStyleFont, document.getSettings().getCaptionFont());
     addAttribute(attributes, CDXMLProp_CaptionStyleSize, document.getSettings().getCaptionSize());
     addAttribute(attributes, CDXMLProp_CaptionStyleFace, document.getSettings().getCaptionFace());
     addAttribute(attributes, CDXMLProp_CaptionStyleColor, document.getSettings().getCaptionColor());
     if (document.getSettings().getCaptionLineHeight() != CDSettings.LineHeight_Automatic) {
-      addLineHeightAttribute(attributes, CDXMLProp_CaptionLineHeight, document.getSettings().getCaptionLineHeight());
+      addLineHeightAttribute(
+          attributes, CDXMLProp_CaptionLineHeight, document.getSettings().getCaptionLineHeight());
     }
     if (document.getSettings().getCaptionJustification() != CDJustification.Left) {
-      addAttribute(attributes, CDXMLProp_CaptionJustification, document.getSettings().getCaptionJustification());
+      addAttribute(
+          attributes,
+          CDXMLProp_CaptionJustification,
+          document.getSettings().getCaptionJustification());
     }
     if (document.isFractionalWidths()) {
       addAttribute(attributes, CDXMLProp_FractionalWidths, document.isFractionalWidths());
     }
     if (!document.getSettings().isInterpretChemically()) {
-      addAttribute(attributes, CDXMLProp_InterpretChemically, document.getSettings().isInterpretChemically());
+      addAttribute(
+          attributes,
+          CDXMLProp_InterpretChemically,
+          document.getSettings().isInterpretChemically());
     }
     if (!document.getSettings().isShowAtomQuery()) {
       addAttribute(attributes, CDXMLProp_Atom_ShowQuery, document.getSettings().isShowAtomQuery());
     }
     if (document.getSettings().isShowAtomStereo()) {
-      addAttribute(attributes, CDXMLProp_Atom_ShowStereo, document.getSettings().isShowAtomStereo());
+      addAttribute(
+          attributes, CDXMLProp_Atom_ShowStereo, document.getSettings().isShowAtomStereo());
     }
     if (!document.getSettings().isShowAtomEnhancedStereo()) {
-      addAttribute(attributes, CDXMLProp_Atom_ShowEnhancedStereo, document.getSettings().isShowAtomEnhancedStereo());
+      addAttribute(
+          attributes,
+          CDXMLProp_Atom_ShowEnhancedStereo,
+          document.getSettings().isShowAtomEnhancedStereo());
     }
     if (document.getSettings().isShowAtomNumber()) {
-      addAttribute(attributes, CDXMLProp_Atom_ShowAtomNumber, document.getSettings().isShowAtomNumber());
+      addAttribute(
+          attributes, CDXMLProp_Atom_ShowAtomNumber, document.getSettings().isShowAtomNumber());
     }
     if (!document.getSettings().isShowBondQuery()) {
       addAttribute(attributes, CDXMLProp_Bond_ShowQuery, document.getSettings().isShowBondQuery());
     }
     if (document.getSettings().isShowBondStereo()) {
-      addAttribute(attributes, CDXMLProp_Bond_ShowStereo, document.getSettings().isShowBondStereo());
+      addAttribute(
+          attributes, CDXMLProp_Bond_ShowStereo, document.getSettings().isShowBondStereo());
     }
     if (document.getSettings().isShowBondReaction()) {
       addAttribute(attributes, CDXMLProp_Bond_ShowRxn, document.getSettings().isShowBondReaction());
     }
     if (document.getSettings().isShowTerminalCarbonLabels()) {
-      addAttribute(attributes, CDXMLProp_ShowTerminalCarbonLabels, document.getSettings().isShowTerminalCarbonLabels());
+      addAttribute(
+          attributes,
+          CDXMLProp_ShowTerminalCarbonLabels,
+          document.getSettings().isShowTerminalCarbonLabels());
     }
     if (document.getSettings().isShowNonTerminalCarbonLabels()) {
-      addAttribute(attributes, CDXMLProp_ShowNonTerminalCarbonLabels, document.getSettings().isShowNonTerminalCarbonLabels());
+      addAttribute(
+          attributes,
+          CDXMLProp_ShowNonTerminalCarbonLabels,
+          document.getSettings().isShowNonTerminalCarbonLabels());
     }
     if (document.getSettings().isHideImplicitHydrogens()) {
-      addAttribute(attributes, CDXMLProp_HideImplicitHydrogens, document.getSettings().isHideImplicitHydrogens());
+      addAttribute(
+          attributes,
+          CDXMLProp_HideImplicitHydrogens,
+          document.getSettings().isHideImplicitHydrogens());
     }
     if (document.getMagnification() != 0.0) {
       addAttribute(attributes, CDXMLProp_Magnification, (int) (document.getMagnification() * 10f));
@@ -333,7 +355,6 @@ public class CDXMLWriter {
       handler.endElement(NS, CDXMLObj_Font, CDXMLObj_Font);
     }
     handler.endElement(NS, CDXMLObj_FontTable, CDXMLObj_FontTable);
-
   }
 
   private void collectPage(CDPage page) {
@@ -619,7 +640,8 @@ public class CDXMLWriter {
   private void writeFragment(CDFragment fragment) throws SAXException, IOException {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, fragment);
-    addReferenceListAttribute(attributes, CDXMLProp_Frag_ConnectionOrder, fragment.getConnectionOrder());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_Frag_ConnectionOrder, fragment.getConnectionOrder());
     addAttribute(attributes, CDXMLProp_BoundingBox, fragment.getBounds());
     if (fragment.isRacemic()) {
       addAttribute(attributes, CDXMLProp_Mole_Racemic, fragment.isRacemic());
@@ -714,9 +736,11 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_LabelStyleFace, text.getSettings().getLabelFace());
     addAttribute(attributes, CDXMLProp_LabelStyleColor, text.getSettings().getLabelColor());
     if (text.getSettings().getLabelJustification() != CDJustification.Left) {
-      addAttribute(attributes, CDXMLProp_LabelJustification, text.getSettings().getLabelJustification());
+      addAttribute(
+          attributes, CDXMLProp_LabelJustification, text.getSettings().getLabelJustification());
     }
-    addLineHeightAttribute(attributes, CDXMLProp_LabelLineHeight, text.getSettings().getLabelLineHeight());
+    addLineHeightAttribute(
+        attributes, CDXMLProp_LabelLineHeight, text.getSettings().getLabelLineHeight());
     addAttribute(attributes, CDXMLProp_CaptionStyleFont, text.getSettings().getCaptionFont());
     if (text.getSettings().getCaptionSize() > 0) {
       addAttribute(attributes, CDXMLProp_CaptionStyleSize, text.getSettings().getCaptionSize());
@@ -724,13 +748,16 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_CaptionStyleFace, text.getSettings().getCaptionFace());
     addAttribute(attributes, CDXMLProp_CaptionStyleColor, text.getSettings().getCaptionColor());
     if (text.getSettings().getCaptionLineHeight() != CDSettings.LineHeight_Automatic) {
-      addAttribute(attributes, CDXMLProp_CaptionLineHeight, text.getSettings().getCaptionLineHeight());
+      addAttribute(
+          attributes, CDXMLProp_CaptionLineHeight, text.getSettings().getCaptionLineHeight());
     }
     if (text.getSettings().getCaptionJustification() != CDJustification.Left) {
-      addAttribute(attributes, CDXMLProp_CaptionJustification, text.getSettings().getCaptionJustification());
+      addAttribute(
+          attributes, CDXMLProp_CaptionJustification, text.getSettings().getCaptionJustification());
     }
     if (!text.getSettings().isInterpretChemically()) {
-      addAttribute(attributes, CDXMLProp_InterpretChemically, text.getSettings().isInterpretChemically());
+      addAttribute(
+          attributes, CDXMLProp_InterpretChemically, text.getSettings().isInterpretChemically());
     }
 
     handler.startElement(NS, CDXMLObj_Text, CDXMLObj_Text, attributes);
@@ -818,17 +845,22 @@ public class CDXMLWriter {
     if (node.getRadical() != CDRadical.None) {
       addAttribute(attributes, CDXMLProp_Atom_Radical, node.getRadical());
     }
-    if (node.getSubstituentType() == CDAtomSubstituentType.FreeSites && node.getSubstituentCount() != 0) {
+    if (node.getSubstituentType() == CDAtomSubstituentType.FreeSites
+        && node.getSubstituentCount() != 0) {
       addAttribute(attributes, CDXMLProp_Atom_RestrictFreeSites, node.getSubstituentCount());
     }
-    if (node.getSubstituentType() == CDAtomSubstituentType.SubstituentsUpTo && node.getSubstituentCount() > 0) {
+    if (node.getSubstituentType() == CDAtomSubstituentType.SubstituentsUpTo
+        && node.getSubstituentCount() > 0) {
       addAttribute(attributes, CDXMLProp_Atom_RestrictSubstituentsUpTo, node.getSubstituentCount());
     }
-    if (node.getSubstituentType() == CDAtomSubstituentType.SubstituentsExactly && node.getSubstituentCount() > 0) {
-      addAttribute(attributes, CDXMLProp_Atom_RestrictSubstituentsExactly, node.getSubstituentCount());
+    if (node.getSubstituentType() == CDAtomSubstituentType.SubstituentsExactly
+        && node.getSubstituentCount() > 0) {
+      addAttribute(
+          attributes, CDXMLProp_Atom_RestrictSubstituentsExactly, node.getSubstituentCount());
     }
     if (node.isImplicitHydrogensAllowed()) {
-      addAttribute(attributes, CDXMLProp_Atom_RestrictImplicitHydrogens, node.isImplicitHydrogensAllowed());
+      addAttribute(
+          attributes, CDXMLProp_Atom_RestrictImplicitHydrogens, node.isImplicitHydrogensAllowed());
     }
     if (node.getRingBondCount() != CDRingBondCount.Unspecified) {
       addAttribute(attributes, CDXMLProp_Atom_RestrictRingBondCount, node.getRingBondCount());
@@ -849,7 +881,8 @@ public class CDXMLWriter {
       addAttribute(attributes, CDXMLProp_Atom_IsotopicAbundance, node.getIsotopicAbundance());
     }
     if (node.getAttachmentPointType() != CDExternalConnectionType.Unspecified) {
-      addAttribute(attributes, CDXMLProp_Atom_ExternalConnectionType, node.getAttachmentPointType());
+      addAttribute(
+          attributes, CDXMLProp_Atom_ExternalConnectionType, node.getAttachmentPointType());
     }
     if (node.isAbnormalValenceAllowed()) {
       addAttribute(attributes, CDXMLProp_Atom_AbnormalValence, node.isAbnormalValenceAllowed());
@@ -888,19 +921,32 @@ public class CDXMLWriter {
       addAttribute(attributes, CDXMLProp_Atom_ShowStereo, node.getSettings().isShowAtomStereo());
     }
     if (!node.getSettings().isShowAtomEnhancedStereo()) {
-      addAttribute(attributes, CDXMLProp_Atom_ShowEnhancedStereo, node.getSettings().isShowAtomEnhancedStereo());
+      addAttribute(
+          attributes,
+          CDXMLProp_Atom_ShowEnhancedStereo,
+          node.getSettings().isShowAtomEnhancedStereo());
     }
     if (node.getSettings().isShowAtomNumber()) {
-      addAttribute(attributes, CDXMLProp_Atom_ShowAtomNumber, node.getSettings().isShowAtomNumber());
+      addAttribute(
+          attributes, CDXMLProp_Atom_ShowAtomNumber, node.getSettings().isShowAtomNumber());
     }
     if (node.getSettings().isShowTerminalCarbonLabels()) {
-      addAttribute(attributes, CDXMLProp_ShowTerminalCarbonLabels, node.getSettings().isShowTerminalCarbonLabels());
+      addAttribute(
+          attributes,
+          CDXMLProp_ShowTerminalCarbonLabels,
+          node.getSettings().isShowTerminalCarbonLabels());
     }
     if (node.getSettings().isShowNonTerminalCarbonLabels()) {
-      addAttribute(attributes, CDXMLProp_ShowNonTerminalCarbonLabels, node.getSettings().isShowNonTerminalCarbonLabels());
+      addAttribute(
+          attributes,
+          CDXMLProp_ShowNonTerminalCarbonLabels,
+          node.getSettings().isShowNonTerminalCarbonLabels());
     }
     if (node.getSettings().isHideImplicitHydrogens()) {
-      addAttribute(attributes, CDXMLProp_HideImplicitHydrogens, node.getSettings().isHideImplicitHydrogens());
+      addAttribute(
+          attributes,
+          CDXMLProp_HideImplicitHydrogens,
+          node.getSettings().isHideImplicitHydrogens());
     }
     if (node.getSettings().getLineWidth() > 0) {
       addAttribute(attributes, CDXMLProp_LineWidth, node.getSettings().getLineWidth());
@@ -965,7 +1011,8 @@ public class CDXMLWriter {
       addAttribute(attributes, CDXMLProp_Bond_RestrictTopology, bond.getTopology());
     }
     if (bond.getReactionParticipation() != CDBondReactionParticipation.Unspecified) {
-      addAttribute(attributes, CDXMLProp_Bond_RestrictRxnParticipation, bond.getReactionParticipation());
+      addAttribute(
+          attributes, CDXMLProp_Bond_RestrictRxnParticipation, bond.getReactionParticipation());
     }
     if (bond.getBeginAttach() >= 0) {
       addAttribute(attributes, CDXMLProp_Bond_BeginAttach, bond.getBeginAttach());
@@ -976,9 +1023,11 @@ public class CDXMLWriter {
     if (bond.getStereochemistry() != CDBondCIPType.Undetermined) {
       addAttribute(attributes, CDXMLProp_Bond_CIPStereochemistry, bond.getStereochemistry());
     }
-    addReferenceListAttribute(attributes, CDXMLProp_Bond_BondOrdering, bond.getBondCircularOrdering());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_Bond_BondOrdering, bond.getBondCircularOrdering());
     if (bond.getCrossingBonds() != null) {
-      addReferenceListAttribute(attributes, CDXMLProp_Bond_CrossingBonds, new ArrayList<CDBond>(bond.getCrossingBonds()));
+      addReferenceListAttribute(
+          attributes, CDXMLProp_Bond_CrossingBonds, new ArrayList<CDBond>(bond.getCrossingBonds()));
     }
     if (bond.isIgnoreWarnings()) {
       addAttribute(attributes, CDXMLProp_IgnoreWarnings, bond.isIgnoreWarnings());
@@ -1203,8 +1252,8 @@ public class CDXMLWriter {
     handler.endElement(NS, CDXMLObj_Arrow, CDXMLObj_Arrow);
   }
 
-  private void writeRepresents(Map<String,Object> represents) throws SAXException, IOException {
-    for (Entry<String,Object> represent : represents.entrySet()) {
+  private void writeRepresents(Map<String, Object> represents) throws SAXException, IOException {
+    for (Entry<String, Object> represent : represents.entrySet()) {
       AttributesImpl attributes = new AttributesImpl();
       addAttribute(attributes, CDXMLProp_Attribute, represent.getKey());
       addReferenceAttribute(attributes, CDXMLProp_Object, represent.getValue());
@@ -1288,7 +1337,8 @@ public class CDXMLWriter {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, altGroup);
     addAttribute(attributes, CDXMLProp_ForegroundColor, altGroup.getColor());
-    addAttribute(attributes, CDXMLProp_BackgroundColor, altGroup.getSettings().getBackgroundColor());
+    addAttribute(
+        attributes, CDXMLProp_BackgroundColor, altGroup.getSettings().getBackgroundColor());
     addAttribute(attributes, CDXMLProp_ZOrder, altGroup.getZOrder());
     addAttribute(attributes, CDXMLProp_BoundingBox, altGroup.getBounds());
     addAttribute(attributes, CDXMLProp_NamedAlternativeGroup_TextFrame, altGroup.getTextFrame());
@@ -1330,15 +1380,23 @@ public class CDXMLWriter {
     }
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, reactionStep);
-    addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_Reactants, reactionStep.getReactants());
-    addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_Products, reactionStep.getProducts());
-    addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_Plusses, reactionStep.getPlusses());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_ReactionStep_Reactants, reactionStep.getReactants());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_ReactionStep_Products, reactionStep.getProducts());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_ReactionStep_Plusses, reactionStep.getPlusses());
     addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_Arrows, reactionStep.getArrows());
-    addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_ObjectsAboveArrow, reactionStep.getObjectsAboveArrow());
-    addReferenceListAttribute(attributes, CDXMLProp_ReactionStep_ObjectsBelowArrow, reactionStep.getObjectsBelowArrow());
-    addReferenceMapAttribute(attributes, CDXMLProp_ReactionStep_Atom_Map, reactionStep.getAtomMap());
-    addReferenceMapAttribute(attributes, CDXMLProp_ReactionStep_Atom_Map_Manual, reactionStep.getAtomMapManual());
-    addReferenceMapAttribute(attributes, CDXMLProp_ReactionStep_Atom_Map_Auto, reactionStep.getAtomMapAuto());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_ReactionStep_ObjectsAboveArrow, reactionStep.getObjectsAboveArrow());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_ReactionStep_ObjectsBelowArrow, reactionStep.getObjectsBelowArrow());
+    addReferenceMapAttribute(
+        attributes, CDXMLProp_ReactionStep_Atom_Map, reactionStep.getAtomMap());
+    addReferenceMapAttribute(
+        attributes, CDXMLProp_ReactionStep_Atom_Map_Manual, reactionStep.getAtomMapManual());
+    addReferenceMapAttribute(
+        attributes, CDXMLProp_ReactionStep_Atom_Map_Auto, reactionStep.getAtomMapAuto());
 
     handler.startElement(NS, CDXMLObj_ReactionStep, CDXMLObj_ReactionStep, attributes);
 
@@ -1353,7 +1411,8 @@ public class CDXMLWriter {
     }
   }
 
-  private void writeReactionScheme(CDReactionScheme reactionScheme) throws SAXException, IOException {
+  private void writeReactionScheme(CDReactionScheme reactionScheme)
+      throws SAXException, IOException {
     if (reactionScheme == null) {
       return;
     }
@@ -1413,7 +1472,8 @@ public class CDXMLWriter {
     }
     addAttribute(attributes, CDXMLProp_ConstraintMin, constraint.getMinRange());
     addAttribute(attributes, CDXMLProp_ConstraintMax, constraint.getMaxRange());
-    addAttribute(attributes, CDXMLProp_IgnoreUnconnectedAtoms, constraint.isIgnoreUnconnectedAtoms());
+    addAttribute(
+        attributes, CDXMLProp_IgnoreUnconnectedAtoms, constraint.isIgnoreUnconnectedAtoms());
     if (constraint.isDihedralIsChiral()) {
       addAttribute(attributes, CDXMLProp_DihedralIsChiral, constraint.isDihedralIsChiral());
     }
@@ -1457,7 +1517,8 @@ public class CDXMLWriter {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, spectrum);
     addAttribute(attributes, CDXMLProp_ForegroundColor, spectrum.getColor());
-    addAttribute(attributes, CDXMLProp_BackgroundColor, spectrum.getSettings().getBackgroundColor());
+    addAttribute(
+        attributes, CDXMLProp_BackgroundColor, spectrum.getSettings().getBackgroundColor());
     addAttribute(attributes, CDXMLProp_ZOrder, spectrum.getZOrder());
     addAttribute(attributes, CDXMLProp_BoundingBox, spectrum.getBounds());
     addAttribute(attributes, CDXMLProp_Spectrum_XSpacing, spectrum.getXSpacing());
@@ -1526,28 +1587,44 @@ public class CDXMLWriter {
     addReferenceAttribute(attributes, CDXMLProp_Id, embeddedObject);
     // SupersededBy CDATA #IMPLIED
     addAttribute(attributes, CDXMLProp_ForegroundColor, embeddedObject.getColor());
-    addAttribute(attributes, CDXMLProp_BackgroundColor, embeddedObject.getSettings().getBackgroundColor());
+    addAttribute(
+        attributes, CDXMLProp_BackgroundColor, embeddedObject.getSettings().getBackgroundColor());
     addAttribute(attributes, CDXMLProp_ZOrder, embeddedObject.getZOrder());
     addAttribute(attributes, CDXMLProp_BoundingBox, embeddedObject.getBounds());
     addAttribute(attributes, CDXMLProp_RotationAngle, embeddedObject.getRotationAngle());
     addAttribute(attributes, CDXMLProp_Picture_Edition, embeddedObject.getPictureEdition());
-    addAttribute(attributes, CDXMLProp_Picture_EditionAlias, embeddedObject.getPictureEditionAlias());
+    addAttribute(
+        attributes, CDXMLProp_Picture_EditionAlias, embeddedObject.getPictureEditionAlias());
     addAttribute(attributes, CDXMLProp_MacPICT, embeddedObject.getMacPICT());
 
     if (embeddedObject.getEnhancedMetafile() != null) {
       byte[] data = IOUtils.compress(embeddedObject.getEnhancedMetafile());
-      addAttribute(attributes, CDXMLProp_CompressedEnhancedMetafile, Base64.getEncoder().encodeToString(data));
-      addAttribute(attributes, CDXMLProp_UncompressedEnhancedMetafileSize, embeddedObject.getEnhancedMetafile().length);
+      addAttribute(
+          attributes,
+          CDXMLProp_CompressedEnhancedMetafile,
+          Base64.getEncoder().encodeToString(data));
+      addAttribute(
+          attributes,
+          CDXMLProp_UncompressedEnhancedMetafileSize,
+          embeddedObject.getEnhancedMetafile().length);
     }
     if (embeddedObject.getOleObject() != null) {
       byte[] data = IOUtils.compress(embeddedObject.getOleObject());
-      addAttribute(attributes, CDXMLProp_CompressedOLEObject, Base64.getEncoder().encodeToString(data));
-      addAttribute(attributes, CDXMLProp_UncompressedOLEObjectSize, embeddedObject.getOleObject().length);
+      addAttribute(
+          attributes, CDXMLProp_CompressedOLEObject, Base64.getEncoder().encodeToString(data));
+      addAttribute(
+          attributes, CDXMLProp_UncompressedOLEObjectSize, embeddedObject.getOleObject().length);
     }
     if (embeddedObject.getWindowsMetafile() != null) {
       byte[] data = IOUtils.compress(embeddedObject.getWindowsMetafile());
-      addAttribute(attributes, CDXMLProp_CompressedWindowsMetafile, Base64.getEncoder().encodeToString(data));
-      addAttribute(attributes, CDXMLProp_UncompressedWindowsMetafileSize, embeddedObject.getWindowsMetafile().length);
+      addAttribute(
+          attributes,
+          CDXMLProp_CompressedWindowsMetafile,
+          Base64.getEncoder().encodeToString(data));
+      addAttribute(
+          attributes,
+          CDXMLProp_UncompressedWindowsMetafileSize,
+          embeddedObject.getWindowsMetafile().length);
     }
 
     addAttribute(attributes, CDXMLProp_GIF, embeddedObject.getGif());
@@ -1615,7 +1692,6 @@ public class CDXMLWriter {
 
   private void collectSequence(CDSequence sequence) {
     collectReference(sequence);
-
   }
 
   private void writeSequence(CDSequence sequence) throws SAXException {
@@ -1628,7 +1704,6 @@ public class CDXMLWriter {
 
   private void collectCrossReference(CDCrossReference crossReference) {
     collectReference(crossReference);
-
   }
 
   private void writeCrossReference(CDCrossReference crossReference) throws SAXException {
@@ -1723,7 +1798,8 @@ public class CDXMLWriter {
       addAttribute(attributes, CDXMLProp_Visible, tlcPlate.isVisible());
     }
     addAttribute(attributes, CDXMLProp_ForegroundColor, tlcPlate.getColor());
-    addAttribute(attributes, CDXMLProp_BackgroundColor, tlcPlate.getSettings().getBackgroundColor());
+    addAttribute(
+        attributes, CDXMLProp_BackgroundColor, tlcPlate.getSettings().getBackgroundColor());
     addAttribute(attributes, CDXMLProp_ZOrder, tlcPlate.getZOrder());
     addAttribute(attributes, CDXMLProp_BoundingBox, tlcPlate.getBounds());
     addAttribute(attributes, CDXMLProp_BoldWidth, tlcPlate.getSettings().getBoldWidth());
@@ -1737,7 +1813,8 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_BottomRight, tlcPlate.getBottomRight());
     addAttribute(attributes, CDXMLProp_BottomLeft, tlcPlate.getBottomLeft());
     addAttribute(attributes, CDXMLProp_TLC_OriginFraction, tlcPlate.getOriginFraction());
-    addAttribute(attributes, CDXMLProp_TLC_SolventFrontFraction, tlcPlate.getSolventFrontFraction());
+    addAttribute(
+        attributes, CDXMLProp_TLC_SolventFrontFraction, tlcPlate.getSolventFrontFraction());
     if (tlcPlate.isShowOrigin()) {
       addAttribute(attributes, CDXMLProp_TLC_ShowOrigin, tlcPlate.isShowOrigin());
     }
@@ -1850,13 +1927,16 @@ public class CDXMLWriter {
   private void writeBracketedGroup(CDBracket bracketedGroup) throws SAXException, IOException {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, bracketedGroup);
-    addReferenceListAttribute(attributes, CDXMLProp_BracketedObjects, bracketedGroup.getBracketedObjects());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_BracketedObjects, bracketedGroup.getBracketedObjects());
     addAttribute(attributes, CDXMLProp_Bracket_Usage, bracketedGroup.getBracketUsage());
-    addAttribute(attributes, CDXMLProp_Polymer_RepeatPattern, bracketedGroup.getPolymerRepeatPattern());
+    addAttribute(
+        attributes, CDXMLProp_Polymer_RepeatPattern, bracketedGroup.getPolymerRepeatPattern());
     addAttribute(attributes, CDXMLProp_Polymer_FlipType, bracketedGroup.getPolymerFlipType());
     addAttribute(attributes, CDXMLProp_Bracket_RepeatCount, bracketedGroup.getRepeatCount());
     if (bracketedGroup.getComponentOrder() > 0) {
-      addAttribute(attributes, CDXMLProp_Bracket_ComponentOrder, bracketedGroup.getComponentOrder());
+      addAttribute(
+          attributes, CDXMLProp_Bracket_ComponentOrder, bracketedGroup.getComponentOrder());
     }
     addAttribute(attributes, CDXMLProp_Bracket_SRULabel, bracketedGroup.getSRULabel());
 
@@ -1880,7 +1960,8 @@ public class CDXMLWriter {
     }
   }
 
-  private void writeBracketAttachment(CDBracketAttachment bracketAttachment) throws SAXException, IOException {
+  private void writeBracketAttachment(CDBracketAttachment bracketAttachment)
+      throws SAXException, IOException {
     if (bracketAttachment == null) {
       return;
     }
@@ -1928,7 +2009,7 @@ public class CDXMLWriter {
     addReferenceAttribute(attributes, CDXMLProp_Id, border);
     addAttribute(attributes, CDXMLProp_Line_Type, border.getLineType());
     addAttribute(attributes, CDXMLProp_LineWidth, border.getWidth());
-    addAttribute(attributes, CDXMLProp_ForegroundColor, border.getForegroundColor());// TODO rename
+    addAttribute(attributes, CDXMLProp_ForegroundColor, border.getForegroundColor()); // TODO rename
     addAttribute(attributes, CDXMLProp_Side, border.getSide());
 
     handler.startElement(NS, CDXMLObj_Border, CDXMLObj_Border, attributes);
@@ -1940,18 +2021,21 @@ public class CDXMLWriter {
     collectReference(chemicalProperty);
   }
 
-  private void writeChemicalProperty(CDChemicalProperty chemicalProperty) throws SAXException, IOException {
+  private void writeChemicalProperty(CDChemicalProperty chemicalProperty)
+      throws SAXException, IOException {
     if (chemicalProperty == null) {
       return;
     }
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, chemicalProperty);
     addAttribute(attributes, CDXMLProp_ChemicalPropertyType, chemicalProperty.getType());
-    addReferenceAttribute(attributes, CDXMLProp_ChemicalPropertyDisplayID, chemicalProperty.getDisplay());
+    addReferenceAttribute(
+        attributes, CDXMLProp_ChemicalPropertyDisplayID, chemicalProperty.getDisplay());
     if (chemicalProperty.isActive()) {
       addAttribute(attributes, CDXMLProp_ChemicalPropertyIsActive, chemicalProperty.isActive());
     }
-    addReferenceListAttribute(attributes, CDXMLProp_BasisObjects, chemicalProperty.getBasisObjects());
+    addReferenceListAttribute(
+        attributes, CDXMLProp_BasisObjects, chemicalProperty.getBasisObjects());
 
     handler.startElement(NS, CDXMLObj_ChemicalProperty, CDXMLObj_ChemicalProperty, attributes);
 
@@ -2039,7 +2123,8 @@ public class CDXMLWriter {
     }
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDFont value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDFont value)
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -2049,14 +2134,17 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, String.valueOf(fonts.get(value)));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDCharSet value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDCharSet value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, String.valueOf(CDXMLUtils.convertCharSetToString(value)));
+    attributes.addAttribute(
+        "", name, name, CDATA, String.valueOf(CDXMLUtils.convertCharSetToString(value)));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDColor value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDColor value)
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -2073,147 +2161,174 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, String.valueOf(CDXUtils.convertFontType(value)));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDJustification value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDJustification value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertTextJustificationToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertTextJustificationToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDDrawingSpaceType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDDrawingSpaceType value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertDrawingSpaceTypeToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertDrawingSpaceTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDPageDefinition value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDPageDefinition value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPageDefinitionToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDLabelDisplay value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDLabelDisplay value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertLabelDisplayToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDNodeType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDNodeType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertNodeTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDRadical value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDRadical value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertRadicalToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDRingBondCount value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDRingBondCount value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertRingBondCountToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDUnsaturation value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDUnsaturation value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertUnsaturationToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDReactionStereo value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDReactionStereo value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertReactionStereoToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDTranslation value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDTranslation value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertTranslationToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDIsotopicAbundance value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDIsotopicAbundance value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertAbundanceToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDExternalConnectionType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDExternalConnectionType value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertExternalConnectionTypeToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertExternalConnectionTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDAtomGeometry value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDAtomGeometry value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertAtomGeometryToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDAtomCIPType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDAtomCIPType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertAtomCIPTypeToString(value));
   }
 
-  private void addBondOrderAttribute(AttributesImpl attributes, String name, CDBondOrder value) throws IOException {
+  private void addBondOrderAttribute(AttributesImpl attributes, String name, CDBondOrder value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondOrderToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBondDisplay value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBondDisplay value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondDisplayToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBondDoublePosition value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBondDoublePosition value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondDoublePositionToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertBondDoublePositionToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBondTopology value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBondTopology value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondTopologyToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBondReactionParticipation value) throws IOException {
+  private void addAttribute(
+      AttributesImpl attributes, String name, CDBondReactionParticipation value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondReactionParticipationToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertBondReactionParticipationToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBondCIPType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBondCIPType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBondCIPTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDGraphicType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDGraphicType value)
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -2227,14 +2342,16 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertLineTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDArrowType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDArrowType value)
+      throws IOException {
     if (value == null || value == CDArrowType.NoHead) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertArrowTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBracketType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBracketType value)
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -2255,112 +2372,132 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertOvalTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDOrbitalType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDOrbitalType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertOrbitalTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSymbolType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSymbolType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertSymbolTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDBracketUsage value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDBracketUsage value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertBracketUsageToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDPolymerRepeatPattern value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDPolymerRepeatPattern value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPolymerRepeatPatternToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertPolymerRepeatPatternToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDPolymerFlipType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDPolymerFlipType value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPolymerFlipTypeToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertPolymerFlipTypeToString(value));
   }
 
   private void addAttribute(AttributesImpl attributes, String name, CDSplineType value) {
     if (value == null || value.isPlain()) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, String.valueOf(CDXUtils.convertCurveTypeToInt(value)));
+    attributes.addAttribute(
+        "", name, name, CDATA, String.valueOf(CDXUtils.convertCurveTypeToInt(value)));
   }
 
-  private void addPoint2DListAttribute(AttributesImpl attributes, String name, List<CDPoint2D> value) {
+  private void addPoint2DListAttribute(
+      AttributesImpl attributes, String name, List<CDPoint2D> value) {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPoint2DListToString(value));
   }
 
-  private void addPoint3DListAttribute(AttributesImpl attributes, String name, List<CDPoint3D> value) {
+  private void addPoint3DListAttribute(
+      AttributesImpl attributes, String name, List<CDPoint3D> value) {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPoint3DListToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDGeometryType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDGeometryType value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertGeometricFeatureToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertGeometricFeatureToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDConstraintType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDConstraintType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertConstraintTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumXType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumXType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertSpectrumXTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumYType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumYType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertSpectrumYTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumClass value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSpectrumClass value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertSpectrumClassToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDObjectTagType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDObjectTagType value)
+      throws IOException {
     if (value == null) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertObjectTagTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDPositioningType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDPositioningType value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertPositioningTypeToString(value));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertPositioningTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSideType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSideType value)
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -2376,7 +2513,8 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertLineHeightToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDSequenceType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDSequenceType value)
+      throws IOException {
     if (value == null || value == CDSequenceType.Unknown) {
       // default
       return;
@@ -2385,49 +2523,57 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertSequenceTypeToString(value));
   }
 
-  private void addReferenceAttribute(AttributesImpl attributes, String name, Object value) throws IOException {
+  private void addReferenceAttribute(AttributesImpl attributes, String name, Object value)
+      throws IOException {
     if (value == null) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertObjectRefToString(value, references));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertObjectRefToString(value, references));
   }
 
   private void addReferenceListAttribute(AttributesImpl attributes, String name, List<?> value) {
     if (value == null || value.isEmpty()) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertObjectRefList(value, references));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertObjectRefList(value, references));
   }
 
-  private void addReferenceMapAttribute(AttributesImpl attributes, String name, Map<?,?> values) {
+  private void addReferenceMapAttribute(AttributesImpl attributes, String name, Map<?, ?> values) {
     if (values == null || values.isEmpty()) {
       return;
     }
-    attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertObjectRefMapToString(values, references));
+    attributes.addAttribute(
+        "", name, name, CDATA, CDXMLUtils.convertObjectRefMapToString(values, references));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDArrowHeadType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDArrowHeadType value)
+      throws IOException {
     if (value == null || value == CDArrowHeadType.Solid) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertArrowheadTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDArrowHeadPositionType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDArrowHeadPositionType value)
+      throws IOException {
     if (value == null || value == CDArrowHeadPositionType.Unspecified) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertArrowheadToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDFillType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDFillType value)
+      throws IOException {
     if (value == null || value == CDFillType.Unspecified) {
       return;
     }
     attributes.addAttribute("", name, name, CDATA, CDXMLUtils.convertFillTypeToString(value));
   }
 
-  private void addAttribute(AttributesImpl attributes, String name, CDNoGoType value) throws IOException {
+  private void addAttribute(AttributesImpl attributes, String name, CDNoGoType value)
+      throws IOException {
     if (value == null || value == CDNoGoType.Unspecified) {
       return;
     }

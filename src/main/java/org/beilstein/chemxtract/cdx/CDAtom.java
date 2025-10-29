@@ -21,96 +21,126 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.beilstein.chemxtract.cdx.datatypes.*;
 
-/**
- * Basic part of a substance, usually denoting a single atom.
- */
+/** Basic part of a substance, usually denoting a single atom. */
 public class CDAtom extends CDObject {
   /** The abnormal valence restriction on the atom. */
   private boolean abnormalValenceAllowed = false;
+
   /** The geometry of the atom. */
   private CDAtomGeometry atomGeometry = CDAtomGeometry.Unknown;
+
   /** The atom number of the atom. */
   private String atomNumber;
-  /**
-   * the collection of attached atoms, for multi-center atoms and variable attachment points.
-   */
+
+  /** the collection of attached atoms, for multi-center atoms and variable attachment points. */
   private List<CDAtom> attachedAtoms;
-  /**
-   * The type of the external attachment point, for atoms that are external attachment points.
-   */
+
+  /** The type of the external attachment point, for atoms that are external attachment points. */
   private CDExternalConnectionType attachmentPointType = CDExternalConnectionType.Unspecified;
+
   /** The charge of the atom. */
   private int charge;
+
   /** The element number of the atom. */
   private int elementNumber = 6;
-  /**
-   * The group number (associated with Or and And enhanced stereochemistry types) on the atom.
-   */
+
+  /** The group number (associated with Or and And enhanced stereochemistry types) on the atom. */
   private int enhancedStereoGroupNumber;
+
   /** The type of enhanced stereochemistry on the atom. */
   private CDEnhancedStereoType enhancedStereoType;
+
   /** whether the atom has an H-dash indicator. */
   private boolean hDash = false;
+
   /** Whether the atom has an H-dot indicator. */
   private boolean hDot = false;
+
   /** The implicit hydrogen restriction on the atom. */
   private boolean implicitHydrogensAllowed = false;
+
   /** The isotope of the atom. */
   private int isotope;
+
   /** The isotopic abundance restriction on the atom. */
   private CDIsotopicAbundance isotopicAbundance = CDIsotopicAbundance.Unspecified;
+
   /** The label display type of the atom. */
   private CDLabelDisplay labelDisplay = CDLabelDisplay.Auto;
+
   /** The text of the atom's label. */
   private String labelText;
+
   /** The high end of the link count range, for link nodes. */
   private int linkCountHigh;
+
   /** The low end of the link count range, for link nodes. */
   private int linkCountLow;
+
   /** The type of the atom. */
   private CDNodeType nodeType = CDNodeType.Element;
+
   /** The number of implicit hydrogens on the atom. */
   private int numImplicitHydrogens;
+
   /** The radical of the atom. */
   private CDRadical radical = CDRadical.None;
+
   /** The reaction stereo restriction on the atom (feature of a query atom). */
   private CDReactionStereo reactionStereo = CDReactionStereo.Unspecified;
+
   /** The reaction change restriction on the atom (feature of a query atom). */
   private boolean restrictReactionChange = false;
+
   /** The ring bong limit of the atom (feature of a query atom). */
   private CDRingBondCount ringBondCount = CDRingBondCount.Unspecified;
+
   /** The absolute stereochemistry of the atom. */
   private CDAtomCIPType stereochemistry = CDAtomCIPType.Undetermined;
+
   /** The substitution restriction limit on the atom (feature of a query atom). */
   private int substituentCount;
+
   /** The type of restricted substitution on the atom (feature of a query atom). */
   private CDAtomSubstituentType substituentType = CDAtomSubstituentType.None;
+
   /** The translation restriction on the atom (feature related to queries/matching behavior). */
   private CDTranslation translation = CDTranslation.Equal;
+
   /** The unsaturation restriction on the atom (feature of a query atom). */
   private CDUnsaturation unsaturatedBonds = CDUnsaturation.Unspecified;
+
   /** The fragment of the superatom/nickname. */
   private List<CDFragment> fragments = new ArrayList<>();
+
   /** The label of the atom. */
   private CDText text;
+
   /** 2D coordinates. */
   private CDPoint2D position2D;
+
   /** 3D coordinates. */
   private CDPoint3D position3D;
+
   /** List of elements associated with this atom (feature of a query atom). */
   private CDElementList elementList;
-  /** The chemical formula. It is not disclosed by CambridgeSoft how this is encoded. Consequently,
-   the byte values are stored. */
+
+  /**
+   * The chemical formula. It is not disclosed by CambridgeSoft how this is encoded. Consequently,
+   * the byte values are stored.
+   */
   private byte[] formula;
+
   /** Important for retaining stereochemistry. */
   private List<CDBond> bondOrdering;
+
   /** A container object holding fragments that represent alternative substituents for a query. */
   private CDAltGroup altGroup;
+
   /** A list of generic nicknames. */
   private CDGenericList genericList;
 
@@ -415,11 +445,11 @@ public class CDAtom extends CDObject {
   }
 
   public CDAtom() {
-    //empty constructor
+    // empty constructor
   }
 
   public CDAtom(CDAtom template) {
-    //Primitive types and enums (direct assignments)
+    // Primitive types and enums (direct assignments)
     this.abnormalValenceAllowed = template.abnormalValenceAllowed;
     this.atomGeometry = template.atomGeometry;
     this.attachmentPointType = template.attachmentPointType;
@@ -451,7 +481,7 @@ public class CDAtom extends CDObject {
     this.atomNumber = template.atomNumber;
     this.labelText = template.labelText;
 
-    //lists
+    // lists
     if (template.fragments != null) {
       this.fragments = new ArrayList<>(template.fragments);
     }
@@ -463,18 +493,32 @@ public class CDAtom extends CDObject {
       this.attachedAtoms = new ArrayList<>(template.attachedAtoms);
     }
 
-    //Objects (shallow or deep copy depending on whether they are mutable)
+    // Objects (shallow or deep copy depending on whether they are mutable)
     this.text = (template.text != null) ? template.text : null; // Assuming CDText has a copy method
-    this.position2D = (template.position2D != null) ? template.position2D : null; // Assuming CDPoint2D has a copy method
-    this.position3D = (template.position3D != null) ? template.position3D : null; // Assuming CDPoint3D has a copy method
-    this.elementList = (template.elementList != null) ? template.elementList : null; // Assuming CDElementList has a copy method
-    this.altGroup = (template.altGroup != null) ? template.altGroup : null; // Assuming CDAltGroup has a copy method
-    this.genericList = (template.genericList != null) ? template.genericList : null; // Assuming CDGenericList has a copy method
+    this.position2D =
+        (template.position2D != null)
+            ? template.position2D
+            : null; // Assuming CDPoint2D has a copy method
+    this.position3D =
+        (template.position3D != null)
+            ? template.position3D
+            : null; // Assuming CDPoint3D has a copy method
+    this.elementList =
+        (template.elementList != null)
+            ? template.elementList
+            : null; // Assuming CDElementList has a copy method
+    this.altGroup =
+        (template.altGroup != null)
+            ? template.altGroup
+            : null; // Assuming CDAltGroup has a copy method
+    this.genericList =
+        (template.genericList != null)
+            ? template.genericList
+            : null; // Assuming CDGenericList has a copy method
 
     // Byte arrays (deep copy)
     if (template.formula != null) {
       this.formula = template.formula.clone();
     }
-
   }
 }

@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * This enum represents the target topology of a bond in a query.
- */
-public enum CDBondTopology{
+/** This enum represents the target topology of a bond in a query. */
+public enum CDBondTopology {
   /** Ring/chain status of the bond is unspecified. */
   Unspecified,
   /** Bond must be in a ring. */

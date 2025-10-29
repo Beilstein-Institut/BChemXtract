@@ -19,9 +19,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 package org.beilstein.chemxtract.lookups;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openscience.cdk.exception.CDKException;
@@ -29,11 +37,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
-
-import java.io.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SMILESLookupReader {
 
@@ -45,15 +48,15 @@ public class SMILESLookupReader {
   }
 
   /**
-   * Imports the abbreviations and their corresponding SMILES from the file specified by the given path
+   * Imports the abbreviations and their corresponding SMILES from the file specified by the given
+   * path
    *
    * @param path String path to the abbreviation file
    * @throws IOException if file could not be imported
    */
   public Map<String, String> loadSmilesLookup(String path, int initialSize) throws IOException {
     try (InputStream in = this.getClass().getResourceAsStream(path)) {
-      if (in != null)
-        return this.loadAbbreviations(in, initialSize);
+      if (in != null) return this.loadAbbreviations(in, initialSize);
       File file = new File(path);
       if (file.exists() && file.canRead())
         return this.loadAbbreviations(new FileInputStream(file), initialSize);
@@ -62,14 +65,15 @@ public class SMILESLookupReader {
   }
 
   /**
-   * Reads the given InputStream and adds the abbreviations and corresponding SMILES to a map. If a SMILES could not
-   * be parsed it will be skipped and ignored.
+   * Reads the given InputStream and adds the abbreviations and corresponding SMILES to a map. If a
+   * SMILES could not be parsed it will be skipped and ignored.
    *
    * @param inputStream InputStream
    * @throws IOException if a line could not be read
    */
-  private Map<String,String> loadAbbreviations(InputStream inputStream, int initialSize) throws IOException {
-    Map<String,String> abbreviations = new HashMap<>(initialSize);
+  private Map<String, String> loadAbbreviations(InputStream inputStream, int initialSize)
+      throws IOException {
+    Map<String, String> abbreviations = new HashMap<>(initialSize);
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
       String line;
       while ((line = reader.readLine()) != null) {
@@ -87,13 +91,13 @@ public class SMILESLookupReader {
   }
 
   /**
-   * Splits the given line and add the abbreviation as a key and the corresponding SMILES as value to a map.
-   * If a SMILES could not be parsed it will be skipped and ignored.
+   * Splits the given line and add the abbreviation as a key and the corresponding SMILES as value
+   * to a map. If a SMILES could not be parsed it will be skipped and ignored.
    *
    * @param line to be parsed
    * @throws CDKException if SMILES could not be parsed
    */
-  private void addAbbreviationToMap(String line, Map<String,String> map) throws CDKException {
+  private void addAbbreviationToMap(String line, Map<String, String> map) throws CDKException {
     String[] items = this.getLineItems(line);
     String abbr = items[0];
     IAtomContainer smilesStructure = this.smilesParser.parseSmiles(items[1]);
@@ -110,7 +114,7 @@ public class SMILESLookupReader {
   private String[] getLineItems(String line) {
     String[] items = new String[2];
     int lastIndex = 0;
-    if (line.contains(" ")){
+    if (line.contains(" ")) {
       lastIndex = line.lastIndexOf(" ");
     }
     if (line.contains("\t")) {

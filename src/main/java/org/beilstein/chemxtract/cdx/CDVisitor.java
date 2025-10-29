@@ -25,9 +25,9 @@ import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDFont;
 
 /**
- * This class is used to build the "Visitor" pattern for {@link CDObject}s.
- * For creating specific visitors, implement a subclass, override the method
- * you are interested in and pass the object to the accept method of {@link CDPage}.
+ * This class is used to build the "Visitor" pattern for {@link CDObject}s. For creating specific
+ * visitors, implement a subclass, override the method you are interested in and pass the object to
+ * the accept method of {@link CDPage}.
  */
 public class CDVisitor {
   public void visitDocument(CDDocument document) {

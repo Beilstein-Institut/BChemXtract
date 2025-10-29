@@ -21,20 +21,20 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
 
-import java.util.List;
-
-/**
- * A constraint that describes an angle or distance between one or more objects.
- */
+/** A constraint that describes an angle or distance between one or more objects. */
 public class CDConstraint extends CDObject {
   /** The objects used to define this constraint. */
   private List<Object> basisObjects;
+
   /** The type of the constraint. */
   private CDConstraintType constraintType = CDConstraintType.Undefined;
+
   /** The maximum value of this constraint range. */
   private double maxRange;
+
   /** The minimum value of this constraint range. */
   private double minRange;
 
@@ -112,5 +112,4 @@ public class CDConstraint extends CDObject {
     visitor.visitConstraint(this);
     super.accept(visitor);
   }
-
 }

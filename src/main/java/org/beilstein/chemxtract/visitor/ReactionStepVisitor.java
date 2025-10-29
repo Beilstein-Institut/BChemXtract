@@ -21,23 +21,20 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDReactionStep;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Visitor class for traversing a ChemDraw page and collecting reaction steps.
- */
+/** Visitor class for traversing a ChemDraw page and collecting reaction steps. */
 public class ReactionStepVisitor extends CDVisitor {
 
   private final List<CDReactionStep> reactionSteps;
 
   /**
-   * Constructs a {@code ReactionStepVisitor} and traverses the given page
-   * to collect all reaction steps.
+   * Constructs a {@code ReactionStepVisitor} and traverses the given page to collect all reaction
+   * steps.
    *
    * @param page the {@link CDPage} to traverse for reaction steps
    */
@@ -47,8 +44,8 @@ public class ReactionStepVisitor extends CDVisitor {
   }
 
   /**
-   * Visits a {@link CDReactionStep} node during traversal and adds it
-   * to the internal list of reaction steps.
+   * Visits a {@link CDReactionStep} node during traversal and adds it to the internal list of
+   * reaction steps.
    *
    * @param reactionStep the {@link CDReactionStep} being visited
    */

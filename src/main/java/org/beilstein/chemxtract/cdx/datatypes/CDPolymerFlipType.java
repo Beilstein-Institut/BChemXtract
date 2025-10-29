@@ -21,16 +21,11 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The flip state of objects contained within the bracket. 
- */
-public enum CDPolymerFlipType{
+/** The flip state of objects contained within the bracket. */
+public enum CDPolymerFlipType {
   /** Unspecified flip type. */
   Unspecified,
-  /**
-   * The orientation of the repeating unit does not change between adjacent
-   * units.
-   */
+  /** The orientation of the repeating unit does not change between adjacent units. */
   NoFlip,
   /** The orientation of the repeating unit does change between adjacent units. */
   Flip;

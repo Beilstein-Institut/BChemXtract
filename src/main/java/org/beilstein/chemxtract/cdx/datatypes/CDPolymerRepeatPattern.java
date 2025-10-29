@@ -21,19 +21,11 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The head-to-tail connectivity of objects contained within the bracket. 
- */
-public enum CDPolymerRepeatPattern{
-  /**
-   * One end of the repeating unit is connected to the other end of the
-   * adjacent repeating unit.
-   */
+/** The head-to-tail connectivity of objects contained within the bracket. */
+public enum CDPolymerRepeatPattern {
+  /** One end of the repeating unit is connected to the other end of the adjacent repeating unit. */
   HeadToTail,
-  /**
-   * One end of the repeating unit is connected to the same end of the
-   * adjacent repeating unit.
-   */
+  /** One end of the repeating unit is connected to the same end of the adjacent repeating unit. */
   HeadToHead,
   /** A mixture of the above, or an unknown repeat pattern. */
   EitherUnknown;

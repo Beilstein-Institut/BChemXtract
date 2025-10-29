@@ -26,16 +26,18 @@ import java.util.regex.Pattern;
 public class Definitions {
 
   private Definitions() {
-    //hide implicit public constructor
+    // hide implicit public constructor
   }
 
   public static final String RGROUP_LABEL_STRING = "^(?:R|X|Y|Ar|E|L)\\d*\\b";
   public static final Pattern RGROUP_LABEL_PATTERN = Pattern.compile(RGROUP_LABEL_STRING);
   public static final String RGROUP_STRING = "\\b(R|X|Y|Ar|E|L)\\b\\s*=\\s*(.+)";
-  public static final Pattern RGROUP_PATTERN =Pattern.compile(RGROUP_STRING);
-  public static final String ABBREVIATION_PATH = "/org/beilstein/chemxtract/lookups/abbreviations.smi";
+  public static final Pattern RGROUP_PATTERN = Pattern.compile(RGROUP_STRING);
+  public static final String ABBREVIATION_PATH =
+      "/org/beilstein/chemxtract/lookups/abbreviations.smi";
   public static final int ABBREVIATION_SIZE = 400;
-  public static final String AGENT_ABBREVIATION_PATH = "/org/beilstein/chemxtract/lookups/agents_abbreviations.smi";
+  public static final String AGENT_ABBREVIATION_PATH =
+      "/org/beilstein/chemxtract/lookups/agents_abbreviations.smi";
   public static final int AGENTS_SIZE = 400;
   // Regular expression for splitting:
   // \s includes all whitespace (spaces, tabs, line feeds, etc.)

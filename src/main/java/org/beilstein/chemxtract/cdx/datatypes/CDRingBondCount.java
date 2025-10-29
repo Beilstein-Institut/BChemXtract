@@ -23,14 +23,13 @@ package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
  * The number of ring bonds attached to an atom.
- * <p>
- * If posed as a structure query in some database, this atom should not match
- * only those atoms with the specified number of ring bonds.
- * <p>
- * The value stored in this property exactly corresponds to the Ring Bond Count
- * property in ISIS.
+ *
+ * <p>If posed as a structure query in some database, this atom should not match only those atoms
+ * with the specified number of ring bonds.
+ *
+ * <p>The value stored in this property exactly corresponds to the Ring Bond Count property in ISIS.
  */
-public enum CDRingBondCount{
+public enum CDRingBondCount {
   /** Unspecified number of ring bonds. */
   Unspecified,
   /** Exactly 0 ring bonds. */

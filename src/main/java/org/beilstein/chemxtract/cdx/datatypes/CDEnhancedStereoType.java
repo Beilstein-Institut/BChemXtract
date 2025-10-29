@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDEnhancedStereoType{
+public enum CDEnhancedStereoType {
   Unspecified,
   None,
   Absolute,

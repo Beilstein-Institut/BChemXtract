@@ -21,23 +21,22 @@
  */
 package org.beilstein.chemxtract.lookups;
 
+import java.io.IOException;
+import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 
-import java.io.IOException;
-import java.util.Map;
-
 /**
- * Singleton utility class providing access to a lookup table of common
- * chemical abbreviations and their corresponding SMILES representations.
- * <p>
- * This class centralizes abbreviation handling for standard molecular fragments
- * (e.g., "Ph", "Bn", "tBu") by reading them from a predefined SMILES abbreviation file.
- * The lookup enables uniform and reproducible conversion of shorthand notations
- * to chemical structures across the application.
- * </p>
+ * Singleton utility class providing access to a lookup table of common chemical abbreviations and
+ * their corresponding SMILES representations.
+ *
+ * <p>This class centralizes abbreviation handling for standard molecular fragments (e.g., "Ph",
+ * "Bn", "tBu") by reading them from a predefined SMILES abbreviation file. The lookup enables
+ * uniform and reproducible conversion of shorthand notations to chemical structures across the
+ * application.
  *
  * <h2>Example Usage:</h2>
+ *
  * <pre>{@code
  * if (SmilesAbbreviations.contains("Ph")) {
  *     String smiles = SmilesAbbreviations.get("Ph");  // returns "c1ccccc1"
@@ -52,16 +51,16 @@ public class SmilesAbbreviations {
 
   /**
    * Private constructor that initializes the SMILES abbreviation lookup table.
-   * <p>
-   * The lookup is loaded from a resource file defined in {@link Definitions#ABBREVIATION_PATH}
+   *
+   * <p>The lookup is loaded from a resource file defined in {@link Definitions#ABBREVIATION_PATH}
    * and limited to a maximum size given by {@link Definitions#ABBREVIATION_SIZE}.
-   * </p>
    *
    * @throws IOException if the abbreviation file cannot be read or parsed
    */
   private SmilesAbbreviations() throws IOException {
     SMILESLookupReader reader = new SMILESLookupReader(DefaultChemObjectBuilder.getInstance());
-    this.smilesLookup = reader.loadSmilesLookup(Definitions.ABBREVIATION_PATH, Definitions.ABBREVIATION_SIZE);
+    this.smilesLookup =
+        reader.loadSmilesLookup(Definitions.ABBREVIATION_PATH, Definitions.ABBREVIATION_SIZE);
   }
 
   /**
@@ -71,8 +70,7 @@ public class SmilesAbbreviations {
    * @throws IOException if the abbreviation file cannot be loaded
    */
   private static SmilesAbbreviations getInstance() throws IOException {
-    if (instance == null)
-      instance = new SmilesAbbreviations();
+    if (instance == null) instance = new SmilesAbbreviations();
     return instance;
   }
 
@@ -87,7 +85,6 @@ public class SmilesAbbreviations {
     return SmilesAbbreviations.getInstance().smilesLookup.get(key.toLowerCase());
   }
 
-
   /**
    * Checks whether the given abbreviation exists in the SMILES lookup table.
    *
@@ -101,6 +98,7 @@ public class SmilesAbbreviations {
 
   /**
    * Return complete Abbreviation SMILES lookup map
+   *
    * @return the lookup table
    * @throws IOException if the lookup table cannot be initialized
    */

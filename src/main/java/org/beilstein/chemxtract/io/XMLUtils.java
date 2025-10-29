@@ -21,6 +21,9 @@
  */
 package org.beilstein.chemxtract.io;
 
+import java.io.IOException;
+import java.io.InputStream;
+import javax.xml.XMLConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.NamedNodeMap;
@@ -28,19 +31,13 @@ import org.w3c.dom.Node;
 import org.xml.sax.*;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.XMLConstants;
-import java.io.IOException;
-import java.io.InputStream;
-
-/**
- * This class holds various helper methods for XML related actions.
- */
+/** This class holds various helper methods for XML related actions. */
 public class XMLUtils {
   private static final Log logger = LogFactory.getLog(XMLUtils.class);
 
   /**
    * Parse a XML document and return the root XML element.
-   * 
+   *
    * @param in {@link InputStream} from which the input are read
    * @param entityResolver Entity resolver, normally an instance of {@link XMLEntityCatalog}
    * @return Root XML element
@@ -52,14 +49,15 @@ public class XMLUtils {
 
   /**
    * Parse a XML document and return the root XML element.
-   * 
+   *
    * @param in {@link InputStream} from which the input are read
    * @param entityResolver Entity resolver, normally an instance of {@link XMLEntityCatalog}
    * @param validate Flag, if the XML document, should be validated by the DTD
    * @return Root XML element
    * @throws IOException Occurs if the reader couldn't read the input from the {@link InputStream}
    */
-  public static XMLObject parse(InputStream in, EntityResolver entityResolver, boolean validate) throws IOException {
+  public static XMLObject parse(InputStream in, EntityResolver entityResolver, boolean validate)
+      throws IOException {
     if (in == null) {
       throw new NullPointerException("Input stream is null");
     }
@@ -132,7 +130,7 @@ public class XMLUtils {
 
   /**
    * Returns the attribute of an element node
-   * 
+   *
    * @param node Element node
    * @param attributeName Name of attribute
    * @return Attribute node
@@ -154,7 +152,7 @@ public class XMLUtils {
 
   /**
    * Standard message for unexpected elements in a XML format.
-   * 
+   *
    * @param object XML object
    * @return Error message
    */
@@ -164,37 +162,53 @@ public class XMLUtils {
 
   /**
    * Standard message for unexpected attributes in a XML format
-   * 
+   *
    * @param object XML Object
    * @param attribute Attribute name
    * @return Error message
    */
   public static String getUnexpectedAttributeMessage(XMLObject object, String attribute) {
-    return "Encountered unexpected attribute \'" + attribute + "\' of element \'" + object.getName() + "\'" + " (value=" +
-            object.getAttributes().get(attribute) + ") at " + object.getLocation();
+    return "Encountered unexpected attribute \'"
+        + attribute
+        + "\' of element \'"
+        + object.getName()
+        + "\'"
+        + " (value="
+        + object.getAttributes().get(attribute)
+        + ") at "
+        + object.getLocation();
   }
 
   /**
    * Standard message for invalid values of elements in a XML format.
-   * 
+   *
    * @param object XML object
    * @return Error message
    */
   public static String getInvalidObjectMessage(XMLObject object) {
-    return "Encountered invalid value \'" + object.getTextsAsString() + "\' for element \'" + object.getName() + "\' at " +
-            object.getLocation();
+    return "Encountered invalid value \'"
+        + object.getTextsAsString()
+        + "\' for element \'"
+        + object.getName()
+        + "\' at "
+        + object.getLocation();
   }
 
   /**
    * Standard message for invalid values of attributes in a XML format.
-   * 
+   *
    * @param object XML object
    * @param attribute Attribute name
    * @return Error message
    */
   public static String getInvalidAttributeMessage(XMLObject object, String attribute) {
-    return "Encountered invalid attribute value \'" + object.getAttributes().get(attribute) + "\' for attribute \'" + attribute +
-            "\' of element \'" + object.getName() + "\' at " + object.getLocation();
+    return "Encountered invalid attribute value \'"
+        + object.getAttributes().get(attribute)
+        + "\' for attribute \'"
+        + attribute
+        + "\' of element \'"
+        + object.getName()
+        + "\' at "
+        + object.getLocation();
   }
-
 }

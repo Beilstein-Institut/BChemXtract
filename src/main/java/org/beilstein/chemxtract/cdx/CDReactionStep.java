@@ -27,32 +27,37 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This object represents a single step in a reaction and encompasses the
- * participating reactants, products or agents above or below the arrow.
+ * This object represents a single step in a reaction and encompasses the participating reactants,
+ * products or agents above or below the arrow.
  */
-public class CDReactionStep extends CDObject{
+public class CDReactionStep extends CDObject {
   /** The objects that act as reactants relative to this step. */
   private List<Object> reactants = new ArrayList<>();
+
   /** The objects that act as products relative to this step. */
   private List<Object> products = new ArrayList<>();
+
   /** The plus symbols in this step. */
   private List<Object> plusses = new ArrayList<>();
+
   /** The arrow that denotes this step. */
   private List<Object> arrows = new ArrayList<>();
+
   /** The objects that are positioned above the arrow in this step. */
   private List<Object> objectsAboveArrow = new ArrayList<>();
+
   /** The objects that are positioned below the arrow in this step. */
   private List<Object> objectsBelowArrow = new ArrayList<>();
 
-  private Map<CDAtom,CDAtom> atomMap = new HashMap<>();
-  private Map<CDAtom,CDAtom> atomMapManual = new HashMap<>();
-  private Map<CDAtom,CDAtom> atomMapAuto = new HashMap<>();
+  private Map<CDAtom, CDAtom> atomMap = new HashMap<>();
+  private Map<CDAtom, CDAtom> atomMapManual = new HashMap<>();
+  private Map<CDAtom, CDAtom> atomMapAuto = new HashMap<>();
 
-  public Map<CDAtom,CDAtom> getAtomMap() {
+  public Map<CDAtom, CDAtom> getAtomMap() {
     return atomMap;
   }
 
-  public void setAtomMap(Map<CDAtom,CDAtom> atomMap) {
+  public void setAtomMap(Map<CDAtom, CDAtom> atomMap) {
     this.atomMap = atomMap;
   }
 
@@ -104,19 +109,19 @@ public class CDReactionStep extends CDObject{
     this.objectsBelowArrow = objectsBelowArrow;
   }
 
-  public Map<CDAtom,CDAtom> getAtomMapManual() {
+  public Map<CDAtom, CDAtom> getAtomMapManual() {
     return atomMapManual;
   }
 
-  public void setAtomMapManual(Map<CDAtom,CDAtom> atomMapManual) {
+  public void setAtomMapManual(Map<CDAtom, CDAtom> atomMapManual) {
     this.atomMapManual = atomMapManual;
   }
 
-  public Map<CDAtom,CDAtom> getAtomMapAuto() {
+  public Map<CDAtom, CDAtom> getAtomMapAuto() {
     return atomMapAuto;
   }
 
-  public void setAtomMapAuto(Map<CDAtom,CDAtom> atomMapAuto) {
+  public void setAtomMapAuto(Map<CDAtom, CDAtom> atomMapAuto) {
     this.atomMapAuto = atomMapAuto;
   }
 

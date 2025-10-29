@@ -23,42 +23,48 @@ package org.beilstein.chemxtract.cdx;
 
 import org.beilstein.chemxtract.cdx.datatypes.*;
 
-/**
- * A line or an arrow with or without arrowheads on one or both ends.
- */
+/** A line or an arrow with or without arrowheads on one or both ends. */
 public class CDArrow extends CDObject {
   /** The line type of the arrow. */
   private CDLineType lineType = new CDLineType();
-  /**
-   * The size of the arrowhead, as a multiple of the line width, for arrows with arrowheads.
-   */
+
+  /** The size of the arrowhead, as a multiple of the line width, for arrows with arrowheads. */
   private float headSize;
+
   /**
    * The half-width of the arrowhead, as a multiple of the line width, for arrows with arrowheads.
    */
   private float headWidth;
+
   /**
    * The size of the center of the arrowhead, as a multiple of the line width, for arrows with
    * arrowheads.
    */
   private float headCenterSize;
+
   /** The type of the arrowhead, for arrows with arrowheads. */
   private CDArrowHeadType arrowHeadType = CDArrowHeadType.Solid;
+
   /** The position of the arrowhead at the start of the arrow. */
   private CDArrowHeadPositionType arrowHeadPositionStart = CDArrowHeadPositionType.Unspecified;
+
   /** The position of the arrowhead at the tail of the arrow. */
   private CDArrowHeadPositionType arrowHeadPositionTail = CDArrowHeadPositionType.Unspecified;
+
   /**
    * The width of the space between a multiple-component arrow shaft, as in an equilibrium arrow.
    */
   private float shaftSpacing;
+
   /**
    * The ratio of the length of the left component of an equilibrium arrow (viewed from the end to
    * the start) to the right component.
    */
   private float equilibriumRatio;
+
   /** The angular size of the arrow, for arrows that are arcs. */
   private float angularSize;
+
   /** The type of the no-go (crossed-through or hashed-out) arrow. */
   private CDNoGoType noGoType;
 
@@ -70,6 +76,7 @@ public class CDArrow extends CDObject {
   private CDPoint3D center3D;
   private CDPoint3D majorAxisEnd3D;
   private CDPoint3D minorAxisEnd3D;
+
   /** The fill type of the spline. */
   private CDFillType fillType = CDFillType.Unspecified;
 

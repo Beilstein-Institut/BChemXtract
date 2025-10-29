@@ -21,29 +21,32 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * This object represents a spot on a TLC plate.
- */
+/** This object represents a spot on a TLC plate. */
 public class CDTLCSpot {
 
   /** The color of the spot. */
   private CDColor color;
+
   /** The height of the spot, in points. */
   private float height;
+
   /** The retention factor (Rf) of the spot. */
   private double rf;
+
   /** Whether the retention factor (Rf) of the spot is displayed. */
   private boolean showRf = false;
+
   /** The height of the spot's tail, in points. */
   private float tail;
+
   /** Whether the spot is visible. */
   private boolean visible = true;
+
   /** The width of the spot, in points. */
   private float width;
 
@@ -121,5 +124,4 @@ public class CDTLCSpot {
   public void setColor(CDColor color) {
     this.color = color;
   }
-
 }

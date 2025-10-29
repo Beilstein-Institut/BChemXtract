@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * Indicates whether unsaturation should be present or absent.
- */
-public enum CDUnsaturation{
+/** Indicates whether unsaturation should be present or absent. */
+public enum CDUnsaturation {
   /** Node may or may not be unsaturated. */
   Unspecified,
   /** Node must not have any unsaturated bonds. */

@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDPageDefinition{
+public enum CDPageDefinition {
   Undefined,
   Center,
   TL4,

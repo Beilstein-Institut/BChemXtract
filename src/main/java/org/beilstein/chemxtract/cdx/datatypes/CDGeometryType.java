@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of the geometrical feature (point, line, plane, etc.).
- */
-public enum CDGeometryType{
+/** The type of the geometrical feature (point, line, plane, etc.). */
+public enum CDGeometryType {
   /** Geometric feature type is undefined. */
   Undefined,
 

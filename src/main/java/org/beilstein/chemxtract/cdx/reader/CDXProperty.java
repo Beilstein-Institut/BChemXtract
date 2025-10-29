@@ -21,17 +21,15 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.CDRectangle;
-import org.beilstein.chemxtract.cdx.datatypes.*;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cdx.datatypes.*;
 
 /**
  * This class is used to store intermediate values during the reading of CDX files. This class is
@@ -39,12 +37,16 @@ import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
  */
 public class CDXProperty {
   private final Log logger = LogFactory.getLog(CDXProperty.class);
+
   /** Tag of the property. */
   private int tag;
+
   /** Length of the property in the stream in bytes. */
   private int length;
+
   /** Content of the property. */
   private byte[] data;
+
   /** Position of the property in the stream. */
   private int position;
 
@@ -82,7 +84,11 @@ public class CDXProperty {
 
   public boolean getDataAsBoolean() throws IOException {
     if (length != 0 && length != 1) {
-      throw new IOException("Property size doesn't match, current size:" + length + " expected size: 0 or 1 at " + getPositionAsString());
+      throw new IOException(
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size: 0 or 1 at "
+              + getPositionAsString());
     }
     if (length == 0) {
       return true;
@@ -93,7 +99,10 @@ public class CDXProperty {
   public int getDataAsUInt() throws IOException {
     if (length != 1 && length != 2 && length != 4) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size: 1, 2 or 4 at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size: 1, 2 or 4 at "
+              + getPositionAsString());
     }
 
     if (length == 4) {
@@ -110,7 +119,10 @@ public class CDXProperty {
   public int getDataAsInt() throws IOException {
     if (length != 1 && length != 2 && length != 4) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size: 1, 2 or 4 at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size: 1, 2 or 4 at "
+              + getPositionAsString());
     }
 
     if (length == 4) {
@@ -173,7 +185,13 @@ public class CDXProperty {
     int count = CDXUtils.readUInt16(data, 0);
     if (count * 2 + 2 != length) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size:" + count * 2 + 2 + " at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size:"
+              + count * 2
+              + 2
+              + " at "
+              + getPositionAsString());
     }
     List<Integer> array = new ArrayList<>(count);
     for (int i = 2; i < length; i += 2) {
@@ -195,7 +213,11 @@ public class CDXProperty {
 
   public float getDataAsCoordinate() throws IOException {
     if (length != 4) {
-      throw new IOException("Property size doesn't match, current size:" + length + " expected size: 4 at " + getPositionAsString());
+      throw new IOException(
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size: 4 at "
+              + getPositionAsString());
     }
     return readCoordinate(0);
   }
@@ -239,7 +261,13 @@ public class CDXProperty {
     int count = CDXUtils.readUInt16(data, 0);
     if (count * 8 + 2 != length) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size:" + count * 8 + 2 + " at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size:"
+              + count * 8
+              + 2
+              + " at "
+              + getPositionAsString());
     }
     List<CDPoint2D> array = new ArrayList<>(count);
     for (int i = 2; i < length; i += 8) {
@@ -252,7 +280,13 @@ public class CDXProperty {
     int count = CDXUtils.readUInt16(data, 0);
     if (count * 12 + 2 != length) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size:" + count * 12 + 2 + " at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size:"
+              + count * 12
+              + 2
+              + " at "
+              + getPositionAsString());
     }
     List<CDPoint3D> array = new ArrayList<>(count);
     for (int i = 2; i < length; i += 12) {
@@ -261,7 +295,8 @@ public class CDXProperty {
     return array;
   }
 
-  private <T> T readObjectByRef(Class<T> clazz, int offset, RefManager refManager) throws IOException {
+  private <T> T readObjectByRef(Class<T> clazz, int offset, RefManager refManager)
+      throws IOException {
     int id = CDXUtils.readInt32(data, offset);
     return refManager.getObjectRef(id, clazz, CDXReader.RIGID);
   }
@@ -271,9 +306,11 @@ public class CDXProperty {
     return readObjectByRef(clazz, 0, refManager);
   }
 
-  public <T> List<T> getDataAsObjectRefArray(Class<T> clazz, RefManager refManager) throws IOException {
+  public <T> List<T> getDataAsObjectRefArray(Class<T> clazz, RefManager refManager)
+      throws IOException {
     if (length % 4 != 0) {
-      throw new IOException("Cannot calculate array length for size of " + length + " at " + getPositionAsString());
+      throw new IOException(
+          "Cannot calculate array length for size of " + length + " at " + getPositionAsString());
     }
     List<T> array = new ArrayList<>(length / 4);
     for (int i = 0; i < length; i += 4) {
@@ -285,11 +322,18 @@ public class CDXProperty {
     return array;
   }
 
-  public <T> List<T> getDataAsObjectRefArrayWithCounts(Class<T> clazz, RefManager refManager) throws IOException {
+  public <T> List<T> getDataAsObjectRefArrayWithCounts(Class<T> clazz, RefManager refManager)
+      throws IOException {
     int count = CDXUtils.readUInt16(data, 0);
     if (count * 4 + 2 != length) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size:" + count * 4 + 2 + " at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size:"
+              + count * 4
+              + 2
+              + " at "
+              + getPositionAsString());
     }
     List<T> array = new ArrayList<>(count);
     for (int i = 2; i < length; i += 4) {
@@ -301,11 +345,13 @@ public class CDXProperty {
     return array;
   }
 
-  public <K,V> Map<K,V> getDataObjectRefMap(Class<K> clazz1, Class<V> clazz2, RefManager refManager) throws IOException {
+  public <K, V> Map<K, V> getDataObjectRefMap(
+      Class<K> clazz1, Class<V> clazz2, RefManager refManager) throws IOException {
     if (length % 8 != 0) {
-      throw new IOException("Cannot calculate map length for size of " + length + " at " + getPositionAsString());
+      throw new IOException(
+          "Cannot calculate map length for size of " + length + " at " + getPositionAsString());
     }
-    Map<K,V> map = new HashMap<>();
+    Map<K, V> map = new HashMap<>();
     for (int i = 0; i < length; i += 8) {
       K keyObject = readObjectByRef(clazz1, i, refManager);
       V valueObject = readObjectByRef(clazz2, i + 4, refManager);
@@ -341,42 +387,51 @@ public class CDXProperty {
     return readFontFace(0);
   }
 
-  public CDXFontStyle getDataAsFontStyle(Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors) throws IOException {
+  public CDXFontStyle getDataAsFontStyle(Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors)
+      throws IOException {
     checkPropSize(8);
     return readFontStyle(0, fonts, colors);
   }
 
-  public CDFont getDataAsFontRef(Map<Integer,CDFont> fonts) throws IOException {
+  public CDFont getDataAsFontRef(Map<Integer, CDFont> fonts) throws IOException {
     checkPropSize(2);
     return readFontRef(0, fonts);
   }
 
-  public CDColor getDataAsColorRef(Map<Integer,CDColor> colors) throws IOException {
+  public CDColor getDataAsColorRef(Map<Integer, CDColor> colors) throws IOException {
     if (length != 2 && length != 4) {
-      throw new IOException("Property size doesn't match, current size:" + length + " expected size: 2 or 4 at " + getPositionAsString());
+      throw new IOException(
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size: 2 or 4 at "
+              + getPositionAsString());
     }
 
     return readColorRef(0, length, colors);
   }
 
-  public CDStyledString getDataAsStyledString(Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors) throws IOException {
+  public CDStyledString getDataAsStyledString(
+      Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors) throws IOException {
     return readStyledString(0, length, fonts, colors);
   }
 
-  public String getDataAsUnstyledString(Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors) throws IOException {
+  public String getDataAsUnstyledString(Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors)
+      throws IOException {
     CDStyledString styledString = getDataAsStyledString(fonts, colors);
     if (styledString.getChunks().size() > 1) {
-      throw new IOException("String contains unexcpected count of style " + styledString.getChunks().size());
+      throw new IOException(
+          "String contains unexcpected count of style " + styledString.getChunks().size());
     }
     return styledString.getText();
   }
 
-  public Map<String,Object> getDataAsRepresentsProperties(RefManager refManager) throws IOException {
+  public Map<String, Object> getDataAsRepresentsProperties(RefManager refManager)
+      throws IOException {
     if (length % 6 != 0 && length >= 6) {
       throw new IOException("Property size unexpected:" + length);
     }
 
-    Map<String,Object> properties = new HashMap<>();
+    Map<String, Object> properties = new HashMap<>();
     for (int i = 0; i < length; i += 6) {
       // read object id
       Object object = readObjectByRef(Object.class, i, refManager);
@@ -394,7 +449,14 @@ public class CDXProperty {
           properties.put("Radical", object);
           break;
         default:
-          throw new IOException("Tag 0x" + Integer.toHexString(tag) + " not recognized at " + i + "(0x" + Integer.toHexString(i) + ")");
+          throw new IOException(
+              "Tag 0x"
+                  + Integer.toHexString(tag)
+                  + " not recognized at "
+                  + i
+                  + "(0x"
+                  + Integer.toHexString(i)
+                  + ")");
       }
     }
     return properties;
@@ -403,7 +465,12 @@ public class CDXProperty {
   private void checkPropSize(int size) throws IOException {
     if (size != length) {
       throw new IOException(
-              "Property size doesn't match, current size:" + length + " expected size:" + size + " at " + getPositionAsString());
+          "Property size doesn't match, current size:"
+              + length
+              + " expected size:"
+              + size
+              + " at "
+              + getPositionAsString());
     }
   }
 
@@ -428,7 +495,7 @@ public class CDXProperty {
     return point3D;
   }
 
-  private CDFont readFontRef(int offset, Map<Integer,CDFont> fonts) {
+  private CDFont readFontRef(int offset, Map<Integer, CDFont> fonts) {
     int index = CDXUtils.readUInt16(data, offset);
     CDFont font = fonts.get(index);
     if (font == null) {
@@ -440,10 +507,10 @@ public class CDXProperty {
     return font;
   }
 
-  public Map<Integer,CDFont> getDataAsFontTable() throws IOException {
+  public Map<Integer, CDFont> getDataAsFontTable() throws IOException {
     int count = CDXUtils.readUInt16(data, 2);
     int position = 4;
-    Map<Integer,CDFont> fonts = new HashMap<>();
+    Map<Integer, CDFont> fonts = new HashMap<>();
     for (int i = 0; i < count; i++) {
       int id = CDXUtils.readUInt16(data, position);
       position += 2;
@@ -468,7 +535,8 @@ public class CDXProperty {
     return CDXUtils.convertIntToFontFace(CDXUtils.readUInt16(data, offset));
   }
 
-  private CDXFontStyle readFontStyle(int offset, Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors) throws IOException {
+  private CDXFontStyle readFontStyle(
+      int offset, Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors) throws IOException {
     CDFont font = readFontRef(offset, fonts);
     CDFontFace fontType = readFontFace(offset + 2);
     float size = CDXUtils.readUInt16(data, offset + 4) / 20f;
@@ -476,7 +544,8 @@ public class CDXProperty {
     return new CDXFontStyle(font, size, fontType, color);
   }
 
-  private CDColor readColorRef(int offset, int length, Map<Integer,CDColor> colors) throws IOException {
+  private CDColor readColorRef(int offset, int length, Map<Integer, CDColor> colors)
+      throws IOException {
     int index = 0;
     if (length == 2) {
       index = CDXUtils.readUInt16(data, offset);
@@ -495,12 +564,18 @@ public class CDXProperty {
     return color;
   }
 
-  public Map<Integer,CDColor> getDataAsColorTable() throws IOException {
+  public Map<Integer, CDColor> getDataAsColorTable() throws IOException {
     int count = CDXUtils.readUInt16(data, 0);
     if (count * 6 + 2 != length) {
-      throw new IOException("Unexpected count of color entries " + count + " for length " + length + " at " + getPositionAsString());
+      throw new IOException(
+          "Unexpected count of color entries "
+              + count
+              + " for length "
+              + length
+              + " at "
+              + getPositionAsString());
     }
-    Map<Integer,CDColor> colors = new HashMap<>();
+    Map<Integer, CDColor> colors = new HashMap<>();
     colors.put(0, CDColor.BLACK);
     colors.put(1, CDColor.WHITE);
     colors.put(2, CDColor.WHITE);
@@ -678,7 +753,8 @@ public class CDXProperty {
       case CDXCharSetMacTurkish:
         return CDCharSet.MacTurkish;
     }
-    throw new IOException("Charset 0x" + Integer.toHexString(charSet) + " no recognized at " + getPositionAsString());
+    throw new IOException(
+        "Charset 0x" + Integer.toHexString(charSet) + " no recognized at " + getPositionAsString());
   }
 
   private String getPositionAsString() {
@@ -701,7 +777,8 @@ public class CDXProperty {
     return elementList;
   }
 
-  public CDGenericList getDataAsGenericList(Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors) throws IOException {
+  public CDGenericList getDataAsGenericList(
+      Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors) throws IOException {
     CDGenericList genericList = new CDGenericList();
     int count = CDXUtils.readInt16(data, 0);
     if (count < 0) {
@@ -719,8 +796,9 @@ public class CDXProperty {
     return genericList;
   }
 
-  public CDStyledString readStyledString(int offset, int length, Map<Integer,CDFont> fonts, Map<Integer,CDColor> colors)
-    throws IOException {
+  public CDStyledString readStyledString(
+      int offset, int length, Map<Integer, CDFont> fonts, Map<Integer, CDColor> colors)
+      throws IOException {
     int position = offset;
     int styles = CDXUtils.readUInt16(data, position);
     position += 2;
@@ -764,9 +842,15 @@ public class CDXProperty {
           charSetName = "windows-1252";
         }
         try {
-          string.getChunks()
-                  .add(new CDStyledString.CDXChunk(fontStyles[i].getFont(), fontStyles[i].getSize(), fontStyles[i].getFontType(),
-                          fontStyles[i].getColor(), new String(bytes, charSetName)));
+          string
+              .getChunks()
+              .add(
+                  new CDStyledString.CDXChunk(
+                      fontStyles[i].getFont(),
+                      fontStyles[i].getSize(),
+                      fontStyles[i].getFontType(),
+                      fontStyles[i].getColor(),
+                      new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           logger.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
@@ -786,15 +870,25 @@ public class CDXProperty {
           charSetName = "windows-1252";
         }
         try {
-          string.getChunks()
-                  .add(new CDStyledString.CDXChunk(fontStyles[last].getFont(), fontStyles[last].getSize(), fontStyles[last].getFontType(),
-                          fontStyles[last].getColor(), new String(bytes, charSetName)));
+          string
+              .getChunks()
+              .add(
+                  new CDStyledString.CDXChunk(
+                      fontStyles[last].getFont(),
+                      fontStyles[last].getSize(),
+                      fontStyles[last].getFontType(),
+                      fontStyles[last].getColor(),
+                      new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           logger.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
       }
     } else {
-      string.getChunks().add(new CDStyledString.CDXChunk(fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
+      string
+          .getChunks()
+          .add(
+              new CDStyledString.CDXChunk(
+                  fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
     }
     return string;
   }

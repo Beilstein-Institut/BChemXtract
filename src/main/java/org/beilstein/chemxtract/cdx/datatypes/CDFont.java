@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * A logical font definition.
- */
+/** A logical font definition. */
 public class CDFont {
   private CDCharSet charSet;
   private String name;
@@ -93,5 +91,4 @@ public class CDFont {
     sb.append("]");
     return sb.toString();
   }
-
 }

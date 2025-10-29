@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of a rectangle object.
- */
+/** The type of a rectangle object. */
 public class CDRectangleType {
 
   private boolean roundEdge = false;
@@ -161,5 +159,4 @@ public class CDRectangleType {
     sb.append("]");
     return sb.toString();
   }
-
 }

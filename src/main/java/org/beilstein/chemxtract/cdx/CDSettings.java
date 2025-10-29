@@ -36,56 +36,73 @@ public class CDSettings {
 
   /** The color of the objects or the foreground color of the document. */
   private CDColor color;
+
   /** The background color of the document (not applicable to objects). */
   private CDColor backgroundColor;
+
   /** The highlight color of the document (not applicable to objects). */
   private CDColor highlightColor;
 
   /** The width of any line segment in points. */
   private float lineWidth;
+
   /** The width of a bold or wedge bond in points. */
   private float boldWidth;
+
   /** The default bond length in points. */
   private float bondLength;
+
   /** The default bond spacing in percentage of the bond length. */
   private float bondSpacing;
+
   /** The absolute distance between segments of a multiple bond. */
   private float bondSpacingAbs;
+
   /** The default chain angle in degrees. */
   private float chainAngle;
+
   /** The spacing between hash lines in points. */
   private float hashSpacing;
+
   /** The amount of space surrounding all atom labels in points. */
   private float marginWidth;
 
   /** The absolute distance between segments of a multiple bond. */
   private CDColor captionColor;
+
   /** The default font face for captions (non-atom-label text objects). */
   private CDFontFace captionFace = new CDFontFace();
+
   /** The default font style for captions (non-atom-label text objects). */
   private CDFont captionFont;
+
   /** The font size of captions. */
   private float captionSize;
+
   /** The justification used for captions. */
   private CDJustification captionJustification = CDJustification.Left;
+
   /** The line height used for captions. */
   private float captionLineHeight = LineHeight_Automatic;
 
-  /**
-   * Whether text objects should be interpreted as chemically-meaningful where possible.
-   */
+  /** Whether text objects should be interpreted as chemically-meaningful where possible. */
   private boolean interpretChemically = true;
 
   /** The default color for atom labels. */
   private CDColor labelColor;
+
   /** The default font style for atom labels. */
   private CDFontFace labelFace = new CDFontFace();
+
   /** The font used for atom labels. */
   private CDFont labelFont;
+
   /** The font size of atom labels. */
   private float labelSize;
+
   /** The justification used for atom labels. */
   private CDJustification labelJustification = CDJustification.Left;
+
   /** The line height used for atom labels. */
   private float labelLineHeight = LineHeight_Variable;
 
@@ -94,42 +111,43 @@ public class CDSettings {
    * configuration.
    */
   private boolean showAtomEnhancedStereo = true;
-  /**
-   * Whether atoms will display associated tags representing the atoms' atom numbers.
-   */
+
+  /** Whether atoms will display associated tags representing the atoms' atom numbers. */
   private boolean showAtomNumber = false;
-  /**
-   * Whether atoms will display associated tags representing the atoms' query properties.
-   */
+
+  /** Whether atoms will display associated tags representing the atoms' query properties. */
   private boolean showAtomQuery = true;
+
   /**
    * Whether atoms will display associated tags representing the atoms' absolute CIP stereochemical
    * configurations.
    */
   private boolean showAtomStereo = false;
-  /**
-   * Whether bonds will display associated tags representing the bonds' query properties.
-   */
+
+  /** Whether bonds will display associated tags representing the bonds' query properties. */
   private boolean showBondQuery = true;
-  /**
-   * Whether bonds will display associated tags representing the bonds' reaction-change status.
-   */
+
+  /** Whether bonds will display associated tags representing the bonds' reaction-change status. */
   private boolean showBondReaction = true;
+
   /**
    * Whether bonds will display associated tags representing the bonds' absolute CIP stereochemical
    * configurations.
    */
   private boolean showBondStereo = false;
+
   /**
    * Whether non-terminal carbons (carbons with more than one bond) should display a text label with
    * the element symbol and appropriate hydrogens.
    */
   private boolean showNonTerminalCarbonLabels = false;
+
   /**
    * Whether terminal carbons (carbons with zero or one bond) should display a text label with the
    * element symbol and appropriate hydrogens.
    */
   private boolean showTerminalCarbonLabels = false;
+
   /**
    * Whether implicit hydrogens should be displayed on otherwise-atomic atom labels (NH2 versus N).
    */
@@ -406,5 +424,4 @@ public class CDSettings {
   public void setBondSpacingAbs(float bondSpacingAbs) {
     this.bondSpacingAbs = bondSpacingAbs;
   }
-
 }

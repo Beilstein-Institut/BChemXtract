@@ -26,40 +26,30 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A reaction with RInchi that could be extracted from a CDX file.
- */
+/** A reaction with RInchi that could be extracted from a CDX file. */
 public class BCXReaction implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = -291128317668966826L;
+  @Serial private static final long serialVersionUID = -291128317668966826L;
 
-  /**
-   * RInchi and RInchi Key(s)
-   */
+  /** RInchi and RInchi Key(s) */
   private String rinchi;
-  /**
-   * Business key
-   */
+
+  /** Business key */
   private String rinchiKey;
+
   private String shortRinchiKey;
   private String longRinchiKey;
   private String webRinchiKey;
 
-  /**
-   * Canonical reaction smiles
-   */
+  /** Canonical reaction smiles */
   private String reactionSmiles;
 
-  /**
-   * Aux info collected during RInchi generation
-   */
+  /** Aux info collected during RInchi generation */
   private String auxInfo;
 
-  /**
-   * The components, i.e. substances that are part of the reaction
-   */
+  /** The components, i.e. substances that are part of the reaction */
   private List<BCXReactionComponent> products = new ArrayList<BCXReactionComponent>();
+
   private List<BCXReactionComponent> reactants = new ArrayList<BCXReactionComponent>();
   private List<BCXReactionComponent> agents = new ArrayList<BCXReactionComponent>();
 
@@ -184,8 +174,18 @@ public class BCXReaction implements Serializable {
 
   @Override
   public String toString() {
-    return "BCXReaction [rinchi=" + rinchi + ", rinchiKey=" + rinchiKey + ", shortRinchiKey=" + shortRinchiKey + ", longRinchiKey=" +
-            longRinchiKey + ", webRinchiKey=" + webRinchiKey + ", reactionSmiles=" + reactionSmiles + "]";
+    return "BCXReaction [rinchi="
+        + rinchi
+        + ", rinchiKey="
+        + rinchiKey
+        + ", shortRinchiKey="
+        + shortRinchiKey
+        + ", longRinchiKey="
+        + longRinchiKey
+        + ", webRinchiKey="
+        + webRinchiKey
+        + ", reactionSmiles="
+        + reactionSmiles
+        + "]";
   }
-
 }

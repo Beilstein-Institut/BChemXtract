@@ -21,11 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * Type of external connection, for atoms of type
- * CDXNodeType.CDXExternalConnectionType.
- */
-public enum CDExternalConnectionType{
+/** Type of external connection, for atoms of type CDXNodeType.CDXExternalConnectionType. */
+public enum CDExternalConnectionType {
 
   /** Nothing is specified about the node's isotopic abundance */
   Unspecified,
@@ -33,15 +30,9 @@ public enum CDExternalConnectionType{
   Diamond,
   /** The attachment point is indicated by an asterisk at the end of a bond */
   Star,
-  /**
-   * The attachment point is indicated by large shaded sphere at the end of a
-   * bond
-   */
+  /** The attachment point is indicated by large shaded sphere at the end of a bond */
   PolymerBead,
-  /**
-   * The attachment point is indicated by a wavy line perpendicular to the end
-   * of a bond
-   */
+  /** The attachment point is indicated by a wavy line perpendicular to the end of a bond */
   Wavy,
   // TODO: javadoc
   Residue;

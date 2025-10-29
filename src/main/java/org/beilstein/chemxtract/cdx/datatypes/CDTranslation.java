@@ -22,28 +22,26 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
- * Provides for restrictions on whether a given node may match other more- or
- * less-general nodes.
+ * Provides for restrictions on whether a given node may match other more- or less-general nodes.
  */
-public enum CDTranslation{
+public enum CDTranslation {
   /**
-   * Generic nickname can match only an identical generic nickname; specific
-   * atoms can match only the identical specific atoms.
+   * Generic nickname can match only an identical generic nickname; specific atoms can match only
+   * the identical specific atoms.
    */
   Equal,
   /**
-   * Node may match any identical or more-general node, including more-general
-   * generic nicknames.
+   * Node may match any identical or more-general node, including more-general generic nicknames.
    */
   Broad,
   /**
-   * Generic nickname must match specific atoms or groups of atoms (cannot
-   * match another generic nickname).
+   * Generic nickname must match specific atoms or groups of atoms (cannot match another generic
+   * nickname).
    */
   Narrow,
   /**
-   * Generic nicknames may match other more-general generic nicknames, or may
-   * match specific atoms or groups of atoms.
+   * Generic nicknames may match other more-general generic nicknames, or may match specific atoms
+   * or groups of atoms.
    */
   Any;
 }

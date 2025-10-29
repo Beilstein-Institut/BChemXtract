@@ -22,8 +22,8 @@
 package org.beilstein.chemxtract.cdx;
 
 /**
- * This object represents an externally-generated object embedded in the
- * file, usually a metafile or OLE object.
+ * This object represents an externally-generated object embedded in the file, usually a metafile or
+ * OLE object.
  */
 public class CDPicture extends CDObject {
   private float rotationAngle;
@@ -141,5 +141,4 @@ public class CDPicture extends CDObject {
     visitor.visitEmbeddedObject(this);
     super.accept(visitor);
   }
-
 }

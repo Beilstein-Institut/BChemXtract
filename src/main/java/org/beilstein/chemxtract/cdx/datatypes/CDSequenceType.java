@@ -21,12 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDSequenceType{
-
+public enum CDSequenceType {
   Unknown,
   Peptide1,
   Peptide3,
   DNA,
   RNA;
-
 }

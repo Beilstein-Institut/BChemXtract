@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDArrowHeadType{
+public enum CDArrowHeadType {
   Solid,
   Hollow,
   Angle;

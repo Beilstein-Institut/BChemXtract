@@ -37,5 +37,4 @@ public class CDSequence {
   public void setIdentifier(String identifier) {
     this.identifier = identifier;
   }
-
 }

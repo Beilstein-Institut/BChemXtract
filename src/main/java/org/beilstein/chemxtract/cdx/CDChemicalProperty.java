@@ -23,9 +23,7 @@ package org.beilstein.chemxtract.cdx;
 
 import java.util.List;
 
-/**
- * Physical or chemical property that corresponds to a group of atoms or bonds.
- */
+/** Physical or chemical property that corresponds to a group of atoms or bonds. */
 public class CDChemicalProperty {
 
   private List<Object> basisObjects;
@@ -64,5 +62,4 @@ public class CDChemicalProperty {
   public void setActive(boolean active) {
     this.active = active;
   }
-
 }

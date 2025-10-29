@@ -21,15 +21,17 @@
  */
 package org.beilstein.chemxtract.converter;
 
+import java.io.IOException;
+import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
-import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.utils.StereoHandler;
 import org.beilstein.chemxtract.visitor.AtomVisitor;
 import org.beilstein.chemxtract.visitor.BondVisitor;
@@ -43,24 +45,17 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-import java.io.IOException;
-import java.util.*;
-
 /**
- * Converts a {@link CDFragment} (e.g., a ChemDraw fragment) into a
- * CDK {@link IAtomContainer}.
+ * Converts a {@link CDFragment} (e.g., a ChemDraw fragment) into a CDK {@link IAtomContainer}.
  *
- * <p>
- * The {@code FragmentConverter} serves as the top-level converter for ChemDraw
- * fragments. It delegates conversion of atoms and bonds to
- * {@link AtomConverter} and {@link BondConverter} respectively,
- * assembles the resulting {@link IAtomContainer}, resolves abbreviations
- * (e.g., "Ph", "Me", "Et"), and performs post-processing such as
- * radical detection, implicit hydrogen addition, and stereochemistry
- * perception.
- * </p>
+ * <p>The {@code FragmentConverter} serves as the top-level converter for ChemDraw fragments. It
+ * delegates conversion of atoms and bonds to {@link AtomConverter} and {@link BondConverter}
+ * respectively, assembles the resulting {@link IAtomContainer}, resolves abbreviations (e.g., "Ph",
+ * "Me", "Et"), and performs post-processing such as radical detection, implicit hydrogen addition,
+ * and stereochemistry perception.
  *
- * <p><b>Example usage:</b></p>
+ * <p><b>Example usage:</b>
+ *
  * <pre>{@code
  * IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
  * FragmentConverter converter = new FragmentConverter(builder);
@@ -75,12 +70,12 @@ public class FragmentConverter {
   private static final Log logger = LogFactory.getLog(FragmentConverter.class);
 
   /**
-   * Constructs a new {@code FragmentConverter} using the given
-   * {@link IChemObjectBuilder} and reader mode.
+   * Constructs a new {@code FragmentConverter} using the given {@link IChemObjectBuilder} and
+   * reader mode.
    *
    * @param builder the CDK {@link IChemObjectBuilder} used to create new instances
-   * @param mode the conversion mode (e.g., {@link IChemObjectReader.Mode#STRICT} or
-   *             {@link IChemObjectReader.Mode#RELAXED})
+   * @param mode the conversion mode (e.g., {@link IChemObjectReader.Mode#STRICT} or {@link
+   *     IChemObjectReader.Mode#RELAXED})
    */
   public FragmentConverter(IChemObjectBuilder builder, IChemObjectReader.Mode mode) {
     this.builder = builder;
@@ -89,8 +84,8 @@ public class FragmentConverter {
   }
 
   /**
-   * Constructs a new {@code FragmentConverter} using the given builder and
-   * {@link IChemObjectReader.Mode#RELAXED} as the default mode.
+   * Constructs a new {@code FragmentConverter} using the given builder and {@link
+   * IChemObjectReader.Mode#RELAXED} as the default mode.
    *
    * @param builder the CDK {@link IChemObjectBuilder}
    */
@@ -98,15 +93,12 @@ public class FragmentConverter {
     this(builder, IChemObjectReader.Mode.RELAXED);
   }
 
-
   /**
    * Converts a ChemDraw {@link CDFragment} into a CDK {@link IAtomContainer}.
    *
-   * <p>
-   * This method performs full reconstruction of the molecular graph:
-   * it converts atoms and bonds, handles pseudoatoms and abbreviations,
-   * and configures radicals, atom types, hydrogens, and stereo elements.
-   * </p>
+   * <p>This method performs full reconstruction of the molecular graph: it converts atoms and
+   * bonds, handles pseudoatoms and abbreviations, and configures radicals, atom types, hydrogens,
+   * and stereo elements.
    *
    * @param fragment the ChemDraw fragment to convert
    * @return the converted {@link IAtomContainer} representation
@@ -139,7 +131,8 @@ public class FragmentConverter {
       bonds.add(bondConverter.convert(cdBond));
     }
     // create IAtomContainer
-    IAtomContainer atomContainer = createAtomContainer(atoms.toArray(IAtom[]::new), bonds.toArray(IBond[]::new));
+    IAtomContainer atomContainer =
+        createAtomContainer(atoms.toArray(IAtom[]::new), bonds.toArray(IBond[]::new));
     // check for radicals
     setRadicals(atomContainer, atomConverter.getAtomMap());
     // add implicit hydrogens
@@ -162,27 +155,27 @@ public class FragmentConverter {
   }
 
   /**
-   * Returns a mapping of nickname labels to corresponding
-   * {@link CDFragment} definitions contained in the given fragment.
+   * Returns a mapping of nickname labels to corresponding {@link CDFragment} definitions contained
+   * in the given fragment.
    *
    * @param fragment the {@link CDFragment} to inspect
    * @return a map of nicknames to {@link CDFragment} structures
    */
-  public Map<String,CDFragment> getNicknames(CDFragment fragment) {
+  public Map<String, CDFragment> getNicknames(CDFragment fragment) {
     return new AtomVisitor(fragment).getNicknames();
   }
 
   /**
-   * Checks the given fragment for “dot allene” artifacts
-   * (central carbon drawn as a dot) and corrects them by converting
-   * the dot node to a proper carbon element.
+   * Checks the given fragment for “dot allene” artifacts (central carbon drawn as a dot) and
+   * corrects them by converting the dot node to a proper carbon element.
    *
    * @param fragment the {@link CDFragment} to clean
    */
   private void checkForDotAllene(CDFragment fragment) {
     fragment.getAtoms().stream()
-            .filter(this::isDotAlleneCandidate)
-            .forEach(dot -> {
+        .filter(this::isDotAlleneCandidate)
+        .forEach(
+            dot -> {
               List<CDBond> connectedBonds = getConnectedBonds(fragment, dot);
               if (formsAllene(connectedBonds)) {
                 dot.setNodeType(CDNodeType.Element);
@@ -193,9 +186,8 @@ public class FragmentConverter {
   }
 
   /**
-   * Creates a new {@link IAtomContainer} from the provided atoms and bonds.
-   * Performs a post-processing step to re-substitute abbreviations
-   * into full structures.
+   * Creates a new {@link IAtomContainer} from the provided atoms and bonds. Performs a
+   * post-processing step to re-substitute abbreviations into full structures.
    *
    * @param atoms array of {@link IAtom}
    * @param bonds array of {@link IBond}
@@ -223,8 +215,9 @@ public class FragmentConverter {
   }
 
   /**
-   * Expands pseudoatom abbreviations (e.g., "Ph", "Ac") into explicit
-   * substructures defined in {@link SmilesAbbreviations}.
+   * Expands pseudoatom abbreviations (e.g., "Ph", "Ac") into explicit substructures defined in
+   * {@link SmilesAbbreviations}.
+   *
    * <p>
    *
    * @param atomContainer the container in which abbreviations are replaced
@@ -254,20 +247,21 @@ public class FragmentConverter {
       try {
         expandedStructure = smilesParser.parseSmiles(smiles);
       } catch (InvalidSmilesException e) {
-        logger.error("SMILES could not be parsed to AtomContainer: " +
-                abbreviation + ": " + smiles);
+        logger.error(
+            "SMILES could not be parsed to AtomContainer: " + abbreviation + ": " + smiles);
         continue;
       }
 
       // set coordinates all to the coordinates of the connection point
-      for (IAtom expandedAtom : expandedStructure.atoms()){
+      for (IAtom expandedAtom : expandedStructure.atoms()) {
         expandedAtom.setPoint2d(pseudoAtom.getPoint2d());
       }
 
       if (expandedStructure.getAtomCount() == 1) {
         replaceSingleAtom(atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove);
       } else {
-        replaceMultiAtom(atomContainer, pseudoAtom, expandedStructure, bondsToRemove, atomsToRemove);
+        replaceMultiAtom(
+            atomContainer, pseudoAtom, expandedStructure, bondsToRemove, atomsToRemove);
       }
     }
     bondsToRemove.forEach(atomContainer::removeBond);
@@ -275,30 +269,31 @@ public class FragmentConverter {
   }
 
   /**
-   * Replaces the given single R-Atom with the given new IAtom in the IAtomContainer and adds the R-Atom to the list
-   * of atoms to be removed
+   * Replaces the given single R-Atom with the given new IAtom in the IAtomContainer and adds the
+   * R-Atom to the list of atoms to be removed
    *
    * @param atomContainer IAtomContainer
    * @param pseudoAtom abbreviation/R atom (IAtom) to be replaced
    * @param newAtom IAtom to replace the rAtom
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
    */
-  private void replaceSingleAtom(IAtomContainer atomContainer, IAtom pseudoAtom, IAtom newAtom, List<IAtom> atomsToRemove) {
+  private void replaceSingleAtom(
+      IAtomContainer atomContainer, IAtom pseudoAtom, IAtom newAtom, List<IAtom> atomsToRemove) {
     atomContainer.addAtom(newAtom);
 
     List<IBond> connectedBonds = new ArrayList<>();
     pseudoAtom.bonds().forEach(connectedBonds::add);
-    connectedBonds.forEach(bond ->
-            bond.setAtoms(new IAtom[] { bond.getOther(pseudoAtom), newAtom }));
+    connectedBonds.forEach(bond -> bond.setAtoms(new IAtom[] {bond.getOther(pseudoAtom), newAtom}));
     newAtom.setValency(connectedBonds.size());
-    newAtom.setImplicitHydrogenCount(Math.max(newAtom.getImplicitHydrogenCount() - connectedBonds.size(), 0));
+    newAtom.setImplicitHydrogenCount(
+        Math.max(newAtom.getImplicitHydrogenCount() - connectedBonds.size(), 0));
 
     atomsToRemove.add(pseudoAtom);
   }
 
   /**
-   * Replaces and reconnects the given IAtomContainer parsed from a SMILES with the residue IAtoms in the original
-   * IAtomContainer.
+   * Replaces and reconnects the given IAtomContainer parsed from a SMILES with the residue IAtoms
+   * in the original IAtomContainer.
    *
    * @param atomContainer IAtomContainer
    * @param pseudoAtom List of residue IAtoms
@@ -306,8 +301,12 @@ public class FragmentConverter {
    * @param bondsToRemove list of bonds that will be removed from the IAtomContainer
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
    */
-  private void replaceMultiAtom(IAtomContainer atomContainer, IAtom pseudoAtom, IAtomContainer expandedStructure, List<IBond> bondsToRemove,
-          List<IAtom> atomsToRemove) {
+  private void replaceMultiAtom(
+      IAtomContainer atomContainer,
+      IAtom pseudoAtom,
+      IAtomContainer expandedStructure,
+      List<IBond> bondsToRemove,
+      List<IAtom> atomsToRemove) {
     List<IAtom> connectionPoints = new ArrayList<>();
     for (IAtom atom : expandedStructure.atoms()) {
       if (atom instanceof IPseudoAtom) {
@@ -333,7 +332,7 @@ public class FragmentConverter {
       logger.error("Bond could not be cloned.");
       return;
     }
-    newBond.setAtoms(new IAtom[] { originAtom, atomInsideAbbr });
+    newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});
 
     atomContainer.add(expandedStructure);
     atomContainer.addBond(newBond);
@@ -345,11 +344,10 @@ public class FragmentConverter {
   }
 
   /**
-   * Adds implicit hydrogens accordingly. It does not create 2D or 3D
-   * coordinates for the new hydrogens.
+   * Adds implicit hydrogens accordingly. It does not create 2D or 3D coordinates for the new
+   * hydrogens.
    *
-   * @param container to which implicit hydrogens are added.
-   * Copied from CDK
+   * @param container to which implicit hydrogens are added. Copied from CDK
    */
   private void addImplicitHydrogens(IAtomContainer container) {
     try {
@@ -358,8 +356,7 @@ public class FragmentConverter {
       String[] originalAtomTypeNames = new String[atomCount];
       for (int i = 0; i < atomCount; i++) {
         IAtom atom = container.getAtom(i);
-        if (atom instanceof IPseudoAtom)
-          atom.setImplicitHydrogenCount(0);
+        if (atom instanceof IPseudoAtom) atom.setImplicitHydrogenCount(0);
         IAtomType type = matcher.findMatchingAtomType(container, atom);
         originalAtomTypeNames[i] = atom.getAtomTypeName();
         atom.setAtomTypeName(type.getAtomTypeName());
@@ -377,15 +374,15 @@ public class FragmentConverter {
   }
 
   /**
-   * Determines whether a set of bonds forms an allene structure,
-   * i.e. a carbon atom connected to exactly two double bonds.
+   * Determines whether a set of bonds forms an allene structure, i.e. a carbon atom connected to
+   * exactly two double bonds.
    *
    * @param bonds the list of bonds connected to a carbon atom
    * @return {@code true} if the bonds form an allene, otherwise {@code false}
    */
   private boolean formsAllene(List<CDBond> bonds) {
-    return bonds.size() == 2 &&
-            bonds.stream().allMatch(b -> b.getBondOrder().equals(CDBondOrder.Double));
+    return bonds.size() == 2
+        && bonds.stream().allMatch(b -> b.getBondOrder().equals(CDBondOrder.Double));
   }
 
   /**
@@ -397,36 +394,38 @@ public class FragmentConverter {
    */
   private List<CDBond> getConnectedBonds(CDFragment fragment, CDAtom atom) {
     return fragment.getBonds().stream()
-            .filter(b -> b.getBegin().equals(atom) || b.getEnd().equals(atom))
-            .toList();
+        .filter(b -> b.getBegin().equals(atom) || b.getEnd().equals(atom))
+        .toList();
   }
 
   /**
-   * Checks whether a ChemDraw atom represents a “dot allene” candidate,
-   * i.e. a carbon atom with a single “.” label.
+   * Checks whether a ChemDraw atom represents a “dot allene” candidate, i.e. a carbon atom with a
+   * single “.” label.
    *
    * @param candidate the candidate {@link CDAtom}
    * @return {@code true} if the atom is a dot allene candidate
    */
   private boolean isDotAlleneCandidate(CDAtom candidate) {
-    return candidate.getElementNumber() == 6 &&
-            Optional.ofNullable(candidate.getText())
-                    .map(t -> t.getText().getText())
-                    .filter("."::equals)
-                    .isPresent();
+    return candidate.getElementNumber() == 6
+        && Optional.ofNullable(candidate.getText())
+            .map(t -> t.getText().getText())
+            .filter("."::equals)
+            .isPresent();
   }
 
   /**
-   * Sets radicals on atoms according to the {@link CDRadical}
-   * information encoded in the ChemDraw fragment.
+   * Sets radicals on atoms according to the {@link CDRadical} information encoded in the ChemDraw
+   * fragment.
+   *
    * <p>
    *
    * @param atomContainer the {@link IAtomContainer} to modify
    * @param atomMap the mapping from {@link CDAtom} to {@link IAtom}
    */
-  private void setRadicals(IAtomContainer atomContainer, Map<CDAtom,IAtom> atomMap) {
+  private void setRadicals(IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     try {
-      List<CDAtom> cdRadicals = atomMap.keySet().stream().filter(a -> !CDRadical.None.equals(a.getRadical())).toList();
+      List<CDAtom> cdRadicals =
+          atomMap.keySet().stream().filter(a -> !CDRadical.None.equals(a.getRadical())).toList();
       for (CDAtom cdRadical : cdRadicals) {
         IAtom radical = atomMap.get(cdRadical);
         if (!atomContainer.contains(radical)) {

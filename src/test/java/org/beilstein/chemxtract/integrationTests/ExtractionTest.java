@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.integrationTests;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.Assert.assertNotNull;
 
 import java.awt.Color;
@@ -29,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.*;
@@ -45,11 +45,10 @@ import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
-import static org.assertj.core.api.Assertions.*;
-
 public class ExtractionTest {
 
-  private static final String OUTPUT_DIR = System.getProperty("user.dir") + "/target/test-output/bchemxtract";
+  private static final String OUTPUT_DIR =
+      System.getProperty("user.dir") + "/target/test-output/bchemxtract";
   private File outputDir;
 
   @Before
@@ -93,7 +92,6 @@ public class ExtractionTest {
         e.printStackTrace();
       }
     }
-
   }
 
   @Test
@@ -129,7 +127,6 @@ public class ExtractionTest {
         e.printStackTrace();
       }
     }
-
   }
 
   private void depictSubstance(BCXSubstance substance) throws IOException, CDKException {
@@ -138,7 +135,12 @@ public class ExtractionTest {
 
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
     IAtomContainer m = sp.parseSmiles(substance.getSmiles());
-    DepictionGenerator dg = new DepictionGenerator().withSize(1024, 1024).withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE);
+    DepictionGenerator dg =
+        new DepictionGenerator()
+            .withSize(1024, 1024)
+            .withAtomColors()
+            .withFillToFit()
+            .withBackgroundColor(Color.WHITE);
     Depiction d = dg.depict(m);
     d.writeTo(Depiction.PNG_FMT, fos);
     fos.flush();
@@ -151,11 +153,11 @@ public class ExtractionTest {
 
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
     IReaction r = sp.parseReactionSmiles(reaction.getReactionSmiles());
-    DepictionGenerator dg = new DepictionGenerator().withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE);
+    DepictionGenerator dg =
+        new DepictionGenerator().withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE);
     Depiction d = dg.depict(r);
     d.writeTo(Depiction.PNG_FMT, fos);
     fos.flush();
     fos.close();
   }
-
 }

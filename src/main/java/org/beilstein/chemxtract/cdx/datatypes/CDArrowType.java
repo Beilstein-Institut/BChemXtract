@@ -21,11 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of arrow object, which represents line, arrow, arc, rectangle, or
- * orbital.
- */
-public enum CDArrowType{
+/** The type of arrow object, which represents line, arrow, arc, rectangle, or orbital. */
+public enum CDArrowType {
   /** No head. */
   NoHead,
   /** Half head. */

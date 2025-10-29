@@ -26,29 +26,22 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * A component that is part of a reaction.
- * In contrast to the Substance entity, this component does not exist standalone as-is,
- * but within the scope of a reaction.
+ * A component that is part of a reaction. In contrast to the Substance entity, this component does
+ * not exist standalone as-is, but within the scope of a reaction.
  */
 public class BCXReactionComponent implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = -901699159889250570L;
+  @Serial private static final long serialVersionUID = -901699159889250570L;
 
-  /**
-   * Inchi and Inchi Key
-   */
+  /** Inchi and Inchi Key */
   private String inchi;
 
-  /**
-   * Business key
-   */
+  /** Business key */
   private String inchiKey;
 
-  /**
-   * The coordinates in the CDX file
-   */
+  /** The coordinates in the CDX file */
   private float cdxTop;
+
   private float cdxLeft;
   private float cdxBottom;
   private float cdxRight;
@@ -140,8 +133,16 @@ public class BCXReactionComponent implements Serializable {
 
   @Override
   public String toString() {
-    return "ReactionComponent [inchiKey=" + inchiKey + ", cdxTop=" + cdxTop + ", cdxLeft=" + cdxLeft + ", cdxBottom=" + cdxBottom +
-            ", cdxRight=" + cdxRight + "]";
+    return "ReactionComponent [inchiKey="
+        + inchiKey
+        + ", cdxTop="
+        + cdxTop
+        + ", cdxLeft="
+        + cdxLeft
+        + ", cdxBottom="
+        + cdxBottom
+        + ", cdxRight="
+        + cdxRight
+        + "]";
   }
-
 }

@@ -22,14 +22,13 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
- * The order of a bond object. Dative and Ionic bonds are set with the method
- * {@link org.beilstein.chemxtract.cdx.CDBond#setBegin(CDAtom)} as positive end. 
- * Hydrogen bonds are set with the method
- * {@link org.beilstein.chemxtract.cdx.CDBond#setBegin(CDAtom)} as the hydrogen. 
- * Three center bonds are set with two Bond objects, each with 
- * {@link org.beilstein.chemxtract.cdx.CDBond#getBegin()} as the center atom. 
+ * The order of a bond object. Dative and Ionic bonds are set with the method {@link
+ * org.beilstein.chemxtract.cdx.CDBond#setBegin(CDAtom)} as positive end. Hydrogen bonds are set
+ * with the method {@link org.beilstein.chemxtract.cdx.CDBond#setBegin(CDAtom)} as the hydrogen.
+ * Three center bonds are set with two Bond objects, each with {@link
+ * org.beilstein.chemxtract.cdx.CDBond#getBegin()} as the center atom.
  */
-public enum CDBondOrder{
+public enum CDBondOrder {
   /** Single bond */
   Single,
   /** Double bond */

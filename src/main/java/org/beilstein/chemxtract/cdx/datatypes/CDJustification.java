@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDJustification{
+public enum CDJustification {
   /** Right justified text */
   Right,
   /** Left justified text */
@@ -36,6 +36,9 @@ public enum CDJustification{
   Below,
   /** Text is automatically positioned */
   Auto,
-  /** Text is positioned at creation-type in the alignment that best avoids any associated objects, but that alignment is fixed from that point onward */
+  /**
+   * Text is positioned at creation-type in the alignment that best avoids any associated objects,
+   * but that alignment is fixed from that point onward
+   */
   BestInitial;
 }

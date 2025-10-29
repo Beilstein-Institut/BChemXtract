@@ -23,11 +23,11 @@ package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
  * This enum describes an atom's bond geometry.
- * <p>
- * The number of bonds and implicit and explicit hydrogens must be the number
- * of attachments given in the table for the specified geometry.
+ *
+ * <p>The number of bonds and implicit and explicit hydrogens must be the number of attachments
+ * given in the table for the specified geometry.
  */
-public enum CDAtomGeometry{
+public enum CDAtomGeometry {
   /** Unknown */
   Unknown,
   /** 1 ligand */

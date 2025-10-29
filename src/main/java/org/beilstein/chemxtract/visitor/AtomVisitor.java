@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import java.util.*;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
@@ -28,11 +29,7 @@ import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 
-import java.util.*;
-
-/**
- * Visitor class for traversing a ChemDraw fragment and collecting atom-related information.
- */
+/** Visitor class for traversing a ChemDraw fragment and collecting atom-related information. */
 public class AtomVisitor extends CDVisitor {
 
   private final List<CDAtom> atoms;
@@ -40,8 +37,8 @@ public class AtomVisitor extends CDVisitor {
   private final Set<String> abbreviations;
 
   /**
-   * Constructs an {@code AtomVisitor} and immediately traverses the provided fragment
-   * to collect atoms, nicknames, and abbreviations.
+   * Constructs an {@code AtomVisitor} and immediately traverses the provided fragment to collect
+   * atoms, nicknames, and abbreviations.
    *
    * @param fragment the {@link CDFragment} to traverse
    */
@@ -67,19 +64,17 @@ public class AtomVisitor extends CDVisitor {
     }
     // collect abbreviations that could not be handled by ChemDraw
     else if (!CDNodeType.Element.equals(node.getNodeType())
-            && (node.getText() != null || node.getLabelText() != null)
-    ) {
-      String text = Optional.ofNullable(node.getText())
+        && (node.getText() != null || node.getLabelText() != null)) {
+      String text =
+          Optional.ofNullable(node.getText())
               .map(CDText::getText)
               .map(CDStyledString::getText)
-              .orElseGet(node::getLabelText
-              );
+              .orElseGet(node::getLabelText);
       abbreviations.add(text);
       atoms.add(node);
     }
     // Collect atoms
-    if (CDNodeType.Element.equals(node.getNodeType())
-    ) {
+    if (CDNodeType.Element.equals(node.getNodeType())) {
       atoms.add(node);
     }
   }

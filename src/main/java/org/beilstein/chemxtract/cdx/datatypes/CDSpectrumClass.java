@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of spectrum represented.
- */
-public enum CDSpectrumClass{
+/** The type of spectrum represented. */
+public enum CDSpectrumClass {
   /** Unknown spectral type. Not recommended */
   Unknown,
   /** GC (not supported in ChemDraw) */

@@ -21,24 +21,23 @@
  */
 package org.beilstein.chemxtract.io;
 
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
+import static org.beilstein.chemxtract.io.XMLUtils.getInvalidAttributeMessage;
+import static org.beilstein.chemxtract.io.XMLUtils.getInvalidObjectMessage;
 
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.*;
 import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.*;
-
-import static org.beilstein.chemxtract.io.XMLUtils.getInvalidAttributeMessage;
-import static org.beilstein.chemxtract.io.XMLUtils.getInvalidObjectMessage;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * Object for a lightweight XML DOM implementation. This implementation doesn't support XML
@@ -46,7 +45,7 @@ import static org.beilstein.chemxtract.io.XMLUtils.getInvalidObjectMessage;
  */
 public class XMLObject {
   private String name;
-  private Map<String,String> attributes = new LinkedHashMap<>();
+  private Map<String, String> attributes = new LinkedHashMap<>();
   private List<XMLObject> objects = new ArrayList<>();
   private List<String> texts = new ArrayList<>();
   private Object instance;
@@ -58,7 +57,7 @@ public class XMLObject {
 
   /**
    * Returns the line number of the XML element.
-   * 
+   *
    * @return Line number
    */
   public int getLineNumber() {
@@ -67,7 +66,7 @@ public class XMLObject {
 
   /**
    * Sets the line number of the XML element. This method is invoked by the XML parser.
-   * 
+   *
    * @param lineNumber
    */
   public void setLineNumber(int lineNumber) {
@@ -76,7 +75,7 @@ public class XMLObject {
 
   /**
    * Returns the column number of the XML element.
-   * 
+   *
    * @return Column number
    */
   public int getColumnNumber() {
@@ -85,7 +84,7 @@ public class XMLObject {
 
   /**
    * Sets the column number of the XML element. This method is invoked by the XML parser.
-   * 
+   *
    * @param columnNumber Column number
    */
   public void setColumnNumber(int columnNumber) {
@@ -94,8 +93,9 @@ public class XMLObject {
 
   /**
    * Returns the number of XMLObjects in the tree this object is root of
+   *
    * @param recursive If true, count recursively, otherwise just count the direct children
-   * @return The number of objects in the tree 
+   * @return The number of objects in the tree
    */
   public int getNumberOfObjects(boolean recursive) {
     if (!recursive) {
@@ -111,6 +111,7 @@ public class XMLObject {
 
   /**
    * Returns the tree depth.
+   *
    * @return
    */
   public int getDepth() {
@@ -128,7 +129,7 @@ public class XMLObject {
   /**
    * Return the text elements of the XML element. Normally you have only one text element, but for
    * Mix-Content elements you have n+1 text elements where n is the number of child elements.
-   * 
+   *
    * @return Text elements
    */
   public List<String> getTexts() {
@@ -137,7 +138,7 @@ public class XMLObject {
 
   /**
    * Sets the texts elements. This method is invoked by the XML parser.
-   * 
+   *
    * @param texts Text elements.
    */
   public void setTexts(List<String> texts) {
@@ -146,7 +147,7 @@ public class XMLObject {
 
   /**
    * Returns the name of the XML element.
-   * 
+   *
    * @return Element name
    */
   public String getName() {
@@ -155,7 +156,7 @@ public class XMLObject {
 
   /**
    * Sets the name of the XML element. This method is invoked by the XML parser.
-   * 
+   *
    * @param name Element name
    */
   public void setName(String name) {
@@ -165,25 +166,25 @@ public class XMLObject {
   /**
    * Returns the element attributes as map, where the key is the attribute name and the value the
    * attribute value.
-   * 
+   *
    * @return Element attributes
    */
-  public Map<String,String> getAttributes() {
+  public Map<String, String> getAttributes() {
     return attributes;
   }
 
   /**
    * Sets the attributes of the element. This method is invoked by the XML parser.
-   * 
+   *
    * @param attributes Element attributes
    */
-  public void setAttributes(Map<String,String> attributes) {
+  public void setAttributes(Map<String, String> attributes) {
     this.attributes = attributes;
   }
 
   /**
    * Returns the list of child XML elements.
-   * 
+   *
    * @return Child elements
    */
   public List<XMLObject> getObjects() {
@@ -192,7 +193,7 @@ public class XMLObject {
 
   /**
    * Sets the list of child elements. This method is invoked by the XML parser.
-   * 
+   *
    * @param objects Child elements
    */
   public void setObjects(List<XMLObject> objects) {
@@ -201,7 +202,7 @@ public class XMLObject {
 
   /**
    * Returns an user-defined object, which can be attached during a XML-Java mapping process.
-   * 
+   *
    * @return User-defined object
    */
   public Object getInstance() {
@@ -210,7 +211,7 @@ public class XMLObject {
 
   /**
    * Sets an user-defined object, which can be attached during a XML-Java mapping process.
-   * 
+   *
    * @param instance User-defined object
    */
   public void setInstance(Object instance) {
@@ -221,7 +222,7 @@ public class XMLObject {
 
   /**
    * Add or replace an attribute of this XML object
-   * 
+   *
    * @param name Name of the attribute
    * @param value Value of the attribute
    */
@@ -231,7 +232,7 @@ public class XMLObject {
 
   /**
    * Remove an attribute of this XML object.
-   * 
+   *
    * @param name Name of the attribute
    */
   public void removeAttribute(String name) {
@@ -240,7 +241,7 @@ public class XMLObject {
 
   /**
    * Add the XML object as new child element.
-   * 
+   *
    * @param object The new child element
    */
   public void addObject(XMLObject object) {
@@ -249,7 +250,7 @@ public class XMLObject {
 
   /**
    * Add a new child element with the given name.
-   * 
+   *
    * @param name Name of the child element
    * @return The new XML object
    */
@@ -262,7 +263,7 @@ public class XMLObject {
 
   /**
    * Returns true, if this element has a child element with the given name.
-   * 
+   *
    * @param name Name of child element
    * @return True, if this element has a child element with the given name
    */
@@ -277,7 +278,7 @@ public class XMLObject {
 
   /**
    * Returns a list of child elements with the given name.
-   * 
+   *
    * @param name Name of the child elements
    * @return List of child elements
    */
@@ -293,7 +294,7 @@ public class XMLObject {
 
   /**
    * Returns a list of all child elements independent of position the with the given name.
-   * 
+   *
    * @param name Name of the child elements
    * @return List of all child elements
    */
@@ -318,7 +319,7 @@ public class XMLObject {
 
   /**
    * Returns the first child element with the given name
-   * 
+   *
    * @param name Name of the child element
    * @return First child element
    */
@@ -333,7 +334,7 @@ public class XMLObject {
 
   /**
    * Returns the text elements as text string.
-   * 
+   *
    * @return Text elements as text string
    */
   public String getTextsAsString() {
@@ -348,7 +349,7 @@ public class XMLObject {
 
   /**
    * Returns the text elements as integer.
-   * 
+   *
    * @return Text elements as integer
    * @throws IOException Occurs if the texts elements cannot be parse to an integer
    */
@@ -362,7 +363,7 @@ public class XMLObject {
 
   /**
    * Returns true if the element has an attribute with the given name.
-   * 
+   *
    * @param name Name of the attribute
    * @return True if the element has an attribute with the given name
    */
@@ -372,7 +373,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given attribute name.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute, otherwise null if the attribute doesn't exists
    */
@@ -382,7 +383,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given attribute name.
-   * 
+   *
    * @param name Name of the attribute
    * @param defaultValue Value, which should be returned if the attribute doesn't exists
    * @return Value of the attribute
@@ -397,22 +398,25 @@ public class XMLObject {
   /**
    * Returns the attribute value for the given name as boolean. "yes"/"no" and "true"/"false" are
    * valid values.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute as boolean
    * @throws IOException
    */
   public boolean getAttributeAsBoolean(String name) throws IOException {
-    if (!getAttribute(name).equalsIgnoreCase("yes") && !getAttribute(name).equalsIgnoreCase("true") &&
-            !getAttribute(name).equalsIgnoreCase("no") && !getAttribute(name).equalsIgnoreCase("false")) {
+    if (!getAttribute(name).equalsIgnoreCase("yes")
+        && !getAttribute(name).equalsIgnoreCase("true")
+        && !getAttribute(name).equalsIgnoreCase("no")
+        && !getAttribute(name).equalsIgnoreCase("false")) {
       throw new IOException(getInvalidAttributeMessage(this, name));
     }
-    return getAttribute(name).equalsIgnoreCase("yes") || getAttribute(name).equalsIgnoreCase("true");
+    return getAttribute(name).equalsIgnoreCase("yes")
+        || getAttribute(name).equalsIgnoreCase("true");
   }
 
   /**
    * Returns the attribute value for the given name as boolean.
-   * 
+   *
    * @param name Name of the attribute
    * @param defaultValue Value, which should be returned if the attribute doesn't exists
    * @return Value of the attribute as boolean
@@ -427,7 +431,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given name as integer.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute as integer
    * @throws IOException
@@ -442,7 +446,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given name as integer.
-   * 
+   *
    * @param name Name of the attribute
    * @param defaultValue Value, which should be returned if the attribute doesn't exists
    * @return Value of the attribute as integer
@@ -457,7 +461,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given name as long.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute as long
    * @throws IOException
@@ -472,7 +476,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given name as float.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute as float
    * @throws IOException
@@ -487,7 +491,7 @@ public class XMLObject {
 
   /**
    * Returns the attribute value for the given name as double.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute as double
    * @throws IOException
@@ -503,7 +507,7 @@ public class XMLObject {
   /**
    * Returns the attribute value as list of text strings. The text strings are separated by one or
    * more whitespace characters.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute
    */
@@ -512,9 +516,9 @@ public class XMLObject {
   }
 
   /**
-   * Returns the attribute value as list of text strings. The text strings are separated by 
-   * the given separator char
-   * 
+   * Returns the attribute value as list of text strings. The text strings are separated by the
+   * given separator char
+   *
    * @param name Name of the attribute
    * @param separatorChar Name of the separator char
    * @return Value of the attribute
@@ -533,7 +537,7 @@ public class XMLObject {
   /**
    * Returns the attribute value as list of integers. The integers are separated by one or more
    * whitespace characters.
-   * 
+   *
    * @param name Name of the attribute
    * @return Value of the attribute
    * @throws IOException
@@ -552,7 +556,8 @@ public class XMLObject {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T getReference(String id, Class<T> clazz, Map<String,Object> references) throws IOException {
+  private <T> T getReference(String id, Class<T> clazz, Map<String, Object> references)
+      throws IOException {
     if (!references.containsKey(id)) {
       throw new IOException("Object not found for id \"" + id + "\" at " + getLocation());
     }
@@ -561,40 +566,49 @@ public class XMLObject {
       return null;
     }
     if (!clazz.isAssignableFrom(object.getClass())) {
-      throw new IOException("Object with id \"" + id + "\" is not instance of " + clazz.getName() + " instead instance of " +
-              object.getClass().getName() + " at " + getLocation());
+      throw new IOException(
+          "Object with id \""
+              + id
+              + "\" is not instance of "
+              + clazz.getName()
+              + " instead instance of "
+              + object.getClass().getName()
+              + " at "
+              + getLocation());
     }
     return (T) object;
   }
 
   /**
    * Returns the object, which referenced by the attribute's value.
-   * 
+   *
    * @param <T> Type of the reference
    * @param name Name of the attribute
    * @param clazz Class of the type
    * @param references Map, where the objects are associated by the reference IDs
    * @return Object, which is referenced by the attribute's value
-   * @throws IOException Occurs if no object is mapped to the given attribute value or if the
-   *           object has a different type
+   * @throws IOException Occurs if no object is mapped to the given attribute value or if the object
+   *     has a different type
    */
-  public <T> T getAttributeAsReference(String name, Class<T> clazz, Map<String,Object> references) throws IOException {
+  public <T> T getAttributeAsReference(String name, Class<T> clazz, Map<String, Object> references)
+      throws IOException {
     return getReference(getAttribute(name), clazz, references);
   }
 
   /**
    * Returns the list of objects referenced by the attribute's values. The values are separated by
    * one or more whitespaces.
-   * 
+   *
    * @param <T> Type of the reference
    * @param name Name of the attribute
    * @param clazz Class of the type
    * @param references Map, where the objects are associated by the reference IDs
    * @return List of object, which are referenced by the attribute's values
    * @throws IOException Occurs if no objects is mapped to the given attribute values or if the
-   *           objects have a different type
+   *     objects have a different type
    */
-  public <T> List<T> getAttributeAsReferenceList(String name, Class<T> clazz, Map<String,Object> references) throws IOException {
+  public <T> List<T> getAttributeAsReferenceList(
+      String name, Class<T> clazz, Map<String, Object> references) throws IOException {
     List<String> intList = getAttributeAsStringList(name);
     List<T> list = new ArrayList<>(intList.size());
     for (String id : intList) {
@@ -605,7 +619,7 @@ public class XMLObject {
 
   /**
    * Returns the line and column number as text.
-   * 
+   *
    * @return Location as text
    */
   public String getLocation() {
@@ -614,18 +628,20 @@ public class XMLObject {
 
   /**
    * Write this XML element and all his child elements to a XML document.
-   * 
+   *
    * @param out {@link OutputStream}, which retrieves the generated output
    * @param namespace Default XML namespace
-   * @throws SAXException Occurs if the writer couldn't write the output to the
-   *           {@link ContentHandler}
-   * @throws IOException Occurs if the writer couldn't write the output into the
-   *           {@link OutputStream}
+   * @throws SAXException Occurs if the writer couldn't write the output to the {@link
+   *     ContentHandler}
+   * @throws IOException Occurs if the writer couldn't write the output into the {@link
+   *     OutputStream}
    * @throws TransformerConfigurationException Occurs if the writer couldn't configure the XML
-   *           serializer
+   *     serializer
    */
-  public void write(OutputStream out, String namespace) throws SAXException, IOException, TransformerConfigurationException {
-    SAXTransformerFactory serializerfactory = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+  public void write(OutputStream out, String namespace)
+      throws SAXException, IOException, TransformerConfigurationException {
+    SAXTransformerFactory serializerfactory =
+        (SAXTransformerFactory) SAXTransformerFactory.newInstance();
     serializerfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 
     Properties format = new Properties();
@@ -674,5 +690,4 @@ public class XMLObject {
     }
     handler.endElement(NS, getName(), getName());
   }
-
 }

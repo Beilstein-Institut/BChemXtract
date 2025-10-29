@@ -21,16 +21,16 @@
  */
 package org.beilstein.chemxtract.io;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.assertj.core.api.Assertions.*;
 
 public class XMLObjectTest {
 
@@ -40,7 +40,7 @@ public class XMLObjectTest {
   XMLObject grandchild = new XMLObject();
 
   String xml =
-          """
+      """
                   <?xml version="1.0" encoding="ASCII"?><root attname1="attval1" attname2="1" attname3="false" attname31="yes" attname4="3.14" attname5="1 2 3" attname6="a b c" attname61="a,b,c" attname7="dummy">
                       text1
                       <child>
@@ -96,7 +96,8 @@ public class XMLObjectTest {
     try {
       obj.getTextsAsInt();
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     obj.setTexts(Arrays.asList("1", "2", "3"));
     assertThat(obj.getTextsAsInt()).isEqualTo(123);
   }
@@ -131,49 +132,58 @@ public class XMLObjectTest {
     try {
       obj.getAttributeAsBoolean("attname1");
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsInt("attname2")).isEqualTo(1);
     assertThat(obj.getAttributeAsInt("attname2", 12)).isEqualTo(1);
     assertThat(obj.getAttributeAsInt("attname10", 12)).isEqualTo(12);
     try {
       obj.getAttributeAsInt("attname1");
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsLong("attname2")).isEqualTo(1L);
     try {
       obj.getAttributeAsLong("attname1");
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsFloat("attname4")).isEqualTo(3.14F);
     try {
       obj.getAttributeAsFloat("attname1");
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsDouble("attname4")).isEqualTo(3.14D);
     try {
       obj.getAttributeAsDouble("attname1");
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsStringList("attname6")).isEqualTo(Arrays.asList("a", "b", "c"));
-    assertThat(obj.getAttributeAsStringList("attname61", ",")).isEqualTo(Arrays.asList("a", "b", "c"));
-    assertThat(obj.getAttributeAsIntArray("attname5")).isEqualTo(new int[] { 1, 2, 3 });
+    assertThat(obj.getAttributeAsStringList("attname61", ","))
+        .isEqualTo(Arrays.asList("a", "b", "c"));
+    assertThat(obj.getAttributeAsIntArray("attname5")).isEqualTo(new int[] {1, 2, 3});
     try {
       obj.getAttributeAsIntArray("attname1");
       fail("No exception");
-    } catch (Exception e) {}
-    Map<String,Object> refs = new HashMap<String,Object>();
+    } catch (Exception e) {
+    }
+    Map<String, Object> refs = new HashMap<String, Object>();
     refs.put("a", "Letter A");
     refs.put("b", "Letter B");
     refs.put("c", "Letter C");
     refs.put("attval1", "Some random text");
     refs.put("3.14", 3.14D);
-    assertThat(obj.getAttributeAsReference("attname1", String.class, refs)).isEqualTo("Some random text");
+    assertThat(obj.getAttributeAsReference("attname1", String.class, refs))
+        .isEqualTo("Some random text");
     try {
       obj.getAttributeAsReference("attname4", String.class, refs);
       fail("No exception");
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
     assertThat(obj.getAttributeAsReferenceList("attname6", String.class, refs))
-            .isEqualTo(Arrays.asList("Letter A", "Letter B", "Letter C"));
+        .isEqualTo(Arrays.asList("Letter A", "Letter B", "Letter C"));
   }
 
   @Test
@@ -182,5 +192,4 @@ public class XMLObjectTest {
     obj.write(baos, "");
     assertThat(baos.toString()).isEqualTo(xml);
   }
-
 }

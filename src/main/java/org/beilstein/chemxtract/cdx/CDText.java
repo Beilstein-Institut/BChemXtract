@@ -21,25 +21,27 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A block of potentially styled text. Has no chemical meaning if 
- * appearing standalone and outside an atom.
+ * A block of potentially styled text. Has no chemical meaning if appearing standalone and outside
+ * an atom.
  */
 public class CDText extends CDObject {
   /** The rotation angle of the caption, in degrees. */
   private float angle;
+
   /** The justification of the caption. */
   private CDJustification justification = CDJustification.Left;
+
   /** The line height of the caption, in points. */
   private float lineHeight = CDSettings.LineHeight_Variable;
+
   /** The wrap width of the caption, in points. */
   private float wrapWidth;
 

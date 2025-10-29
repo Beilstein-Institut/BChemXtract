@@ -21,29 +21,32 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
 import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A bracket is a group of objects that may be repeated several times, like
- * in polymers. External connections to this group are contained as bracket
- * attachments.
+ * A bracket is a group of objects that may be repeated several times, like in polymers. External
+ * connections to this group are contained as bracket attachments.
  */
 public class CDBracket extends CDObject {
   /** The chemical usage of the bracket. */
   private CDBracketUsage bracketUsage;
+
   /** The component order for brackets. */
   private int componentOrder;
+
   /** The polymer flip type of the bracket. */
   private CDPolymerFlipType polymerFlipType;
+
   /** the polymer repeat pattern of the bracket. */
   private CDPolymerRepeatPattern polymerRepeatPattern;
+
   /** The repeat count for brackets. */
   private double repeatCount;
+
   /** The structural repeating unit label for brackets. */
   private String sruLabel;
 
@@ -131,5 +134,4 @@ public class CDBracket extends CDObject {
     }
     super.accept(visitor);
   }
-
 }

@@ -26,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
@@ -39,9 +38,9 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * A simple showcase for substance extraction. Takes a CDX file as input. Reads the CDX and extracts substances. 
- * Converts each found substance to PNG and saves the resulting file to the working directory. The calculated 
- * InChI key is the filename of the result files.
+ * A simple showcase for substance extraction. Takes a CDX file as input. Reads the CDX and extracts
+ * substances. Converts each found substance to PNG and saves the resulting file to the working
+ * directory. The calculated InChI key is the filename of the result files.
  */
 public class BCXTractSubstances {
 
@@ -68,7 +67,7 @@ public class BCXTractSubstances {
 
     // use CDK to generate a structure depiction, save as PNG output
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
-    int i=0;
+    int i = 0;
     for (BCXSubstance bcxSubstance : bcxSubstances) {
       String outputfile = bcxSubstance.getInchiKey() + ".png";
       FileOutputStream fos = new FileOutputStream(outputfile);
@@ -77,17 +76,22 @@ public class BCXTractSubstances {
       IAtomContainer container = sp.parseSmiles(bcxSubstance.getSmiles());
 
       // render depiction
-      String title = bcxSubstance.getMolecularFormula() + " (InChI Key: " + bcxSubstance.getInchiKey() + ")";
+      String title =
+          bcxSubstance.getMolecularFormula() + " (InChI Key: " + bcxSubstance.getInchiKey() + ")";
       container.setTitle(title);
-      DepictionGenerator dg = new DepictionGenerator().withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE).withMolTitle();
+      DepictionGenerator dg =
+          new DepictionGenerator()
+              .withAtomColors()
+              .withFillToFit()
+              .withBackgroundColor(Color.WHITE)
+              .withMolTitle();
       Depiction d = dg.depict(container);
       d.writeTo(Depiction.PNG_FMT, fos);
       fos.flush();
       fos.close();
       i++;
     }
-    
+
     System.out.println("\n\n" + i + " substances extracted to current working directory.");
   }
-
 }

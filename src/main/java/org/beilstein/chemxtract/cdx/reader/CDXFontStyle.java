@@ -25,16 +25,17 @@ import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDFont;
 import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
 
-/**
- * This class holds the information about font style of CDX files.
- */
+/** This class holds the information about font style of CDX files. */
 public class CDXFontStyle {
   /** Font. */
   private CDFont font;
+
   /** Font size. */
   private float size;
+
   /** Font face. */
   private CDFontFace fontType;
+
   /** Font color. */
   private CDColor color;
 

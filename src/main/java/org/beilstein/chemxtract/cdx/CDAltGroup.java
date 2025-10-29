@@ -25,24 +25,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A container that groups fragments that represent alternative substituents,
- * also known as R-Group.
+ * A container that groups fragments that represent alternative substituents, also known as R-Group.
  */
 public class CDAltGroup extends CDObject {
 
   /** The captions collection of this alternative group. */
   private List<CDText> captions = new ArrayList<>();
+
   /** The groups collection of this alternative group. */
   private List<CDGroup> groups = new ArrayList<>();
-  /**
-   * The bounds of the rectangle drawn around the contents of this alternative
-   * group.
-   */
+
+  /** The bounds of the rectangle drawn around the contents of this alternative group. */
   private CDRectangle groupFrame;
-  /**
-   * The bounds of the rectangle drawn around the title of this alternative
-   * group.
-   */
+
+  /** The bounds of the rectangle drawn around the title of this alternative group. */
   private CDRectangle textFrame;
 
   private List<CDFragment> fragments = new ArrayList<>();
@@ -110,5 +106,4 @@ public class CDAltGroup extends CDObject {
     }
     super.accept(visitor);
   }
-
 }

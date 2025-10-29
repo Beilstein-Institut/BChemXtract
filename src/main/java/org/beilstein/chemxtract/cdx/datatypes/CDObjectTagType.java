@@ -21,13 +21,9 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The tag's data type.
- */
-public enum CDObjectTagType{
-  /**
-   * The formatting of the object tag is unknown. 
-   */
+/** The tag's data type. */
+public enum CDObjectTagType {
+  /** The formatting of the object tag is unknown. */
   Undefined,
 
   Double,

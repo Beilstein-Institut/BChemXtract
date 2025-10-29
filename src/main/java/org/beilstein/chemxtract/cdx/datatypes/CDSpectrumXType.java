@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * The type of units the X-axis represents.
- */
-public enum CDSpectrumXType{
+/** The type of units the X-axis represents. */
+public enum CDSpectrumXType {
   /** The axis type is unknown. Not recommended */
   Unknown,
   /** Axis is in wavenumbers. Only for IR spectra */

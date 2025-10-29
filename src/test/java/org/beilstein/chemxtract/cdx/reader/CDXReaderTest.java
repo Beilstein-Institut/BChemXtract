@@ -21,23 +21,21 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.Assert.*;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-
 import org.beilstein.chemxtract.cdx.CDBracket;
 import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDReactionStep;
 import org.beilstein.chemxtract.cdx.CDText;
-import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 public class CDXReaderTest {
 
@@ -62,7 +60,7 @@ public class CDXReaderTest {
     List<CDReactionStep> steps = CDDocumentUtils.getListOfReactionSteps(document);
     assertThat(steps.size()).isEqualTo(4);
 
-    Map<String,String> residues = CDDocumentUtils.getResidues(document);
+    Map<String, String> residues = CDDocumentUtils.getResidues(document);
     assertThat(residues.size()).isEqualTo(0);
 
     List<CDText> texts = CDDocumentUtils.getTexts(document);
@@ -71,5 +69,4 @@ public class CDXReaderTest {
     List<CDBracket> brackets = CDDocumentUtils.getBrackets(document);
     assertThat(brackets.size()).isEqualTo(3);
   }
-
 }

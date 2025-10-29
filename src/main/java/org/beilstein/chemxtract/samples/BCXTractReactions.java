@@ -26,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.List;
-
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXReaction;
@@ -38,9 +37,9 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * A simple showcase for reaction extraction. Takes a CDX file as input. Reads the CDX and extracts reactions. 
- * Converts each found reaction to PNG and saves the resulting file to the working directory. The calculated 
- * RInChI Web key is the filename of the result files.
+ * A simple showcase for reaction extraction. Takes a CDX file as input. Reads the CDX and extracts
+ * reactions. Converts each found reaction to PNG and saves the resulting file to the working
+ * directory. The calculated RInChI Web key is the filename of the result files.
  */
 public class BCXTractReactions {
 
@@ -66,12 +65,16 @@ public class BCXTractReactions {
 
     // use CDK to generate a reaction depiction, save as PNG output
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
-    int i=0;
+    int i = 0;
     for (BCXReaction bcxReaction : bcxReactions) {
       String outputfile = bcxReaction.getWebRinchiKey() + ".png";
       FileOutputStream fos = new FileOutputStream(outputfile);
       IReaction reaction = sp.parseReactionSmiles(bcxReaction.getReactionSmiles());
-      DepictionGenerator dg = new DepictionGenerator().withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE);
+      DepictionGenerator dg =
+          new DepictionGenerator()
+              .withAtomColors()
+              .withFillToFit()
+              .withBackgroundColor(Color.WHITE);
       Depiction d = dg.depict(reaction);
       d.writeTo(Depiction.PNG_FMT, fos);
       fos.flush();
@@ -81,5 +84,4 @@ public class BCXTractReactions {
 
     System.out.println("\n\n" + i + " reactions extracted to current working directory.");
   }
-
 }

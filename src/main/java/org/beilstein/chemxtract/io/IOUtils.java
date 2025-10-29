@@ -21,17 +21,14 @@
  */
 package org.beilstein.chemxtract.io;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-/**
- * This class holds various helper methods for the IO package.
- */
+/** This class holds various helper methods for the IO package. */
 public class IOUtils {
   private static final Log logger = LogFactory.getLog(IOUtils.class);
 
@@ -61,7 +58,7 @@ public class IOUtils {
 
   /**
    * Read a byte array from an {@link InputStream}. Closing the stream is not necessary.
-   * 
+   *
    * @param in InputStream
    * @return Byte array
    * @throws IOException Occurs if the method cannot read the content from InputStream
@@ -74,7 +71,7 @@ public class IOUtils {
 
   /**
    * Read a byte array from an {@link InputStream}. Closing the stream is not necessary.
-   * 
+   *
    * @param in InputStream
    * @param length Expected length of the byte array
    * @return Byte array
@@ -125,7 +122,7 @@ public class IOUtils {
 
   /**
    * Test if a byte array starts with the given pattern.
-   * 
+   *
    * @param bytes Byte array
    * @param pattern Pattern
    * @return True, if the byte array starts with the pattern
@@ -144,7 +141,7 @@ public class IOUtils {
 
   /**
    * Compress a byte array with ZLIB compression.
-   * 
+   *
    * @param data Uncompressed byte array
    * @return Compressed byte array
    */
@@ -164,7 +161,7 @@ public class IOUtils {
 
   /**
    * Uncompress a byte array with the ZLIB compression.
-   * 
+   *
    * @param data Compressed byte array
    * @return Uncompressed byte array
    * @throws DataFormatException Occurs if the compressed byte array is corrupted
@@ -182,5 +179,4 @@ public class IOUtils {
     decompresser.end();
     return baos.toByteArray();
   }
-
 }

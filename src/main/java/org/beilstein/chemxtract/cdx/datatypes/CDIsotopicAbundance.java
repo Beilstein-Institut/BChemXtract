@@ -21,33 +21,30 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * Isotopic abundance of this atom's isotope.
- */
-public enum CDIsotopicAbundance{
+/** Isotopic abundance of this atom's isotope. */
+public enum CDIsotopicAbundance {
   /** Nothing is specified about the node's isotopic abundance. */
   Unspecified,
   /** Node may match any node of the same element type, regardless of isotopy. */
   Any,
   /**
-   * Node's element exists explicitly in natural abundance. Not valid when the
-   * node also has a specific isotopy.
+   * Node's element exists explicitly in natural abundance. Not valid when the node also has a
+   * specific isotopy.
    */
   Natural,
   /**
-   * Node is enriched in the specified isotope. Not valid unless the node also
-   * has a specific isotopy.
+   * Node is enriched in the specified isotope. Not valid unless the node also has a specific
+   * isotopy.
    */
   Enriched,
   /**
-   * Node is deficient in the specified isotope. Not valid unless the node
-   * also has a specific isotopy.
+   * Node is deficient in the specified isotope. Not valid unless the node also has a specific
+   * isotopy.
    */
   Deficient,
   /**
-   * Node has a non-natural abundance of the specified isotope (may be either
-   * enriched or deficient). Not valid when the node also has a specific
-   * isotopy.
+   * Node has a non-natural abundance of the specified isotope (may be either enriched or
+   * deficient). Not valid when the node also has a specific isotopy.
    */
   Nonnatural;
 }

@@ -24,16 +24,17 @@ package org.beilstein.chemxtract.cdx;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * An object for grouping several other objects.
- */
+/** An object for grouping several other objects. */
 public class CDGroup extends CDObject {
   /** The alternative groups collection of this group. */
   private List<CDAltGroup> altGroups = new ArrayList<>();
+
   /** the captions collection of this group. */
   private List<CDText> captions = new ArrayList<>();
+
   /** Whether the group must be selected as an entire unit. */
   private boolean integral = false;
+
   /** The groups collection of this group. */
   private List<CDGroup> groups = new ArrayList<>();
 
@@ -165,5 +166,4 @@ public class CDGroup extends CDObject {
     }
     super.accept(visitor);
   }
-
 }

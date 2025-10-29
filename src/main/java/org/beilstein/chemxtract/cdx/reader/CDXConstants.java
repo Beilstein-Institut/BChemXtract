@@ -21,13 +21,11 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-/**
- * Constants defined by the CDX file format Specification. 
- */
+/** Constants defined by the CDX file format Specification. */
 public class CDXConstants {
   public static final int CDXUndefinedId = -1;
 
-  private static final byte[] CDX_Signature = new byte[] { 'V', 'j', 'C', 'D', '0', '1', '0', '0' };
+  private static final byte[] CDX_Signature = new byte[] {'V', 'j', 'C', 'D', '0', '1', '0', '0'};
 
   public static final int CDX_HeaderLength = 28;
 
@@ -44,9 +42,7 @@ public class CDXConstants {
   /** Marks end of object. */
   public static final int CDXProp_EndObject = 0x0000;
 
-  /**
-   * The name of the creator (program user's name) of the document. (CDXString)
-   */
+  /** The name of the creator (program user's name) of the document. (CDXString) */
   public static final int CDXProp_CreationUserName = 0x0001;
 
   /** The time of object creation. (CDXDate) */
@@ -58,9 +54,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_CreationProgram = 0x0003;
 
-  /**
-   * The name of the last modifier (program user's name) of the document. (CDXString)
-   */
+  /** The name of the last modifier (program user's name) of the document. (CDXString) */
   public static final int CDXProp_ModificationUserName = 0x0004;
 
   /** Time of the last modification. (CDXDate) */
@@ -111,9 +105,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_IgnoreWarnings = 0x000F;
 
-  /**
-   * A warning concerning possible chemical problems with this object. (CDXString)
-   */
+  /** A warning concerning possible chemical problems with this object. (CDXString) */
   public static final int CDXProp_ChemicalWarning = 0x0010;
 
   /** The object is visible if non-zero. (CDXBoolean) */
@@ -265,9 +257,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_Atom_Formula = 0x0404;
 
-  /**
-   * The absolute isotopic mass of an atom (2 for deuterium, 14 for carbon-14). (INT16)
-   */
+  /** The absolute isotopic mass of an atom (2 for deuterium, 14 for carbon-14). (INT16) */
   public static final int CDXProp_Atom_Isotope = 0x0420;
 
   /** The atomic charge of an atom. (INT8) */
@@ -282,9 +272,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_Atom_RestrictFreeSites = 0x0423;
 
-  /**
-   * Signifies that implicit hydrogens are not allowed on this atom. (CDXBooleanImplied)
-   */
+  /** Signifies that implicit hydrogens are not allowed on this atom. (CDXBooleanImplied) */
   public static final int CDXProp_Atom_RestrictImplicitHydrogens = 0x0424;
 
   /** The number of ring bonds attached to an atom. (INT8) */
@@ -302,9 +290,7 @@ public class CDXConstants {
   /** The change of stereochemistry of an atom during a reaction. (INT8) */
   public static final int CDXProp_Atom_RestrictRxnStereo = 0x0428;
 
-  /**
-   * Signifies that an abnormal valence for an atom is permitted. (CDXBooleanImplied)
-   */
+  /** Signifies that an abnormal valence for an atom is permitted. (CDXBooleanImplied) */
   public static final int CDXProp_Atom_AbnormalValence = 0x0429;
 
   public static final int CDXProp_Unused3 = 0x042A;
@@ -349,24 +335,16 @@ public class CDXConstants {
   /** The name of the generic nickname. (CDXString) */
   public static final int CDXProp_Atom_GenericNickname = 0x0433;
 
-  /**
-   * The ID of the alternative group object that describes this node. (CDXObjectID)
-   */
+  /** The ID of the alternative group object that describes this node. (CDXObjectID) */
   public static final int CDXProp_Atom_AltGroupID = 0x0434;
 
-  /**
-   * Indicates that substitution is restricted to no more than the specified value. (UINT8)
-   */
+  /** Indicates that substitution is restricted to no more than the specified value. (UINT8) */
   public static final int CDXProp_Atom_RestrictSubstituentsUpTo = 0x0435;
 
-  /**
-   * Indicates that exactly the specified number of substituents must be present. (UINT8)
-   */
+  /** Indicates that exactly the specified number of substituents must be present. (UINT8) */
   public static final int CDXProp_Atom_RestrictSubstituentsExactly = 0x0436;
 
-  /**
-   * The node's absolute stereochemistry according to the Cahn-Ingold-Prelog system. (INT8)
-   */
+  /** The node's absolute stereochemistry according to the Cahn-Ingold-Prelog system. (INT8) */
   public static final int CDXProp_Atom_CIPStereochemistry = 0x0437;
 
   /**
@@ -396,9 +374,7 @@ public class CDXConstants {
   /** Isotopic abundance of this atom's isotope. (INT8) */
   public static final int CDXProp_Atom_IsotopicAbundance = 0x043F;
 
-  /**
-   * Type of external connection, for atoms of type CDXNodeType_ExternalConnectionPoint. (INT8)
-   */
+  /** Type of external connection, for atoms of type CDXNodeType_ExternalConnectionPoint. (INT8) */
   public static final int CDXProp_Atom_ExternalConnectionType = 0x0440;
 
   /** A list of generic nicknames. */
@@ -436,9 +412,7 @@ public class CDXConstants {
   /** Indicates that the molecule is a racemic mixture. (CDXBoolean) */
   public static final int CDXProp_Mole_Racemic = 0x0500;
 
-  /**
-   * Indicates that the molecule has known absolute configuration. (CDXBoolean)
-   */
+  /** Indicates that the molecule has known absolute configuration. (CDXBoolean) */
   public static final int CDXProp_Mole_Absolute = 0x0501;
 
   /**
@@ -453,9 +427,7 @@ public class CDXConstants {
   /** The average molecular weight of a molecule object. (FLOAT64) */
   public static final int CDXProp_Mole_Weight = 0x0504;
 
-  /**
-   * An ordered list of attachment points within a fragment. (CDXObjectIDArray)
-   */
+  /** An ordered list of attachment points within a fragment. (CDXObjectIDArray) */
   public static final int CDXProp_Frag_ConnectionOrder = 0x0505;
 
   // Bond properties.
@@ -490,9 +462,7 @@ public class CDXConstants {
   /** Indicates where within the Bond_End node a bond is attached. (UINT8) */
   public static final int CDXProp_Bond_EndAttach = 0x0609;
 
-  /**
-   * The bond's absolute stereochemistry according to the Cahn-Ingold-Prelog system. (INT8)
-   */
+  /** The bond's absolute stereochemistry according to the Cahn-Ingold-Prelog system. (INT8) */
   public static final int CDXProp_Bond_CIPStereochemistry = 0x060A;
 
   /** Ordered list of attached bond IDs. (CDXObjectIDArray) */
@@ -555,9 +525,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_MacPrintInfo = 0x0800;
 
-  /**
-   * The Windows DEVMODE structure associated with the CDX document object. (Unformatted)
-   */
+  /** The Windows DEVMODE structure associated with the CDX document object. (Unformatted) */
   public static final int CDXProp_WinPrintInfo = 0x0801;
 
   /** The outer margins of the Document. (CDXRectangle) */
@@ -566,9 +534,7 @@ public class CDXConstants {
   /** The default chain angle setting in degrees * 65536. (INT32) */
   public static final int CDXProp_ChainAngle = 0x0803;
 
-  /**
-   * The spacing between segments of a multiple bond, measured relative to bond length. (INT16)
-   */
+  /** The spacing between segments of a multiple bond, measured relative to bond length. (INT16) */
   public static final int CDXProp_BondSpacing = 0x0804;
 
   /** The default bond length. (CDXCoordinate) */
@@ -583,9 +549,7 @@ public class CDXConstants {
   /** The default amount of space surrounding atom labels. (CDXCoordinate) */
   public static final int CDXProp_MarginWidth = 0x0808;
 
-  /**
-   * The default spacing between hashed lines used in wedged hashed bonds. (CDXCoordinate)
-   */
+  /** The default spacing between hashed lines used in wedged hashed bonds. (CDXCoordinate) */
   public static final int CDXProp_HashSpacing = 0x0809;
 
   /** The default style for atom labels. (CDXFontStyle) */
@@ -594,9 +558,7 @@ public class CDXConstants {
   /** The default style for non-atomlabel text objects. (CDXFontStyle) */
   public static final int CDXProp_CaptionStyle = 0x080B;
 
-  /**
-   * The horizontal justification of a caption (non-atomlabel text object) (INT8)
-   */
+  /** The horizontal justification of a caption (non-atomlabel text object) (INT8) */
   public static final int CDXProp_CaptionJustification = 0x080C;
 
   /**
@@ -634,17 +596,13 @@ public class CDXConstants {
   /** The text of the header. (CDXString) */
   public static final int CDXProp_Header = 0x0815;
 
-  /**
-   * The vertical offset of the header baseline from the top of the page. (CDXCoordinate)
-   */
+  /** The vertical offset of the header baseline from the top of the page. (CDXCoordinate) */
   public static final int CDXProp_HeaderPosition = 0x0816;
 
   /** The text of the footer. (CDXString) */
   public static final int CDXProp_Footer = 0x0817;
 
-  /**
-   * The vertical offset of the footer baseline from the bottom of the page. (CDXCoordinate)
-   */
+  /** The vertical offset of the footer baseline from the bottom of the page. (CDXCoordinate) */
   public static final int CDXProp_FooterPosition = 0x0818;
 
   /** If present, trim marks are to printed in the margins. (CDXBooleanImplied) */
@@ -653,9 +611,7 @@ public class CDXConstants {
   /** The default font family for atom labels. (INT16) */
   public static final int CDXProp_LabelStyleFont = 0x081A;
 
-  /**
-   * The default font style for captions (non-atom-label text objects). (INT16)
-   */
+  /** The default font style for captions (non-atom-label text objects). (INT16) */
   public static final int CDXProp_CaptionStyleFont = 0x081B;
 
   /** The default font size for atom labels. (INT16) */
@@ -676,9 +632,7 @@ public class CDXConstants {
   /** The default color for captions (non-atom-label text objects). (INT16) */
   public static final int CDXProp_CaptionStyleColor = 0x0821;
 
-  /**
-   * The absolute distance between segments of a multiple bond. (CDXCoordinate)
-   */
+  /** The absolute distance between segments of a multiple bond. (CDXCoordinate) */
   public static final int CDXProp_BondSpacingAbs = 0x0822;
 
   /** The default justification for atom labels. (INT8) */
@@ -698,9 +652,7 @@ public class CDXConstants {
 
   // Window properties.
 
-  /**
-   * Signifies whether the main viewing window is zoomed (maximized). (CDXBooleanImplied)
-   */
+  /** Signifies whether the main viewing window is zoomed (maximized). (CDXBooleanImplied) */
   public static final int CDXProp_Window_IsZoomed = 0x0900;
 
   /** The top-left position of the main viewing window. (CDXPoint2D) */
@@ -717,9 +669,7 @@ public class CDXConstants {
   /** The type of a line object. (INT16) */
   public static final int CDXProp_Line_Type = 0x0A01;
 
-  /**
-   * The type of arrow object, which represents line, arrow, arc, rectangle, or orbital. (INT16)
-   */
+  /** The type of arrow object, which represents line, arrow, arc, rectangle, or orbital. (INT16) */
   public static final int CDXProp_Arrow_Type = 0x0A02;
 
   /** The type of a rectangle object. (INT16) */
@@ -752,14 +702,10 @@ public class CDXConstants {
   /** The B&eacute;zier curve's control point locations. (CDXCurvePoints) */
   public static final int CDXProp_Curve_Points = 0x0A23;
 
-  /**
-   * The syntactical chemical meaning of the bracket (SRU, mer, mon, xlink, etc). (INT8)
-   */
+  /** The syntactical chemical meaning of the bracket (SRU, mer, mon, xlink, etc). (INT8) */
   public static final int CDXProp_Bracket_Usage = 0x0A24;
 
-  /**
-   * The head-to-tail connectivity of objects contained within the bracket. (INT8)
-   */
+  /** The head-to-tail connectivity of objects contained within the bracket. (INT8) */
   public static final int CDXProp_Polymer_RepeatPattern = 0x0A25;
 
   /** The flip state of objects contained within the bracket. (INT8) */
@@ -774,9 +720,7 @@ public class CDXConstants {
   /** The component order associated with a BracketedGroup. (INT16) */
   public static final int CDXProp_Bracket_ComponentOrder = 0x0A29;
 
-  /**
-   * The label associated with a BracketedGroup that represents an SRU. (CDXString)
-   */
+  /** The label associated with a BracketedGroup that represents an SRU. (CDXString) */
   public static final int CDXProp_Bracket_SRULabel = 0x0A2A;
 
   /**
@@ -809,7 +753,9 @@ public class CDXConstants {
   /** The size of the object's shadow. */
   public static final int CDXProp_ShadowSize = 0x0A32;
 
-  /** The width of the space between a multiple-component arrow shaft, as in an equilibrium arrow. */
+  /**
+   * The width of the space between a multiple-component arrow shaft, as in an equilibrium arrow.
+   */
   public static final int CDXProp_Arrow_ShaftSpacing = 0x0A33;
 
   /**
@@ -857,8 +803,8 @@ public class CDXConstants {
   public static final int CDXProp_Picture_Edition = 0x0A60;
 
   /**
-   * The alias information of the Macintosh Publish and Subscribe edition embedded in the CDX picture
-   * object. (Unformatted)
+   * The alias information of the Macintosh Publish and Subscribe edition embedded in the CDX
+   * picture object. (Unformatted)
    */
   public static final int CDXProp_Picture_EditionAlias = 0x0A61;
 
@@ -959,14 +905,10 @@ public class CDXConstants {
    */
   public static final int CDXProp_TLC_SolventFrontFraction = 0x0AA1;
 
-  /**
-   * Show the origin line near the base of the TLC Plate if non-zero. (CDXBoolean)
-   */
+  /** Show the origin line near the base of the TLC Plate if non-zero. (CDXBoolean) */
   public static final int CDXProp_TLC_ShowOrigin = 0x0AA2;
 
-  /**
-   * Show the solvent front line near the top of the TLC Plate if non-zero. (CDXBoolean)
-   */
+  /** Show the solvent front line near the top of the TLC Plate if non-zero. (CDXBoolean) */
   public static final int CDXProp_TLC_ShowSolventFront = 0x0AA3;
 
   /** Show borders around the edges of the TLC Plate if non-zero. (CDXBoolean) */
@@ -998,9 +940,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_NamedAlternativeGroup_GroupFrame = 0x0B01;
 
-  /**
-   * The number of attachment points in each alternative in a named alternative group. (INT16)
-   */
+  /** The number of attachment points in each alternative in a named alternative group. (INT16) */
   public static final int CDXProp_NamedAlternativeGroup_Valence = 0x0B02;
 
   // Geometry and Constraint properties
@@ -1048,9 +988,7 @@ public class CDXConstants {
   /** The ID of a graphical object used to display the property value. */
   public static final int CDXProp_ChemicalPropertyDisplayID = 0x0BB1;
 
-  /**
-   * Whether the property should be recalculated in response to changes in the basis objects.
-   */
+  /** Whether the property should be recalculated in response to changes in the basis objects. */
   public static final int CDXProp_ChemicalPropertyIsActive = 0x0BB2;
 
   // Reaction properties
@@ -1061,14 +999,10 @@ public class CDXConstants {
    */
   public static final int CDXProp_ReactionStep_Atom_Map = 0x0C00;
 
-  /**
-   * An order list of reactants present in the Reaction Step. (CDXObjectIDArray)
-   */
+  /** An order list of reactants present in the Reaction Step. (CDXObjectIDArray) */
   public static final int CDXProp_ReactionStep_Reactants = 0x0C01;
 
-  /**
-   * An order list of products present in the Reaction Step. (CDXObjectIDArray)
-   */
+  /** An order list of products present in the Reaction Step. (CDXObjectIDArray) */
   public static final int CDXProp_ReactionStep_Products = 0x0C02;
 
   /**
@@ -1081,14 +1015,10 @@ public class CDXConstants {
    */
   public static final int CDXProp_ReactionStep_Arrows = 0x0C04;
 
-  /**
-   * An order list of objects above the arrow in the Reaction Step. (CDXObjectIDArray)
-   */
+  /** An order list of objects above the arrow in the Reaction Step. (CDXObjectIDArray) */
   public static final int CDXProp_ReactionStep_ObjectsAboveArrow = 0x0C05;
 
-  /**
-   * An order list of objects below the arrow in the Reaction Step. (CDXObjectIDArray)
-   */
+  /** An order list of objects below the arrow in the Reaction Step. (CDXObjectIDArray) */
   public static final int CDXProp_ReactionStep_ObjectsBelowArrow = 0x0C06;
 
   /**
@@ -1126,9 +1056,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_ObjectTag_Value = 0x0D05;
 
-  /**
-   * How the indicator should be positioned with respect to its containing object. (INT8)
-   */
+  /** How the indicator should be positioned with respect to its containing object. (INT8) */
   public static final int CDXProp_Positioning = 0x0D06;
 
   /** Angular positioning, in radians * 65536. (INT32) */
@@ -1139,9 +1067,7 @@ public class CDXConstants {
 
   // Sequence properties
 
-  /**
-   * A unique (but otherwise random) identifier for a given Sequence object. (CDXString)
-   */
+  /** A unique (but otherwise random) identifier for a given Sequence object. (CDXString) */
   public static final int CDXProp_Sequence_Identifier = 0x0E00;
 
   // Cross reference properties
@@ -1152,14 +1078,10 @@ public class CDXConstants {
    */
   public static final int CDXProp_CrossReference_Container = 0x0F00;
 
-  /**
-   * An external document containing the Sequence object being referenced. (CDXString)
-   */
+  /** An external document containing the Sequence object being referenced. (CDXString) */
   public static final int CDXProp_CrossReference_Document = 0x0F01;
 
-  /**
-   * A unique (but otherwise random) identifier for a given Cross-Reference object. (CDXString)
-   */
+  /** A unique (but otherwise random) identifier for a given Cross-Reference object. (CDXString) */
   public static final int CDXProp_CrossReference_Identifier = 0x0F02;
 
   /**
@@ -1178,9 +1100,7 @@ public class CDXConstants {
   /** The number of columns of the CDX TemplateGrid object. (INT16) */
   public static final int CDXProp_Template_NumColumns = 0x1002;
 
-  /**
-   * The group is considered to be integral (non-subdivisible) if non-zero. (CDXBoolean)
-   */
+  /** The group is considered to be integral (non-subdivisible) if non-zero. (CDXBoolean) */
   public static final int CDXProp_Group_Integral = 0x1100;
 
   /**
@@ -1191,9 +1111,7 @@ public class CDXConstants {
    */
   public static final int CDXProp_SplitterPositions = 0x1FF0;
 
-  /**
-   * An array of vertical positions that subdivide a page into regions. (CDXObjectIDArray)
-   */
+  /** An array of vertical positions that subdivide a page into regions. (CDXObjectIDArray) */
   public static final int CDXProp_PageDefinition = 0x1FF1;
 
   // User defined properties
@@ -1257,19 +1175,19 @@ public class CDXConstants {
 
   public static final int CDXObj_CrossingBond = 0x8019;
 
-  public static final int CDXObj_Border = /*0x8020*/0x801a;
+  public static final int CDXObj_Border = /*0x8020*/ 0x801a;
 
-  public static final int CDXObj_Geometry = /*0x8021*/0x801b;
+  public static final int CDXObj_Geometry = /*0x8021*/ 0x801b;
 
-  public static final int CDXObj_Constraint = /*0x8022*/0x801c;
+  public static final int CDXObj_Constraint = /*0x8022*/ 0x801c;
 
-  public static final int CDXObj_TLCPlate = /*0x8023*/0x801d;
+  public static final int CDXObj_TLCPlate = /*0x8023*/ 0x801d;
 
-  public static final int CDXObj_TLCLane = /*0x8024*/0x801e;
+  public static final int CDXObj_TLCLane = /*0x8024*/ 0x801e;
 
-  public static final int CDXObj_TLCSpot = /*0x8025*/0x801f;
+  public static final int CDXObj_TLCSpot = /*0x8025*/ 0x801f;
 
-  public static final int CDXObj_ChemicalProperty = /*0x8026*/0x8020;
+  public static final int CDXObj_ChemicalProperty = /*0x8026*/ 0x8020;
 
   public static final int CDXObj_Arrow = 0x8021;
 
@@ -1500,10 +1418,12 @@ public class CDXConstants {
   public static final int CDXBondOrder_SingleOrDouble = CDXBondOrder_Single | CDXBondOrder_Double;
 
   /** Single or aromatic bond for substructure queries */
-  public static final int CDXBondOrder_SingleOrAromatic = CDXBondOrder_Single | CDXBondOrder_OneHalf;
+  public static final int CDXBondOrder_SingleOrAromatic =
+      CDXBondOrder_Single | CDXBondOrder_OneHalf;
 
   /** Double or aromatic bond for substructure queries */
-  public static final int CDXBondOrder_DoubleOrAromatic = CDXBondOrder_Double | CDXBondOrder_OneHalf;
+  public static final int CDXBondOrder_DoubleOrAromatic =
+      CDXBondOrder_Double | CDXBondOrder_OneHalf;
 
   /** Any bond for substructure queries */
   public static final int CDXBondOrder_Any = -1;
@@ -1622,9 +1542,7 @@ public class CDXConstants {
   /** Bond is not part of reacting center */
   public static final int CDXBondReactionParticipation_NotReactionCenter = 5;
 
-  /**
-   * Bond does not change in course of reaction, but it is part of the reacting center
-   */
+  /** Bond does not change in course of reaction, but it is part of the reacting center */
   public static final int CDXBondReactionParticipation_NoChange = 6;
 
   /**
@@ -2008,9 +1926,7 @@ public class CDXConstants {
   /** Brackets enclose any polymer. */
   public static final int CDXBracketUsage_Anypolymer = 18;
 
-  /**
-   * Brackets enclose an individual component of an ordered or unordered mixture.
-   */
+  /** Brackets enclose an individual component of an ordered or unordered mixture. */
   public static final int CDXBracketUsage_Component = 13;
 
   /** Brackets enclose one of several repeating units that co-polymerize. */
@@ -2021,19 +1937,13 @@ public class CDXConstants {
    */
   public static final int CDXBracketUsage_CopolymerAlternating = 7;
 
-  /**
-   * Brackets enclose one of several repeating units that co-polymerize in a block fashion.
-   */
+  /** Brackets enclose one of several repeating units that co-polymerize in a block fashion. */
   public static final int CDXBracketUsage_CopolymerBlock = 9;
 
-  /**
-   * Brackets enclose one of several repeating units that co-polymerize in a random fashion.
-   */
+  /** Brackets enclose one of several repeating units that co-polymerize in a random fashion. */
   public static final int CDXBracketUsage_CopolymerRandom = 8;
 
-  /**
-   * Brackets enclose a cross-linking repeating unit in a source-based representation.
-   */
+  /** Brackets enclose a cross-linking repeating unit in a source-based representation. */
   public static final int CDXBracketUsage_Crosslink = 10;
 
   /** Brackets enclose a generic polymer. */
@@ -2042,9 +1952,7 @@ public class CDXConstants {
   /** Brackets enclose a graft repeating unit in a source-based representation. */
   public static final int CDXBracketUsage_Graft = 11;
 
-  /**
-   * Brackets enclose a source-based monomeric unit that is known not to self-polymerize.
-   */
+  /** Brackets enclose a source-based monomeric unit that is known not to self-polymerize. */
   public static final int CDXBracketUsage_Mer = 5;
 
   /**
@@ -2053,27 +1961,19 @@ public class CDXConstants {
    */
   public static final int CDXBracketUsage_MixtureOrdered = 15;
 
-  /**
-   * Brackets enclose a collection of substances that comprise an unordered mixture.
-   */
+  /** Brackets enclose a collection of substances that comprise an unordered mixture. */
   public static final int CDXBracketUsage_MixtureUnordered = 14;
 
-  /**
-   * Brackets enclose a modified repeating unit in a source-based representation.
-   */
+  /** Brackets enclose a modified repeating unit in a source-based representation. */
   public static final int CDXBracketUsage_Modification = 12;
 
   /** Brackets enclose a source-based monomeric unit. */
   public static final int CDXBracketUsage_Monomer = 4;
 
-  /**
-   * Brackets enclose a structure or fragment that is repeated some number of times.
-   */
+  /** Brackets enclose a structure or fragment that is repeated some number of times. */
   public static final int CDXBracketUsage_MultipleGroup = 16;
 
-  /**
-   * Brackets enclose a Structural Repeating Unit in a structure-based representation.
-   */
+  /** Brackets enclose a Structural Repeating Unit in a structure-based representation. */
   public static final int CDXBracketUsage_SRU = 3;
 
   /** (unused) */
@@ -2084,14 +1984,10 @@ public class CDXConstants {
 
   // enum CDXPolymerRepeatPattern
 
-  /**
-   * One end of the repeating unit is connected to the other end of the adjacent repeating unit.
-   */
+  /** One end of the repeating unit is connected to the other end of the adjacent repeating unit. */
   public static final int CDXPolymerRepeatPattern_HeadToTail = 0;
 
-  /**
-   * One end of the repeating unit is connected to the same end of the adjacent repeating unit.
-   */
+  /** One end of the repeating unit is connected to the same end of the adjacent repeating unit. */
   public static final int CDXPolymerRepeatPattern_HeadToHead = 1;
 
   /** A mixture of the above, or an unknown repeat pattern. */
@@ -2102,9 +1998,7 @@ public class CDXConstants {
   /** Unspecified flip type. */
   public static final int CDXPolymerFlipType_Unspecified = 0;
 
-  /**
-   * The orientation of the repeating unit does not change between adjacent units.
-   */
+  /** The orientation of the repeating unit does not change between adjacent units. */
   public static final int CDXPolymerFlipType_NoFlip = 1;
 
   /** The orientation of the repeating unit does change between adjacent units. */
@@ -2516,8 +2410,10 @@ public class CDXConstants {
   // TODO: check if this are the correct values
   /** Solid */
   public static final int CDXArrowheadType_Solid = 1;
+
   /** Hollow */
   public static final int CDXArrowheadType_Hollow = 2;
+
   /** Angle */
   public static final int CDXArrowheadType_Angle = 3;
 

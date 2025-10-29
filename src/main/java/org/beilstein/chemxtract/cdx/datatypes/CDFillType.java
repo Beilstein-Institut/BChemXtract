@@ -21,22 +21,14 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-public enum CDFillType{
-  /**
-   * Unspecified fill type.
-   */
+public enum CDFillType {
+  /** Unspecified fill type. */
   Unspecified,
-  /**
-   * No fill type.
-   */
+  /** No fill type. */
   None,
-  /**
-   * Solid fill type.
-   */
+  /** Solid fill type. */
   Solid,
-  /**
-   * Shaded fill type.
-   */
+  /** Shaded fill type. */
   Shaded,
   // TODO: javadoc
   Faded

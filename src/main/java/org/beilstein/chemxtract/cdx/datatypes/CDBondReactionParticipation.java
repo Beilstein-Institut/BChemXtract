@@ -22,10 +22,10 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
- * Specifies that a bond is affected by a reaction. The value stored in this
- * property corresponds to the Reacting Center Status property.
+ * Specifies that a bond is affected by a reaction. The value stored in this property corresponds to
+ * the Reacting Center Status property.
  */
-public enum CDBondReactionParticipation{
+public enum CDBondReactionParticipation {
   /** Bond involvement in reacting center is not specified */
   Unspecified,
   /** Bond is part of reacting center but not made/broken nor order changed */
@@ -38,14 +38,11 @@ public enum CDBondReactionParticipation{
   MakeAndChange,
   /** Bond is not part of reacting center */
   NotReactionCenter,
-  /**
-   * Bond does not change in course of reaction, but it is part of the
-   * reacting center
-   */
+  /** Bond does not change in course of reaction, but it is part of the reacting center */
   NoChange,
   /**
-   * The structure was partially mapped, but the reaction involvement of this
-   * bond was not determined
+   * The structure was partially mapped, but the reaction involvement of this bond was not
+   * determined
    */
   Unmapped;
 }

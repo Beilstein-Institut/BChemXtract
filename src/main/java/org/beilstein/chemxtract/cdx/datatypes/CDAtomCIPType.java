@@ -22,20 +22,19 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 /**
- * This enum represents an atom's absolute stereochemistry according to the CIP
- * system, which is defined in the following references:
+ * This enum represents an atom's absolute stereochemistry according to the CIP system, which is
+ * defined in the following references:
+ *
  * <ul>
- * <li>R.S. Cahn, C.K. Ingold, and V. Prelog, Specification of Molecular
- * Chirality, Angew. Chem., Int. Ed. Engl. 1966, 5, 385-414 (errata: 1966, 5,
- * 511); Angew. Chem. 1966, 78, 413-447.
- * <li>V. Prelog and G. Helmchen, Basic principals of the CIP-System and
- * Proposals for a Revision, Angew Chem. 1982, 94, 614-631; Angew. Chem., Int.
- * Ed. Engl. 1982, 21, 567-583.
- * <li>P. Mata and A.M. Lobo, The CIP Sequence Rules: Analysis and Proposal for
- * a Revision, Tetrahedron: Asymmetry.1993, 4, 657-668.
+ *   <li>R.S. Cahn, C.K. Ingold, and V. Prelog, Specification of Molecular Chirality, Angew. Chem.,
+ *       Int. Ed. Engl. 1966, 5, 385-414 (errata: 1966, 5, 511); Angew. Chem. 1966, 78, 413-447.
+ *   <li>V. Prelog and G. Helmchen, Basic principals of the CIP-System and Proposals for a Revision,
+ *       Angew Chem. 1982, 94, 614-631; Angew. Chem., Int. Ed. Engl. 1982, 21, 567-583.
+ *   <li>P. Mata and A.M. Lobo, The CIP Sequence Rules: Analysis and Proposal for a Revision,
+ *       Tetrahedron: Asymmetry.1993, 4, 657-668.
  * </ul>
  */
-public enum CDAtomCIPType{
+public enum CDAtomCIPType {
   /** Undetermined */
   Undetermined,
   /** Determined to be symmetric */
@@ -49,8 +48,7 @@ public enum CDAtomCIPType{
   /** Pseudoasymmetric: (s) */
   PseudoS,
   /**
-   * The node is asymmetric, but lacks a hash/wedge so absolute configuration
-   * cannot be determined
+   * The node is asymmetric, but lacks a hash/wedge so absolute configuration cannot be determined
    */
   Unspecified;
 }

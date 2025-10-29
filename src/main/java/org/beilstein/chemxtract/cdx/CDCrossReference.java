@@ -63,5 +63,4 @@ public class CDCrossReference {
   public void setSequence(String sequence) {
     this.sequence = sequence;
   }
-
 }

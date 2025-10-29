@@ -21,22 +21,20 @@
  */
 package org.beilstein.chemxtract.lookups;
 
+import java.io.IOException;
+import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 
-import java.io.IOException;
-import java.util.Map;
-
 /**
- * Singleton utility class that provides a lookup table for chemical reaction agents,
- * mapping common textual abbreviations (e.g., "THF", "Acetic Acid") to their corresponding
- * SMILES representations.
- * <p>
- * This class loads a predefined SMILES abbreviation list from a file at initialization,
- * allowing consistent access to standardized agent definitions throughout the application.
- * </p>
+ * Singleton utility class that provides a lookup table for chemical reaction agents, mapping common
+ * textual abbreviations (e.g., "THF", "Acetic Acid") to their corresponding SMILES representations.
+ *
+ * <p>This class loads a predefined SMILES abbreviation list from a file at initialization, allowing
+ * consistent access to standardized agent definitions throughout the application.
  *
  * <h2>Example Usage:</h2>
+ *
  * <pre>{@code
  * if (ReactionAgents.contains("EtOH")) {
  *     String smiles = ReactionAgents.get("EtOH");  // returns "CCO"
@@ -50,46 +48,47 @@ public class ReactionAgents {
   private final Map<String, String> lookup;
 
   /**
-   * Private constructor that loads the SMILES lookup table from the defined
-   * resource file. The lookup is read using a {@link SMILESLookupReader} and
-   * stored as a lowercase key-to-SMILES mapping.
+   * Private constructor that loads the SMILES lookup table from the defined resource file. The
+   * lookup is read using a {@link SMILESLookupReader} and stored as a lowercase key-to-SMILES
+   * mapping.
    *
    * @throws IOException if the SMILES abbreviation file cannot be read or parsed
    */
   private ReactionAgents() throws IOException {
     SMILESLookupReader reader = new SMILESLookupReader(DefaultChemObjectBuilder.getInstance());
-    this.lookup = reader.loadSmilesLookup(Definitions.AGENT_ABBREVIATION_PATH, Definitions.AGENTS_SIZE);
+    this.lookup =
+        reader.loadSmilesLookup(Definitions.AGENT_ABBREVIATION_PATH, Definitions.AGENTS_SIZE);
   }
 
   /**
    * Returns the singleton instance of the {@code ReactionAgents} class.
+   *
    * <p>
    *
    * @return the singleton instance
    * @throws IOException if the SMILES abbreviation file cannot be loaded
    */
   private static ReactionAgents getInstance() throws IOException {
-    if (instance == null)
-      instance = new ReactionAgents();
+    if (instance == null) instance = new ReactionAgents();
     return instance;
   }
 
-/**
- * Retrieves the SMILES representation associated with the given agent abbreviation.
- * <p>
- * If the abbreviation is not found, {@code null} is returned.
- * </p>
- *
- * @param key the agent abbreviation (e.g., "EtOH", "H2O2")
- * @return the corresponding SMILES string, or {@code null} if not found
- * @throws IOException if the lookup table could not be loaded
- */
+  /**
+   * Retrieves the SMILES representation associated with the given agent abbreviation.
+   *
+   * <p>If the abbreviation is not found, {@code null} is returned.
+   *
+   * @param key the agent abbreviation (e.g., "EtOH", "H2O2")
+   * @return the corresponding SMILES string, or {@code null} if not found
+   * @throws IOException if the lookup table could not be loaded
+   */
   public static String get(String key) throws IOException {
     return ReactionAgents.getInstance().lookup.get(key.toLowerCase());
   }
 
   /**
    * Checks whether the given abbreviation is defined in the agent lookup table.
+   *
    * <p>
    *
    * @param key the agent abbreviation to test

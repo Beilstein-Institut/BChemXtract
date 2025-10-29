@@ -19,14 +19,3 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-package org.beilstein.chemxtract.cdx.datatypes;
-
-/** The constraint type (distance, angle, or exclusion sphere). */
-public enum CDConstraintType {
-  /** The type of constraint is undefined. */
-  Undefined,
-
-  Distance,
-  Angle,
-  ExclusionSphere;
-}

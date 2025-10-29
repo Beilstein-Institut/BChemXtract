@@ -25,9 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Set of elements, which are represented by their atomic number. This set can
- * also be exclusive, which means the set fits all elements except the element,
- * which this set contains.
+ * Set of elements, which are represented by their atomic number. This set can also be exclusive,
+ * which means the set fits all elements except the element, which this set contains.
  */
 public class CDElementList {
   private boolean exclusive = false;
@@ -48,5 +47,4 @@ public class CDElementList {
   public void setElements(List<Integer> elements) {
     this.elements = elements;
   }
-
 }

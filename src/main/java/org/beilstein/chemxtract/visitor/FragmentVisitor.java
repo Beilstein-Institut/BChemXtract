@@ -21,25 +21,21 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Visitor class for traversing a ChemDraw page and collecting fragments.
- */
+/** Visitor class for traversing a ChemDraw page and collecting fragments. */
 public class FragmentVisitor extends CDVisitor {
 
   private final List<CDFragment> allFragments;
   private final List<CDFragment> fragments;
 
   /**
-   * Constructs a {@code FragmentVisitor} and traverses the given page to collect
-   * fragments.
+   * Constructs a {@code FragmentVisitor} and traverses the given page to collect fragments.
    *
    * @param page the {@link CDPage} to traverse for fragments
    */
@@ -51,17 +47,17 @@ public class FragmentVisitor extends CDVisitor {
 
   /**
    * Visits a {@link CDFragment} node during traversal.
-   * <p>
-   * Fragments without external connection points are added to both
-   * {@link #fragments} and {@link #allFragments}, while fragments with external
-   * connection points are only added to {@link #allFragments}.
-   * </p>
+   *
+   * <p>Fragments without external connection points are added to both {@link #fragments} and {@link
+   * #allFragments}, while fragments with external connection points are only added to {@link
+   * #allFragments}.
    *
    * @param fragment the {@link CDFragment} being visited
    */
   @Override
-  public void visitFragment(CDFragment fragment){
-    if (fragment.getAtoms().stream().noneMatch(cdAtom -> CDNodeType.ExternalConnectionPoint.equals(cdAtom.getNodeType()))) {
+  public void visitFragment(CDFragment fragment) {
+    if (fragment.getAtoms().stream()
+        .noneMatch(cdAtom -> CDNodeType.ExternalConnectionPoint.equals(cdAtom.getNodeType()))) {
       fragments.add(fragment);
     }
     allFragments.add(fragment);
@@ -77,8 +73,7 @@ public class FragmentVisitor extends CDVisitor {
   }
 
   /**
-   * Returns the list of all fragments visited, including those with external
-   * connection points.
+   * Returns the list of all fragments visited, including those with external connection points.
    *
    * @return list of all {@link CDFragment} objects visited
    */

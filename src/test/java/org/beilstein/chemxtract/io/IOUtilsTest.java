@@ -23,14 +23,12 @@ package org.beilstein.chemxtract.io;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class IOUtilsTest {
 
@@ -47,7 +45,7 @@ public class IOUtilsTest {
     IOUtils.writeText(baos, fixture);
     assertThat(baos.toString()).isEqualTo(fixture);
   }
-  
+
   @Test
   public void testReadBytes() throws IOException {
     String fixture = "Hello world!";
@@ -63,7 +61,7 @@ public class IOUtilsTest {
     byte[] out = IOUtils.readBytes(bais, 5);
     assertThat(new String(out)).isEqualTo(fixture);
   }
-  
+
   @Test
   public void testStartsWithBytes() {
     byte[] fixture = "Hello world!".getBytes();
@@ -72,7 +70,7 @@ public class IOUtilsTest {
     assertThat(IOUtils.startsWithBytes(fixture, right)).isTrue();
     assertThat(IOUtils.startsWithBytes(fixture, wrong)).isFalse();
   }
-  
+
   @Test
   public void testCompressRoundtrip() throws Exception {
     byte[] fixture = "Hello world!".getBytes();

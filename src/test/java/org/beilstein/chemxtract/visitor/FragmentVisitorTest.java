@@ -21,6 +21,15 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -30,22 +39,12 @@ import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 public class FragmentVisitorTest {
 
   @Test
   public void test() throws IOException {
-        String fileName = "nicknames.cdx";
-//    String fileName = "abbreviation.cdx";
+    String fileName = "nicknames.cdx";
+    //    String fileName = "abbreviation.cdx";
     InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
     assertThat(in).isNotNull();
 
@@ -84,12 +83,15 @@ public class FragmentVisitorTest {
     when(fragmentWithExternal.getAtoms()).thenReturn(Arrays.asList(normalAtom, externalAtom));
 
     // page.accept(visitor) should call back into visitor.visitFragment(...)
-    doAnswer(invocation -> {
-      FragmentVisitor visitor = (FragmentVisitor) invocation.getArguments()[0];
-      visitor.visitFragment(fragmentWithNoExternal);
-      visitor.visitFragment(fragmentWithExternal);
-      return null;
-    }).when(pageMock).accept(any(FragmentVisitor.class));
+    doAnswer(
+            invocation -> {
+              FragmentVisitor visitor = (FragmentVisitor) invocation.getArguments()[0];
+              visitor.visitFragment(fragmentWithNoExternal);
+              visitor.visitFragment(fragmentWithExternal);
+              return null;
+            })
+        .when(pageMock)
+        .accept(any(FragmentVisitor.class));
   }
 
   @Test

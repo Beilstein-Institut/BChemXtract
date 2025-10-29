@@ -27,9 +27,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-/**
- * Default XML error handler used for parsing XML documents.
- */
+/** Default XML error handler used for parsing XML documents. */
 public class XMLErrorHandler implements ErrorHandler {
   private static final Log logger = LogFactory.getLog(XMLErrorHandler.class);
 
@@ -83,15 +81,13 @@ public class XMLErrorHandler implements ErrorHandler {
     return message.toString();
   }
 
-  /**
-   * Own exception for exceptions, which can occur during the parsing process of XML documents.
-   */
+  /** Own exception for exceptions, which can occur during the parsing process of XML documents. */
   public static class XMLErrorHandlerException extends SAXException {
     private static final long serialVersionUID = -8987602073675231565L;
 
     /**
      * Create new instance with the given message and original exception.
-     * 
+     *
      * @param message Message
      * @param exception Original exception
      */

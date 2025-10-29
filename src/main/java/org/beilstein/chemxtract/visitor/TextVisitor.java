@@ -21,18 +21,15 @@
  */
 package org.beilstein.chemxtract.visitor;
 
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.utils.Definitions;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-/**
- * Visitor class for traversing a ChemDraw page and extracting R-group definitions from text.
- */
+/** Visitor class for traversing a ChemDraw page and extracting R-group definitions from text. */
 public class TextVisitor extends CDVisitor {
 
   private final Map<String, List<String>> rgroups;
@@ -48,32 +45,31 @@ public class TextVisitor extends CDVisitor {
   }
 
   /**
-   * Visits a {@link CDText} node and extracts any R-group definitions it contains.
-   * The extracted R-groups are added to the internal map.
+   * Visits a {@link CDText} node and extracts any R-group definitions it contains. The extracted
+   * R-groups are added to the internal map.
    *
    * @param cdText the {@link CDText} node being visited
    */
   @Override
-  public void visitText(CDText cdText){
-    if(cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
+  public void visitText(CDText cdText) {
+    if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
       return;
     }
     Map<String, List<String>> results = extractRGroups(cdText.getText().getText());
-    for (Map.Entry<String, List<String>> entry : results.entrySet()){
+    for (Map.Entry<String, List<String>> entry : results.entrySet()) {
       rgroups.putIfAbsent(entry.getKey(), entry.getValue());
     }
   }
 
   /**
    * Parses a string to extract R-group definitions in the form "R = ..." or "X = ...".
-   * <p>
-   * Supports both enumerated forms "(a) H, (b) F, ..." and simple comma-separated lists.
-   * </p>
+   *
+   * <p>Supports both enumerated forms "(a) H, (b) F, ..." and simple comma-separated lists.
    *
    * @param input the string to parse for R-group definitions
    * @return a map of R-group identifiers to their possible substituents
    */
-  //TODO needs to be extended for better recognition
+  // TODO needs to be extended for better recognition
   private Map<String, List<String>> extractRGroups(String input) {
 
     Map<String, List<String>> result = new LinkedHashMap<>();
@@ -83,7 +79,7 @@ public class TextVisitor extends CDVisitor {
 
     if (mainMatcher.find()) {
       String identifier = mainMatcher.group(1); // e.g., "R"
-      String rhs = mainMatcher.group(2).trim();  // e.g., "(a) H, (b) F, (c) –OCH2O–" or "CH3, Cl"
+      String rhs = mainMatcher.group(2).trim(); // e.g., "(a) H, (b) F, (c) –OCH2O–" or "CH3, Cl"
 
       List<String> abbreviations = new ArrayList<>();
 
@@ -98,8 +94,7 @@ public class TextVisitor extends CDVisitor {
       // Case 2: plain comma-separated list if no (a)/(b)/(c) found
       if (abbreviations.isEmpty()) {
         for (String part : rhs.split("\\s*,\\s*")) {
-          if (!part.isEmpty())
-            abbreviations.add(part.trim());
+          if (!part.isEmpty()) abbreviations.add(part.trim());
         }
       }
 
@@ -107,7 +102,6 @@ public class TextVisitor extends CDVisitor {
     }
 
     return result;
-
   }
 
   /**

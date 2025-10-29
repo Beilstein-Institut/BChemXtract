@@ -21,9 +21,9 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class CDPoint2DTest {
   @Test
@@ -68,5 +68,4 @@ public class CDPoint2DTest {
     other = new CDPoint2D(20.32f, 107.47f);
     assertThat(point.equalsTolerance(other)).isFalse();
   }
-
 }

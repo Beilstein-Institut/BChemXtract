@@ -21,10 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
-/**
- * A specific side of an object (rectangle).
- */
-public enum CDSideType{
+/** A specific side of an object (rectangle). */
+public enum CDSideType {
   /** Undefined side */
   Undefined,
   /** Top side */

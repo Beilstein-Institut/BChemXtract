@@ -24,9 +24,7 @@ package org.beilstein.chemxtract.cdx;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
-/**
- * Divides a page into horizontal bands.
- */
+/** Divides a page into horizontal bands. */
 public class CDSplitter {
 
   private CDPoint2D position2D;
@@ -47,5 +45,4 @@ public class CDSplitter {
   public void setPageDefinition(CDPageDefinition pageDefinition) {
     this.pageDefinition = pageDefinition;
   }
-
 }

@@ -31,22 +31,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Singleton utility class that provides access to a predefined set of
- * unwanted or excluded words used for text and label filtering.
+ * Singleton utility class that provides access to a predefined set of unwanted or excluded words
+ * used for text and label filtering.
  *
  * <h2>Purpose</h2>
- * This class is used to filter out common or 'non-chemical' words
- * (e.g., "step", "reaction", "mixture", etc.) when parsing text near reaction
- * arrows or in fragment annotations.
+ *
+ * This class is used to filter out common or 'non-chemical' words (e.g., "step", "reaction",
+ * "mixture", etc.) when parsing text near reaction arrows or in fragment annotations.
  *
  * <h2>Example Usage:</h2>
- * <pre>
- * {@code
+ *
+ * <pre>{@code
  * if (!UnwantedWords.contains("solution")) {
  *     // treat as potential chemical label
  * }
- * }
- * </pre>
+ * }</pre>
  */
 public class UnwantedWords {
 
@@ -63,24 +62,22 @@ public class UnwantedWords {
   }
 
   /**
-   * Returns the singleton instance of {@link UnwantedWords},
-   * creating it on first access if necessary.
+   * Returns the singleton instance of {@link UnwantedWords}, creating it on first access if
+   * necessary.
    *
    * @return the singleton instance
    * @throws IOException if the unwanted words file cannot be loaded
    */
   private static UnwantedWords getInstance() throws IOException {
-    if (instance == null)
-      instance = new UnwantedWords();
+    if (instance == null) instance = new UnwantedWords();
     return instance;
   }
 
   /**
    * Loads the unwanted word list from the {@code unwantedWords.txt} resource file.
-   * <p>
-   * Each non-blank line in the file is added to a set, which is then made
-   * unmodifiable for safe concurrent access.
-   * </p>
+   *
+   * <p>Each non-blank line in the file is added to a set, which is then made unmodifiable for safe
+   * concurrent access.
    *
    * @return an unmodifiable set of unwanted words
    * @throws IOException if the resource cannot be found or read

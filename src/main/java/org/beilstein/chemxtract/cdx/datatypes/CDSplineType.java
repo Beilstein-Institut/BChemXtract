@@ -41,8 +41,16 @@ public class CDSplineType {
   private boolean halfArrowAtEnd = false;
 
   public boolean isPlain() {
-    return !isDashed() && !isBold() && !isDoubled() && !isClosed() && !isFilled() && !isShaded() && !isArrowAtStart() && !isArrowAtEnd() &&
-            !isHalfArrowAtStart() && !isHalfArrowAtEnd();
+    return !isDashed()
+        && !isBold()
+        && !isDoubled()
+        && !isClosed()
+        && !isFilled()
+        && !isShaded()
+        && !isArrowAtStart()
+        && !isArrowAtEnd()
+        && !isHalfArrowAtStart()
+        && !isHalfArrowAtEnd();
   }
 
   public void setPlain(boolean plain) {
@@ -218,5 +226,4 @@ public class CDSplineType {
     }
     return true;
   }
-
 }

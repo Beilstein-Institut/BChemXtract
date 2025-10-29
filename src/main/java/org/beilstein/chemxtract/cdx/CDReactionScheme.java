@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This object describes a one- or multistep reaction and therefore
- * contains one or more reaction step objects.
+ * This object describes a one- or multistep reaction and therefore contains one or more reaction
+ * step objects.
  */
-public class CDReactionScheme extends CDObject{
+public class CDReactionScheme extends CDObject {
 
   /** The reaction steps collection of the document. */
   private List<CDReactionStep> steps = new ArrayList<>();

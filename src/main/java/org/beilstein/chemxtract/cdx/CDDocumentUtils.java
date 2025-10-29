@@ -21,14 +21,14 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.awt.geom.Point2D;
+import java.util.*;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 
-import java.awt.geom.Point2D;
-import java.util.*;
-
 /**
- * Utils class for handling CD documents and their properties when converting CD fragments in CDK AtomContainers.
+ * Utils class for handling CD documents and their properties when converting CD fragments in CDK
+ * AtomContainers.
  *
  * @author Felix Bänsch
  */
@@ -98,9 +98,9 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Extracts and returns a list of all {@code CDReactionStep} instances from a given {@code CDDocument}.
-   * This method performs a breadth-first search (BFS) to traverse through the document structure,
-   * including pages, reaction schemes, and reaction steps.
+   * Extracts and returns a list of all {@code CDReactionStep} instances from a given {@code
+   * CDDocument}. This method performs a breadth-first search (BFS) to traverse through the document
+   * structure, including pages, reaction schemes, and reaction steps.
    *
    * @param document the {@code CDDocument} containing reaction data
    * @return a {@code List} of {@code CDReactionStep} objects found in the document
@@ -126,13 +126,12 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Retrieves a map of residues from the given CDDocument
+   * Experimental code Retrieves a map of residues from the given CDDocument
    *
    * @param document CDDocument containing the residues to retrieve
    * @return map where keys represent residue names and values represent their corresponding SMILES
    */
-  public static Map<String,String> getResidues(CDDocument document) {
+  public static Map<String, String> getResidues(CDDocument document) {
     // generate a list of all fragments
     Stack<CDObject> objects = new Stack<>();
     List<CDText> cDTexts = new ArrayList<>();
@@ -151,15 +150,13 @@ public class CDDocumentUtils {
         cDTexts.add(text);
       }
     }
-    Map<String,String> residues = new HashMap<>((int) (cDTexts.size() / 0.75f + 2));
+    Map<String, String> residues = new HashMap<>((int) (cDTexts.size() / 0.75f + 2));
     for (CDText cdText : cDTexts) {
       String text = cdText.getText().getText().trim();
       int idx = text.indexOf('R');
-      if (idx > -1)
-        text = text.substring(idx);
+      if (idx > -1) text = text.substring(idx);
       String[] items = text.split("=");
-      if (items.length < 2)
-        continue;
+      if (items.length < 2) continue;
       String[] textResidues = items[1].split(", ");
       if (textResidues.length == 1) {
         residues.putIfAbsent(items[0], textResidues[0].trim());
@@ -182,8 +179,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Returns a list of texts from the given CDDocument
+   * Experimental code Returns a list of texts from the given CDDocument
    *
    * @param document CDDocument containing the residues to retrieve
    * @return list of CDText objects found in the document
@@ -213,6 +209,7 @@ public class CDDocumentUtils {
 
   /**
    * Returns a list of all brackets of all pages of the document
+   *
    * @param document CDDocument containing the residues to retrieve
    * @return list of CDBracket objects found in the document
    */
@@ -234,8 +231,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Checks if the given fragment contains an R-group.
+   * Experimental code Checks if the given fragment contains an R-group.
    *
    * @param fragment The fragment to check
    * @return {@code true} if the fragment contains an R-group, otherwise {@code false}
@@ -251,8 +247,7 @@ public class CDDocumentUtils {
           }
         }
       } else {
-        if (atom.getLabelText() != null && atom.getLabelText().contains("R"))
-          return true;
+        if (atom.getLabelText() != null && atom.getLabelText().contains("R")) return true;
       }
     }
     return false;
@@ -262,36 +257,34 @@ public class CDDocumentUtils {
    * Checks if a fragment is valid.
    *
    * @param fragment CDFragment to check
-   * @return {@code true} if CDFragment is valid (i.e., contains at least two atoms), otherwise {@code false}.
-   * * @Depreacted use CDFragment.hasRGroup instead
+   * @return {@code true} if CDFragment is valid (i.e., contains at least two atoms), otherwise
+   *     {@code false}. * @Depreacted use CDFragment.hasRGroup instead
    */
-
   public static boolean isFragmentValid(CDFragment fragment) {
     return fragment.getAtoms() != null && fragment.getAtoms().size() >= 2;
   }
 
   /**
-   * Experimental code
-   * Filters a CDDocument object and returns a new list containing only the text fragments.
-   * This method delegates the task of filtering fragments to the filterFragmentsForText method,
-   * assuming getListOfFragments provides a list of all fragments within the document.
+   * Experimental code Filters a CDDocument object and returns a new list containing only the text
+   * fragments. This method delegates the task of filtering fragments to the filterFragmentsForText
+   * method, assuming getListOfFragments provides a list of all fragments within the document.
    *
    * @param document The CDDocument object to be filtered.
-   * @return A new list containing only the CDText objects extracted from the text fragments within the document.
+   * @return A new list containing only the CDText objects extracted from the text fragments within
+   *     the document.
    */
   public static List<CDText> filterFragmentsForText(CDDocument document) {
     return filterFragmentsForText(getListOfFragments(document));
   }
 
   /**
-   * Experimental code
-   * Filters a list of CDFragments and returns a new list containing only the text fragments.
-   * This method iterates through the fragments and applies the following criteria to identify text fragments:
-   *     The fragment is not valid (assumed to be determined by the isFragmentValid method).
-   *     The fragment contains only one atom.
-   *     The single atom's node type is CDNodeType.Unspecified (assumed to represent text data).
-   * If a fragment meets these criteria, the text content is extracted from the single atom using the getText method
-   * and added to the resulting list.
+   * Experimental code Filters a list of CDFragments and returns a new list containing only the text
+   * fragments. This method iterates through the fragments and applies the following criteria to
+   * identify text fragments: The fragment is not valid (assumed to be determined by the
+   * isFragmentValid method). The fragment contains only one atom. The single atom's node type is
+   * CDNodeType.Unspecified (assumed to represent text data). If a fragment meets these criteria,
+   * the text content is extracted from the single atom using the getText method and added to the
+   * resulting list.
    *
    * @param fragments The list of CDFragment objects to be filtered.
    * @return A new list containing only the CDText objects extracted from the text fragments.
@@ -311,11 +304,10 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Checks if a CDText object contains a structure label.
-   * This method calls the getStructureLabelString method to extract the potential label string
-   * from the text object. If the extracted string is not empty, it is considered a structure label
-   * and this method returns true. Otherwise, it returns false.
+   * Experimental code Checks if a CDText object contains a structure label. This method calls the
+   * getStructureLabelString method to extract the potential label string from the text object. If
+   * the extracted string is not empty, it is considered a structure label and this method returns
+   * true. Otherwise, it returns false.
    *
    * @param text The CDText object to be checked.
    * @return True if the text object contains a structure label, false otherwise.
@@ -325,8 +317,8 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Filters a list of CDText objects and returns a new list containing only the structure labels.
+   * Experimental code Filters a list of CDText objects and returns a new list containing only the
+   * structure labels.
    *
    * @param texts The list of CDText objects to be filtered.
    * @return A new list containing only the CDText objects identified as structure labels.
@@ -334,27 +326,24 @@ public class CDDocumentUtils {
   public static List<CDText> getStructureLabels(List<CDText> texts) {
     List<CDText> labels = new ArrayList<>();
     for (CDText text : texts) {
-      if (containsStructureLabel(text))
-        labels.add(text);
+      if (containsStructureLabel(text)) labels.add(text);
     }
     return labels;
   }
 
   /**
-   * Experimental code
-   * Extracts and returns the structure label string from a CDText object.
-   * The method iterates through the text chunks and searches for a chunk that meets these criteria:
-   *     The chunk's font is bold.
-   *     The chunk's text contains at least one digit character.
-   * If such a chunk is found, its text content is considered the structure label and is returned.
-   * Otherwise, an empty string is returned.
+   * Experimental code Extracts and returns the structure label string from a CDText object. The
+   * method iterates through the text chunks and searches for a chunk that meets these criteria: The
+   * chunk's font is bold. The chunk's text contains at least one digit character. If such a chunk
+   * is found, its text content is considered the structure label and is returned. Otherwise, an
+   * empty string is returned.
    *
    * @param text The CDText object from which to extract the label string.
-   * @return The structure label string extracted from the text chunk, or an empty string if no suitable chunk is found.
+   * @return The structure label string extracted from the text chunk, or an empty string if no
+   *     suitable chunk is found.
    */
   public static String getStructureLabelString(CDText text) {
-    if (text == null || text.getText() == null)
-      return "";
+    if (text == null || text.getText() == null) return "";
     String label = "";
     List<CDStyledString.CDXChunk> chunks = text.getText().getChunks();
     for (var chunk : chunks) {
@@ -368,8 +357,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Calculates and returns the center point of a CDText object.
+   * Experimental code Calculates and returns the center point of a CDText object.
    *
    * @param text The CDText object.
    * @return A Point2D object representing the center point of the text.
@@ -379,8 +367,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Calculates and returns the center point of a CDFragment object.
+   * Experimental code Calculates and returns the center point of a CDFragment object.
    *
    * @param fragment The CDFragment object.
    * @return A Point2D object representing the center point of the fragment.
@@ -390,8 +377,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Calculates and returns the center point of a CDRectangle object.
+   * Experimental code Calculates and returns the center point of a CDRectangle object.
    *
    * @param rectangle The CDRectangle object.
    * @return A Point2D object representing the center point of the rectangle.
@@ -403,9 +389,8 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Calculates the distance between the center of theCDFragment and
-   * the center of the CDText object.
+   * Experimental code Calculates the distance between the center of theCDFragment and the center of
+   * the CDText object.
    *
    * @param fragment The CDFragment object.
    * @param text The CDText object.
@@ -418,8 +403,7 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Experimental code
-   * Assigns a label to a given fragment based on proximity and distance cutoff.
+   * Experimental code Assigns a label to a given fragment based on proximity and distance cutoff.
    * This method iterates through the list of text elements and searches for a structure label
    * (determined by the containsStructureLabel method) that is closest to the fragment.
    *
@@ -431,35 +415,35 @@ public class CDDocumentUtils {
     double cutOff = LABEL_MAX_DISTANCE_CUT_OFF + getLongestSideOfCDRectangle(fragment.getBounds());
     CDText label = null;
     for (CDText text : texts) {
-      if (!containsStructureLabel(text))
-        continue;
+      if (!containsStructureLabel(text)) continue;
       double dist = getDistanceOfFragmentToText(fragment, text);
       if (dist < shortestDist && dist < cutOff) {
         shortestDist = dist;
         label = text;
       }
     }
-    if (label != null)
-      fragment.getTexts().add(label);
+    if (label != null) fragment.getTexts().add(label);
   }
 
   /**
-   * Returns the longest side of a CDRectangle object.
-   * This method compares the width and height of the rectangle and returns the larger value.
+   * Returns the longest side of a CDRectangle object. This method compares the width and height of
+   * the rectangle and returns the larger value.
    *
    * @param rectangle The CDRectangle object for which the longest side is to be calculated.
    * @return The length of the longest side of the rectangle as a double.
-   **/
+   */
   public static double getLongestSideOfCDRectangle(CDRectangle rectangle) {
     return Math.max(rectangle.getHeight(), rectangle.getWidth());
   }
 
   /**
-   * Extracts a list of CDBracket objects from a provided list that are associated with a given CDFragment.
+   * Extracts a list of CDBracket objects from a provided list that are associated with a given
+   * CDFragment.
    *
    * @param fragment The CDFragment object for which to find associated brackets.
    * @param brackets The list of CDBracket objects to be searched.
-   * @return A new list containing only the CDBracket objects that are associated with the fragment (i.e. contain one or more of its atoms).
+   * @return A new list containing only the CDBracket objects that are associated with the fragment
+   *     (i.e. contain one or more of its atoms).
    */
   public static List<CDBracket> getFragmentBrackets(CDFragment fragment, List<CDBracket> brackets) {
     List<CDBracket> fragmentBrackets = new ArrayList<>();
@@ -478,11 +462,13 @@ public class CDDocumentUtils {
   }
 
   /**
-   * Checks whether the given node type contains chemical knowledge in the form of a fragment or similar, and returns true if so.
-   * CDNodeType that are defined to contain chemical knowledge are Fragment, Nickname and GenericNickname
+   * Checks whether the given node type contains chemical knowledge in the form of a fragment or
+   * similar, and returns true if so. CDNodeType that are defined to contain chemical knowledge are
+   * Fragment, Nickname and GenericNickname
    *
    * @param type CDNodeType
-   * @return true whether the given node type contains chemical knowledge in the form of a fragment or similar.
+   * @return true whether the given node type contains chemical knowledge in the form of a fragment
+   *     or similar.
    */
   public static boolean hasNodeTypeChemicalKnowledge(CDNodeType type) {
     switch (type) {

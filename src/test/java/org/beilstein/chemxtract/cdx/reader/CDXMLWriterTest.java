@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.junit.After;
 import org.junit.Before;
@@ -35,7 +34,8 @@ import org.junit.Test;
 
 public class CDXMLWriterTest {
 
-  private static final String OUTPUT_DIR = System.getProperty("user.dir") + "/target/test-output/cdx";
+  private static final String OUTPUT_DIR =
+      System.getProperty("user.dir") + "/target/test-output/cdx";
   private File outputDir;
 
   @Before
@@ -62,5 +62,4 @@ public class CDXMLWriterTest {
     fos.flush();
     fos.close();
   }
-
 }
