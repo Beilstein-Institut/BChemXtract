@@ -11,6 +11,41 @@
 	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
 	<description>A pure-Java extractor of ChemDraw structures.</description>
 
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://mit-license.org/</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Felix Bänsch</name>
+			<email>open-source@beilstein-institut.de</email>
+			<organization>Beilstein Institut</organization>
+			<organizationUrl>https://github.com/Beilstein-Institut</organizationUrl>
+		</developer>
+		<developer>
+			<name>Markus Nietfeld</name>
+			<email>open-source@beilstein-institut.de</email>
+			<organization>Beilstein Institut</organization>
+			<organizationUrl>https://github.com/Beilstein-Institut</organizationUrl>
+		</developer>
+		<developer>
+			<name>Udo Reschel</name>
+			<email>open-source@beilstein-institut.de</email>
+			<organization>Beilstein Institut</organization>
+			<organizationUrl>https://github.com/Beilstein-Institut</organizationUrl>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com/Beilstein-Institut/BChemXtract</connection>
+		<developerConnection>
+			scm:git:ssh://github.com/Beilstein-Institut/BChemXtract</developerConnection>
+		<url>https://github.com/Beilstein-Institut/BChemXtract</url>
+	</scm>
+
 
 	<properties>
 		<cdk.version>2.11</cdk.version>
