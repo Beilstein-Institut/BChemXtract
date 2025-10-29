@@ -429,6 +429,9 @@ public class FragmentConverter {
       List<CDAtom> cdRadicals = atomMap.keySet().stream().filter(a -> !CDRadical.None.equals(a.getRadical())).toList();
       for (CDAtom cdRadical : cdRadicals) {
         IAtom radical = atomMap.get(cdRadical);
+        if (!atomContainer.contains(radical)) {
+          continue;
+        }
         int rad = convertRadical(cdRadical.getRadical());
         MDLV2000Writer.SPIN_MULTIPLICITY spin = MDLV2000Writer.SPIN_MULTIPLICITY.ofValue(rad);
         for (int i = 0; i < spin.getSingleElectrons(); i++) {
