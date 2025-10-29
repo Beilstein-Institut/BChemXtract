@@ -187,7 +187,7 @@ public class ChemicalUtils {
         smiles = smilesGen.create(clone);
         logger.info("Kekulized structure: " + smiles);
       }
-    } catch (CDKException | NullPointerException | IllegalArgumentException | CloneNotSupportedException anException) {
+    } catch (CDKException | NullPointerException | IllegalArgumentException | CloneNotSupportedException | IllegalStateException anException) {
       logger.error(anException + "; molecule name: " + atomContainer.getID(), anException);
     }
     return smiles;
