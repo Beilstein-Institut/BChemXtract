@@ -5,14 +5,15 @@ This document contains some code snippets of how to use the libary in your own c
 ## Extracting substances
 
 ```
-FileInputStream in = new FileInputStream(filename);
+InputStream in = new FileInputStream(filename);
 
 // parse CDX into in-memory model
 CDDocument document = CDXReader.readDocument(in);
 
 // extract substances from CDX document
 BCXSubstanceInfo info = new BCXSubstanceInfo();
-List<BCXSubstance> bcxSubstances = ChemInfConverterUtils.getUniqueArticleSubstancesOfCdDocument(document, info, false);
+SubstanceXtractor xtractor = new SubstanceXtractor();
+List<BCXSubstance> bcxSubstances = xtractor.xtractUnique(document, info, false);
 
 // use CDK to generate a structure depiction, save as PNG output
 SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
@@ -33,14 +34,15 @@ In addition to the example above, the original coordinates from the drawing are 
 of the structure being auto-layouted.
 
 ```
-FileInputStream in = new FileInputStream(filename);
+InputStream in = new FileInputStream(filename);
 
 // parse CDX into in-memory model
 CDDocument document = CDXReader.readDocument(in);
 
 // extract substances from CDX document
 BCXSubstanceInfo info = new BCXSubstanceInfo();
-List<BCXSubstance> bcxSubstances = ChemInfConverterUtils.getUniqueArticleSubstancesOfCdDocument(document, info, false);
+SubstanceXtractor xtractor = new SubstanceXtractor();
+List<BCXSubstance> bcxSubstances = xtractor.xtractUnique(document, info, false);
 
 // use CDK to generate a structure depiction with the original coordinates, save as PNG output
 SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
@@ -79,14 +81,15 @@ for (BCXSubstance bcxSubstance : bcxSubstances) {
 In addition to the example above, common abbreviations are collapsed if they were found during extraction 
 
 ```
-FileInputStream in = new FileInputStream(filename);
+InputStream in = new FileInputStream(filename);
 
 // parse CDX into in-memory model
 CDDocument document = CDXReader.readDocument(in);
 
 // extract substances from CDX document
 BCXSubstanceInfo info = new BCXSubstanceInfo();
-List<BCXSubstance> bcxSubstances = ChemInfConverterUtils.getUniqueArticleSubstancesOfCdDocument(document, info, false);
+SubstanceXtractor xtractor = new SubstanceXtractor();
+List<BCXSubstance> bcxSubstances = xtractor.xtractUnique(document, info, false);
 
 // use CDK to generate a structure depiction, save as PNG output
 SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
@@ -118,3 +121,31 @@ for (BCXSubstance bcxSubstance : bcxSubstances) {
   fos.close();
 }
 ```
+
+## Extracting reactions
+This functionality is still experimental, so use at own risk. 
+
+```
+InputStream in = new FileInputStream(filename);
+
+// parse CDX into in-memory model
+CDDocument document = CDXReader.readDocument(in);
+
+// extract reactions from CDX document
+ReactionXtractor xtractor = new ReactionXtractor();
+List<BCXReaction> bcxReactions = xtractor.xtract(document);
+
+// use CDK to generate a reaction depiction, save as PNG output
+SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+for (BCXReaction bcxReaction : bcxReactions) {
+  String outputfile = bcxReaction.getWebRinchiKey() + ".png";
+  FileOutputStream fos = new FileOutputStream(outputfile);
+  IReaction reaction = sp.parseReactionSmiles(bcxReaction.getReactionSmiles());
+  DepictionGenerator dg = new DepictionGenerator().withAtomColors().withFillToFit().withBackgroundColor(Color.WHITE);
+  Depiction d = dg.depict(reaction);
+  d.writeTo(Depiction.PNG_FMT, fos);
+  fos.flush();
+  fos.close();
+}
+```
+

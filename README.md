@@ -19,15 +19,19 @@ The website is offline nowadays, however the specification can still be browsed 
 ## Getting started
 Some concepts of the parser and extraction software are given in the [documentation](doc/CONCEPTS.md). Simple code snippets are given on the [HOWTO page](doc/HOWTO.md).
 
-### Building the sources
+### Building using Maven
 Clone this repository, change to the project directory and type:
 
 ```
 mvn clean package
 ```
 
+This will compile the sources and create two artifacts below your target directory:
+* bchemxtract-<x.y>.jar: A jar file containing just the compiled classes from this project. This can be used to be packaged with your software.
+* bchemxtract-<x.y>-jar-with-dependencies.jar: A jar file containing all required libraries. This can be used to be run standalone. 
+
 ### Installing using Maven
-To use in your own code, add this dependency to your project's POM file:
+To use this library in your own project, add this dependency to your project's POM file:
 
 ```
 <dependency>
@@ -38,10 +42,10 @@ To use in your own code, add this dependency to your project's POM file:
 ```
 
 ## Usage
-To extract all structures from a CDX file and save structure depictions to the current working directory, type:
+To extract all structures from a CDX file and save the structures as PNG to the current working directory, type:
 
 ```
-java -jar target/chemxtract-1.0.jar org.beilstein.chemxtract.samples.BCXTractSubstances <CDX file>
+java -jar target/bchemxtract-<x.y>-jar-with-dependencies.jar <CDX file>
 ```
 
 ## Contributing

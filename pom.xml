@@ -1,241 +1,267 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.beilstein</groupId>
-  <artifactId>bchemxtract</artifactId>
-  <packaging>jar</packaging>
-  <name>BChemXtract</name>
-  <version>1.0-SNAPSHOT</version>
-  <url>https://github.com/Beilstein-Institut/BChemXtract</url>
-  <description>A pure-Java extractor of ChemDraw structures.</description>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.beilstein</groupId>
+	<artifactId>bchemxtract</artifactId>
+	<packaging>jar</packaging>
+	<name>BChemXtract</name>
+	<version>1.0-SNAPSHOT</version>
+	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
+	<description>A pure-Java extractor of ChemDraw structures.</description>
 
 
-  <properties>
-    <cdk.version>2.11</cdk.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <java.version>17</java.version>
-    <source.encoding>UTF-8</source.encoding>
-  </properties>
+	<properties>
+		<cdk.version>2.11</cdk.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<java.version>17</java.version>
+		<source.encoding>UTF-8</source.encoding>
+	</properties>
 
 
-  <build>
+	<build>
 
-    <resources>
-      <resource>
-        <directory>src/main/java</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-          <exclude>**/package.html</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/package.html</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
 
-    <testResources>
-      <testResource>
-        <directory>src/test/java</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-          <exclude>**/package.html</exclude>
-        </excludes>
-      </testResource>
-      <testResource>
-        <directory>src/test/resources</directory>
-      </testResource>
-    </testResources>
-    
-    <plugins>
-		
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
-        <configuration>
-          <release>${java.version}</release>
-          <encoding>${source.encoding}</encoding>
-        </configuration>
-      </plugin>
+		<testResources>
+			<testResource>
+				<directory>src/test/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/package.html</exclude>
+				</excludes>
+			</testResource>
+			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
-        <configuration>
-          <encoding>${source.encoding}</encoding>
-        </configuration>
-      </plugin>
+		<plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>3.21.0</version>
-        <configuration>
-          <siteDirectory>doc</siteDirectory>
-          <inputEncoding>${source.encoding}</inputEncoding>
-        </configuration>
-      </plugin>
-		
-		
-		
-	</plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<release>${java.version}</release>
+					<encoding>${source.encoding}</encoding>
+				</configuration>
+			</plugin>
 
-  </build>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<encoding>${source.encoding}</encoding>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.21.0</version>
+				<configuration>
+					<siteDirectory>doc</siteDirectory>
+					<inputEncoding>${source.encoding}</inputEncoding>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>org.beilstein.chemxtract.samples.BCXTractSubstances</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<!-- bind to the packaging phase -->
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 
-  <dependencies>
+		</plugins>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-extra</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+	</build>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-depict</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-inchi</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+	<dependencies>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-jniinchi-support</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-extra</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-rinchi</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-depict</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>org.openscience.cdk</groupId>
-      <artifactId>cdk-fingerprint</artifactId>
-      <version>${cdk.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-inchi</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.openscience.cdk</groupId>-->
-<!--      <artifactId>cdk-bundle</artifactId>-->
-<!--      <version>${cdk.version}</version>-->
-<!--      <exclusions>-->
-<!--        <exclusion>-->
-<!--          <groupId>xml-apis</groupId>-->
-<!--          <artifactId>xml-apis</artifactId>-->
-<!--        </exclusion>-->
-<!--      </exclusions>-->
-<!--    </dependency>-->
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-jniinchi-support</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <!-- ================= Tests =========================== -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-rinchi</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>5.4.0</version>
-      <scope>test</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-fingerprint</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>3.11.1</version>
-      <scope>test</scope>
-    </dependency>
+		<!--    <dependency>-->
+		<!--      <groupId>org.openscience.cdk</groupId>-->
+		<!--      <artifactId>cdk-bundle</artifactId>-->
+		<!--      <version>${cdk.version}</version>-->
+		<!--      <exclusions>-->
+		<!--        <exclusion>-->
+		<!--          <groupId>xml-apis</groupId>-->
+		<!--          <artifactId>xml-apis</artifactId>-->
+		<!--        </exclusion>-->
+		<!--      </exclusions>-->
+		<!--    </dependency>-->
 
-    <!-- ================= Logging =========================== -->
-    <!-- SLF4J is used as the logging facade -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
-    </dependency>
+		<!-- ================= Tests =========================== -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
 
-    <!-- Legacy code uses commons-logging API, so we need this bridge -->
-    <!-- There is no need to include commons-logging anymore -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.7.30</version>
-      <scope>compile</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>5.4.0</version>
+			<scope>test</scope>
+		</dependency>
 
-    <!-- Log4j2 is the used as the logging implementation for the slf4j facade -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>2.25.2</version>
-    </dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.11.1</version>
+			<scope>test</scope>
+		</dependency>
 
-    <!-- Needed to allow the access to the context path inside log4j2.xml -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-web</artifactId>
-      <version>2.25.2</version>
-    </dependency>
+		<!-- ================= Logging =========================== -->
+		<!-- SLF4J is used as the logging facade -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.30</version>
+		</dependency>
 
-    <!-- The Log4j 2 SLF4J Binding allows applications coded to the SLF4J
+		<!-- Legacy code uses commons-logging API, so we need this bridge -->
+		<!-- There is no need to include commons-logging anymore -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.30</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- Log4j2 is the used as the logging implementation for the slf4j
+		facade -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.25.2</version>
+		</dependency>
+
+		<!-- Needed to allow the access to the context path inside log4j2.xml -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-web</artifactId>
+			<version>2.25.2</version>
+		</dependency>
+
+		<!-- The Log4j 2 SLF4J Binding allows applications coded to the SLF4J
       API to use Log4j 2 as the implementation. -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.25.2</version>
-    </dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>2.25.2</version>
+		</dependency>
 
 
-  </dependencies>
+	</dependencies>
 
 
 </project>
