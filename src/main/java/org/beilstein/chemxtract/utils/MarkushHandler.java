@@ -372,7 +372,11 @@ public class MarkushHandler {
     }
     IAtom connectionPoint = connectionPoints.get(0);
     // Find bond between pseudoAtom and its origin
-    IBond bondOrigin = pseudoAtom.bonds().iterator().next();
+    IBond bondOrigin = null;
+    if (!pseudoAtom.bonds().iterator().hasNext()){
+      return;
+    }
+    bondOrigin = pseudoAtom.bonds().iterator().next();
     IAtom originAtom = bondOrigin.getOther(pseudoAtom);
     // Find bond inside abbreviation connecting to connection point
     IBond bondInsideAbbr = connectionPoint.bonds().iterator().next();
