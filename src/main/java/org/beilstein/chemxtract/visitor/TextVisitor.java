@@ -55,7 +55,9 @@ public class TextVisitor extends CDVisitor {
    */
   @Override
   public void visitText(CDText cdText){
-
+    if(cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
+      return;
+    }
     Map<String, List<String>> results = extractRGroups(cdText.getText().getText());
     for (Map.Entry<String, List<String>> entry : results.entrySet()){
       rgroups.putIfAbsent(entry.getKey(), entry.getValue());
