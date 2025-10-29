@@ -39,26 +39,24 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * A simple showcase for substance extraction. Takes a CDX file as input. If none given, loads
- * the default test fixture from resources. Reads the CDX and extracts substances. Converts
- * each found substance to PNG and saves the resulting file to the working directory. The calculated 
+ * A simple showcase for substance extraction. Takes a CDX file as input. Reads the CDX and extracts substances. 
+ * Converts each found substance to PNG and saves the resulting file to the working directory. The calculated 
  * InChI key is the filename of the result files.
  */
 public class BCXTractSubstances {
 
   public static void main(String[] args) throws Exception {
+    if (args.length != 1) {
+      System.err.println("Input CDX file must be given as argument.");
+      System.exit(1);
+    }
     BCXTractSubstances bcx = new BCXTractSubstances();
-    bcx.extract(args.length > 0 ? args[0] : null);
+    bcx.extract(args[0]);
   }
 
   public void extract(String filename) throws Exception {
-    // load input CDX file - either from command-line args or resources
-    InputStream in = null;
-    if (filename == null) {
-      in = getClass().getResourceAsStream("/org/beilstein/chemxtract/tools/test_fixture.cdx");
-    } else {
-      in = new FileInputStream(filename);
-    }
+    // load input CDX file
+    InputStream in = new FileInputStream(filename);
 
     // parse CDX into in-memory model
     CDDocument document = CDXReader.readDocument(in);
@@ -70,6 +68,7 @@ public class BCXTractSubstances {
 
     // use CDK to generate a structure depiction, save as PNG output
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    int i=0;
     for (BCXSubstance bcxSubstance : bcxSubstances) {
       String outputfile = bcxSubstance.getInchiKey() + ".png";
       FileOutputStream fos = new FileOutputStream(outputfile);
@@ -85,7 +84,10 @@ public class BCXTractSubstances {
       d.writeTo(Depiction.PNG_FMT, fos);
       fos.flush();
       fos.close();
+      i++;
     }
+    
+    System.out.println("\n\n" + i + " substances extracted to current working directory.");
   }
 
 }

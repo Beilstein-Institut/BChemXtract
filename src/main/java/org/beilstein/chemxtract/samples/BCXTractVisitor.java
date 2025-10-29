@@ -39,18 +39,17 @@ public class BCXTractVisitor extends CDVisitor {
   private int visitedAtoms;
   
   public static void main(String[] args) throws Exception {
+    if (args.length != 1) {
+      System.err.println("Input CDX file must be given as argument.");
+      System.exit(1);
+    }
     BCXTractVisitor bcx = new BCXTractVisitor();
-    bcx.work(args.length > 0 ? args[0] : null);
+    bcx.work(args[0]);
   }
 
   public void work(String filename) throws Exception {
-    // load input CDX file - either from command-line args or resources
-    InputStream in = null;
-    if (filename == null) {
-      in = getClass().getResourceAsStream("/org/beilstein/chemxtract/tools/test_fixture.cdx");
-    } else {
-      in = new FileInputStream(filename);
-    }
+    // load input CDX file
+    InputStream in = new FileInputStream(filename);
 
     // parse CDX into in-memory model
     CDDocument document = CDXReader.readDocument(in);
