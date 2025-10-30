@@ -77,8 +77,8 @@ public class StereoHandler {
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
     return detector.containsSugarProjections()
-            ? extractSugarStereoElements(atomContainer)
-            : extractNonSugarStereoElements(atomContainer, atomMap);
+        ? extractSugarStereoElements(atomContainer)
+        : extractNonSugarStereoElements(atomContainer, atomMap);
   }
 
   /**
