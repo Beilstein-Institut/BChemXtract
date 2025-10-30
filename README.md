@@ -13,7 +13,7 @@ meaningful chemical structures and reactions from the parsed file. Structures an
 ## ChemDraw file specification
 The implementation of the parser was originally developed against the ChemDraw file specification that was published online for years at www.cambridgesoft.com.
 The website is offline nowadays, however the specification can still be browsed here:
-- [St. Olaf College](https://chemapps.stolaf.edu/iupac/cdx/sdk/index.htm)
+- [IUPAC](https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk)
 - [Wayback Machine](https://web.archive.org/web/20160225200221/http://www.cambridgesoft.com/services/documentation/sdk/chemdraw/cdx/)
 
 ## Getting started

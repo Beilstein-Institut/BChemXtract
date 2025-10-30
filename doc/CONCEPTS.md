@@ -1,7 +1,7 @@
 # Concepts
 
 ## Overall architecture
-This is the overall architecture of BChemXtract.
+This chapter briefly describes the overall architecture of BChemXtract.
 
 ChemDraw files exist in two incarnations: Either as the original binary file format (with .cdx being the file extension) or the newer XML format (.cdxml). For both formats, a parser exists that reads the data from the file system into a hierarchical in-memory model of Java objects, the CDX Object Model.
 
@@ -16,7 +16,7 @@ At the end of the workflow, the extraction software returns a set of substance o
 ![Overall architecture](ChemXtract_Architecture.png)
 
 ## CDX object model
-This is the ChemDraw object model, that is created in-memory during the parsing stage.
+Following we outline the ChemDraw object model, that is created in-memory during the parsing stage.
 
 | Object             | Description                                               |
 | ------------------ | --------------------------------------------------------- |
