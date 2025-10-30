@@ -27,7 +27,7 @@ import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
-import org.beilstein.chemxtract.cheminf.SugarRings;
+import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.stereo.Projection;
 import org.openscience.cdk.stereo.StereoElementFactory;
@@ -75,9 +75,10 @@ public class StereoHandler {
    */
   private static List<IStereoElement> getStereoElements(
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
-    return SugarRings.containsSugarRings(atomContainer)
-        ? extractSugarStereoElements(atomContainer)
-        : extractNonSugarStereoElements(atomContainer, atomMap);
+    SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
+    return detector.containsSugarProjections()
+            ? extractSugarStereoElements(atomContainer)
+            : extractNonSugarStereoElements(atomContainer, atomMap);
   }
 
   /**
