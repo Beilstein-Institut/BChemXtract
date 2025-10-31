@@ -255,9 +255,12 @@ public class SubstanceXtractor {
     // add AtomContainer
     substance.setAtomContainer(atomContainer);
     // set SMILES
-    String smiles =
-        Optional.ofNullable(ChemicalUtils.createAbsoluteSmiles(atomContainer))
-            .orElseGet(() -> ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical));
+    String smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
+    if (smiles == null) {
+      // Fallback to canonical SMILES
+      smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical);
+      logger.error("Generated canonical SMILES instead of absolute.");
+    }
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
     // set InChI, InChIKey and AuxInfo
@@ -281,7 +284,7 @@ public class SubstanceXtractor {
    * @param fragment the {@link CDFragment} containing abbreviations/nicknames
    * @throws IOException if fragment conversion fails
    */
-  private void addAbbreviations(BCXSubstance substance, CDFragment fragment) throws IOException {
+  private void addAbbreviations(BCXSubstance substance, CDFragment fragment) throws IOException, CDKException {
     FragmentConverter fragmentConverter = new FragmentConverter(builder);
 
     for (String abbreviation : fragmentConverter.getAbbreviations(fragment)) {

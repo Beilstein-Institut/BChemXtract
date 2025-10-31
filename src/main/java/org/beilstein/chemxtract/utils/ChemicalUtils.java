@@ -90,7 +90,7 @@ public class ChemicalUtils {
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
    * @return absolute SMILES string representing the structure of the AtomContainer
    */
-  public static String createAbsoluteSmiles(IAtomContainer atomContainer) {
+  public static String createAbsoluteSmiles(IAtomContainer atomContainer) throws CDKException {
     return createSmiles(atomContainer, SmiFlavor.Absolute);
   }
 
@@ -130,7 +130,7 @@ public class ChemicalUtils {
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
    * @return CXSMILES with coordinates, if all atoms have coordinates, otherwise null.
    */
-  public static String createExtendedSmiles(IAtomContainer atomContainer) {
+  public static String createExtendedSmiles(IAtomContainer atomContainer) throws CDKException {
     for (IAtom atom : atomContainer.atoms()) {
       if ((atom.getPoint2d() == null && atom.getPoint3d() == null)
           || hasDuplicateCoordinates(atomContainer)) {
@@ -172,7 +172,7 @@ public class ChemicalUtils {
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
    * @return absolute SMILES string representing the structure of the AtomContainer
    */
-  public static String createSmiles(IAtomContainer atomContainer, int flavor) {
+  public static String createSmiles(IAtomContainer atomContainer, int flavor) throws CDKException {
     String smiles = null;
     // flag absolute generates a canonical SMILES with stereochemistry and atomic masses (isomers)
     SmilesGenerator smilesGen = new SmilesGenerator(flavor);
@@ -190,7 +190,8 @@ public class ChemicalUtils {
         | IllegalArgumentException
         | CloneNotSupportedException
         | IllegalStateException anException) {
-      logger.error(anException + "; molecule name: " + atomContainer.getID(), anException);
+      logger.error(anException);
+      throw new CDKException("Unable to generate SMILES.", anException.getCause());
     }
     return smiles;
   }
