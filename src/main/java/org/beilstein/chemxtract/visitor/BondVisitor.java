@@ -73,8 +73,10 @@ public class BondVisitor extends CDVisitor {
       if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
       else bond.setEnd(conAtom);
     }
-    if (onlyElementsAtBond(bond) || isRGroupBond(bond) || isAbbreviationAtBond(bond))
-      bonds.add(bond);
+    if (onlyElementsAtBond(bond)
+        || isRGroupBond(bond)
+        || isMultiAttachmentBond(bond)
+        || isAbbreviationAtBond(bond)) bonds.add(bond);
   }
 
   /**
@@ -150,6 +152,17 @@ public class BondVisitor extends CDVisitor {
   private boolean hasNestedFragment(CDBond bond) {
     return (bond.getBegin() != null && !bond.getBegin().getFragments().isEmpty())
         || (bond.getEnd() != null && !bond.getEnd().getFragments().isEmpty());
+  }
+
+  /**
+   * Checks if the bond is connected to a multi attachment point.
+   *
+   * @param bond the bond to check
+   * @return true if either end is multi attachment, false otherwise.
+   */
+  private boolean isMultiAttachmentBond(CDBond bond) {
+    return CDNodeType.MultiAttachment.equals(bond.getBegin().getNodeType())
+        || CDNodeType.MultiAttachment.equals(bond.getEnd().getNodeType());
   }
 
   /**
