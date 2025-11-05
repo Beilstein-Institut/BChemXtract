@@ -284,7 +284,8 @@ public class SubstanceXtractor {
    * @param fragment the {@link CDFragment} containing abbreviations/nicknames
    * @throws IOException if fragment conversion fails
    */
-  private void addAbbreviations(BCXSubstance substance, CDFragment fragment) throws IOException, CDKException {
+  private void addAbbreviations(BCXSubstance substance, CDFragment fragment)
+      throws IOException, CDKException {
     FragmentConverter fragmentConverter = new FragmentConverter(builder);
 
     for (String abbreviation : fragmentConverter.getAbbreviations(fragment)) {

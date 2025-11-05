@@ -119,10 +119,12 @@ public class AtomConverter {
     }
     // set coordinates
     setCoordinates(atom, cdAtom);
+    // set implicit hydrogens
+    atom.setImplicitHydrogenCount(cdAtom.getNumImplicitHydrogens());
     // set formal charge
     setCharge(atom, cdAtom.getCharge());
     // check for isotopes
-    if (!isHydrogenIsotope(label)) {
+    if (!isHydrogenIsotope(label) && cdAtom.getIsotope() != 0) {
       try {
         configureIsotope(atom, cdAtom.getIsotope());
       } catch (IOException e) {

@@ -109,7 +109,7 @@ public class StereoHandler {
     List<IStereoElement> elements = selectFactory(atomContainer).createAll();
     if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
       //      return
-      elements.addAll(setTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
+      elements.addAll(getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
     }
     return elements;
   }
@@ -160,7 +160,7 @@ public class StereoHandler {
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom}
    * @return list of tetrahedral chirality stereo elements
    */
-  private static List<IStereoElement> setTetrahedralStereoByCDAtomCIPType(
+  private static List<IStereoElement> getTetrahedralStereoByCDAtomCIPType(
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     List<IStereoElement> stereoElements = new ArrayList<>();
     for (Map.Entry<CDAtom, IAtom> entry : atomMap.entrySet()) {
