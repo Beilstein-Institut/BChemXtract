@@ -21,19 +21,22 @@
  */
 package org.beilstein.chemxtract.visitor;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.beilstein.chemxtract.cdx.CDAtom;
-import org.beilstein.chemxtract.cdx.CDBond;
-import org.beilstein.chemxtract.cdx.CDFragment;
-import org.beilstein.chemxtract.cdx.CDVisitor;
+import java.io.IOException;
+import java.util.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
+import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
 import org.beilstein.chemxtract.utils.Definitions;
 
 /** Visitor class for traversing a ChemDraw fragment and collecting bond-related information. */
 public class BondVisitor extends CDVisitor {
 
   private final List<CDBond> bonds;
+  private final Set<CDBond> skip;
+  private static final Log logger = LogFactory.getLog(BondVisitor.class);
 
   /**
    * Constructs a {@code BondVisitor} and immediately traverses the provided fragment to collect
@@ -43,6 +46,7 @@ public class BondVisitor extends CDVisitor {
    */
   public BondVisitor(CDFragment fragment) {
     bonds = new ArrayList<>();
+    skip = new HashSet<>();
     fragment.accept(this);
   }
 
@@ -58,25 +62,29 @@ public class BondVisitor extends CDVisitor {
     // structure
     if (hasNestedFragment(bond)) {
       CDFragment fragment = getNestedFragment(bond);
+      // if nested fragment is unwanted abbreviation skip all nested bonds
+      if (isNestedFragmentUnwantedAbbreviation(bond)) {
+        skip.addAll(fragment.getBonds());
+      } else {
+        CDAtom extCon =
+            fragment.getAtoms().stream()
+                .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Missing external connection point in fragment: " + fragment));
 
-      CDAtom extCon =
-          fragment.getAtoms().stream()
-              .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
-              .findFirst()
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Missing external connection point in fragment: " + fragment));
-
-      CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
-
-      if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
-      else bond.setEnd(conAtom);
+        CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
+        if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
+        else bond.setEnd(conAtom);
+      }
     }
-    if (onlyElementsAtBond(bond)
-        || isRGroupBond(bond)
-        || isMultiAttachmentBond(bond)
-        || isAbbreviationAtBond(bond)) bonds.add(bond);
+    if ((onlyElementsAtBond(bond)
+            || isRGroupBond(bond)
+            || isMultiAttachmentBond(bond)
+            || isAbbreviationAtBond(bond))
+        && !skip.contains(bond)) bonds.add(bond);
   }
 
   /**
@@ -152,6 +160,27 @@ public class BondVisitor extends CDVisitor {
   private boolean hasNestedFragment(CDBond bond) {
     return (bond.getBegin() != null && !bond.getBegin().getFragments().isEmpty())
         || (bond.getEnd() != null && !bond.getEnd().getFragments().isEmpty());
+  }
+
+  private boolean isNestedFragmentUnwantedAbbreviation(CDBond bond) {
+    String textBegin =
+        Optional.ofNullable(bond.getBegin().getText())
+            .map(CDText::getText)
+            .map(CDStyledString::getText)
+            .orElseGet(() -> bond.getBegin().getLabelText());
+
+    String textEnd =
+        Optional.ofNullable(bond.getEnd().getText())
+            .map(CDText::getText)
+            .map(CDStyledString::getText)
+            .orElseGet(() -> bond.getEnd().getLabelText());
+
+    try {
+      return (UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd));
+    } catch (IOException e) {
+      logger.error("Unable to load unwanted abbreviations: " + e.getMessage());
+    }
+    return false;
   }
 
   /**

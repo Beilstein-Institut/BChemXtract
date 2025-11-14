@@ -76,7 +76,7 @@ public class StereoHandler {
   private static List<IStereoElement> getStereoElements(
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
-    return detector.containsSugarProjections()
+    return detector.containsChairProjections()
         ? extractSugarStereoElements(atomContainer)
         : extractNonSugarStereoElements(atomContainer, atomMap);
   }
