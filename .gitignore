@@ -30,3 +30,4 @@ replay_pid*
 
 /src/test/java/org/beilstein/chemxtract/volumeTest/
 /src/test/resources/volumeTest/
+/src/test/java/org/openscience/cdk/layout/
