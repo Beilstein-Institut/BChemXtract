@@ -38,6 +38,11 @@ public class IOUtils {
   public static final String ENCODING = "UTF-8";
 
   /**
+   * Private constructor to hide implicit public one.
+   */
+  private IOUtils(){}
+
+  /**
    * Write text into an {@link OutputStream} with the standard character encoding. Closing and
    * flushing the stream is not necessary.
    *
