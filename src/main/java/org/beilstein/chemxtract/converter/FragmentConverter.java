@@ -94,6 +94,19 @@ public class FragmentConverter {
   }
 
   /**
+   * Converts a ChemDraw {@link CDFragment} into an {@link IAtomContainer} using default conversion
+   * settings. This is a convenience method that delegates to {@link #convert(CDFragment, boolean)}
+   * with raw processing disabled (raw = false).
+   *
+   * @param fragment the {@link CDFragment} to convert
+   * @return an {@link IAtomContainer} representing the converted chemical structure
+   * @throws CDKException if an error occurs during the conversion process
+   */
+  public IAtomContainer convert(CDFragment fragment) throws CDKException {
+    return convert(fragment, false);
+  }
+
+  /**
    * Converts a ChemDraw {@link CDFragment} into a CDK {@link IAtomContainer}.
    *
    * <p>This method performs full reconstruction of the molecular graph: it converts atoms and
@@ -104,18 +117,18 @@ public class FragmentConverter {
    * @return the converted {@link IAtomContainer} representation
    * @throws CDKException if a conversion error occurs or invalid data is encountered
    */
-  public IAtomContainer convert(CDFragment fragment) throws CDKException {
+  public IAtomContainer convert(CDFragment fragment, boolean rawMode) throws CDKException {
     Objects.requireNonNull(fragment, "Instance of CDFragment must not be null.");
 
     // check for and "clean" dot allene
     checkForDotAllene(fragment);
 
     // get atoms
-    AtomVisitor atomVisitor = new AtomVisitor(fragment);
+    AtomVisitor atomVisitor = new AtomVisitor(fragment, rawMode);
     List<CDAtom> cdAtoms = atomVisitor.getAtoms();
 
     // get bonds
-    BondVisitor bondVisitor = new BondVisitor(fragment);
+    BondVisitor bondVisitor = new BondVisitor(fragment, rawMode);
     List<CDBond> cdBonds = bondVisitor.getBonds();
 
     // convert CDAtoms to IAtoms

@@ -36,23 +36,51 @@ import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
 /** Visitor class for traversing a ChemDraw fragment and collecting atom-related information. */
 public class AtomVisitor extends CDVisitor {
 
+  /** A list containing all {@link CDAtom} instances collected during traversal of the fragment. */
   private final List<CDAtom> atoms;
+
+  /** A map associating nickname strings with their corresponding {@link CDFragment} definitions. */
   private final Map<String, CDFragment> nicknames; // map for nicknames
+
+  /** A set containing all abbreviation strings encountered during fragment traversal. */
   private final Set<String> abbreviations;
+
+  /** A set of {@link CDAtom} instances that should be skipped during processing. */
   private final Set<CDAtom> skip;
+
+  /** Logger instance for this class, used for diagnostic and error reporting. */
   private static final Log logger = LogFactory.getLog(AtomVisitor.class);
 
   /**
+   * Flag indicating whether to process atoms in raw unfiltered, untreated mode. When {@code true},
+   * atoms are processed without additional transformations or interpretations.
+   */
+  private boolean rawMode;
+
+  /**
    * Constructs an {@code AtomVisitor} and immediately traverses the provided fragment to collect
-   * atoms, nicknames, and abbreviations.
+   * atoms, nicknames, and abbreviations. Uses default processing mode (raw = false).
    *
    * @param fragment the {@link CDFragment} to traverse
    */
   public AtomVisitor(CDFragment fragment) {
+    this(fragment, false);
+  }
+
+  /**
+   * Constructs an {@code AtomVisitor} with configurable raw processing mode and immediately
+   * traverses the provided fragment to collect atoms, nicknames, and abbreviations.
+   *
+   * @param fragment the {@link CDFragment} to traverse
+   * @param rawMode {@code true} to enable raw processing unfiltered, untreated mode, {@code false}
+   *     for standard processing
+   */
+  public AtomVisitor(CDFragment fragment, boolean rawMode) {
     atoms = new ArrayList<>();
     nicknames = new HashMap<>();
     abbreviations = new HashSet<>();
     skip = new HashSet<>();
+    this.rawMode = rawMode;
     fragment.accept(this);
   }
 
@@ -63,33 +91,37 @@ public class AtomVisitor extends CDVisitor {
    */
   @Override
   public void visitAtom(CDAtom node) {
-    // Extract primary node text, maybe null
-    String nickname =
-        Optional.ofNullable(node.getText())
-            .map(CDText::getText)
-            .map(CDStyledString::getText)
-            .orElseGet(node::getLabelText);
+    if (rawMode) {
+      atoms.add(node);
+    } else {
+      // Extract primary node text, maybe null
+      String nickname =
+          Optional.ofNullable(node.getText())
+              .map(CDText::getText)
+              .map(CDStyledString::getText)
+              .orElseGet(node::getLabelText);
 
-    // Collect internal fragment and its nickname
-    if (!node.getFragments().isEmpty()) {
-      CDFragment frag = node.getFragments().get(0);
-      if (!isUnwantedAbbreviation(nickname)) {
-        nicknames.putIfAbsent(nickname, frag);
-      } else {
-        skip.addAll(frag.getAtoms());
+      // Collect internal fragment and its nickname
+      if (!node.getFragments().isEmpty()) {
+        CDFragment frag = node.getFragments().get(0);
+        if (!isUnwantedAbbreviation(nickname)) {
+          nicknames.putIfAbsent(nickname, frag);
+        } else {
+          skip.addAll(frag.getAtoms());
+          abbreviations.add(nickname);
+          atoms.add(node);
+        }
+      }
+      // collect abbreviations that could not be handled by ChemDraw
+      else if ((!CDNodeType.Element.equals(node.getNodeType()) && nickname != null)
+          || isUnwantedAbbreviation(nickname)) {
         abbreviations.add(nickname);
         atoms.add(node);
       }
-    }
-    // collect abbreviations that could not be handled by ChemDraw
-    else if ((!CDNodeType.Element.equals(node.getNodeType()) && nickname != null)
-        || isUnwantedAbbreviation(nickname)) {
-      abbreviations.add(nickname);
-      atoms.add(node);
-    }
-    // Collect atoms
-    if (CDNodeType.Element.equals(node.getNodeType()) && !skip.contains(node)) {
-      atoms.add(node);
+      // Collect atoms
+      if (CDNodeType.Element.equals(node.getNodeType()) && !skip.contains(node)) {
+        atoms.add(node);
+      }
     }
   }
 
