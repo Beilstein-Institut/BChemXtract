@@ -51,7 +51,14 @@ public class BCXSubstance implements Serializable {
   /** Aux info collected during Inchi generation */
   private String auxInfo;
 
+  /**
+   * The atom container being constructed or processed by this converter. Holds the chemical
+   * structure representation including atoms, bonds, and associated properties.
+   */
   private IAtomContainer atomContainer;
+
+  /** The MDL V3000 format string representation of the chemical structure. */
+  private String mdlv3000;
 
   /** The occurrences of the substance within the manuscript */
   private Set<BCXSubstanceOccurrence> occurrences = new HashSet<BCXSubstanceOccurrence>();
@@ -149,6 +156,14 @@ public class BCXSubstance implements Serializable {
 
   public void addAbbreviation(String smiles, String label) {
     this.abbreviations.put(smiles, label);
+  }
+
+  public String getMdlv3000() {
+    return mdlv3000;
+  }
+
+  public void setMdlv3000(String mdlv3000) {
+    this.mdlv3000 = mdlv3000;
   }
 
   @Override

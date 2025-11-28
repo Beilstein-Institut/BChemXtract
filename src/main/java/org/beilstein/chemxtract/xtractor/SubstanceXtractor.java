@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +42,7 @@ import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.io.MDLV3000Writer;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
@@ -254,6 +256,14 @@ public class SubstanceXtractor {
     BCXSubstance substance = new BCXSubstance();
     // add AtomContainer
     substance.setAtomContainer(atomContainer);
+    // add MDLV3000 mol file as string
+    final StringWriter sw = new StringWriter();
+    try (final MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
+      mdlw.write(atomContainer);
+      substance.setMdlv3000(sw.toString());
+    } catch (IOException e) {
+      logger.error("Could not generate MDL V3000 mol file;");
+    }
     // set SMILES
     String smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
     if (smiles == null) {
@@ -303,7 +313,7 @@ public class SubstanceXtractor {
       CDFragment nested = entry.getValue();
       IAtomContainer nestedAc;
       try {
-        nestedAc = fragmentConverter.convert(nested);
+        nestedAc = fragmentConverter.convert(nested, true);
       } catch (CDKException e) {
         logger.error("Nested fragment could not be converted: " + nickname);
         continue;

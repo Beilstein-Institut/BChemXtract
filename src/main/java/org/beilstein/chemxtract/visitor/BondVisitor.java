@@ -37,6 +37,7 @@ public class BondVisitor extends CDVisitor {
   private final List<CDBond> bonds;
   private final Set<CDBond> skip;
   private static final Log logger = LogFactory.getLog(BondVisitor.class);
+  private boolean rawMode;
 
   /**
    * Constructs a {@code BondVisitor} and immediately traverses the provided fragment to collect
@@ -44,10 +45,29 @@ public class BondVisitor extends CDVisitor {
    *
    * @param fragment the {@link CDFragment} to traverse
    */
-  public BondVisitor(CDFragment fragment) {
+  /**
+   * Constructs a {@code BondVisitor} with configurable raw mode and immediately traverses the
+   * provided fragment to collect relevant bonds.
+   *
+   * @param fragment the {@link CDFragment} to traverse
+   * @param rawMode {@code true} to enable raw mode for abbreviation processing, {@code false} for
+   *     standard bond processing
+   */
+  public BondVisitor(CDFragment fragment, boolean rawMode) {
     bonds = new ArrayList<>();
     skip = new HashSet<>();
+    this.rawMode = rawMode;
     fragment.accept(this);
+  }
+
+  /**
+   * Constructs a {@code BondVisitor} and immediately traverses the provided fragment to collect
+   * relevant bonds. Uses default processing mode (raw mode = false).
+   *
+   * @param fragment the {@link CDFragment} to traverse
+   */
+  public BondVisitor(CDFragment fragment) {
+    this(fragment, false);
   }
 
   /**
@@ -57,34 +77,37 @@ public class BondVisitor extends CDVisitor {
    */
   @Override
   public void visitBond(CDBond bond) {
+    if (rawMode) {
+      bonds.add(bond);
+    } else {
+      // if one of the bonded atoms is fragment, add bonds of fragment and reconnect fragment to
+      // structure
+      if (hasNestedFragment(bond)) {
+        CDFragment fragment = getNestedFragment(bond);
+        // if nested fragment is unwanted abbreviation skip all nested bonds
+        if (isNestedFragmentUnwantedAbbreviation(bond)) {
+          skip.addAll(fragment.getBonds());
+        } else {
+          CDAtom extCon =
+              fragment.getAtoms().stream()
+                  .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
+                  .findFirst()
+                  .orElseThrow(
+                      () ->
+                          new IllegalArgumentException(
+                              "Missing external connection point in fragment: " + fragment));
 
-    // if one of the bonded atoms is fragment, add bonds of fragment and reconnect fragment to
-    // structure
-    if (hasNestedFragment(bond)) {
-      CDFragment fragment = getNestedFragment(bond);
-      // if nested fragment is unwanted abbreviation skip all nested bonds
-      if (isNestedFragmentUnwantedAbbreviation(bond)) {
-        skip.addAll(fragment.getBonds());
-      } else {
-        CDAtom extCon =
-            fragment.getAtoms().stream()
-                .filter(a -> CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
-                .findFirst()
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Missing external connection point in fragment: " + fragment));
-
-        CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
-        if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
-        else bond.setEnd(conAtom);
+          CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
+          if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
+          else bond.setEnd(conAtom);
+        }
       }
+      if ((onlyElementsAtBond(bond)
+              || isRGroupBond(bond)
+              || isMultiAttachmentBond(bond)
+              || isAbbreviationAtBond(bond))
+          && !skip.contains(bond)) bonds.add(bond);
     }
-    if ((onlyElementsAtBond(bond)
-            || isRGroupBond(bond)
-            || isMultiAttachmentBond(bond)
-            || isAbbreviationAtBond(bond))
-        && !skip.contains(bond)) bonds.add(bond);
   }
 
   /**
@@ -108,7 +131,11 @@ public class BondVisitor extends CDVisitor {
     return (!CDNodeType.Element.equals(bond.getBegin().getNodeType())
             && bond.getBegin().getChemicalWarning() != null)
         || (!CDNodeType.Element.equals(bond.getEnd().getNodeType())
-            && bond.getEnd().getChemicalWarning() != null);
+            && bond.getEnd().getChemicalWarning() != null)
+        || (CDNodeType.Fragment.equals(bond.getBegin().getNodeType())
+            || CDNodeType.Fragment.equals(bond.getEnd().getNodeType())
+            || CDNodeType.Nickname.equals(bond.getBegin().getNodeType())
+            || CDNodeType.Nickname.equals(bond.getEnd().getNodeType()));
   }
 
   /**
