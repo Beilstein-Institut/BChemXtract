@@ -106,15 +106,16 @@ public class ReactionXtractor {
       ReactionStepVisitor rsVisitor = new ReactionStepVisitor(page);
       List<CDReactionStep> steps = rsVisitor.getReactionSteps();
       for (CDReactionStep step : steps) {
-        try {
-          ReactionConverter reactionConverter =
-              new ReactionConverter(fragmentSubstanceMap, builder);
-          IReaction cdkReaction = reactionConverter.convert(step);
-          BCXReaction reaction = createBcxReaction(cdkReaction, atomContainerReactionComponentMap);
+
+        ReactionConverter reactionConverter = new ReactionConverter(fragmentSubstanceMap, builder);
+        Optional<IReaction> cdkReaction = reactionConverter.convert(step);
+        if (cdkReaction.isPresent()) {
+          BCXReaction reaction =
+              createBcxReaction(cdkReaction.get(), atomContainerReactionComponentMap);
           reactions.add(reaction);
           unknowns.addAll(reactionConverter.getUnknowns());
-        } catch (CDKException e) {
-          logger.error(e.getMessage());
+        } else {
+          logger.error("Could not convert reaction in document: " + document.getName());
         }
       }
     }

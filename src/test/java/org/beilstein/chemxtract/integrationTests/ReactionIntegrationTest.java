@@ -130,6 +130,48 @@ public class ReactionIntegrationTest {
   }
 
   @Test
+  public void backwards_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/backwards_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void backwards_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/backwards_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void forward_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/forward_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void forward_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/forward_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void reversible_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/reversible_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void reversible_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/reversible_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
   public void multi_direction_reaction_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/multi_direction_reaction.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);

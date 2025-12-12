@@ -91,22 +91,25 @@ public class ReactionConverter {
    * <p>
    *
    * @param reactionStep the ChemDraw {@link CDReactionStep} to convert
-   * @return a new {@link IReaction} object
-   * @throws CDKException if an error occurs during component conversion or SMILES parsing
+   * @return a new {@link IReaction} as an Optional object
    */
-  public IReaction convert(CDReactionStep reactionStep) throws CDKException {
+  public Optional<IReaction> convert(CDReactionStep reactionStep) {
     IReaction cdkReaction = new Reaction();
+    if (reactionStep.getReactants().isEmpty() || reactionStep.getProducts().isEmpty()) {
+      logger.error("Reaction has zero reactants or zero products.");
+      return Optional.empty();
+    }
     try {
       processReactionComponents(reactionStep.getReactants(), cdkReaction::addReactant);
       processReactionComponents(reactionStep.getProducts(), cdkReaction::addProduct);
       processReactionComponents(getAgents(reactionStep), cdkReaction::addAgent);
     } catch (IOException | CDKException e) {
       logger.error("Conversion of a reaction component has failed.", e);
-      return null;
+      return Optional.empty();
     }
     cdkReaction.setDirection(
         getReactionDirection(reactionStep, cdkReaction.getReactants(), cdkReaction.getProducts()));
-    return cdkReaction;
+    return Optional.of(cdkReaction);
   }
 
   /**
