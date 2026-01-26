@@ -52,7 +52,6 @@ public class ReactionXtractor {
   private final IChemObjectBuilder builder;
   private final Log logger = LogFactory.getLog(ReactionXtractor.class);
   private Set<String> unknowns;
-  private boolean sanitize = false;
 
   /**
    * Constructs a {@code ReactionXtractor} with a custom {@link IChemObjectBuilder}.
@@ -62,17 +61,6 @@ public class ReactionXtractor {
   public ReactionXtractor(IChemObjectBuilder builder) {
     this.builder = builder;
   }
-
-  public ReactionXtractor(IChemObjectBuilder builder, boolean sanitize) {
-    this.builder = builder;
-    this.sanitize = sanitize;
-  }
-
-  public ReactionXtractor(boolean sanitize) {
-    this(DefaultChemObjectBuilder.getInstance());
-    this.sanitize = sanitize;
-  }
-
 
   /** Constructs a {@code ReactionXtractor} using the default CDK object builder. */
   public ReactionXtractor() {
@@ -120,7 +108,7 @@ public class ReactionXtractor {
       for (CDReactionStep step : steps) {
         try {
           ReactionConverter reactionConverter =
-              new ReactionConverter(fragmentSubstanceMap, builder, this.sanitize);
+              new ReactionConverter(fragmentSubstanceMap, builder);
           IReaction cdkReaction = reactionConverter.convert(step);
           BCXReaction reaction = createBcxReaction(cdkReaction, atomContainerReactionComponentMap);
           reactions.add(reaction);

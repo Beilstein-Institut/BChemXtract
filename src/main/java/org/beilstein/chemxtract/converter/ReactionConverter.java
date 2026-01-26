@@ -68,7 +68,6 @@ public class ReactionConverter {
   private static final Log logger = LogFactory.getLog(ReactionConverter.class);
   private final Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap;
   private final Set<String> unknowns;
-  private boolean sanitize = false;
 
   /**
    * Constructs a {@code ReactionConverter} with the specified fragment–substance mapping and CDK
@@ -79,10 +78,9 @@ public class ReactionConverter {
    * @param builder the {@link IChemObjectBuilder} used to create CDK chemical objects
    */
   public ReactionConverter(
-      Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap, IChemObjectBuilder builder, boolean sanitize) {
+      Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap, IChemObjectBuilder builder) {
     this.fragmentsAtomContainerMap = fragmentsAtomContainerMap;
     this.builder = builder;
-    this.sanitize = sanitize;
     this.smilesParser = new SmilesParser(this.builder);
     this.unknowns = new HashSet<>();
   }
@@ -98,29 +96,10 @@ public class ReactionConverter {
    */
   public IReaction convert(CDReactionStep reactionStep) throws CDKException {
     IReaction cdkReaction = new Reaction();
-
-
-
-
-
     try {
-      for (Object reactant : reactionStep.getReactants()) {
-        if ( !isInLineWithArrow(reactant, reactionStep.getArrows())) {
-//          continue;
-          System.out.println(isInLineWithArrow(reactant, reactionStep.getArrows()));
-        }
-        processReactionComponents(reactant, cdkReaction::addReactant);
-      }
-      for (Object product : reactionStep.getProducts()) {
-        processReactionComponents(product, cdkReaction::addProduct);
-      }
-      for (Object agent : getAgents(reactionStep)) {
-        processReactionComponents(agent, cdkReaction::addAgent);
-      }
-
-//      processReactionComponents(reactionStep.getReactants(), cdkReaction::addReactant);
-//      processReactionComponents(reactionStep.getProducts(), cdkReaction::addProduct);
-//      processReactionComponents(getAgents(reactionStep), cdkReaction::addAgent);
+      processReactionComponents(reactionStep.getReactants(), cdkReaction::addReactant);
+      processReactionComponents(reactionStep.getProducts(), cdkReaction::addProduct);
+      processReactionComponents(getAgents(reactionStep), cdkReaction::addAgent);
     } catch (IOException | CDKException e) {
       logger.error("Conversion of a reaction component has failed.", e);
       return null;
@@ -145,10 +124,11 @@ public class ReactionConverter {
    * @throws CDKException if an error occurs while parsing SMILES or generating InChI identifiers
    */
   private void processReactionComponents(
-      Object component, Consumer<IAtomContainer> addCdkComponent)
+      List<Object> components, Consumer<IAtomContainer> addCdkComponent)
       throws CDKException, IOException {
 
-//    for (Object component : components) {
+    for (Object component : components) {
+
       if (component instanceof CDFragment fragment
           && fragmentsAtomContainerMap.containsKey(fragment)) {
         addCdkComponent.accept(fragmentsAtomContainerMap.get(fragment).getAtomContainer());
@@ -172,7 +152,7 @@ public class ReactionConverter {
           unknowns.add(text);
         }
       }
-//    }
+    }
   }
 
   /**
@@ -324,84 +304,6 @@ public class ReactionConverter {
               }
             })
         .toList();
-  }
-
-
-  /**
-   * Checks if a component lies on the infinite line defined by the bounding box
-   * diagonal of the first arrow in the list.
-   *
-   * @param component The object to check for intersection (must be an instance of {@code CDFragment}).
-   * @param arrows    A list of objects, where the first element is treated as the reference arrow
-   */
-  private boolean isInLineWithArrow(Object component, List<Object> arrows) {
-
-    if(!arrows.isEmpty() && (arrows.get(0) instanceof CDGraphic arrow) && (component instanceof CDFragment fragment)) {
-      return intersectsRectangle(
-              arrow.getBounds().getMinX(), arrow.getBounds().getMinY(),
-              arrow.getBounds().getMaxX(), arrow.getBounds().getMaxY(),
-              fragment.getBounds().getMinX(), fragment.getBounds().getMinY(),
-              fragment.getBounds().getMaxX(), fragment.getBounds().getMaxY()
-      );
-    }
-    return false;
-  }
-
-  /**
-   * Determines whether a line defined by two points intersects with
-   * an axis-aligned rectangle.
-   *
-   * <p>This method calculates the general line equation (ax + by + c = 0) passing
-   * through the points {@code (gx1, gy1)} and {@code (gx2, gy2)}. It then evaluates
-   * this equation at the four corners of the specified rectangle.
-   *
-   * <p>If the evaluated values of the corners include both non-positive and non-negative
-   * results, the rectangle lies on the line or crosses it (vertices are on opposite
-   * sides of the line). This method is based on the separation theorem.
-   *
-   * <p><strong>Note:</strong> This checks against an <em>infinite line</em>, not a
-   * line segment. Even if the segment defined by the {@code g} points is far away
-   * from the rectangle, this method will return {@code true} if the line extending
-   * through those points passes through the rectangle.
-   *
-   * @param gx1 The X coordinate of the first point defining the line.
-   * @param gy1 The Y coordinate of the first point defining the line.
-   * @param gx2 The X coordinate of the second point defining the line.
-   * @param gy2 The Y coordinate of the second point defining the line.
-   * @param rx1 The X coordinate of the first corner of the rectangle.
-   * @param ry1 The Y coordinate of the first corner of the rectangle.
-   * @param rx2 The X coordinate of the diagonally opposite corner of the rectangle.
-   * @param ry2 The Y coordinate of the diagonally opposite corner of the rectangle.
-   * @return {@code true} if the infinite line passes through or touches the rectangle;
-   * {@code false} if the rectangle lies entirely on one side of the line.
-   */
-  private boolean intersectsRectangle(
-          double gx1, double gy1,
-          double gx2, double gy2,
-          double rx1, double ry1,
-          double rx2, double ry2) {
-
-    // Line in normal form ax + by + c = 0
-    double a = gy2 - gy1;
-    double b = gx1 - gx2;
-    double c = gx2*gy1 - gx1*gy2;
-
-    // Rectangle formed by diagonal points
-    double xmin = Math.min(rx1, rx2);
-    double xmax = Math.max(rx1, rx2);
-    double ymin = Math.min(ry1, ry2);
-    double ymax = Math.max(ry1, ry2);
-
-    // Vertices
-    double f1 = a*xmin + b*ymin + c;
-    double f2 = a*xmin + b*ymax + c;
-    double f3 = a*xmax + b*ymin + c;
-    double f4 = a*xmax + b*ymax + c;
-
-    double min = Math.min(Math.min(f1,f2), Math.min(f3,f4));
-    double max = Math.max(Math.max(f1,f2), Math.max(f3,f4));
-
-    return min <= 0.0 && max >= 0.0;
   }
 
   /**
