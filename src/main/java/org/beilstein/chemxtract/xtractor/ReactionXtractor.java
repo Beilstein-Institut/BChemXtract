@@ -52,6 +52,7 @@ public class ReactionXtractor {
   private final IChemObjectBuilder builder;
   private final Log logger = LogFactory.getLog(ReactionXtractor.class);
   private Set<String> unknowns;
+  private boolean sanitize = false;
 
   /**
    * Constructs a {@code ReactionXtractor} with a custom {@link IChemObjectBuilder}.
@@ -60,6 +61,35 @@ public class ReactionXtractor {
    */
   public ReactionXtractor(IChemObjectBuilder builder) {
     this.builder = builder;
+  }
+
+  /**
+   * Constructs a {@code ReactionXtractor} with a custom {@link IChemObjectBuilder} and sanitization
+   * setting.
+   *
+   * @param builder the {@link IChemObjectBuilder} to be used for creating chemical objects
+   * @param sanitize if {@code true}, enables sanitization of the reaction during the conversion
+   *     process: only structures in line with the reaction arrow are considered; if {@code false},
+   *     reactions are processed as-is
+   */
+  public ReactionXtractor(IChemObjectBuilder builder, boolean sanitize) {
+    this.builder = builder;
+    this.sanitize = sanitize;
+  }
+
+  /**
+   * Constructs a {@code ReactionXtractor} using the default chemical object builder.
+   *
+   * <p>This convenience constructor uses {@link DefaultChemObjectBuilder#getInstance()} as the
+   * builder factory.
+   *
+   * @param sanitize if {@code true}, enables sanitization of the reaction during the conversion
+   *     process: only structures in line with the reaction arrow are considered; if {@code false},
+   *     reactions are processed as-is
+   */
+  public ReactionXtractor(boolean sanitize) {
+    this(DefaultChemObjectBuilder.getInstance());
+    this.sanitize = sanitize;
   }
 
   /** Constructs a {@code ReactionXtractor} using the default CDK object builder. */
@@ -106,8 +136,8 @@ public class ReactionXtractor {
       ReactionStepVisitor rsVisitor = new ReactionStepVisitor(page);
       List<CDReactionStep> steps = rsVisitor.getReactionSteps();
       for (CDReactionStep step : steps) {
-
-        ReactionConverter reactionConverter = new ReactionConverter(fragmentSubstanceMap, builder);
+        ReactionConverter reactionConverter =
+            new ReactionConverter(fragmentSubstanceMap, builder, this.sanitize);
         Optional<IReaction> cdkReaction = reactionConverter.convert(step);
         if (cdkReaction.isPresent()) {
           BCXReaction reaction =
