@@ -100,10 +100,6 @@ public class ReactionConverter {
    */
   public Optional<IReaction> convert(CDReactionStep reactionStep) {
     IReaction cdkReaction = new Reaction();
-    if (reactionStep.getReactants().isEmpty() || reactionStep.getProducts().isEmpty()) {
-      logger.error("Reaction has zero reactants or zero products.");
-      return Optional.empty();
-    }
     try {
       for (Object reactant : reactionStep.getReactants()) {
         if (this.sanitize && !isInLineWithArrow(reactant, reactionStep.getArrows())) {
@@ -112,10 +108,17 @@ public class ReactionConverter {
         processReactionComponents(reactant, cdkReaction::addReactant);
       }
       for (Object product : reactionStep.getProducts()) {
+        if (this.sanitize && !isInLineWithArrow(product, reactionStep.getArrows())) {
+          continue;
+        }
         processReactionComponents(product, cdkReaction::addProduct);
       }
       for (Object agent : getAgents(reactionStep)) {
         processReactionComponents(agent, cdkReaction::addAgent);
+      }
+      if (cdkReaction.getReactants().isEmpty() || cdkReaction.getProducts().isEmpty()) {
+        logger.error("Reaction has zero reactants or zero products.");
+        return Optional.empty();
       }
     } catch (IOException | CDKException e) {
       logger.error("Conversion of a reaction component has failed.", e);
