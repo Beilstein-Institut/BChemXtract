@@ -153,13 +153,15 @@ public class ReactionConverter {
       IAtomContainer groupContainer = builder.newAtomContainer();
       if (CDDocumentUtils.getFragmentsOfGroup(group).size() == 1) {
         CDFragment fragment = CDDocumentUtils.getFragmentsOfGroup(group).get(0);
-        groupContainer.add(fragmentsAtomContainerMap.get(fragment).getAtomContainer());
+        if (fragmentsAtomContainerMap.containsKey(fragment)) {
+          groupContainer.add(fragmentsAtomContainerMap.get(fragment).getAtomContainer());
+        } else {
+          return;
+        }
       }
       addCdkComponent.accept(groupContainer);
-
     } else if (component instanceof String text) {
       String key = text.toLowerCase();
-
       if (ReactionAgents.contains(key)) {
         IAtomContainer ac = smilesParser.parseSmiles(ReactionAgents.get(key));
         addCdkComponent.accept(ac);
