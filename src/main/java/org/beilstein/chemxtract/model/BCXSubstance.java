@@ -69,49 +69,31 @@ public class BCXSubstance implements Serializable {
    */
   private Map<String, String> abbreviations = new HashMap<String, String>();
 
-  /**
-   * The total number of atoms in the structure that are part of an aromatic system.
-   */
+  /** The total number of atoms in the structure that are part of an aromatic system. */
   private int aromaticAtomsCount;
 
-  /**
-   * The total number of bonds in the structure that are classified as aromatic.
-   */
+  /** The total number of bonds in the structure that are classified as aromatic. */
   private int aromaticBondsCount;
 
-  /**
-   * The total count of all atoms in the structure.
-   */
+  /** The total count of all atoms in the structure. */
   private int atomCount;
 
-  /**
-   * The number of hydrogen bond acceptor sites in the structure.
-   */
+  /** The number of hydrogen bond acceptor sites in the structure. */
   private int hBondAcceptorCount;
 
-  /**
-   * The number of hydrogen bond donor sites in the structure.
-   */
+  /** The number of hydrogen bond donor sites in the structure. */
   private int hBondDonorCount;
 
-  /**
-   * The number of atoms involved in the largest continuous pi system of the structure.
-   */
+  /** The number of atoms involved in the largest continuous pi system of the structure. */
   private int largestPiSystemCount;
 
-  /**
-   * The calculated molecular weight of the structure.
-   */
+  /** The calculated molecular weight of the structure. */
   private double weight;
 
-  /**
-   * The calculated monoisotopic mass of the structure.
-   */
+  /** The calculated monoisotopic mass of the structure. */
   private double exactMass;
 
-  /**
-   * The predicted XLogP (partition coefficient) value for the structure.
-   */
+  /** The predicted XLogP (partition coefficient) value for the structure. */
   private double xLogP;
 
   public BCXSubstance() {

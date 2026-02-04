@@ -28,9 +28,7 @@ import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-/**
- * Utility class providing static methods to calculate molecular qsar descriptors.
- */
+/** Utility class providing static methods to calculate molecular qsar descriptors. */
 public class Descriptors {
 
   // Pre-instantiate descriptors to avoid overhead on every method call
@@ -120,8 +118,8 @@ public class Descriptors {
   /**
    * Calculates the monoisotopic mass of the atom container.
    *
-   * <p>This method uses {@link AtomContainerManipulator#getMass} with the
-   * {@code MonoIsotopic} flag.
+   * <p>This method uses {@link AtomContainerManipulator#getMass} with the {@code MonoIsotopic}
+   * flag.
    *
    * @param atomContainer the {@link IAtomContainer} to inspect
    * @return the exact monoisotopic mass
