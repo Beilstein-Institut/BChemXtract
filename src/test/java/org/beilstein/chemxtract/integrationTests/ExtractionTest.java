@@ -106,7 +106,9 @@ public class ExtractionTest {
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXReaction> reactions = xtractor.xtract(document);
 
-    assertThat(reactions.size()).isEqualTo(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing abbreviation
+    assertThat(reactions.size())
+        .isEqualTo(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing
+    // abbreviation
     BCXReaction r0 = reactions.get(0);
     BCXReaction r1 = reactions.get(1);
     assertThat(r0).isNotEqualTo(r1);
