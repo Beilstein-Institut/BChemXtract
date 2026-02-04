@@ -33,6 +33,7 @@ import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.model.BCXSubstanceOccurrence;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
+import org.beilstein.chemxtract.utils.Descriptors;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
@@ -284,6 +285,17 @@ public class SubstanceXtractor {
     IMolecularFormula molecularFormula =
         MolecularFormulaManipulator.getMolecularFormula(atomContainer);
     substance.setMolecularFormula(MolecularFormulaManipulator.getString(molecularFormula));
+    // descriptors
+    substance.setAromaticAtomsCount(Descriptors.getAromaticAtomsCount(atomContainer));
+    substance.setAromaticBondsCount(Descriptors.getAromaticBondsCount(atomContainer));
+    substance.setAtomCount(Descriptors.getAtomCount(atomContainer));
+    substance.sethBondAcceptorCount(Descriptors.getHBondAcceptorCount(atomContainer));
+    substance.sethBondDonorCount(Descriptors.getHBondDonorCount(atomContainer));
+    substance.setLargestPiSystemCount(Descriptors.getLargestPiSystemCount(atomContainer));
+    substance.setWeight(Descriptors.getWeight(atomContainer));
+    substance.setExactMass(Descriptors.getExactMass(atomContainer));
+    substance.setxLogP(Descriptors.getXlogP(atomContainer));
+
     return substance;
   }
 

@@ -69,6 +69,51 @@ public class BCXSubstance implements Serializable {
    */
   private Map<String, String> abbreviations = new HashMap<String, String>();
 
+  /**
+   * The total number of atoms in the structure that are part of an aromatic system.
+   */
+  private int aromaticAtomsCount;
+
+  /**
+   * The total number of bonds in the structure that are classified as aromatic.
+   */
+  private int aromaticBondsCount;
+
+  /**
+   * The total count of all atoms in the structure.
+   */
+  private int atomCount;
+
+  /**
+   * The number of hydrogen bond acceptor sites in the structure.
+   */
+  private int hBondAcceptorCount;
+
+  /**
+   * The number of hydrogen bond donor sites in the structure.
+   */
+  private int hBondDonorCount;
+
+  /**
+   * The number of atoms involved in the largest continuous pi system of the structure.
+   */
+  private int largestPiSystemCount;
+
+  /**
+   * The calculated molecular weight of the structure.
+   */
+  private double weight;
+
+  /**
+   * The calculated monoisotopic mass of the structure.
+   */
+  private double exactMass;
+
+  /**
+   * The predicted XLogP (partition coefficient) value for the structure.
+   */
+  private double xLogP;
+
   public BCXSubstance() {
     super();
   }
@@ -192,5 +237,77 @@ public class BCXSubstance implements Serializable {
 
   public void setAtomContainer(IAtomContainer atomContainer) {
     this.atomContainer = atomContainer;
+  }
+
+  public int getAromaticAtomsCount() {
+    return aromaticAtomsCount;
+  }
+
+  public void setAromaticAtomsCount(int aromaticAtomsCount) {
+    this.aromaticAtomsCount = aromaticAtomsCount;
+  }
+
+  public int getAromaticBondsCount() {
+    return aromaticBondsCount;
+  }
+
+  public void setAromaticBondsCount(int aromaticBondsCount) {
+    this.aromaticBondsCount = aromaticBondsCount;
+  }
+
+  public int getAtomCount() {
+    return atomCount;
+  }
+
+  public void setAtomCount(int atomCount) {
+    this.atomCount = atomCount;
+  }
+
+  public int gethBondAcceptorCount() {
+    return hBondAcceptorCount;
+  }
+
+  public void sethBondAcceptorCount(int hBondAcceptorCount) {
+    this.hBondAcceptorCount = hBondAcceptorCount;
+  }
+
+  public int gethBondDonorCount() {
+    return hBondDonorCount;
+  }
+
+  public void sethBondDonorCount(int hBondDonorCount) {
+    this.hBondDonorCount = hBondDonorCount;
+  }
+
+  public int getLargestPiSystemCount() {
+    return largestPiSystemCount;
+  }
+
+  public void setLargestPiSystemCount(int largestPiSystemCount) {
+    this.largestPiSystemCount = largestPiSystemCount;
+  }
+
+  public double getWeight() {
+    return weight;
+  }
+
+  public void setWeight(double weight) {
+    this.weight = weight;
+  }
+
+  public double getExactMass() {
+    return exactMass;
+  }
+
+  public void setExactMass(double exactMass) {
+    this.exactMass = exactMass;
+  }
+
+  public double getxLogP() {
+    return xLogP;
+  }
+
+  public void setxLogP(double xLogP) {
+    this.xLogP = xLogP;
   }
 }

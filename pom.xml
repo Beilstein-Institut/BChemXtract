@@ -276,17 +276,29 @@
 			</exclusions>
 		</dependency>
 
-		<!--    <dependency>-->
-		<!--      <groupId>org.openscience.cdk</groupId>-->
-		<!--      <artifactId>cdk-bundle</artifactId>-->
-		<!--      <version>${cdk.version}</version>-->
-		<!--      <exclusions>-->
-		<!--        <exclusion>-->
-		<!--          <groupId>xml-apis</groupId>-->
-		<!--          <artifactId>xml-apis</artifactId>-->
-		<!--        </exclusion>-->
-		<!--      </exclusions>-->
-		<!--    </dependency>-->
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-qsarmolecular</artifactId>
+			<version>${cdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+<!--		    <dependency>-->
+<!--		      <groupId>org.openscience.cdk</groupId>-->
+<!--		      <artifactId>cdk-bundle</artifactId>-->
+<!--		      <version>${cdk.version}</version>-->
+<!--		      <exclusions>-->
+<!--		        <exclusion>-->
+<!--		          <groupId>xml-apis</groupId>-->
+<!--		          <artifactId>xml-apis</artifactId>-->
+<!--		        </exclusion>-->
+<!--		      </exclusions>-->
+<!--		    </dependency>-->
 
 		<!-- ================= Tests =========================== -->
 		<dependency>
