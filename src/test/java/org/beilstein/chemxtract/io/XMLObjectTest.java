@@ -39,21 +39,23 @@ public class XMLObjectTest {
   XMLObject child = new XMLObject();
   XMLObject grandchild = new XMLObject();
 
-  String xml =
-      """
-                  <?xml version="1.0" encoding="ASCII"?><root attname1="attval1" attname2="1" attname3="false" attname31="yes" attname4="3.14" attname5="1 2 3" attname6="a b c" attname61="a,b,c" attname7="dummy">
-                      text1
-                      <child>
-                          child text
-                          <grandchild>grandchild text</grandchild>
-                          child text
-                      </child>
-                      text1
-                  </root>
-                    """;
+  String xml;
 
   @Before
   public void setUp() throws Exception {
+
+    StringBuilder tmp = new StringBuilder();
+    tmp.append("<?xml version=\"1.0\" encoding=\"ASCII\"?><root attname1=\"attval1\" attname2=\"1\" attname3=\"false\" attname31=\"yes\" attname4=\"3.14\" attname5=\"1 2 3\" attname6=\"a b c\" attname61=\"a,b,c\" attname7=\"dummy\">").append(System.lineSeparator());
+    tmp.append("    text1").append(System.lineSeparator());
+    tmp.append("    <child>").append(System.lineSeparator());
+    tmp.append("        child text").append(System.lineSeparator());
+    tmp.append("        <grandchild>grandchild text</grandchild>").append(System.lineSeparator());
+    tmp.append("        child text").append(System.lineSeparator());
+    tmp.append("    </child>").append(System.lineSeparator());
+    tmp.append("    text1").append(System.lineSeparator());
+    tmp.append("</root>").append(System.lineSeparator());
+    xml = tmp.toString();
+    
     obj = new XMLObject();
     obj.setName("root");
     obj.setInstance(instance);
