@@ -436,6 +436,13 @@ public class CDAtom extends CDObject {
   public void accept(CDVisitor visitor) {
     visitor.visitAtom(this);
     for (CDFragment fragment : fragments) {
+      if (fragment.getBounds() == null) {
+        if (this.getBounds() != null) {
+          fragment.setBounds(this.getBounds());
+        } else if (this.text != null && this.text.getBounds() != null) {
+          fragment.setBounds(this.text.getBounds());
+        }
+      }
       fragment.accept(visitor);
     }
     if (text != null) {
