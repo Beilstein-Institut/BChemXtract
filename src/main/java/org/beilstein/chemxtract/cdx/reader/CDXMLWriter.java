@@ -1295,7 +1295,8 @@ public class CDXMLWriter {
     addAttribute(attributes, CDXMLProp_ArrowHeadType, curve.getArrowHeadType());
     addAttribute(attributes, CDXMLProp_ArrowHeadHead, curve.getArrowHeadPositionAtStart());
     addAttribute(attributes, CDXMLProp_ArrowHeadTail, curve.getArrowHeadPositionAtStart());
-    if (!curve.isClosed()) {
+
+    if (curve.isClosed()) {
       addAttribute(attributes, CDXMLProp_Closed, curve.isClosed());
     }
     if (curve.getSettings().getLineWidth() != 0) {
