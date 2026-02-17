@@ -635,6 +635,9 @@ public class CDXMLWriter {
     for (CDText text : fragment.getTexts()) {
       collectText(text);
     }
+    for (CDColoredMolecularArea area : fragment.getColoredMolecularAreas()) {
+      collectColoredMolecularArea(area);
+    }
   }
 
   private void writeFragment(CDFragment fragment) throws SAXException, IOException {
@@ -680,6 +683,9 @@ public class CDXMLWriter {
     }
     for (CDText text : fragment.getTexts()) {
       writeText(text);
+    }
+    for (CDColoredMolecularArea area : fragment.getColoredMolecularAreas()) {
+      writeColoredMolecularArea(area);
     }
     handler.endElement(NS, CDXMLObj_Fragment, CDXMLObj_Fragment);
   }
@@ -795,6 +801,21 @@ public class CDXMLWriter {
 
       handler.endElement(NS, CDXMLObj_String, CDXMLObj_String);
     }
+  }
+  
+  private void writeColoredMolecularArea(CDColoredMolecularArea area) throws SAXException, IOException {
+    AttributesImpl attributes = new AttributesImpl();
+    addReferenceAttribute(attributes, CDXMLProp_Id, area);
+    addAttribute(attributes, CDXMLProp_BackgroundColor, area.getBackgroundColor());
+    addReferenceListAttribute(attributes, CDXMLProp_BasisObjects, area.getBasisObjects());
+
+    handler.startElement(NS, CDXMLObj_ColoredMolecularArea, CDXMLObj_ColoredMolecularArea, attributes);
+    handler.endElement(NS, CDXMLObj_ColoredMolecularArea, CDXMLObj_ColoredMolecularArea);
+  }
+  
+  private void collectColoredMolecularArea(CDColoredMolecularArea area) {
+    collectReference(area);
+    collectColor(area.getBackgroundColor());
   }
 
   private void collectNode(CDAtom node) {
