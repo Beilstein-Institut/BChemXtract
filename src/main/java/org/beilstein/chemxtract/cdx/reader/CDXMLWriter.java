@@ -802,17 +802,19 @@ public class CDXMLWriter {
       handler.endElement(NS, CDXMLObj_String, CDXMLObj_String);
     }
   }
-  
-  private void writeColoredMolecularArea(CDColoredMolecularArea area) throws SAXException, IOException {
+
+  private void writeColoredMolecularArea(CDColoredMolecularArea area)
+      throws SAXException, IOException {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLProp_Id, area);
     addAttribute(attributes, CDXMLProp_BackgroundColor, area.getBackgroundColor());
     addReferenceListAttribute(attributes, CDXMLProp_BasisObjects, area.getBasisObjects());
 
-    handler.startElement(NS, CDXMLObj_ColoredMolecularArea, CDXMLObj_ColoredMolecularArea, attributes);
+    handler.startElement(
+        NS, CDXMLObj_ColoredMolecularArea, CDXMLObj_ColoredMolecularArea, attributes);
     handler.endElement(NS, CDXMLObj_ColoredMolecularArea, CDXMLObj_ColoredMolecularArea);
   }
-  
+
   private void collectColoredMolecularArea(CDColoredMolecularArea area) {
     collectReference(area);
     collectColor(area.getBackgroundColor());
