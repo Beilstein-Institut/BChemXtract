@@ -21,9 +21,15 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import junit.framework.TestCase;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
+import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 import org.beilstein.chemxtract.cdx.reader.CDXUtils;
+import org.junit.Test;
 
 public class CDXUtilsTest extends TestCase {
 
@@ -220,5 +226,67 @@ public class CDXUtilsTest extends TestCase {
 
     assertFalse(expected.hashCode() == actual.hashCode());
     assertFalse(expected.equals(actual));
+  }
+
+  @Test
+  public void testConvertFontType() {
+    CDFontFace ff = new CDFontFace();
+    ff.setBold(true);
+    ff.setFormula(true);
+    ff.setItalic(true);
+    ff.setOutline(true);
+    ff.setPlain(true);
+    ff.setShadow(true);
+    ff.setSubscript(true);
+    ff.setSuperscript(true);
+    ff.setUnderline(true);
+
+    int c = CDXUtils.convertFontType(ff);
+    assertEquals(84, c);
+  }
+
+  @Test
+  public void testConvertIntToFontFace() {
+    CDFontFace ff = CDXUtils.convertIntToFontFace(127);
+    assertTrue(ff.isBold());
+    assertTrue(ff.isItalic());
+    assertTrue(ff.isUnderline());
+    assertTrue(ff.isOutline());
+    assertTrue(ff.isShadow());
+  }
+
+  @Test
+  public void testConvertIntToSplineType() {
+    CDSplineType st = CDXUtils.convertIntToSplineType(1023);
+    assertTrue(st.isClosed());
+    assertTrue(st.isDashed());
+    assertTrue(st.isBold());
+    assertTrue(st.isArrowAtEnd());
+    assertTrue(st.isArrowAtStart());
+    assertTrue(st.isHalfArrowAtEnd());
+    assertTrue(st.isHalfArrowAtStart());
+    assertTrue(st.isFilled());
+    assertTrue(st.isShaded());
+    assertTrue(st.isDoubled());
+  }
+
+  @Test
+  public void testConvertCurveTypeToInt() {
+    CDSplineType st = new CDSplineType();
+    st.setArrowAtEnd(true);
+    st.setArrowAtStart(true);
+    st.setBold(true);
+    st.setClosed(true);
+    st.setDashed(true);
+    st.setDoubled(true);
+    st.setFilled(true);
+    st.setShaded(true);
+    st.setHalfArrowAtEnd(true);
+    st.setHalfArrowAtStart(true);
+
+    assertEquals(1023, CDXUtils.convertCurveTypeToInt(st));
+    st.setPlain(true);
+    assertTrue(st.isPlain());
+    assertEquals(0, CDXUtils.convertCurveTypeToInt(st));
   }
 }
