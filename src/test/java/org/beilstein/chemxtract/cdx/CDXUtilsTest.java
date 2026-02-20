@@ -24,10 +24,20 @@ package org.beilstein.chemxtract.cdx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import junit.framework.TestCase;
+
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
+import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
+import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
+import org.beilstein.chemxtract.cdx.reader.CDXProperty;
 import org.beilstein.chemxtract.cdx.reader.CDXUtils;
 import org.junit.Test;
 
@@ -288,5 +298,129 @@ public class CDXUtilsTest extends TestCase {
     st.setPlain(true);
     assertTrue(st.isPlain());
     assertEquals(0, CDXUtils.convertCurveTypeToInt(st));
+  }
+  
+  @Test
+  public void testReadBondCIPTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDBondCIPType.Undetermined, CDXUtils.readBondCIPTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDBondCIPType.None, CDXUtils.readBondCIPTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDBondCIPType.E, CDXUtils.readBondCIPTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDBondCIPType.Z, CDXUtils.readBondCIPTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDBondCIPType.Undetermined, CDXUtils.readBondCIPTypeProperty(property));
+  }
+  
+  @Test
+  public void testReadTextJustificationProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x0-1});
+    assertEquals(CDJustification.Right, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x00});
+    assertEquals(CDJustification.Left, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDJustification.Center, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDJustification.Full, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDJustification.Above, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDJustification.Below, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDJustification.Auto, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDJustification.BestInitial, CDXUtils.readTextJustificationProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDJustification.Auto, CDXUtils.readTextJustificationProperty(property));
+  }
+  
+  @Test
+  public void testReadPageDefinitionProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDPageDefinition.Undefined, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDPageDefinition.Center, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDPageDefinition.TL4, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDPageDefinition.IDTerm, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDPageDefinition.FlushLeft, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDPageDefinition.FlushRight, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDPageDefinition.Reaction1, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDPageDefinition.Reaction2, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x08});
+    assertEquals(CDPageDefinition.MulticolumnTL4, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x09});
+    assertEquals(CDPageDefinition.MulticolumnNonTL4, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x0a});
+    assertEquals(CDPageDefinition.UserDefined, CDXUtils.readPageDefinitionProperty(property));
+    property.setData(new byte[] {0x0b});
+    assertEquals(CDPageDefinition.Undefined, CDXUtils.readPageDefinitionProperty(property));
+
+  }
+  
+  @Test
+  public void testReadDrawingSpaceTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDDrawingSpaceType.Pages, CDXUtils.readDrawingSpaceTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDDrawingSpaceType.Poster, CDXUtils.readDrawingSpaceTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDDrawingSpaceType.Pages, CDXUtils.readDrawingSpaceTypeProperty(property));
+
+  }
+  
+  @Test
+  public void testReadUnsaturationProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+    
+    property.setData(new byte[] {0x00});
+    assertEquals(CDUnsaturation.Unspecified, CDXUtils.readUnsaturationProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDUnsaturation.MustBeAbsent, CDXUtils.readUnsaturationProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDUnsaturation.MustBePresent, CDXUtils.readUnsaturationProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDUnsaturation.Unspecified, CDXUtils.readUnsaturationProperty(property));
+  }
+  
+  @Test
+  public void testReadExternalConnectionTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+    
+    property.setData(new byte[] {0x00});
+    assertEquals(CDExternalConnectionType.Unspecified, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDExternalConnectionType.Diamond, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDExternalConnectionType.Star, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDExternalConnectionType.PolymerBead, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDExternalConnectionType.Wavy, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDExternalConnectionType.Residue, CDXUtils.readExternalConnectionTypeProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDExternalConnectionType.Unspecified, CDXUtils.readExternalConnectionTypeProperty(property));
   }
 }
