@@ -25,17 +25,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-
 import junit.framework.TestCase;
 
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
 import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
 import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
+import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
 import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 import org.beilstein.chemxtract.cdx.reader.CDXProperty;
 import org.beilstein.chemxtract.cdx.reader.CDXUtils;
@@ -299,7 +303,7 @@ public class CDXUtilsTest extends TestCase {
     assertTrue(st.isPlain());
     assertEquals(0, CDXUtils.convertCurveTypeToInt(st));
   }
-  
+
   @Test
   public void testReadBondCIPTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -316,13 +320,13 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x04});
     assertEquals(CDBondCIPType.Undetermined, CDXUtils.readBondCIPTypeProperty(property));
   }
-  
+
   @Test
   public void testReadTextJustificationProperty() throws IOException {
     CDXProperty property = new CDXProperty();
     property.setLength(1);
 
-    property.setData(new byte[] {0x0-1});
+    property.setData(new byte[] {0x0 - 1});
     assertEquals(CDJustification.Right, CDXUtils.readTextJustificationProperty(property));
     property.setData(new byte[] {0x00});
     assertEquals(CDJustification.Left, CDXUtils.readTextJustificationProperty(property));
@@ -341,7 +345,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x07});
     assertEquals(CDJustification.Auto, CDXUtils.readTextJustificationProperty(property));
   }
-  
+
   @Test
   public void testReadPageDefinitionProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -371,9 +375,8 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDPageDefinition.UserDefined, CDXUtils.readPageDefinitionProperty(property));
     property.setData(new byte[] {0x0b});
     assertEquals(CDPageDefinition.Undefined, CDXUtils.readPageDefinitionProperty(property));
-
   }
-  
+
   @Test
   public void testReadDrawingSpaceTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -385,14 +388,13 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDDrawingSpaceType.Poster, CDXUtils.readDrawingSpaceTypeProperty(property));
     property.setData(new byte[] {0x02});
     assertEquals(CDDrawingSpaceType.Pages, CDXUtils.readDrawingSpaceTypeProperty(property));
-
   }
-  
+
   @Test
   public void testReadUnsaturationProperty() throws IOException {
     CDXProperty property = new CDXProperty();
     property.setLength(1);
-    
+
     property.setData(new byte[] {0x00});
     assertEquals(CDUnsaturation.Unspecified, CDXUtils.readUnsaturationProperty(property));
     property.setData(new byte[] {0x01});
@@ -402,25 +404,155 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x03});
     assertEquals(CDUnsaturation.Unspecified, CDXUtils.readUnsaturationProperty(property));
   }
-  
+
   @Test
   public void testReadExternalConnectionTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
     property.setLength(1);
-    
+
     property.setData(new byte[] {0x00});
-    assertEquals(CDExternalConnectionType.Unspecified, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Unspecified,
+        CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x01});
-    assertEquals(CDExternalConnectionType.Diamond, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Diamond, CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x02});
-    assertEquals(CDExternalConnectionType.Star, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Star, CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x03});
-    assertEquals(CDExternalConnectionType.PolymerBead, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.PolymerBead,
+        CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x04});
-    assertEquals(CDExternalConnectionType.Wavy, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Wavy, CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x05});
-    assertEquals(CDExternalConnectionType.Residue, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Residue, CDXUtils.readExternalConnectionTypeProperty(property));
     property.setData(new byte[] {0x06});
-    assertEquals(CDExternalConnectionType.Unspecified, CDXUtils.readExternalConnectionTypeProperty(property));
+    assertEquals(
+        CDExternalConnectionType.Unspecified,
+        CDXUtils.readExternalConnectionTypeProperty(property));
   }
+  
+  @Test
+  public void testReadAbundanceProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDIsotopicAbundance.Unspecified, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDIsotopicAbundance.Any, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDIsotopicAbundance.Natural, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDIsotopicAbundance.Enriched, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDIsotopicAbundance.Deficient, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDIsotopicAbundance.Nonnatural, CDXUtils.readAbundanceProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDIsotopicAbundance.Unspecified, CDXUtils.readAbundanceProperty(property));
+  }
+
+  @Test
+  public void testReadTranslationProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDTranslation.Equal, CDXUtils.readTranslationProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDTranslation.Broad, CDXUtils.readTranslationProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDTranslation.Narrow, CDXUtils.readTranslationProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDTranslation.Any, CDXUtils.readTranslationProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(null, CDXUtils.readTranslationProperty(property));
+  }
+
+  @Test
+  public void testReadAtomCIPTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDAtomCIPType.Undetermined, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDAtomCIPType.None, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDAtomCIPType.R, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDAtomCIPType.S, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDAtomCIPType.PseudoR, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDAtomCIPType.PseudoS, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDAtomCIPType.Unspecified, CDXUtils.readAtomCIPTypeProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDAtomCIPType.Unspecified, CDXUtils.readAtomCIPTypeProperty(property));
+  }
+
+  @Test
+  public void testReadAtomGeometryProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDAtomGeometry.Unknown, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDAtomGeometry.OneLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDAtomGeometry.Linear, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDAtomGeometry.Bent, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDAtomGeometry.TrigonalPlanar, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDAtomGeometry.TrigonalPyramidal, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDAtomGeometry.SquarePlanar, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDAtomGeometry.Tetrahedral, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x08});
+    assertEquals(CDAtomGeometry.TrigonalBipyramidal, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x09});
+    assertEquals(CDAtomGeometry.SquarePyramidal, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0a});
+    assertEquals(CDAtomGeometry.FiveLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0b});
+    assertEquals(CDAtomGeometry.Octahedral, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0c});
+    assertEquals(CDAtomGeometry.SixLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0d});
+    assertEquals(CDAtomGeometry.SevenLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0e});
+    assertEquals(CDAtomGeometry.EightLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x0f});
+    assertEquals(CDAtomGeometry.NineLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x10});
+    assertEquals(CDAtomGeometry.TenLigand, CDXUtils.readAtomGeometryProperty(property));
+    property.setData(new byte[] {0x11});
+    assertEquals(CDAtomGeometry.Unknown, CDXUtils.readAtomGeometryProperty(property));
+  }
+  
+  @Test
+  public void testReadReactionStereoProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDReactionStereo.Unspecified, CDXUtils.readReactionStereoProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDReactionStereo.Inversion, CDXUtils.readReactionStereoProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDReactionStereo.Retention, CDXUtils.readReactionStereoProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDReactionStereo.Unspecified, CDXUtils.readReactionStereoProperty(property));
+  }
+
 }
