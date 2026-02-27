@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import junit.framework.TestCase;
-
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
@@ -453,7 +452,7 @@ public class CDXUtilsTest extends TestCase {
         CDExternalConnectionType.Unspecified,
         CDXUtils.readExternalConnectionTypeProperty(property));
   }
-  
+
   @Test
   public void testReadAbundanceProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -557,7 +556,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x11});
     assertEquals(CDAtomGeometry.Unknown, CDXUtils.readAtomGeometryProperty(property));
   }
-  
+
   @Test
   public void testReadReactionStereoProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -613,7 +612,6 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDLabelDisplay.Auto, CDXUtils.readLabelDisplayProperty(property));
   }
 
-
   @Test
   public void testReadNodeTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -650,30 +648,48 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x0e, 0x00});
     assertEquals(CDNodeType.Unspecified, CDXUtils.readNodeTypeProperty(property));
   }
-  
+
   @Test
   public void testReadBondReactionParticipationProperty() throws IOException {
     CDXProperty property = new CDXProperty();
     property.setLength(1);
 
     property.setData(new byte[] {0x00});
-    assertEquals(CDBondReactionParticipation.Unspecified, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.Unspecified,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x01});
-    assertEquals(CDBondReactionParticipation.ReactionCenter, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.ReactionCenter,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x02});
-    assertEquals(CDBondReactionParticipation.MakeOrBreak, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.MakeOrBreak,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x03});
-    assertEquals(CDBondReactionParticipation.ChangeType, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.ChangeType,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x04});
-    assertEquals(CDBondReactionParticipation.MakeAndChange, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.MakeAndChange,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x05});
-    assertEquals(CDBondReactionParticipation.NotReactionCenter, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.NotReactionCenter,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x06});
-    assertEquals(CDBondReactionParticipation.NoChange, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.NoChange,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x07});
-    assertEquals(CDBondReactionParticipation.Unmapped, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.Unmapped,
+        CDXUtils.readBondReactionParticipationProperty(property));
     property.setData(new byte[] {0x08});
-    assertEquals(CDBondReactionParticipation.Unspecified, CDXUtils.readBondReactionParticipationProperty(property));
+    assertEquals(
+        CDBondReactionParticipation.Unspecified,
+        CDXUtils.readBondReactionParticipationProperty(property));
   }
 
   @Test
@@ -693,20 +709,21 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDBondTopology.Unspecified, CDXUtils.readBondTopologyProperty(property));
   }
 
-
   @Test
   public void testReadBondDoublePositionProperty() throws IOException {
     CDXProperty property = new CDXProperty();
     property.setLength(2);
 
     property.setData(new byte[] {0x00, 0x00});
-    assertEquals(CDBondDoublePosition.AutoCenter, CDXUtils.readBondDoublePositionProperty(property));
+    assertEquals(
+        CDBondDoublePosition.AutoCenter, CDXUtils.readBondDoublePositionProperty(property));
     property.setData(new byte[] {0x01, 0x00});
     assertEquals(CDBondDoublePosition.AutoRight, CDXUtils.readBondDoublePositionProperty(property));
     property.setData(new byte[] {0x02, 0x00});
     assertEquals(CDBondDoublePosition.AutoLeft, CDXUtils.readBondDoublePositionProperty(property));
     property.setData(new byte[] {0x00, 0x01});
-    assertEquals(CDBondDoublePosition.UserCenter, CDXUtils.readBondDoublePositionProperty(property));
+    assertEquals(
+        CDBondDoublePosition.UserCenter, CDXUtils.readBondDoublePositionProperty(property));
     property.setData(new byte[] {0x01, 0x01});
     assertEquals(CDBondDoublePosition.UserRight, CDXUtils.readBondDoublePositionProperty(property));
     property.setData(new byte[] {0x02, 0x01});
@@ -714,7 +731,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x03, 0x01});
     assertEquals(null, CDXUtils.readBondDoublePositionProperty(property));
   }
-  
+
   @Test
   public void testReadBondDisplayProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -754,7 +771,6 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDBondDisplay.Solid, CDXUtils.readBondDisplayProperty(property));
   }
 
-  
   @Test
   public void testReadBondOrdersProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -774,7 +790,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDBondOrder.Sextuple, CDXUtils.readBondOrdersProperty(property));
     property.setData(new byte[] {0x40, 0x00});
     assertEquals(CDBondOrder.Half, CDXUtils.readBondOrdersProperty(property));
-    property.setData(new byte[] {(byte)0x80, 0x00});
+    property.setData(new byte[] {(byte) 0x80, 0x00});
     assertEquals(CDBondOrder.OneHalf, CDXUtils.readBondOrdersProperty(property));
     property.setData(new byte[] {0x00, 0x01});
     assertEquals(CDBondOrder.TwoHalf, CDXUtils.readBondOrdersProperty(property));
@@ -792,13 +808,12 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDBondOrder.Hydrogen, CDXUtils.readBondOrdersProperty(property));
     property.setData(new byte[] {0x03, 0x00});
     assertEquals(CDBondOrder.SingleOrDouble, CDXUtils.readBondOrdersProperty(property));
-    property.setData(new byte[] {(byte)0x81, 0x00});
+    property.setData(new byte[] {(byte) 0x81, 0x00});
     assertEquals(CDBondOrder.SingleOrAromatic, CDXUtils.readBondOrdersProperty(property));
-    property.setData(new byte[] {(byte)0x82, 0x00});
+    property.setData(new byte[] {(byte) 0x82, 0x00});
     assertEquals(CDBondOrder.DoubleOrAromatic, CDXUtils.readBondOrdersProperty(property));
-    property.setData(new byte[] {(byte)0x84, 0x00});
+    property.setData(new byte[] {(byte) 0x84, 0x00});
     assertEquals(CDBondOrder.Single, CDXUtils.readBondOrdersProperty(property));
-
   }
 
   @Test
@@ -825,7 +840,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x08});
     assertEquals(CDGraphicType.Undefined, CDXUtils.readGraphicTypeProperty(property));
   }
-  
+
   @Test
   public void testReadLineTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -843,7 +858,7 @@ public class CDXUtilsTest extends TestCase {
     assertTrue(lt.isDashed());
     assertFalse(lt.isBold());
     assertFalse(lt.isWavy());
-  
+
     property.setData(new byte[] {0x02});
     lt = CDXUtils.readLineTypeProperty(property);
     assertFalse(lt.isSolid());
@@ -857,7 +872,7 @@ public class CDXUtilsTest extends TestCase {
     assertFalse(lt.isDashed());
     assertFalse(lt.isBold());
     assertTrue(lt.isWavy());
-  
+
     property.setData(new byte[] {0x07});
     lt = CDXUtils.readLineTypeProperty(property);
     assertFalse(lt.isSolid());
@@ -888,7 +903,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x07});
     assertEquals(CDArrowType.NoHead, CDXUtils.readArrowTypeProperty(property));
   }
-  
+
   @Test
   public void testReadRectangleTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -901,7 +916,6 @@ public class CDXUtilsTest extends TestCase {
     assertTrue(rt.isFilled());
     assertFalse(rt.isBold());
     assertFalse(rt.isDashed());
-    
   }
 
   @Test
@@ -916,7 +930,6 @@ public class CDXUtilsTest extends TestCase {
     assertTrue(ot.isDashed());
     assertFalse(ot.isBold());
     assertFalse(ot.isShadowed());
-    
   }
 
   @Test
@@ -937,7 +950,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x05, 0x00});
     assertEquals(CDFillType.Unspecified, CDXUtils.readFillTypeProperty(property));
   }
-  
+
   @Test
   public void testReadOrbitalTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -990,7 +1003,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x09, 0x02});
     assertEquals(null, CDXUtils.readOrbitalTypeProperty(property));
   }
-  
+
   @Test
   public void testReadBracketTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -1011,7 +1024,7 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x06});
     assertEquals(null, CDXUtils.readBracketTypeProperty(property));
   }
-  
+
   @Test
   public void testReadSymbolTypeProperty() throws IOException {
     CDXProperty property = new CDXProperty();
@@ -1091,7 +1104,4 @@ public class CDXUtilsTest extends TestCase {
     property.setData(new byte[] {0x13});
     assertEquals(CDBracketUsage.Unspecified, CDXUtils.readBracketUsageProperty(property));
   }
-
-
-
 }
