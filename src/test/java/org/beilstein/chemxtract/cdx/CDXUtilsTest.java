@@ -36,6 +36,8 @@ import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
 import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
@@ -47,12 +49,14 @@ import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
 import org.beilstein.chemxtract.cdx.datatypes.CDOvalType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
 import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
 import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
 import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
 import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 import org.beilstein.chemxtract.cdx.reader.CDXProperty;
@@ -934,5 +938,160 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDFillType.Unspecified, CDXUtils.readFillTypeProperty(property));
   }
   
+  @Test
+  public void testReadOrbitalTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDOrbitalType.s, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDOrbitalType.oval, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDOrbitalType.lobe, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDOrbitalType.p, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDOrbitalType.hybridPlus, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDOrbitalType.hybridMinus, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x06, 0x00});
+    assertEquals(CDOrbitalType.dz2Plus, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x07, 0x00});
+    assertEquals(CDOrbitalType.dz2Minus, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x08, 0x00});
+    assertEquals(CDOrbitalType.dxy, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x00, 0x01});
+    assertEquals(CDOrbitalType.sShaded, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x01});
+    assertEquals(CDOrbitalType.ovalShaded, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x01});
+    assertEquals(CDOrbitalType.lobeShaded, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x01});
+    assertEquals(CDOrbitalType.pShaded, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x00, 0x02});
+    assertEquals(CDOrbitalType.sFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x02});
+    assertEquals(CDOrbitalType.ovalFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x02});
+    assertEquals(CDOrbitalType.lobeFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x02});
+    assertEquals(CDOrbitalType.pFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x02});
+    assertEquals(CDOrbitalType.hybridPlusFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x02});
+    assertEquals(CDOrbitalType.hybridMinusFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x06, 0x02});
+    assertEquals(CDOrbitalType.dz2PlusFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x07, 0x02});
+    assertEquals(CDOrbitalType.dz2MinusFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x08, 0x02});
+    assertEquals(CDOrbitalType.dxyFilled, CDXUtils.readOrbitalTypeProperty(property));
+    property.setData(new byte[] {0x09, 0x02});
+    assertEquals(null, CDXUtils.readOrbitalTypeProperty(property));
+  }
   
+  @Test
+  public void testReadBracketTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDBracketType.RoundPair, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDBracketType.SquarePair, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDBracketType.CurlyPair, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDBracketType.Square, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDBracketType.Curly, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDBracketType.Round, CDXUtils.readBracketTypeProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(null, CDXUtils.readBracketTypeProperty(property));
+  }
+  
+  @Test
+  public void testReadSymbolTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDSymbolType.LonePair, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDSymbolType.Electron, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDSymbolType.RadicalCation, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDSymbolType.RadicalAnion, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDSymbolType.CirclePlus, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDSymbolType.CircleMinus, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDSymbolType.Dagger, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDSymbolType.DoubleDagger, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x08});
+    assertEquals(CDSymbolType.Plus, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x09});
+    assertEquals(CDSymbolType.Minus, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x0a});
+    assertEquals(CDSymbolType.Racemic, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x0b});
+    assertEquals(CDSymbolType.Absolute, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x0c});
+    assertEquals(CDSymbolType.Relative, CDXUtils.readSymbolTypeProperty(property));
+    property.setData(new byte[] {0x0d});
+    assertEquals(null, CDXUtils.readSymbolTypeProperty(property));
+  }
+
+  @Test
+  public void testReadBracketUsageProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDBracketUsage.Unspecified, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x12});
+    assertEquals(CDBracketUsage.Anypolymer, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x0d});
+    assertEquals(CDBracketUsage.Component, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(CDBracketUsage.Copolymer, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(CDBracketUsage.CopolymerAlternating, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x09});
+    assertEquals(CDBracketUsage.CopolymerBlock, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x08});
+    assertEquals(CDBracketUsage.CopolymerRandom, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x11});
+    assertEquals(CDBracketUsage.Generic, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x0b});
+    assertEquals(CDBracketUsage.Graft, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDBracketUsage.Mer, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x0f});
+    assertEquals(CDBracketUsage.MixtureOrdered, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x0e});
+    assertEquals(CDBracketUsage.MixtureUnordered, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x0c});
+    assertEquals(CDBracketUsage.Modification, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDBracketUsage.Monomer, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x10});
+    assertEquals(CDBracketUsage.MultipleGroup, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDBracketUsage.SRU, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDBracketUsage.Unused1, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDBracketUsage.Unused2, CDXUtils.readBracketUsageProperty(property));
+    property.setData(new byte[] {0x13});
+    assertEquals(CDBracketUsage.Unspecified, CDXUtils.readBracketUsageProperty(property));
+  }
+
+
+
 }
