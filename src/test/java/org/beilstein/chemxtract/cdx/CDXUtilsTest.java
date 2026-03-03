@@ -38,22 +38,29 @@ import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
 import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
 import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
+import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
 import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
 import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
 import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDGeometryType;
 import org.beilstein.chemxtract.cdx.datatypes.CDGraphicType;
 import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
 import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
 import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
 import org.beilstein.chemxtract.cdx.datatypes.CDOvalType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
+import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
 import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
 import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
 import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
@@ -1103,5 +1110,144 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDBracketUsage.Unused2, CDXUtils.readBracketUsageProperty(property));
     property.setData(new byte[] {0x13});
     assertEquals(CDBracketUsage.Unspecified, CDXUtils.readBracketUsageProperty(property));
+  }
+
+  @Test
+  public void testReadPolymerRepeatPatternProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(
+        CDPolymerRepeatPattern.HeadToTail, CDXUtils.readPolymerRepeatPatternProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(
+        CDPolymerRepeatPattern.HeadToHead, CDXUtils.readPolymerRepeatPatternProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(
+        CDPolymerRepeatPattern.EitherUnknown, CDXUtils.readPolymerRepeatPatternProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(null, CDXUtils.readPolymerRepeatPatternProperty(property));
+  }
+
+  @Test
+  public void testReadPolymerFlipTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDPolymerFlipType.Unspecified, CDXUtils.readPolymerFlipTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDPolymerFlipType.NoFlip, CDXUtils.readPolymerFlipTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDPolymerFlipType.Flip, CDXUtils.readPolymerFlipTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDPolymerFlipType.Unspecified, CDXUtils.readPolymerFlipTypeProperty(property));
+  }
+
+  @Test
+  public void testReadGeometricFeatureProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDGeometryType.Undefined, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(
+        CDGeometryType.PointFromPointPointDistance,
+        CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(
+        CDGeometryType.PointFromPointPointPercentage,
+        CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(
+        CDGeometryType.PointFromPointNormalDistance,
+        CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDGeometryType.LineFromPoints, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x05});
+    assertEquals(CDGeometryType.PlaneFromPoints, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x06});
+    assertEquals(
+        CDGeometryType.PlaneFromPointLine, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x07});
+    assertEquals(
+        CDGeometryType.CentroidFromPoints, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x08});
+    assertEquals(
+        CDGeometryType.NormalFromPointPlane, CDXUtils.readGeometricFeatureProperty(property));
+    property.setData(new byte[] {0x09});
+    assertEquals(CDGeometryType.Undefined, CDXUtils.readGeometricFeatureProperty(property));
+  }
+
+  @Test
+  public void testReadConstraintTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDConstraintType.Undefined, CDXUtils.readConstraintTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDConstraintType.Distance, CDXUtils.readConstraintTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDConstraintType.Angle, CDXUtils.readConstraintTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDConstraintType.ExclusionSphere, CDXUtils.readConstraintTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDConstraintType.Undefined, CDXUtils.readConstraintTypeProperty(property));
+  }
+
+  @Test
+  public void testReadSideTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDSideType.Undefined, CDXUtils.readSideTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDSideType.Top, CDXUtils.readSideTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDSideType.Left, CDXUtils.readSideTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDSideType.Bottom, CDXUtils.readSideTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDSideType.Right, CDXUtils.readSideTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDSideType.Undefined, CDXUtils.readSideTypeProperty(property));
+  }
+
+  @Test
+  public void testReadObjectTagTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDObjectTagType.Undefined, CDXUtils.readObjectTagTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDObjectTagType.Double, CDXUtils.readObjectTagTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDObjectTagType.Long, CDXUtils.readObjectTagTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDObjectTagType.String, CDXUtils.readObjectTagTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDObjectTagType.Undefined, CDXUtils.readObjectTagTypeProperty(property));
+  }
+
+  @Test
+  public void testReadPositioningTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDPositioningType.Auto, CDXUtils.readPositioningTypeProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDPositioningType.Angle, CDXUtils.readPositioningTypeProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDPositioningType.Offset, CDXUtils.readPositioningTypeProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDPositioningType.Absolute, CDXUtils.readPositioningTypeProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDPositioningType.Auto, CDXUtils.readPositioningTypeProperty(property));
   }
 }
