@@ -203,9 +203,9 @@ public class BondConverter {
    * Converts a ChemDraw-defined double bond stereochemistry (E/Z/Undetermined/None) into the
    * corresponding CDK {@link IBond.Display} value.
    *
-   * <p>Returns {@link IBond.Display#Solid} if the stereochemistry is null.
-   * Returns {@link IBond.Display#Crossed} for {@link CDBondCIPType#Undetermined},
-   * return {@link IBond.Display#Solid} in any other case.
+   * <p>Returns {@link IBond.Display#Solid} if the stereochemistry is null. Returns {@link
+   * IBond.Display#Crossed} for {@link CDBondCIPType#Undetermined}, return {@link
+   * IBond.Display#Solid} in any other case.
    *
    * @param stereo the ChemDraw CIP-type stereo designation
    * @return the corresponding {@link IBond.Display} value

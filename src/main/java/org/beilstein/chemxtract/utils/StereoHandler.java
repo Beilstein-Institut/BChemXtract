@@ -22,8 +22,6 @@
 package org.beilstein.chemxtract.utils;
 
 import java.util.*;
-import java.util.function.BiPredicate;
-
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
@@ -31,7 +29,6 @@ import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
 import org.openscience.cdk.interfaces.*;
-import org.openscience.cdk.stereo.DoubleBondStereochemistry;
 import org.openscience.cdk.stereo.Projection;
 import org.openscience.cdk.stereo.StereoElementFactory;
 import org.openscience.cdk.stereo.TetrahedralChirality;
@@ -64,7 +61,7 @@ public class StereoHandler {
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
     List<IStereoElement> stereoElements = getStereoElements(atomContainer, atomMap, bondMap);
-//
+    //
     stereoElements.forEach(atomContainer::addStereoElement);
   }
 
@@ -90,21 +87,22 @@ public class StereoHandler {
    * @param atomContainer the {@link IAtomContainer} containing sugar rings
    * @return list of stereochemical elements
    */
-  private static List<IStereoElement> extractSugarStereoElements(IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
+  private static List<IStereoElement> extractSugarStereoElements(
+      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
     removeBondDisplay(atomContainer);
-    List<IStereoElement> elements = selectFactory(atomContainer)
-        .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
-        .createAll();
+    List<IStereoElement> elements =
+        selectFactory(atomContainer)
+            .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
+            .createAll();
     filterWavyBonds(elements, bondMap);
     return elements;
   }
 
   /**
-   * Resets all bond display styles within the given atom container to
-   * {@link IBond.Display#Solid}.
+   * Resets all bond display styles within the given atom container to {@link IBond.Display#Solid}.
    *
-   * @param atomContainer the {@link IAtomContainer} whose bonds are to be normalised;
-   *                      must not be {@code null}
+   * @param atomContainer the {@link IAtomContainer} whose bonds are to be normalised; must not be
+   *     {@code null}
    */
   private static void removeBondDisplay(IAtomContainer atomContainer) {
     atomContainer.bonds().forEach(b -> b.setDisplay(IBond.Display.Solid));

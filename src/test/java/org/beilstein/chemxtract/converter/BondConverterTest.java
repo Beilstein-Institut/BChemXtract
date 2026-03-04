@@ -167,7 +167,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore ("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondETest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.E);
     IBond result = converter.convert(bond);
@@ -176,7 +176,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore ("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondZTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.Z);
     IBond result = converter.convert(bond);
@@ -185,7 +185,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore ("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondNoneStereoTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.None);
     IBond result = converter.convert(bond);
@@ -194,7 +194,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore ("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondNullStereoTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, null);
     IBond result = converter.convert(bond);
