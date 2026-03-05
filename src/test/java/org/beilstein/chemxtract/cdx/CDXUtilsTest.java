@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import junit.framework.TestCase;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
@@ -49,6 +51,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
 import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNoGoType;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
 import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
@@ -60,7 +63,11 @@ import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
 import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
 import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRingBondCount;
 import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumClass;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumXType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumYType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
 import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
@@ -1249,5 +1256,162 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(CDPositioningType.Absolute, CDXUtils.readPositioningTypeProperty(property));
     property.setData(new byte[] {0x04});
     assertEquals(CDPositioningType.Auto, CDXUtils.readPositioningTypeProperty(property));
+  }
+
+  @Test
+  public void testReadSpectrumClassProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDSpectrumClass.Unknown, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDSpectrumClass.Chromatogram, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDSpectrumClass.Infrared, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDSpectrumClass.UVVis, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDSpectrumClass.XRayDiffraction, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDSpectrumClass.MassSpectrum, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x06, 0x00});
+    assertEquals(CDSpectrumClass.NMR, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x07, 0x00});
+    assertEquals(CDSpectrumClass.Raman, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x08, 0x00});
+    assertEquals(CDSpectrumClass.Fluorescence, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x09, 0x00});
+    assertEquals(CDSpectrumClass.Atomic, CDXUtils.readSpectrumClassProperty(property));
+    property.setData(new byte[] {0x0a, 0x00});
+    assertEquals(CDSpectrumClass.Unknown, CDXUtils.readSpectrumClassProperty(property));
+  }
+
+  @Test
+  public void testReadSpectrumXTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDSpectrumXType.Unknown, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDSpectrumXType.Wavenumbers, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDSpectrumXType.Microns, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDSpectrumXType.Hertz, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDSpectrumXType.MassUnits, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDSpectrumXType.PartsPerMillion, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x06, 0x00});
+    assertEquals(CDSpectrumXType.Other, CDXUtils.readSpectrumXTypeProperty(property));
+    property.setData(new byte[] {0x07, 0x00});
+    assertEquals(CDSpectrumXType.Unknown, CDXUtils.readSpectrumXTypeProperty(property));
+  }
+
+  @Test
+  public void testReadSpectrumYTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDSpectrumYType.Unknown, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDSpectrumYType.Absorbance, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDSpectrumYType.Transmittance, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(
+        CDSpectrumYType.PercentTransmittance, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDSpectrumYType.Other, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDSpectrumYType.ArbitraryUnits, CDXUtils.readSpectrumYTypeProperty(property));
+    property.setData(new byte[] {0x06, 0x00});
+    assertEquals(CDSpectrumYType.Unknown, CDXUtils.readSpectrumYTypeProperty(property));
+  }
+
+  @Test
+  public void testReadRingBondCountProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x0 - 1});
+    assertEquals(CDRingBondCount.Unspecified, CDXUtils.readRingBondCountProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDRingBondCount.Unspecified, CDXUtils.readRingBondCountProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDRingBondCount.Unspecified, CDXUtils.readRingBondCountProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDRingBondCount.Unspecified, CDXUtils.readRingBondCountProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDRingBondCount.Unspecified, CDXUtils.readRingBondCountProperty(property));
+  }
+
+  @Test
+  public void testReadLineHeightProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDSettings.LineHeight_Variable, CDXUtils.readLineHeight(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDSettings.LineHeight_Automatic, CDXUtils.readLineHeight(property));
+    property.setData(new byte[] {0x14, 0x00});
+    assertEquals(1.0f, CDXUtils.readLineHeight(property));
+    property.setData(new byte[] {0x0a, 0x00});
+    assertEquals(0.5f, CDXUtils.readLineHeight(property));
+  }
+
+  @Test
+  public void testReadArrowheadTypeProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDArrowHeadType.Solid, CDXUtils.readArrowheadTypeProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDArrowHeadType.Hollow, CDXUtils.readArrowheadTypeProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDArrowHeadType.Angle, CDXUtils.readArrowheadTypeProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDArrowHeadType.Solid, CDXUtils.readArrowheadTypeProperty(property));
+  }
+
+  @Test
+  public void testReadArrowheadProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(2);
+
+    property.setData(new byte[] {0x00, 0x00});
+    assertEquals(CDArrowHeadPositionType.Unspecified, CDXUtils.readArrowheadProperty(property));
+    property.setData(new byte[] {0x01, 0x00});
+    assertEquals(CDArrowHeadPositionType.None, CDXUtils.readArrowheadProperty(property));
+    property.setData(new byte[] {0x02, 0x00});
+    assertEquals(CDArrowHeadPositionType.Full, CDXUtils.readArrowheadProperty(property));
+    property.setData(new byte[] {0x03, 0x00});
+    assertEquals(CDArrowHeadPositionType.HalfLeft, CDXUtils.readArrowheadProperty(property));
+    property.setData(new byte[] {0x04, 0x00});
+    assertEquals(CDArrowHeadPositionType.HalfRight, CDXUtils.readArrowheadProperty(property));
+    property.setData(new byte[] {0x05, 0x00});
+    assertEquals(CDArrowHeadPositionType.Unspecified, CDXUtils.readArrowheadProperty(property));
+  }
+
+  @Test
+  public void testReadNoGoProperty() throws IOException {
+    CDXProperty property = new CDXProperty();
+    property.setLength(1);
+
+    property.setData(new byte[] {0x00});
+    assertEquals(CDNoGoType.Unspecified, CDXUtils.readNoGoProperty(property));
+    property.setData(new byte[] {0x01});
+    assertEquals(CDNoGoType.None, CDXUtils.readNoGoProperty(property));
+    property.setData(new byte[] {0x02});
+    assertEquals(CDNoGoType.Cross, CDXUtils.readNoGoProperty(property));
+    property.setData(new byte[] {0x03});
+    assertEquals(CDNoGoType.Hash, CDXUtils.readNoGoProperty(property));
+    property.setData(new byte[] {0x04});
+    assertEquals(CDNoGoType.Unspecified, CDXUtils.readNoGoProperty(property));
   }
 }
