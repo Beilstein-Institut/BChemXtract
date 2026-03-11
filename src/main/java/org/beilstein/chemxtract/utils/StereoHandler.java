@@ -22,6 +22,8 @@
 package org.beilstein.chemxtract.utils;
 
 import java.util.*;
+import java.util.function.BiPredicate;
+
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
@@ -94,6 +96,15 @@ public class StereoHandler {
   }
 
   /**
+   * A predicate that tests whether a list of stereo elements already contains
+   * an element whose <em>focus</em> matches the focus of a given candidate element.
+   *
+   * @see IStereoElement#getFocus()
+   */
+  private static final BiPredicate<List<IStereoElement>, IStereoElement> listContainsFocus =
+          (list, element) -> list.stream().anyMatch(e -> e.getFocus().equals(element.getFocus()));
+
+  /**
    * Extracts stereochemical elements for non-sugar molecules.
    *
    * <p>Sets bond stereo from display types if necessary and determines tetrahedral chirality from
@@ -108,10 +119,14 @@ public class StereoHandler {
     setBondStereoByDisplayType(atomContainer); // TODO can be removed when using cdk v2.12 or higher
     List<IStereoElement> elements = selectFactory(atomContainer).createAll();
     if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
-      //      return
-      elements.addAll(getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
+      List<IStereoElement> cipElements = getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap);
+      for (IStereoElement elem : cipElements) {
+        if (!listContainsFocus.test(elements, elem)) {
+          elements.add(elem);
+        }
+      }
     }
-    return elements;
+    return new ArrayList<>(elements);
   }
 
   /**

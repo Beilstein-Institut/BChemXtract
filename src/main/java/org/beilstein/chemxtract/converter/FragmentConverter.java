@@ -146,6 +146,8 @@ public class FragmentConverter {
     // create IAtomContainer
     IAtomContainer atomContainer =
         createAtomContainer(atoms.toArray(IAtom[]::new), bonds.toArray(IBond[]::new));
+    //normalize wavy bonds at double bonds
+    flipWavyBondsAtDoubleBonds(atomContainer);
     // check for radicals
     setRadicals(atomContainer, atomConverter.getAtomMap());
     // add implicit hydrogens
@@ -196,6 +198,56 @@ public class FragmentConverter {
                 dot.setChemicalWarning(null);
               }
             });
+  }
+
+  /**
+   * Normalizes the orientation of wavy bonds adjacent to double bonds within
+   * the given atom container.
+   *
+   * <p>For each double bond, this method inspects all single bonds connected
+   * to either of its atoms. If such a neighboring bond has
+   * {@link IBond.Display#Wavy} display style, its direction is corrected so
+   * that the atom shared with the double bond is placed at index 0
+   * (i.e. the "begin" atom of the wavy bond).
+   *
+   * <p>This normalization is required because downstream stereo-perception
+   * code assumes that the "begin" atom of a wavy bond is the one directly
+   * attached to the double bond. Without this correction, E/Z stereo
+   * assignments derived from wavy bonds may be inverted or ignored.
+   *
+   * @param atomContainer the atom container whose wavy bonds are to be
+   *                      normalized; must not be {@code null}
+   * @throws NullPointerException if {@code atomContainer} is {@code null},
+   *                              or if any bond or atom within it is {@code null}
+   */
+  private void flipWavyBondsAtDoubleBonds(IAtomContainer atomContainer) {
+    for (IBond bond : atomContainer.bonds()) {
+      if (!IBond.Order.DOUBLE.equals(bond.getOrder())) {
+        continue;
+      }
+      for (IAtom atom : bond.atoms()) {
+        List<IBond> connectedBonds = atomContainer.getConnectedBondsList(atom);
+        for (IBond neighborBond : connectedBonds) {
+          if (IBond.Display.Wavy.equals(neighborBond.getDisplay())) {
+            normalizeWavyBondDirection(neighborBond, atom);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Ensures that {@code pivotAtom} is at index 0 of {@code wavyBond}.
+   *
+   * @param wavyBond   the wavy bond to orient; must not be {@code null}
+   * @param pivotAtom  the atom that should appear at index 0 must not be {@code null}
+   */
+  private void normalizeWavyBondDirection(IBond wavyBond, IAtom pivotAtom) {
+    if (!pivotAtom.equals(wavyBond.getBegin())) {
+      IAtom otherAtom = wavyBond.getOther(pivotAtom);
+      wavyBond.setAtom(pivotAtom, 0);
+      wavyBond.setAtom(otherAtom, 1);
+    }
   }
 
   /**
