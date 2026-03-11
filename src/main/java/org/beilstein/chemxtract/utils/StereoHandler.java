@@ -60,8 +60,8 @@ public class StereoHandler {
    */
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
-    List<IStereoElement> stereoElements = getStereoElements(atomContainer, atomMap);
-    filterWavyBonds(stereoElements, bondMap);
+    List<IStereoElement> stereoElements = getStereoElements(atomContainer, atomMap, bondMap);
+    //
     stereoElements.forEach(atomContainer::addStereoElement);
   }
 
@@ -74,10 +74,10 @@ public class StereoHandler {
    * @return list of stereochemical elements
    */
   private static List<IStereoElement> getStereoElements(
-      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
+      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap, Map<CDBond, IBond> bondMap) {
     SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
     return detector.containsChairProjections()
-        ? extractSugarStereoElements(atomContainer)
+        ? extractSugarStereoElements(atomContainer, bondMap)
         : extractNonSugarStereoElements(atomContainer, atomMap);
   }
 
@@ -87,10 +87,25 @@ public class StereoHandler {
    * @param atomContainer the {@link IAtomContainer} containing sugar rings
    * @return list of stereochemical elements
    */
-  private static List<IStereoElement> extractSugarStereoElements(IAtomContainer atomContainer) {
-    return selectFactory(atomContainer)
-        .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
-        .createAll();
+  private static List<IStereoElement> extractSugarStereoElements(
+      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
+    removeBondDisplay(atomContainer);
+    List<IStereoElement> elements =
+        selectFactory(atomContainer)
+            .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
+            .createAll();
+    filterWavyBonds(elements, bondMap);
+    return elements;
+  }
+
+  /**
+   * Resets all bond display styles within the given atom container to {@link IBond.Display#Solid}.
+   *
+   * @param atomContainer the {@link IAtomContainer} whose bonds are to be normalised; must not be
+   *     {@code null}
+   */
+  private static void removeBondDisplay(IAtomContainer atomContainer) {
+    atomContainer.bonds().forEach(b -> b.setDisplay(IBond.Display.Solid));
   }
 
   /**
@@ -105,7 +120,6 @@ public class StereoHandler {
    */
   private static List<IStereoElement> extractNonSugarStereoElements(
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
-    setBondStereoByDisplayType(atomContainer); // TODO can be removed when using cdk v2.12 or higher
     List<IStereoElement> elements = selectFactory(atomContainer).createAll();
     if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
       //      return
