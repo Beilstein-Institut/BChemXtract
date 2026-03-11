@@ -62,7 +62,7 @@ public class CDStyledString {
     private final CDFontFace fontType;
 
     /** Text color. */
-    private final CDColor color;
+    private CDColor color;
 
     /** Text. */
     private final String text;
@@ -89,6 +89,10 @@ public class CDStyledString {
 
     public CDColor getColor() {
       return color;
+    }
+
+    public void setColor(CDColor color) {
+      this.color = color;
     }
 
     public String getText() {
