@@ -376,7 +376,7 @@ public class CDXUtils {
     return CDBondCIPType.Undetermined;
   }
 
-  public static CDJustification readTextJustifcationProperty(CDXProperty property)
+  public static CDJustification readTextJustificationProperty(CDXProperty property)
       throws IOException {
     int value = property.getDataAsInt8();
     switch (value) {

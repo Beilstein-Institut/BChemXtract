@@ -270,7 +270,7 @@ public class CDXReader {
           document.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
         case CDXProp_CaptionJustification:
-          document.getSettings().setCaptionJustification(readTextJustifcationProperty(property));
+          document.getSettings().setCaptionJustification(readTextJustificationProperty(property));
           break;
         case CDXProp_FractionalWidths:
           document.setFractionalWidths(property.getDataAsBoolean());
@@ -303,7 +303,7 @@ public class CDXReader {
           document.getSettings().setCaptionColor(property.getDataAsColorRef(colors));
           break;
         case CDXProp_LabelJustification:
-          document.getSettings().setLabelJustification(readTextJustifcationProperty(property));
+          document.getSettings().setLabelJustification(readTextJustificationProperty(property));
           break;
         case CDXProp_FixInplaceExtent:
           document.setFixInPlaceExtent(property.getDataAsPoint2D());
@@ -1092,8 +1092,8 @@ public class CDXReader {
           text.setText(property.getDataAsStyledString(fonts, colors));
           break;
         case CDXProp_Justification:
-          text.setJustification(readTextJustifcationProperty(property));
-          text.getSettings().setLabelJustification(readTextJustifcationProperty(property));
+          text.setJustification(readTextJustificationProperty(property));
+          text.getSettings().setLabelJustification(readTextJustificationProperty(property));
           break;
         case CDXProp_LineHeight:
           text.setLineHeight(readLineHeight(property));
@@ -1129,7 +1129,7 @@ public class CDXReader {
           text.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
         case CDXProp_CaptionJustification:
-          text.getSettings().setCaptionJustification(readTextJustifcationProperty(property));
+          text.getSettings().setCaptionJustification(readTextJustificationProperty(property));
           break;
         case CDXProp_LabelStyleFont:
           text.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
@@ -1156,8 +1156,8 @@ public class CDXReader {
           text.getSettings().setCaptionColor(property.getDataAsColorRef(colors));
           break;
         case CDXProp_LabelJustification:
-          text.setJustification(readTextJustifcationProperty(property));
-          text.getSettings().setLabelJustification(readTextJustifcationProperty(property));
+          text.setJustification(readTextJustificationProperty(property));
+          text.getSettings().setLabelJustification(readTextJustificationProperty(property));
           break;
         case CDXProp_ForegroundColor:
           text.setColor(property.getDataAsColorRef(colors));
