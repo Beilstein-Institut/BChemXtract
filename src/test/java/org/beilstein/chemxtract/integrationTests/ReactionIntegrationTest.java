@@ -130,6 +130,48 @@ public class ReactionIntegrationTest {
   }
 
   @Test
+  public void backwards_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/backwards_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void backwards_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/backwards_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void forward_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/forward_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void forward_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/forward_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void reversible_no_products_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/reversible_no_products.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void reversible_no_reactants_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/reversible_no_reactants.cdx";
+    List<BCXReaction> reactions = convertReactions(cdxFile);
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
   public void multi_direction_reaction_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/multi_direction_reaction.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
@@ -142,6 +184,78 @@ public class ReactionIntegrationTest {
     for (int i = 0; i < reactions.size(); i++) {
       Assert.assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
     }
+  }
+
+  @Test
+  public void horizontal_reactant_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/horizontal_reactant_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void horizontal_product_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/horizontal_product_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void horizontal_both_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/horizontal_both_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void vertical_reactant_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/vertical_reactant_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void vertical_product_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/vertical_product_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void vertical_both_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/vertical_both_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void diagonal_reactant_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/diagonal_reactant_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void diagonal_product_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/diagonal_product_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
+  }
+
+  @Test
+  public void diagonal_both_off_Test() throws IOException {
+    String cdxFile = "/integrationTests/reactions/diagonal_both_off.cdx";
+    List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
+    assert reactions != null;
+    Assert.assertTrue(reactions.isEmpty());
   }
 
   void cdxReactionRinchiFullInformationForFirstReactionTest(
@@ -173,7 +287,13 @@ public class ReactionIntegrationTest {
   }
 
   private List<BCXReaction> convertReactions(String fileName) throws IOException {
-    ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
+    return convertReactionsWithSanitizeOption(fileName, false);
+  }
+
+  private List<BCXReaction> convertReactionsWithSanitizeOption(String fileName, boolean sanitize)
+      throws IOException {
+    ReactionXtractor xtractor =
+        new ReactionXtractor(SilentChemObjectBuilder.getInstance(), sanitize);
     try (InputStream in = this.getClass().getResourceAsStream(fileName)) {
       Assert.assertNotNull(in);
       CDDocument document;
