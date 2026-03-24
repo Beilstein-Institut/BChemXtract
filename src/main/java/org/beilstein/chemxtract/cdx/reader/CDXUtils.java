@@ -1635,16 +1635,13 @@ public class CDXUtils {
       if (t == null) {
         continue;
       }
-      // if (!t.contains("°")) continue;
-      if (!t.contains("\u00B0")) {
-        continue; // degree sign
-      }
-      // if (!t.contains("\u00B7")) continue; // middle dot
-      // t += (char)13;
-      List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
-      for (int i : calculatedLineStarts) {
-        if (!definedLineStarts.contains(i)) {
-          return true;
+
+      if (containsLineWrapBugCharacter(t)) {
+        List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
+        for (int i : calculatedLineStarts) {
+          if (!definedLineStarts.contains(i)) {
+            return true;
+          }
         }
       }
     }
@@ -1712,21 +1709,24 @@ public class CDXUtils {
       if (t == null) {
         continue;
       }
-      // if (!t.contains("°")) continue;
-      if (!t.contains("\u00B0")) {
-        continue; // degree sign
-      }
-      // if (!t.contains("\u00B7")) continue; // middle dot
-      t += (char) 13;
-      List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
-      boolean erroneous = false;
-      for (int i : calculatedLineStarts) {
-        if (!definedLineStarts.contains(i)) {
-          erroneous = true;
+
+      //      for (int i=0; i < t.length(); i++) {
+      //        System.out.println(i + ": " + t.charAt(i) + " (" + (int)t.charAt(i) + "/" +
+      // Integer.toHexString((int)t.charAt(i)) + ")");
+      //      }
+
+      if (containsLineWrapBugCharacter(t)) {
+        t += (char) 13;
+        List<Integer> calculatedLineStarts = getCalculatedLineStarts(t, (char) 13);
+        boolean erroneous = false;
+        for (int i : calculatedLineStarts) {
+          if (!definedLineStarts.contains(i)) {
+            erroneous = true;
+          }
         }
-      }
-      if (erroneous) {
-        text.setLineStarts(calculatedLineStarts);
+        if (erroneous) {
+          text.setLineStarts(calculatedLineStarts);
+        }
       }
     }
   }
@@ -1739,5 +1739,29 @@ public class CDXUtils {
       result.add(0, i + 1);
     }
     return result;
+  }
+
+  public static boolean containsLineWrapBugCharacter(String t) {
+    return (t.contains("\u00B0")
+        || // degree sign
+        t.contains("\u00B7")
+        || // middle dot
+        t.contains("\u00D7")
+        || // multiplication sign
+        t.contains("\u00AE")
+        || // rightwards arrow (actually registered)
+        t.contains("\u00B3")
+        || // less-than or equal to (actually superscript three)
+        t.contains("\u00A3")
+        || // greater-than or equal to (actually pound sign)
+        t.contains("\u00A9")
+        || // copyright
+        t.contains("\u00D4")
+        || // trademark (actually latin capital letter O with circumflex
+        t.contains("\u00B9")
+        || // not equals (actually superscript one)
+        t.contains("\u00BB")
+        || // almost equal to (actually right-pointing double angle quotation mark)
+        t.contains("\u00C5")); // latin capital letter A with ring above
   }
 }
