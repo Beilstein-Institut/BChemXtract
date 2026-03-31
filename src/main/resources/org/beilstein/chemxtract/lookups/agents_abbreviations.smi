@@ -2,6 +2,7 @@
 1,10-phenanthroline	C1=CC2=C(C3=C(C=CC=N3)C=C2)N=C1
 2,6-lutidine	CC1=NC(=CC=C1)C
 Ac2O	CC(=O)OC(=O)C
+Acetic Acid CC(=O)O
 acetone	CC(=O)C
 ACN	CC#N
 AcOH	CC(=O)O
@@ -65,6 +66,7 @@ DDQ	C(#N)C1=C(C(=O)C(=C(C1=O)Cl)Cl)C#N
 DIAD	CC(C)OC(=O)/N=N/C(=O)OC(C)C
 DIBAL-H	CC(C)C[AlH]CC(C)C
 DIC	CC(C)N=C=NC(C)C
+Dimethoxymethane COCOC
 dioxane	C1COCCO1
 1,4-dioxane	C1COCCO1
 DIPEA	CCN(C(C)C)C(C)C

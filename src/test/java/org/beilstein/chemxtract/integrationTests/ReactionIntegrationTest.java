@@ -104,10 +104,10 @@ public class ReactionIntegrationTest {
     List<BCXReaction> reactions = convertReactions(cdxFile);
     List<String> rinchis =
         Arrays.asList(
-            "C1=CC2=C(C=C1Br)C=C(F)O2>C1=C(C=CC(=C1)B(O)O)C(F)(F)F.O>C1=CC(=CC=C1C2=CC=C3C(=C2)C=C(F)O3)C(F)(F)F",
-            "C1=CC(=CC=C1C2=CC=C3C(=C2)C=C(F)O3)C(F)(F)F>C1=CC=C(C=C1)B(O)O>C1=CC=C(C=C1)C2=CC3=CC(=CC=C3O2)C4=CC=C(C=C4)C(F)(F)F");
+                "RInChI=1.00.1S/C15H8F4O/c16-14-8-11-7-10(3-6-13(11)20-14)9-1-4-12(5-2-9)15(17,18)19/h1-8H<>C8H4BrFO/c9-6-1-2-7-5(3-6)4-8(10)11-7/h1-4H<>3K.H3O4P/c;;;1-5(2,3)4/h;;;(H3,1,2,3,4)/q3*+1;/p-3!C4H8O2/c1-2-6-4-3-5-1/h1-4H2!C7H6BF3O2/c9-7(10,11)5-1-3-6(4-2-5)8(12)13/h1-4,12-13H!H2O/h1H2/d-",
+                "RInChI=1.00.1S/C15H8F4O/c16-14-8-11-7-10(3-6-13(11)20-14)9-1-4-12(5-2-9)15(17,18)19/h1-8H<>C21H13F3O/c22-21(23,24)18-9-6-14(7-10-18)16-8-11-19-17(12-16)13-20(25-19)15-4-2-1-3-5-15/h1-13H<>C18H33P/c1-4-10-16(11-5-1)19(17-12-6-2-7-13-17)18-14-8-3-9-15-18/h16-18H,1-15H2!C6H7BO2/c8-7(9)6-4-2-1-3-5-6/h1-5,8-9H!CH2O3.2K/c2-1(3)4;;/h(H2,2,3,4);;/q;2*+1/p-2/d+");
     for (int i = 0; i < reactions.size(); i++) {
-      Assert.assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
+      Assert.assertEquals(rinchis.get(i), reactions.get(i).getRinchi());
     }
   }
 
@@ -117,11 +117,11 @@ public class ReactionIntegrationTest {
     List<BCXReaction> reactions = convertReactions(cdxFile);
     List<String> rinchis =
         Arrays.asList(
-            "C[C@@H]1CO1>C=CC[Mg]Br>C=CC[C@H](C)CO.C=CCC[C@@H](C)O",
-            "C=CC[C@H](C)CO.C=CCC[C@@H](C)O>>C=CCC[C@@H](C)OS(=O)(=O)C1=CC=C(C)C=C1",
-            "C=CCC[C@@H](C)OS(=O)(=O)C1=CC=C(C)C=C1>>C=CCC[C@H](C)C(C(=O)OCC)C(=O)OCC",
+            "C[C@@H]1CO1>CCOCC.C=CC[Mg]Br>C=CC[C@H](C)CO.C=CCC[C@@H](C)O",
+            "C=CC[C@H](C)CO.C=CCC[C@@H](C)O>CN(C)C1=CC=NC=C1.CCN(CC)CC.C(Cl)Cl.C(Cl)Cl>C=CCC[C@@H](C)OS(=O)(=O)C1=CC=C(C)C=C1",
+            "C=CCC[C@@H](C)OS(=O)(=O)C1=CC=C(C)C=C1>CN(C)C=O.[I-].[Na+].[Na+].[H-]>C=CCC[C@H](C)C(C(=O)OCC)C(=O)OCC",
             "C=CCC[C@H](C)C(C(=O)OCC)C(=O)OCC>CO.[Na]O.O>C=CCC[C@H](C)C(C(=O)O)C(=O)O",
-            "C=CCC[C@H](C)C(C(=O)O)C(=O)O>O>C=CCC[C@H](C)CC(=O)O",
+            "C=CCC[C@H](C)C(C(=O)O)C(=O)O>CS(=O)C.O>C=CCC[C@H](C)CC(=O)O",
             "C=CCC[C@H](C)CC(=O)O>>C=CCC[C@H](C)CCO",
             "C=CCC[C@H](C)CCO>>C=CCC[C@H](C)CCOS(=O)(=O)C1=CC=C(C)C=C1");
     for (int i = 0; i < reactions.size(); i++) {
@@ -177,10 +177,10 @@ public class ReactionIntegrationTest {
     List<BCXReaction> reactions = convertReactions(cdxFile);
     List<String> rinchis =
         Arrays.asList(
-            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>[Na]O>CC(C)(/C=C/C1=CC=CC=C1)C(=O)N",
-            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>>CC(C)(CCC1=CC=CC=C1)C#N",
-            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>C1CCOC1>CC(C)(/C=C/C1=CC=CC=C1)CN",
-            "C=CC(C)(C#N)C1=C(C=CC=C1)Br>[Na]O>C=CC1(C)C2=C(C=CC=C2)NC1=O");
+            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>CC(C)(C)O.[Na]O>CC(C)(/C=C/C1=CC=CC=C1)C(=O)N",
+            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>CCOC(=O)C.CO.[Pd].[H][H]>CC(C)(CCC1=CC=CC=C1)C#N",
+            "CC(C)(/C=C\\C1=CC=CC=C1)C#N>C1CCOC1.[AlH4-].[Li+]>CC(C)(/C=C/C1=CC=CC=C1)CN",
+            "C=CC(C)(C#N)C1=C(C=CC=C1)Br>CC(C)(C)O.[Na]O>C=CC1(C)C2=C(C=CC=C2)NC1=O");
     for (int i = 0; i < reactions.size(); i++) {
       Assert.assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
     }
