@@ -310,13 +310,12 @@ public class ReactionConverter {
     String[] possibleAgents = agentsString.split(Definitions.AGENTS_SPLIT_REGEX);
     return Arrays.stream(possibleAgents)
         .filter(a -> a.length() > 1)
-        .map(s -> {
-          if (s.startsWith("("))
-            s = s.substring(1);
-          if (s.endsWith(")"))
-            s = s.substring(0, s.length()-1);
-          return s;
-        })
+        .map(
+            s -> {
+              if (s.startsWith("(")) s = s.substring(1);
+              if (s.endsWith(")")) s = s.substring(0, s.length() - 1);
+              return s;
+            })
         .filter(a -> !a.matches("-?\\d+(\\.\\d+)?"))
         .filter(
             a -> {
