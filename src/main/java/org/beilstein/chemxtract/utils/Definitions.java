@@ -42,6 +42,6 @@ public class Definitions {
   // Regular expression for splitting:
   // \s includes all whitespace (spaces, tabs, line feeds, etc.)
   // \n ensures we explicitly catch line feeds (optional since \s includes it)
-  // \[\](){}:;, matches individual bracket types, colon, comma, semicolon
-  public static final String AGENTS_SPLIT_REGEX = "[\\s\\n\\[\\](){}:;,%/]+";
+  // \:;, matches colon, comma, semicolon
+  public static final String AGENTS_SPLIT_REGEX = "[\\s\\n\\:;,%/]+";
 }
