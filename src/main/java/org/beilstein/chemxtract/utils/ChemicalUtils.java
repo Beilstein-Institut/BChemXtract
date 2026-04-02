@@ -107,7 +107,7 @@ public class ChemicalUtils {
     SmilesGenerator smilesGen = new SmilesGenerator(flavor);
     try {
       smiles = smilesGen.create(reaction);
-    } catch (CDKException | NullPointerException | IllegalArgumentException anException) {
+    } catch (CDKException | NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException anException) {
       logger.error(anException.getMessage());
     }
     return smiles;
