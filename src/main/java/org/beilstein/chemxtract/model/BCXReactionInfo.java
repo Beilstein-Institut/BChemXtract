@@ -26,16 +26,17 @@ import java.io.Serializable;
 
 public class BCXReactionInfo implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = 3345067415014408831L;
+  @Serial private static final long serialVersionUID = 3345067415014408831L;
 
   /** The number of found reaction steps in the document, regardless if they are rubbish or not. */
   private int noReactionSteps;
 
-  /** The actual number of extracted reactions that have passed the sanitizing rules.  */
+  /** The actual number of extracted reactions that have passed the sanitizing rules. */
   private int noValidReactions;
 
-  public BCXReactionInfo() { super();}
+  public BCXReactionInfo() {
+    super();
+  }
 
   public BCXReactionInfo(int noReactionSteps, int noValidReactions) {
     super();
@@ -62,9 +63,9 @@ public class BCXReactionInfo implements Serializable {
   @Override
   public String toString() {
     return "BCXReactionInfo [noReactionSteps="
-            + noReactionSteps
-            + ", noValidReactions="
-            + noValidReactions
-            + "]";
+        + noReactionSteps
+        + ", noValidReactions="
+        + noValidReactions
+        + "]";
   }
 }

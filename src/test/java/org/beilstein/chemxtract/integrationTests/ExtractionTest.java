@@ -104,7 +104,7 @@ public class ExtractionTest {
     assertNotNull(document);
 
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
-    List<BCXReaction> reactions = xtractor.xtract(document);
+    List<BCXReaction> reactions = xtractor.xtract(document, new BCXReactionInfo());
 
     assertThat(reactions.size())
         .isEqualTo(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing

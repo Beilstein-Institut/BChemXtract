@@ -29,6 +29,7 @@ import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.converter.ReactionConverter;
 import org.beilstein.chemxtract.model.BCXReaction;
 import org.beilstein.chemxtract.model.BCXReactionComponent;
+import org.beilstein.chemxtract.model.BCXReactionInfo;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
@@ -107,7 +108,7 @@ public class ReactionXtractor {
    * @param document the ChemDraw {@link CDDocument} to extract reactions from
    * @return a list of extracted {@link BCXReaction} objects
    */
-  public List<BCXReaction> xtract(CDDocument document) {
+  public List<BCXReaction> xtract(CDDocument document, BCXReactionInfo reactionInfo) {
     List<BCXReaction> reactions = new ArrayList<>();
     SubstanceXtractor substanceXtractor = new SubstanceXtractor(this.builder);
     this.unknowns = new HashSet<>();
@@ -135,6 +136,7 @@ public class ReactionXtractor {
       }
       ReactionStepVisitor rsVisitor = new ReactionStepVisitor(page);
       List<CDReactionStep> steps = rsVisitor.getReactionSteps();
+      reactionInfo.setNoReactionSteps(steps.size());
       for (CDReactionStep step : steps) {
         ReactionConverter reactionConverter =
             new ReactionConverter(fragmentSubstanceMap, builder, this.sanitize);
@@ -149,6 +151,7 @@ public class ReactionXtractor {
         }
       }
     }
+    reactionInfo.setNoValidReactions(reactions.size());
     return reactions;
   }
 
