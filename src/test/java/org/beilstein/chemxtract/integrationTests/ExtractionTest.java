@@ -106,15 +106,15 @@ public class ExtractionTest {
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXReaction> reactions = xtractor.xtract(document, new BCXReactionInfo());
 
-    assertThat(reactions.size())
-        .isEqualTo(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing
+    assertThat(reactions)
+        .hasSize(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing
     // abbreviation
     BCXReaction r0 = reactions.get(0);
     BCXReaction r1 = reactions.get(1);
     assertThat(r0).isNotEqualTo(r1);
     assertThat(r0.toString()).isNotEqualTo(r1.toString());
-    assertThat(r0.getProducts().size()).isEqualTo(1);
-    assertThat(r1.getProducts().size()).isEqualTo(1);
+    assertThat(r0.getProducts()).hasSize(1);
+    assertThat(r1.getProducts()).hasSize(1);
     BCXReactionComponent rc0 = r0.getProducts().get(0);
     BCXReactionComponent rc1 = r1.getProducts().get(0);
     assertThat(rc0).isNotEqualTo(rc1);
@@ -127,6 +127,23 @@ public class ExtractionTest {
         e.printStackTrace();
       }
     }
+  }
+
+  @Test
+  public void testBCXReactionInfo() throws IOException {
+    String fileName = "test_fixture.cdx";
+    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    assertNotNull(in);
+
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+
+    ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
+    BCXReactionInfo reactionInfo = new BCXReactionInfo();
+    List<BCXReaction> reactions = xtractor.xtract(document, reactionInfo);
+
+    assertThat(reactionInfo.getNoReactionSteps()).isEqualTo(4);
+    assertThat(reactionInfo.getNoValidReactions()).isEqualTo(3);
   }
 
   private void depictSubstance(BCXSubstance substance) throws IOException, CDKException {
