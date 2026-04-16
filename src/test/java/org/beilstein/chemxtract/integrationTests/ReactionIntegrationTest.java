@@ -38,6 +38,7 @@ import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXMLReader;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXReaction;
+import org.beilstein.chemxtract.model.BCXReactionInfo;
 import org.beilstein.chemxtract.xtractor.ReactionXtractor;
 import org.junit.Assert;
 import org.junit.Test;
@@ -282,7 +283,7 @@ public class ReactionIntegrationTest {
         return null;
       }
       Assert.assertNotNull(document);
-      return xtractor.xtract(document).get(0);
+      return xtractor.xtract(document, new BCXReactionInfo()).get(0);
     }
   }
 
@@ -305,7 +306,7 @@ public class ReactionIntegrationTest {
         return null;
       }
       Assert.assertNotNull(document);
-      return xtractor.xtract(document);
+      return xtractor.xtract(document, new BCXReactionInfo());
     }
   }
 

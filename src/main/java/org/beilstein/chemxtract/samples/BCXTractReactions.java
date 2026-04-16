@@ -29,6 +29,7 @@ import java.util.List;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXReaction;
+import org.beilstein.chemxtract.model.BCXReactionInfo;
 import org.beilstein.chemxtract.xtractor.ReactionXtractor;
 import org.openscience.cdk.depict.Depiction;
 import org.openscience.cdk.depict.DepictionGenerator;
@@ -61,7 +62,7 @@ public class BCXTractReactions {
 
     // extract reactions from CDX document
     ReactionXtractor xtractor = new ReactionXtractor();
-    List<BCXReaction> bcxReactions = xtractor.xtract(document);
+    List<BCXReaction> bcxReactions = xtractor.xtract(document, new BCXReactionInfo());
 
     // use CDK to generate a reaction depiction, save as PNG output
     SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
