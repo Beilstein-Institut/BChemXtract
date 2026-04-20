@@ -55,6 +55,10 @@ public class TextVisitor extends CDVisitor {
     if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
       return;
     }
+    if (cdText.getText().getText().contains("R")) {
+      String text = cdText.getText().getText();
+      System.out.println(text);
+    }
     Map<String, List<String>> results = extractRGroups(cdText.getText().getText());
     for (Map.Entry<String, List<String>> entry : results.entrySet()) {
       rgroups.putIfAbsent(entry.getKey(), entry.getValue());
@@ -74,8 +78,12 @@ public class TextVisitor extends CDVisitor {
 
     Map<String, List<String>> result = new LinkedHashMap<>();
 
+    if (input.contains("\r")) {
+      input = input.replace("\r", ", ");
+    }
+
     // Match something like "R = ..." or "X = ..."
-    Matcher mainMatcher = Definitions.RGROUP_PATTERN.matcher(input);
+    Matcher mainMatcher = Definitions.RGROUP_PATTERN.matcher(input.trim());
 
     if (mainMatcher.find()) {
       String identifier = mainMatcher.group(1); // e.g., "R"
