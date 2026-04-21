@@ -35,6 +35,8 @@ import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
+import javax.swing.*;
+
 /**
  * Class for handling Markush structures and replacing R-groups in molecules.
  *
@@ -75,7 +77,7 @@ public class MarkushHandler {
   }
 
   /**
-   * Generates all possible IAtomContainer structures by replacing R-groups in the given atom
+   * Generates all possible {@link IAtomContainer} structures by replacing R-groups in the given atom
    * container with their substituents.
    *
    * @param atomContainer molecule containing pseudo-atoms (R-groups)
@@ -87,40 +89,44 @@ public class MarkushHandler {
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
       throws CloneNotSupportedException, IOException, CDKException {
 
-    List<IAtomContainer> atomContainers = new ArrayList<>();
+      Map<String,List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, residueLabels);
 
-    Set<String> atomContainerLabels = new HashSet<>();
-    for (IAtom atom : atomContainer.atoms()) {
-      if (atom instanceof IPseudoAtom pseudoAtom
-          && Definitions.RGROUP_LABEL_PATTERN.matcher(pseudoAtom.getLabel()).find()) {
-        atomContainerLabels.add(pseudoAtom.getLabel());
+      if (relevantRGroups.isEmpty()) {
+        return List.of(atomContainer);
       }
-    }
-    // if atom container does not contain any rgroup return
-    if (atomContainerLabels.isEmpty()) return List.of(atomContainer);
 
-    // create a new map with all possible combinations of residue labels and atom container labels
-    // key: label, value: smiles
+      List<Map<String, String>> combinations = generateCombinations(relevantRGroups);
+      List<IAtomContainer> results = new ArrayList<>(combinations.size());
 
-    Map<String, List<String>> filteredLabels = filterRelevantRGroups(atomContainer, residueLabels);
-    List<Map<String, String>> combinations = generateCombinations(filteredLabels);
+      for (Map<String, String> combination : combinations){
+        IAtomContainer clone = atomContainer.clone();
+        boolean substituted = false;
 
-    for (Map<String, String> combination : combinations) {
-      IAtomContainer clone = atomContainer.clone();
-
-      for (Map.Entry<String, String> entry : combination.entrySet()) {
-        String rLabel = entry.getKey();
-        String definition = entry.getValue();
-        String smiles =
-            SmilesAbbreviations.contains(definition)
-                ? SmilesAbbreviations.get(definition)
-                : definition;
-        replaceRGroup(clone, rLabel, smiles);
+        for (Map.Entry<String, String> entry : combination.entrySet()) {
+          String smiles = resolveSmiles(entry.getValue());
+          if (ChemicalUtils.isValidSmiles(smiles)) {
+            replaceRGroup(clone, entry.getKey(), smiles);
+            substituted = true;
+          }
+        }
+        if (substituted) {
+          results.add(clone);
+        }
       }
-      atomContainers.add(clone);
-    }
+      return results;
+  }
 
-    return atomContainers;
+  /**
+   * Resolves a substituent definition to a SMILES string, looking up abbreviations
+   * if the definition matches a known alias.
+   *
+   * @param definition a SMILES string or a known abbreviation
+   * @return the resolved SMILES string
+   */
+  private String resolveSmiles(String definition) throws IOException {
+    return SmilesAbbreviations.contains(definition)
+            ? SmilesAbbreviations.get(definition)
+            : definition;
   }
 
   /**
