@@ -35,8 +35,6 @@ import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-import javax.swing.*;
-
 /**
  * Class for handling Markush structures and replacing R-groups in molecules.
  *

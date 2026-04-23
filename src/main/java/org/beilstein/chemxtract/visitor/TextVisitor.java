@@ -55,10 +55,6 @@ public class TextVisitor extends CDVisitor {
     if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
       return;
     }
-    if (cdText.getText().getText().contains("R")) {
-      String text = cdText.getText().getText();
-      System.out.println(text);
-    }
     Map<String, List<String>> results = extractRGroups(cdText.getText().getText());
     for (Map.Entry<String, List<String>> entry : results.entrySet()) {
       rgroups.putIfAbsent(entry.getKey(), entry.getValue());
