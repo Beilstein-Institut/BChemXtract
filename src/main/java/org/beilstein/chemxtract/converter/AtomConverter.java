@@ -108,7 +108,9 @@ public class AtomConverter {
     IAtom atom;
     if (CDNodeType.ExternalConnectionPoint.equals(cdAtom.getNodeType())) {
       atom = this.builder.newInstance(IPseudoAtom.class, "*");
-    } else if (isAbbreviation(cdAtom) || !CDNodeType.Element.equals(cdAtom.getNodeType()) || isMarkushLabel(label)) {
+    } else if (isAbbreviation(cdAtom)
+        || !CDNodeType.Element.equals(cdAtom.getNodeType())
+        || isMarkushLabel(label)) {
       if (isHydrogenIsotope(label)) {
         atom = createAtom(atomSymbol, label);
       } else {

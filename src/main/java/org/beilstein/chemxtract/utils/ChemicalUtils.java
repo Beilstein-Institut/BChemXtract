@@ -109,7 +109,10 @@ public class ChemicalUtils {
     SmilesGenerator smilesGen = new SmilesGenerator(flavor);
     try {
       smiles = smilesGen.create(reaction);
-    } catch (CDKException | NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException anException) {
+    } catch (CDKException
+        | NullPointerException
+        | IllegalArgumentException
+        | ArrayIndexOutOfBoundsException anException) {
       logger.error(anException.getMessage());
     }
     return smiles;
@@ -222,8 +225,7 @@ public class ChemicalUtils {
   }
 
   /**
-   * Validates whether a given string is a valid SMILES notation
-   * using the CDK {@link SmilesParser}.
+   * Validates whether a given string is a valid SMILES notation using the CDK {@link SmilesParser}.
    *
    * @param smiles the SMILES string to validate
    * @return {@code true} if the string is a valid SMILES, {@code false} otherwise

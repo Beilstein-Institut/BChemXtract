@@ -190,7 +190,8 @@ public class SubstanceXtractor {
    * @throws CDKException if CDK operations fail
    */
   protected List<BCXSubstance> xtractSubstances(
-      CDFragment fragment, CDPage page, MarkushHandler markushHandler) throws IOException, CDKException {
+      CDFragment fragment, CDPage page, MarkushHandler markushHandler)
+      throws IOException, CDKException {
     Objects.requireNonNull(fragment, "Fragment must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
 
@@ -211,10 +212,12 @@ public class SubstanceXtractor {
       return substances;
     }
 
-//    MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
+    //    MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
 
     try {
-      if (markushHandler != null && fragment.hasRGroup() && !markushHandler.getResidueLabels().isEmpty()) {
+      if (markushHandler != null
+          && fragment.hasRGroup()
+          && !markushHandler.getResidueLabels().isEmpty()) {
         List<IAtomContainer> atomContainers = markushHandler.replaceRGroups(atomContainer);
         for (IAtomContainer container : atomContainers) {
           BCXSubstance substance = createAndFillBCXSubstance(container);
