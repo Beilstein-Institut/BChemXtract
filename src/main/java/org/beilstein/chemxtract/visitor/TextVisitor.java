@@ -74,8 +74,12 @@ public class TextVisitor extends CDVisitor {
 
     Map<String, List<String>> result = new LinkedHashMap<>();
 
+    if (input.contains("\r")) {
+      input = input.replace("\r", ", ");
+    }
+
     // Match something like "R = ..." or "X = ..."
-    Matcher mainMatcher = Definitions.RGROUP_PATTERN.matcher(input);
+    Matcher mainMatcher = Definitions.RGROUP_PATTERN.matcher(input.trim());
 
     if (mainMatcher.find()) {
       String identifier = mainMatcher.group(1); // e.g., "R"

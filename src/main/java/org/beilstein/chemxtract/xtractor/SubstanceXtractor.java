@@ -88,12 +88,18 @@ public class SubstanceXtractor {
     Objects.requireNonNull(document, "Document must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
     for (CDPage page : document.getPages()) {
+
       FragmentVisitor fragmentVisitor = new FragmentVisitor(page);
       List<CDFragment> fragments = fragmentVisitor.getFragments();
+      MarkushHandler markushHandler = null;
+      if (resolveRGroups) {
+        markushHandler = new MarkushHandler(page, this.builder);
+      }
+
       substanceInfo.setNoFragments(fragments.size());
       for (CDFragment fragment : fragments) {
         try {
-          substances.addAll(xtractSubstances(fragment, page, resolveRGroups));
+          substances.addAll(xtractSubstances(fragment, page, markushHandler));
         } catch (IOException | CDKException e) {
           logger.error("Could not extract structures from fragment.");
         }
@@ -165,7 +171,7 @@ public class SubstanceXtractor {
    */
   protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page)
       throws CDKException, IOException {
-    List<BCXSubstance> substances = xtractSubstances(fragment, page, false);
+    List<BCXSubstance> substances = xtractSubstances(fragment, page, null);
     if (!substances.isEmpty()) return substances.get(0);
     else return null;
   }
@@ -184,7 +190,8 @@ public class SubstanceXtractor {
    * @throws CDKException if CDK operations fail
    */
   protected List<BCXSubstance> xtractSubstances(
-      CDFragment fragment, CDPage page, boolean resolveRGroups) throws IOException, CDKException {
+      CDFragment fragment, CDPage page, MarkushHandler markushHandler)
+      throws IOException, CDKException {
     Objects.requireNonNull(fragment, "Fragment must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
 
@@ -205,10 +212,12 @@ public class SubstanceXtractor {
       return substances;
     }
 
-    MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
+    //    MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
 
     try {
-      if (resolveRGroups && fragment.hasRGroup() && !markushHandler.getResidueLabels().isEmpty()) {
+      if (markushHandler != null
+          && fragment.hasRGroup()
+          && !markushHandler.getResidueLabels().isEmpty()) {
         List<IAtomContainer> atomContainers = markushHandler.replaceRGroups(atomContainer);
         for (IAtomContainer container : atomContainers) {
           BCXSubstance substance = createAndFillBCXSubstance(container);

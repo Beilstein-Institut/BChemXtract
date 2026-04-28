@@ -257,3 +257,8 @@ SEt	CCS[*]
 SnBu3	[*][Sn](CCCC)(CCCC)CCCC
 TMSE	C[Si](C)(C)CC[*]
 n-Hexyl	CCCCCC[*]
+CH3 C
+4-CH3Ph C1C=C(*)C=CC=1C
+2-OCH3Ph    C1C=C(*)C(OC)=CC=1
+4-ClPh  C1C=C(*)C=CC=1Cl
+4-BrPh C1C=C(*)C=CC=1Br

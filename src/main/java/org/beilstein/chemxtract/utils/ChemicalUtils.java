@@ -29,6 +29,7 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Kekulization;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ShortestPaths;
@@ -41,6 +42,7 @@ import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.rinchi.RInChIGenerator;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.smiles.SmilesParser;
 
 /**
  * Utility class providing static methods for common chemical operations such as generating InChI,
@@ -107,7 +109,10 @@ public class ChemicalUtils {
     SmilesGenerator smilesGen = new SmilesGenerator(flavor);
     try {
       smiles = smilesGen.create(reaction);
-    } catch (CDKException | NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException anException) {
+    } catch (CDKException
+        | NullPointerException
+        | IllegalArgumentException
+        | ArrayIndexOutOfBoundsException anException) {
       logger.error(anException.getMessage());
     }
     return smiles;
@@ -217,6 +222,22 @@ public class ChemicalUtils {
       }
     }
     return nearestResidueAtom;
+  }
+
+  /**
+   * Validates whether a given string is a valid SMILES notation using the CDK {@link SmilesParser}.
+   *
+   * @param smiles the SMILES string to validate
+   * @return {@code true} if the string is a valid SMILES, {@code false} otherwise
+   */
+  public static boolean isValidSmiles(String smiles) {
+    try {
+      SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+      parser.parseSmiles(smiles);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   public static String getRInChI(IReaction reaction) {

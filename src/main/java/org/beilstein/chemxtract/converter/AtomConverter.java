@@ -108,7 +108,9 @@ public class AtomConverter {
     IAtom atom;
     if (CDNodeType.ExternalConnectionPoint.equals(cdAtom.getNodeType())) {
       atom = this.builder.newInstance(IPseudoAtom.class, "*");
-    } else if (isAbbreviation(cdAtom) || !CDNodeType.Element.equals(cdAtom.getNodeType())) {
+    } else if (isAbbreviation(cdAtom)
+        || !CDNodeType.Element.equals(cdAtom.getNodeType())
+        || isMarkushLabel(label)) {
       if (isHydrogenIsotope(label)) {
         atom = createAtom(atomSymbol, label);
       } else {
@@ -284,6 +286,10 @@ public class AtomConverter {
     return Optional.ofNullable(cdAtom.getChemicalWarning())
         .map("ChemDraw can't interpret this label."::equals)
         .orElseGet(() -> false);
+  }
+
+  private boolean isMarkushLabel(String label) {
+    return "Y".equals(label) || "Ar".equals(label);
   }
 
   /**
