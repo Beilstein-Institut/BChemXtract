@@ -87,10 +87,14 @@ public class BondVisitor extends CDVisitor {
       if (hasNestedFragment(bond)) {
         CDFragment fragment = getNestedFragment(bond);
         // fix 'undetermined' double bonds in ChemDraw abbreviations
-        fragment.getBonds().forEach(b -> {
-          if (b.getBondOrder() == CDBondOrder.Double && b.getStereochemistry() == CDBondCIPType.Undetermined)
-            b.setStereochemistry(CDBondCIPType.None);
-        });
+        fragment
+            .getBonds()
+            .forEach(
+                b -> {
+                  if (b.getBondOrder() == CDBondOrder.Double
+                      && b.getStereochemistry() == CDBondCIPType.Undetermined)
+                    b.setStereochemistry(CDBondCIPType.None);
+                });
         // if nested fragment is unwanted abbreviation skip all nested bonds
         if (isNestedFragmentUnwantedAbbreviation(bond)) {
           skip.addAll(fragment.getBonds());

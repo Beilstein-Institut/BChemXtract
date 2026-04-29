@@ -31,10 +31,13 @@ import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
+import org.junit.Assert;
 import org.junit.Test;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.layout.Depict;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
-public class ResidueTest {
+public class MarkushTest {
 
   @Test
   public void testResidues() throws IOException {
@@ -51,5 +54,39 @@ public class ResidueTest {
     for (BCXSubstance substance : substances) {
       System.out.println("extracted: " + substance.getMolecularFormula());
     }
+  }
+
+  @Test
+  public void testMarkush_Ar_X_Y() throws IOException {
+    String fileName = "Markush_Ar_X_Y.cdx";
+    InputStream in = this.getClass().getResourceAsStream("/integrationTests/markush/" + fileName);
+    assertNotNull(in);
+
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+
+    BCXSubstanceInfo info = new BCXSubstanceInfo();
+    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
+    Assert.assertEquals(9, substances.size());
+  }
+
+  @Test
+  public void testMarkush_R_R1() throws IOException, CDKException {
+    String fileName = "Markush_R_R1.cdx";
+    InputStream in = this.getClass().getResourceAsStream("/integrationTests/markush/" + fileName);
+    assertNotNull(in);
+
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+
+    BCXSubstanceInfo info = new BCXSubstanceInfo();
+    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
+    for (BCXSubstance substance : substances) {
+      System.out.println("extracted: " + substance.getMolecularFormula());
+      Depict.exportStructAsImage(substance.getAtomContainer(), substance.getInchiKey());
+    }
+    Assert.assertEquals(14, substances.size());
   }
 }
