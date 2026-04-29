@@ -34,7 +34,6 @@ import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.layout.Depict;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 public class MarkushTest {
@@ -83,10 +82,6 @@ public class MarkushTest {
     BCXSubstanceInfo info = new BCXSubstanceInfo();
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
-    for (BCXSubstance substance : substances) {
-      System.out.println("extracted: " + substance.getMolecularFormula());
-      Depict.exportStructAsImage(substance.getAtomContainer(), substance.getInchiKey());
-    }
     Assert.assertEquals(14, substances.size());
   }
 }
