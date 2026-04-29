@@ -274,7 +274,12 @@ public class SubstanceXtractor {
       logger.error("Could not generate MDL V3000 mol file;");
     }
     // set SMILES
-    String smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
+    String smiles;
+    if (atomContainer.getAtomCount() > 500) {
+      smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Isomeric);
+    } else {
+      smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
+    }
     if (smiles == null) {
       // Fallback to canonical SMILES
       smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical);
@@ -283,11 +288,13 @@ public class SubstanceXtractor {
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
     // set InChI, InChIKey and AuxInfo
-    InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
-    substance.setInchi(gen.getInchi());
-    substance.setInchiKey(gen.getInchiKey());
-    if (gen.getAuxInfo().length() < 4000) {
-      substance.setAuxInfo(gen.getAuxInfo());
+    if (atomContainer.getAtomCount() < 500) {
+      InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
+      substance.setInchi(gen.getInchi());
+      substance.setInchiKey(gen.getInchiKey());
+      if (gen.getAuxInfo().length() < 4000) {
+        substance.setAuxInfo(gen.getAuxInfo());
+      }
     }
     // set molecular formula
     IMolecularFormula molecularFormula =
