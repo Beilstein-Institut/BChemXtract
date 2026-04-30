@@ -240,7 +240,7 @@
 							<dependency>
 								<groupId>com.puppycrawl.tools</groupId>
 								<artifactId>checkstyle</artifactId>
-								<version>10.21.4</version>
+								<version>10.26.1</version>
 							</dependency>
 						</dependencies>
 						<configuration>
@@ -264,7 +264,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-pmd-plugin</artifactId>
-						<version>3.27.0</version>
+						<version>3.28.0</version>
 						<configuration>
 							<targetJdk>${java.version}</targetJdk>
 							<failOnViolation>false</failOnViolation>
@@ -285,7 +285,7 @@
 					<plugin>
 						<groupId>com.github.spotbugs</groupId>
 						<artifactId>spotbugs-maven-plugin</artifactId>
-						<version>4.9.6.2</version>
+						<version>4.9.3.0</version>
 						<configuration>
 							<effort>Max</effort>
 							<threshold>Default</threshold>
@@ -307,7 +307,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>12.1.0</version>
+						<version>12.1.3</version>
 						<configuration>
 							<failBuildOnCVSS>11</failBuildOnCVSS>
 							<formats>
@@ -350,7 +350,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.2.7</version>
+						<version>3.2.8</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -371,7 +371,7 @@
 					<plugin>
 						<groupId>org.sonatype.central</groupId>
 						<artifactId>central-publishing-maven-plugin</artifactId>
-						<version>0.7.0</version>
+						<version>0.10.0</version>
 						<extensions>true</extensions>
 						<configuration>
 							<publishingServerId>central</publishingServerId>
