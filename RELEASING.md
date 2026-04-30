@@ -71,6 +71,34 @@ level (or via an environment named `maven-central` for the publish job).
 | `RELEASE_BCHEMXTRACT`   | PAT used by release-please to open PRs | Fine-grained PAT with `contents:write` + `pull-requests:write` on this repo |
 | `NVD_API_KEY` *(optional)* | Speeds up OWASP Dependency-Check | https://nvd.nist.gov/developers/request-an-api-key |
 
+### Current release signing key
+
+The active release signing key (created 2026-04-30, expires 2031-04-29):
+
+```
+Primary key fingerprint: 4C3D 88F6 8DE0 9D9B 1F22  51BF 09EE 7544 94D9 F94C
+Long key ID:             09EE754494D9F94C
+UID:                     Beilstein Institut Release Key
+                         (BChemXtract Maven Central signing)
+                         <open-source@beilstein-institut.de>
+Algorithm:               RSA 4096 (sign+certify primary, sign+encrypt subkey)
+```
+
+Published on:
+- `hkps://keyserver.ubuntu.com`
+- `hkps://keys.openpgp.org`
+
+To verify a signed artifact:
+
+```bash
+gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 09EE754494D9F94C
+gpg --verify bchemxtract-X.Y.Z.jar.asc bchemxtract-X.Y.Z.jar
+# Expected: Good signature from "Beilstein Institut Release Key ..."
+```
+
+> Earlier releases (v1.0, v1.1) were signed with an older key. Their
+> signatures remain valid; only v1.2.0+ uses the key above.
+
 ### Generating / preparing the GPG key
 
 If you need to bootstrap a new release key (or rotate the current one):
