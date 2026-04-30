@@ -28,13 +28,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+      # Use the upstream Gitleaks CLI binary directly. The
+      # gitleaks/gitleaks-action wrapper now requires a paid license
+      # for organizations; the CLI itself remains MIT-licensed.
+      - name: Install Gitleaks CLI
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'true'
-          GITLEAKS_ENABLE_SUMMARY: 'true'
-        continue-on-error: true
+          GITLEAKS_VERSION: '8.30.1'
+        run: |
+          curl -sSLf \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Run Gitleaks
+        run: |
+          gitleaks detect \
+            --source=. \
+            --redact \
+            --no-banner \
+            --verbose \
+            --report-format=sarif \
+            --report-path=gitleaks.sarif \
+            --exit-code=0
+
+      - name: Upload Gitleaks SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
 
   trivy:
     name: Trivy (CVE scan)
@@ -54,7 +76,7 @@ jobs:
         run: mvn -B -ntp -DskipTests dependency:resolve
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scan-ref: .

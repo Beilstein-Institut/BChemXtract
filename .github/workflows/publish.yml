@@ -48,6 +48,7 @@ jobs:
 
       - name: Verify version is not -SNAPSHOT
         run: |
+          # shellcheck disable=SC2016  # ${project.version} is a Maven property, intentionally not shell-expanded
           POM_VERSION=$(mvn -B -ntp -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
           echo "Project version: $POM_VERSION"
           if [[ "$POM_VERSION" == *-SNAPSHOT ]]; then

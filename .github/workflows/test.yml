@@ -18,6 +18,12 @@ jobs:
   test:
     name: JDK ${{ matrix.java }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for tokenless Codecov OIDC upload. Without this the
+      # codecov-action call to mint an ACTIONS_ID_TOKEN fails before it
+      # can use the fail_ci_if_error: false guard.
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
