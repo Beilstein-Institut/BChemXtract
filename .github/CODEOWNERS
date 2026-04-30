@@ -5,13 +5,13 @@
 # The default owners are automatically requested for review when someone
 # opens a pull request that modifies code they own.
 
-* @Beilstein-Institut/maintainers
+* @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
 
 # Build / release infrastructure changes deserve extra scrutiny.
-/.github/                       @Beilstein-Institut/maintainers
-/pom.xml                        @Beilstein-Institut/maintainers
-/release-please-config.json     @Beilstein-Institut/maintainers
-/.release-please-manifest.json  @Beilstein-Institut/maintainers
-/checkstyle.xml                 @Beilstein-Institut/maintainers
-/spotbugs-exclude.xml           @Beilstein-Institut/maintainers
-/RELEASING.md                   @Beilstein-Institut/maintainers
+/.github/                       @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/pom.xml                        @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/release-please-config.json     @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/.release-please-manifest.json  @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/checkstyle.xml                 @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/spotbugs-exclude.xml           @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/RELEASING.md                   @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
