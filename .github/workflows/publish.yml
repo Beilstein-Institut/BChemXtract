@@ -30,12 +30,12 @@ jobs:
     environment: maven-central
     steps:
       - name: Checkout release ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
       - name: Set up JDK 17 with Central Portal credentials
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
