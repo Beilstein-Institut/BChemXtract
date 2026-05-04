@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a defect in BChemXtract
+title: "fix: <short summary>"
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much as
+        you can — minimal reproductions are gold.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One- or two-sentence description of the problem.
+      placeholder: "Parsing CDX file X throws NullPointerException in BCXReactionInfo."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Exact commands, code snippet, or input file. Attach a sample CDX/CDXML
+        file if you can share one.
+      placeholder: |
+        1. `java -jar bchemxtract-1.1-jar-with-dependencies.jar sample.cdx`
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Stack trace, log output, screenshots.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: BChemXtract version
+      placeholder: "1.1"
+    validations:
+      required: true
+
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      description: Output of `java -version`
+      placeholder: "OpenJDK 17.0.10"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04 / macOS 15 / Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

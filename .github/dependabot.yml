@@ -1,0 +1,55 @@
+version: 2
+
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - java
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      cdk:
+        patterns:
+          - "org.openscience.cdk:*"
+      log4j:
+        patterns:
+          - "org.apache.logging.log4j:*"
+      slf4j:
+        patterns:
+          - "org.slf4j:*"
+      test-deps:
+        patterns:
+          - "junit:*"
+          - "org.mockito:*"
+          - "org.assertj:*"
+      maven-plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
+          - "com.diffplug.spotless:*"
+          - "com.github.spotbugs:*"
+          - "org.owasp:dependency-check-maven"
+          - "org.jacoco:jacoco-maven-plugin"
+          - "org.sonatype.central:central-publishing-maven-plugin"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+      include: scope
