@@ -202,14 +202,15 @@ In short:
 
 ## 📖 Citing BChemXtract
 
-If you use BChemXtract in published work, please cite:
+If you use BChemXtract in published work, please cite it using the metadata
+in [`CITATION.cff`](CITATION.cff), or the BibTeX entry below:
 
 ```bibtex
 @software{bchemxtract,
-  author       = {Bänsch, Felix and Nietfeld, Markus and Reschel, Udo and others},
-  title        = {{BChemXtract: a pure-Java extractor of ChemDraw structures and reactions}},
+  author       = {Bänsch, Felix and Rajan, Kohulan and Nietfeld, Markus},
+  title        = {{BChemXtract: a pure-Java extractor of ChemDraw structures}},
   organization = {Beilstein-Institut},
-  year         = {2025},
+  year         = {2026},
   url          = {https://github.com/Beilstein-Institut/BChemXtract}
 }
 ```

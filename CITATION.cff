@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "BChemXtract"
+abstract: "A pure-Java extractor of ChemDraw structures."
+type: software
+authors:
+  - given-names: "Felix"
+    family-names: "Bänsch"
+    orcid: "https://orcid.org/0000-0001-8973-8463"
+    affiliation: "Beilstein-Institut"
+  - given-names: "Kohulan"
+    family-names: "Rajan"
+    email: "krajan@beilstein-institut.de"
+    orcid: "https://orcid.org/0000-0003-1066-7792"
+    affiliation: "Beilstein-Institut"
+  - given-names: "Markus"
+    family-names: "Nietfeld"
+    orcid: "https://orcid.org/0000-0001-7786-3005"
+    affiliation: "Beilstein-Institut"
+repository-code: "https://github.com/Beilstein-Institut/BChemXtract"
+url: "https://github.com/Beilstein-Institut/BChemXtract"
+license: MIT
+keywords:
+  - "ChemDraw"
+  - "cheminformatics"
+  - "chemical-structure-extraction"
+  - "java"
+  - "CDX"
+  - "CDXML"
