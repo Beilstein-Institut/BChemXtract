@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
@@ -130,6 +131,17 @@ public class FragmentConverter {
     // get bonds
     BondVisitor bondVisitor = new BondVisitor(fragment, rawMode);
     List<CDBond> cdBonds = bondVisitor.getBonds();
+
+    // check for double bonds in single atom 'label abbreviations' like 'AcOK'
+    // TODO: change this behavior after adding a parent field to CDObject
+    if (fragment.getAtoms().size() == 1) {
+      cdBonds.forEach(
+          b -> {
+            if (b.getBondOrder() == CDBondOrder.Double
+                && b.getStereochemistry() == CDBondCIPType.Undetermined)
+              b.setStereochemistry(CDBondCIPType.None);
+          });
+    }
 
     // convert CDAtoms to IAtoms
     AtomConverter atomConverter = new AtomConverter(builder, mode);
