@@ -197,9 +197,192 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.13</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 
 	</build>
+
+	<profiles>
+		<!--
+			Quality profile: runs Checkstyle, PMD, SpotBugs, OWASP Dependency-Check.
+			Activate with `mvn -Pquality verify`. Kept off the default lifecycle so
+			day-to-day developer builds stay fast.
+		-->
+		<profile>
+			<id>quality</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+						<version>3.6.0</version>
+						<dependencies>
+							<dependency>
+								<groupId>com.puppycrawl.tools</groupId>
+								<artifactId>checkstyle</artifactId>
+								<version>10.26.1</version>
+							</dependency>
+						</dependencies>
+						<configuration>
+							<configLocation>${project.basedir}/checkstyle.xml</configLocation>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>false</failsOnError>
+							<failOnViolation>false</failOnViolation>
+							<includeTestSourceDirectory>false</includeTestSourceDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkstyle-check</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-pmd-plugin</artifactId>
+						<version>3.28.0</version>
+						<configuration>
+							<targetJdk>${java.version}</targetJdk>
+							<failOnViolation>false</failOnViolation>
+							<printFailingErrors>true</printFailingErrors>
+							<includeTests>false</includeTests>
+						</configuration>
+						<executions>
+							<execution>
+								<id>pmd-check</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+						<version>4.9.3.0</version>
+						<configuration>
+							<effort>Max</effort>
+							<threshold>Default</threshold>
+							<failOnError>false</failOnError>
+							<excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
+							<includeTests>false</includeTests>
+						</configuration>
+						<executions>
+							<execution>
+								<id>spotbugs-check</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>12.1.3</version>
+						<configuration>
+							<failBuildOnCVSS>11</failBuildOnCVSS>
+							<formats>
+								<format>HTML</format>
+								<format>SARIF</format>
+							</formats>
+							<skipTestScope>true</skipTestScope>
+							<nvdValidForHours>24</nvdValidForHours>
+						</configuration>
+						<executions>
+							<execution>
+								<id>dependency-check</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!--
+			Release profile: signs artifacts with GPG and publishes to Maven Central
+			via the new Central Portal (central.sonatype.com).
+
+			Required environment / GitHub Actions secrets:
+			  MAVEN_GPG_PRIVATE_KEY  - ASCII-armored private key
+			  MAVEN_GPG_PASSPHRASE   - passphrase
+			  CENTRAL_USERNAME       - Central Portal user-token name
+			  CENTRAL_PASSWORD       - Central Portal user-token value
+
+			Activate with `mvn -Prelease deploy`.
+		-->
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>3.2.8</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+								<configuration>
+									<gpgArguments>
+										<arg>--pinentry-mode</arg>
+										<arg>loopback</arg>
+									</gpgArguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>0.10.0</version>
+						<extensions>true</extensions>
+						<configuration>
+							<publishingServerId>central</publishingServerId>
+							<autoPublish>true</autoPublish>
+							<waitUntil>published</waitUntil>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 
 	<dependencies>

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Maintainer email
+    url: mailto:open-source@beilstein-institut.de
+    about: Reach the BChemXtract maintainers directly.
+  - name: ChemDraw file specification
+    url: https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk
+    about: Reference specification for the CDX file format.

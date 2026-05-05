@@ -1,0 +1,64 @@
+name: Publish to Maven Central
+
+# Fires when release-please cuts a GitHub Release. Signs artifacts with GPG
+# and uploads to the Sonatype Central Portal (central.sonatype.com).
+# `autoPublish=true` in the `release` profile means artifacts go live on
+# Central without a manual approval step.
+#
+# Required GitHub secrets:
+#   MAVEN_GPG_PRIVATE_KEY  - ASCII-armored release private key
+#   MAVEN_GPG_PASSPHRASE   - passphrase for the key
+#   CENTRAL_USERNAME       - Central Portal user-token name
+#   CENTRAL_PASSWORD       - Central Portal user-token value
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v1.2.0)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, sign, deploy
+    runs-on: ubuntu-latest
+    environment: maven-central
+    steps:
+      - name: Checkout release ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Set up JDK 17 with Central Portal credentials
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Verify version is not -SNAPSHOT
+        run: |
+          # shellcheck disable=SC2016  # ${project.version} is a Maven property, intentionally not shell-expanded
+          POM_VERSION=$(mvn -B -ntp -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          echo "Project version: $POM_VERSION"
+          if [[ "$POM_VERSION" == *-SNAPSHOT ]]; then
+            echo "::error::Refusing to publish a -SNAPSHOT version to Maven Central"
+            exit 1
+          fi
+
+      - name: Deploy to Central Portal
+        run: mvn -B -ntp -Prelease -DskipTests deploy
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}

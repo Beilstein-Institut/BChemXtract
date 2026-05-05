@@ -184,7 +184,8 @@ public class SubstanceXtractor {
    *
    * @param fragment the {@link CDFragment} to process
    * @param page the {@link CDPage} containing the fragment
-   * @param resolveRGroups whether to resolve R-groups
+   * @param markushHandler the {@link MarkushHandler} used to resolve R-groups (Markush expansion);
+   *     may be {@code null} to skip R-group resolution
    * @return a list of extracted {@link BCXSubstance} objects
    * @throws IOException if IO operations fail
    * @throws CDKException if CDK operations fail

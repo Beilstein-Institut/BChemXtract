@@ -1,0 +1,17 @@
+# BChemXtract Code Owners
+#
+# Rules: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+#
+# The default owners are automatically requested for review when someone
+# opens a pull request that modifies code they own.
+
+* @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+
+# Build / release infrastructure changes deserve extra scrutiny.
+/.github/                       @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/pom.xml                        @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/release-please-config.json     @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/.release-please-manifest.json  @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/checkstyle.xml                 @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/spotbugs-exclude.xml           @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
+/RELEASING.md                   @Kohulan @mnietfeld @ureschel-beilstein @fbaensch-beilstein
