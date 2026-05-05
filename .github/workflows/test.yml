@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['17', '21']
+        java: ['21']
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -53,7 +53,7 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage to Codecov
-        if: matrix.java == '17'
+        if: matrix.java == '21'
         uses: codecov/codecov-action@v6
         with:
           files: target/site/jacoco/jacoco.xml

@@ -34,11 +34,11 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
-      - name: Set up JDK 17 with Central Portal credentials
+      - name: Set up JDK 21 with Central Portal credentials
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
           cache: maven
           server-id: central
           server-username: CENTRAL_USERNAME
