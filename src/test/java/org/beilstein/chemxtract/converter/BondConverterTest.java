@@ -94,12 +94,22 @@ public class BondConverterTest {
     assertEquals(IBond.Display.Dash, result.getDisplay());
   }
 
+  @Ignore
+  @Deprecated
   @Test
   public void singleHashBondTest() throws CDKException {
     CDBond cdBond = mockBond(CDBondOrder.Single, CDBondDisplay.Hash, null);
     IBond result = converter.convert(cdBond);
     assertEquals(IBond.Order.SINGLE, result.getOrder());
     assertEquals(IBond.Display.Hash, result.getDisplay());
+  }
+
+  @Test
+  public void singleHashBondToWedgeHashBeginTest() throws CDKException {
+    CDBond cdBond = mockBond(CDBondOrder.Single, CDBondDisplay.Hash, null);
+    IBond result = converter.convert(cdBond);
+    assertEquals(IBond.Order.SINGLE, result.getOrder());
+    assertEquals(IBond.Display.WedgedHashBegin, result.getDisplay());
   }
 
   @Test
@@ -118,12 +128,22 @@ public class BondConverterTest {
     assertEquals(IBond.Display.WedgedHashEnd, result.getDisplay());
   }
 
+  @Ignore
+  @Deprecated
   @Test
   public void singleBoldBondTest() throws CDKException {
     CDBond cdBond = mockBond(CDBondOrder.Single, CDBondDisplay.Bold, null);
     IBond result = converter.convert(cdBond);
     assertEquals(IBond.Order.SINGLE, result.getOrder());
     assertEquals(IBond.Display.Bold, result.getDisplay());
+  }
+
+  @Test
+  public void singleBoldBondToWedgeBeginTest() throws CDKException {
+    CDBond cdBond = mockBond(CDBondOrder.Single, CDBondDisplay.Bold, null);
+    IBond result = converter.convert(cdBond);
+    assertEquals(IBond.Order.SINGLE, result.getOrder());
+    assertEquals(IBond.Display.WedgeBegin, result.getDisplay());
   }
 
   @Test

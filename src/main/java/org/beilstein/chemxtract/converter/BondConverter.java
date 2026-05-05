@@ -158,12 +158,12 @@ public class BondConverter {
       return IBond.Display.Solid;
     }
     return switch (cdBondDisplay) {
-      case WedgeBegin -> IBond.Display.WedgeBegin;
-      case WedgedHashBegin -> IBond.Display.WedgedHashBegin;
+      case WedgeBegin, Bold -> IBond.Display.WedgeBegin;
+      case WedgedHashBegin, Hash -> IBond.Display.WedgedHashBegin;
       case WedgeEnd -> IBond.Display.WedgeEnd;
       case WedgedHashEnd -> IBond.Display.WedgedHashEnd;
-      case Bold -> IBond.Display.Bold;
-      case Hash -> IBond.Display.Hash;
+      //      case Bold -> IBond.Display.Bold;
+      //      case Hash -> IBond.Display.Hash;
       case Wavy -> IBond.Display.Wavy;
       case Dash -> IBond.Display.Dash;
       default -> IBond.Display.Solid;
