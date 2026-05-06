@@ -81,14 +81,16 @@ import org.beilstein.chemxtract.io.IOUtils;
 import org.beilstein.chemxtract.cdx.CDXVisitor;
 
 // Read a CDX or CDXML file and walk its object tree
-var doc = IOUtils.readCDX("example.cdx");
+var in = new FileInputStream("example.cdx");
+var doc = CDXReader.readCDX("example.cdx");
 
 // Extract structures, enriched with InChI / SMILES / mol coordinates
-var structures = new CDXVisitor().extractStructures(doc);
+var xtractor = new SubstanceXtractor();
+var structures = xtractor.xtract(doc, new BCXSubstanceInfo());
 
 structures.forEach(s -> {
-    System.out.println(s.getInChI());
-    System.out.println(s.getSMILES());
+    System.out.println(s.getInchi());
+    System.out.println(s.getSmiles());
 });
 ```
 
