@@ -103,9 +103,11 @@ public class BondConverter {
     switch (cdOrder) {
       case Single:
         bond.setOrder(IBond.Order.SINGLE);
+        bond.setDisplay(convertSingleBondDisplay(source.getBondDisplay()));
         break;
       case Double:
         bond.setOrder(IBond.Order.DOUBLE);
+        bond.setDisplay(convertDoubleBondStereoToCDKDisplay(source.getStereochemistry()));
         break;
       case Triple:
         bond.setOrder(IBond.Order.TRIPLE);
@@ -131,14 +133,6 @@ public class BondConverter {
         break;
       default:
         throw new CDKException("Unsupported bond type: " + cdOrder.name());
-    }
-    // set single bond display type
-    if (IBond.Order.SINGLE.equals(bond.getOrder())) {
-      bond.setDisplay(convertSingleBondDisplay(source.getBondDisplay()));
-    }
-    // set double bond stereo
-    else if (IBond.Order.DOUBLE.equals(bond.getOrder())) {
-      bond.setDisplay(convertDoubleBondStereoToCDKDisplay(source.getStereochemistry()));
     }
     bondMap.putIfAbsent(source, bond);
     return bond;
