@@ -2,6 +2,28 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.1.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.0...v1.1.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* **ci:** pin aquasecurity/trivy-action to v0.36.0 (missing v prefix) ([248ff40](https://github.com/Beilstein-Institut/BChemXtract/commit/248ff400fa51bacb0cda6a6dc3a7147e62fe575d))
+* **ci:** repair workflow failures surfaced by first PR run ([def3ae7](https://github.com/Beilstein-Institut/BChemXtract/commit/def3ae7fe7cd9212d509917439bff65fcec8ea7f))
+* **codeowners:** use individual maintainers instead of nonexistent team ([2a66831](https://github.com/Beilstein-Institut/BChemXtract/commit/2a6683162e115639fedd429eb21fea2ba9b44513))
+* **javadoc:** correct stale [@param](https://github.com/param) tag in SubstanceXtractor.xtractSubstances ([c6704bb](https://github.com/Beilstein-Institut/BChemXtract/commit/c6704bb220e258193eefe235dd0013fc45d76856))
+* map Bold and Hash bond displays to WedgeBegin and WedgedHashBegin ([99c043c](https://github.com/Beilstein-Institut/BChemXtract/commit/99c043cc8f0eab8023f572d355f52570db1e4bd6))
+* suppress double bond stereochemistry for single-atom label abbreviations ([8cbed9e](https://github.com/Beilstein-Institut/BChemXtract/commit/8cbed9e3df1e594ea83dbbcf6d12094b0a1fd32f))
+
+
+### Documentation
+
+* add CITATION.cff and align README citation with author ORCIDs ([9037c31](https://github.com/Beilstein-Institut/BChemXtract/commit/9037c31598e7d2681c2b4f9c40f8def17a6e70ca))
+* add RELEASING.md and CONTRIBUTING.md ([f490ba4](https://github.com/Beilstein-Institut/BChemXtract/commit/f490ba443a3dd9aff1e35367ac6ff2830e52c23e))
+* **releasing:** record current release signing key fingerprint ([230f9e3](https://github.com/Beilstein-Institut/BChemXtract/commit/230f9e33c8e2ad1e9c81108397a5bef3a4c0ab5c))
+* revamp README with logo, badges, and structured layout ([4ce72c2](https://github.com/Beilstein-Institut/BChemXtract/commit/4ce72c2382afaf8a806044357435399c79714aab))
+* update README example to reflect current API ([87899c4](https://github.com/Beilstein-Institut/BChemXtract/commit/87899c49b1b6d2658b618d53d8a56e0377889c80))
+* update README example to reflect current API ([adb8dc0](https://github.com/Beilstein-Institut/BChemXtract/commit/adb8dc05f684f204e0375c7006e7bbbdd71f6000))
+
 ## [v1.1] – 2026-04-29
 
 ### New Features
