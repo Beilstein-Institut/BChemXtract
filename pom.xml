@@ -5,7 +5,7 @@
 	<artifactId>bchemxtract</artifactId>
 	<packaging>jar</packaging>
 	<name>BChemXtract</name>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>1.1.1</version>
 	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
 	<description>A pure-Java extractor of ChemDraw structures.</description>
 
