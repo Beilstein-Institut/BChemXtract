@@ -11,6 +11,8 @@
   "packages": {
     ".": {
       "package-name": "bchemxtract",
+      "bootstrap-sha": "0bca23f71b3a6229a851f4576058fd7516e62866",
+      "last-release-sha": "0bca23f71b3a6229a851f4576058fd7516e62866",
       "changelog-sections": [
         { "type": "feat",     "section": "Features" },
         { "type": "fix",      "section": "Bug Fixes" },
