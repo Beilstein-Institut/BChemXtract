@@ -107,7 +107,7 @@ public class BondConverter {
         break;
       case Double:
         bond.setOrder(IBond.Order.DOUBLE);
-        bond.setDisplay(convertDoubleBondStereoToCDKDisplay(source.getStereochemistry()));
+        bond.setDisplay(IBond.Display.Solid);
         break;
       case Triple:
         bond.setOrder(IBond.Order.TRIPLE);
