@@ -2,6 +2,14 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.1.2](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.1...v1.1.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* set IBond.Display.Solid for double bonds and remove undetermined stereo patches ([0e8cec7](https://github.com/Beilstein-Institut/BChemXtract/commit/0e8cec700a9f65cd5c5c464ea48e3801e794bb7d))
+* set IBond.Display.Solid for double bonds and remove undetermined… ([0a4b15e](https://github.com/Beilstein-Institut/BChemXtract/commit/0a4b15ef7fd18870361ac17496399717f8c3bc68))
+
 ## [1.1.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.0...v1.1.1) (2026-05-06)
 
 
