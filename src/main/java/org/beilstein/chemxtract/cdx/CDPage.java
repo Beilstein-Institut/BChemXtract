@@ -169,7 +169,9 @@ public class CDPage extends CDObject {
 
   public void setNamedAlternativeGroups(List<CDAltGroup> namedAlternativeGroups) {
     this.namedAlternativeGroups =
-        namedAlternativeGroups == null ? new ArrayList<>() : new ArrayList<>(namedAlternativeGroups);
+        namedAlternativeGroups == null
+            ? new ArrayList<>()
+            : new ArrayList<>(namedAlternativeGroups);
   }
 
   public void addNamedAlternativeGroup(CDAltGroup namedAlternativeGroup) {
