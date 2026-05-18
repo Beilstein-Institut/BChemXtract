@@ -28,7 +28,12 @@ import org.beilstein.chemxtract.cdx.datatypes.CDFont;
  * This class is used to build the "Visitor" pattern for {@link CDObject}s. For creating specific
  * visitors, implement a subclass, override the method you are interested in and pass the object to
  * the accept method of {@link CDPage}.
+ *
+ * <p>Methods on this base class are intentional no-ops: they exist to provide a default for
+ * subclasses that only override a subset of the visitor protocol. The unused parameters are part of
+ * the visitor contract.
  */
+@SuppressWarnings("unused")
 public class CDVisitor {
   public void visitDocument(CDDocument document) {
     // to be implemented in subclasses
