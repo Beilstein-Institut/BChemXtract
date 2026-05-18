@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,27 +46,39 @@ public class CDAltGroup extends CDObject {
   private int valence;
 
   public List<CDGroup> getGroups() {
-    return groups;
+    return Collections.unmodifiableList(groups);
   }
 
   public void setGroups(List<CDGroup> groups) {
-    this.groups = groups;
+    this.groups = groups == null ? new ArrayList<>() : new ArrayList<>(groups);
+  }
+
+  public void addGroup(CDGroup group) {
+    this.groups.add(group);
   }
 
   public List<CDFragment> getFragments() {
-    return fragments;
+    return Collections.unmodifiableList(fragments);
   }
 
   public void setFragments(List<CDFragment> fragments) {
-    this.fragments = fragments;
+    this.fragments = fragments == null ? new ArrayList<>() : new ArrayList<>(fragments);
+  }
+
+  public void addFragment(CDFragment fragment) {
+    this.fragments.add(fragment);
   }
 
   public List<CDText> getCaptions() {
-    return captions;
+    return Collections.unmodifiableList(captions);
   }
 
   public void setCaptions(List<CDText> captions) {
-    this.captions = captions;
+    this.captions = captions == null ? new ArrayList<>() : new ArrayList<>(captions);
+  }
+
+  public void addCaption(CDText caption) {
+    this.captions.add(caption);
   }
 
   public CDRectangle getTextFrame() {

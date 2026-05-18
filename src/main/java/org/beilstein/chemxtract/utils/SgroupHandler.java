@@ -106,11 +106,11 @@ public class SgroupHandler {
         i < repeatCount - 1;
         i++) { // repeat count -1, as the multiple group already exists once
       CDAtom atom2 = new CDAtom(atom1);
-      fragment.getAtoms().add(atom2);
+      fragment.addAtom(atom2);
       CDBond newBond = new CDBond(crossingBond);
       newBond.setBegin(atom1);
       newBond.setEnd(atom2);
-      fragment.getBonds().add(newBond);
+      fragment.addBond(newBond);
       atom1 = atom2;
       if (i == repeatCount - 2) {
         if (crossingBond.getBegin().equals(atom)) crossingBond.setBegin(atom2);
@@ -158,9 +158,9 @@ public class SgroupHandler {
         copyBond.setBegin(copyBegin);
         copyBond.setEnd(copyEnd);
 
-        fragment.getBonds().add(copyBond);
+        fragment.addBond(copyBond);
       }
-      fragment.getAtoms().addAll(atomMap.values());
+      fragment.addAllAtoms(atomMap.values());
 
       // Reconnect internal multiple group if the bracket has attachments.
       // Bracket must have an even number of crossing bonds, i.e. zero or two.
@@ -207,6 +207,6 @@ public class SgroupHandler {
     copyLastBond.setEnd(firstNonMultipleGroupAtom);
 
     // Add the new bond to the fragment
-    fragment.getBonds().add(copyLastBond);
+    fragment.addBond(copyLastBond);
   }
 }

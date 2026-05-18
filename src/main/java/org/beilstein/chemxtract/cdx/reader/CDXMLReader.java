@@ -77,7 +77,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Page)) {
-        document.getPages().add(createPageObject(object));
+        document.addPage(createPageObject(object));
       } else if (name.equals(CDXMLObj_TemplateGrid)) {
         document.setTemplateGrid(createTemplateGridObject(object));
       } else if (name.equals(CDXMLObj_ColorTable)) {
@@ -297,47 +297,47 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Group)) {
-        page.getGroups().add(createGroupObject(object));
+        page.addGroup(createGroupObject(object));
       } else if (name.equals(CDXMLObj_Fragment)) {
-        page.getFragments().add(createFragmentObject(object));
+        page.addFragment(createFragmentObject(object));
       } else if (name.equals(CDXMLObj_Text)) {
-        page.getTexts().add(createTextObject(object));
+        page.addText(createTextObject(object));
       } else if (name.equals(CDXMLObj_Graphic)) {
-        page.getGraphics().add(createGraphicObject(object));
+        page.addGraphic(createGraphicObject(object));
       } else if (name.equals(CDXMLObj_Arrow)) {
-        page.getArrows().add(createArrowObject(object));
+        page.addArrow(createArrowObject(object));
       } else if (name.equals(CDXMLObj_BracketedGroup)) {
-        page.getBracketedGroups().add(createBracketedGroupObject(object));
+        page.addBracketedGroup(createBracketedGroupObject(object));
       } else if (name.equals(CDXMLObj_Curve)) {
-        page.getCurves().add(createSplineObject(object));
+        page.addCurve(createSplineObject(object));
       } else if (name.equals(CDXMLObj_EmbeddedObject)) {
-        page.getEmbeddedObjects().add(createEmbeddedObjectObject(object));
+        page.addEmbeddedObject(createEmbeddedObjectObject(object));
       } else if (name.equals(CDXMLObj_Table)) {
-        page.getTables().add(createTableObject(object));
+        page.addTable(createTableObject(object));
       } else if (name.equals(CDXMLObj_NamedAlternativeGroup)) {
-        page.getNamedAlternativeGroups().add(createNamedAlternativeGroupObject(object));
+        page.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
       } else if (name.equals(CDXMLObj_ReactionScheme)) {
-        page.getReactionSchemes().add(createReactionSchemeObject(object));
+        page.addReactionScheme(createReactionSchemeObject(object));
       } else if (name.equals(CDXMLObj_ReactionStep)) {
-        page.getReactionSteps().add(createReactionStepObject(object));
+        page.addReactionStep(createReactionStepObject(object));
       } else if (name.equals(CDXMLObj_Spectrum)) {
-        page.getSpectra().add(createSpectrumObject(object));
+        page.addSpectrum(createSpectrumObject(object));
       } else if (name.equals(CDXMLObj_Sequence)) {
-        page.getSequences().add(createSequenceObject(object));
+        page.addSequence(createSequenceObject(object));
       } else if (name.equals(CDXMLObj_CrossReference)) {
-        page.getCrossReferences().add(createCrossReferenceObject(object));
+        page.addCrossReference(createCrossReferenceObject(object));
       } else if (name.equals(CDXMLObj_Border)) {
-        page.getBorders().add(createBorderObject(object));
+        page.addBorder(createBorderObject(object));
       } else if (name.equals(CDXMLObj_Geometry)) {
-        page.getGeometries().add(createGeometryObject(object));
+        page.addGeometry(createGeometryObject(object));
       } else if (name.equals(CDXMLObj_Constraint)) {
-        page.getConstraints().add(createConstraintObject(object));
+        page.addConstraint(createConstraintObject(object));
       } else if (name.equals(CDXMLObj_TLCPlate)) {
-        page.getTLCPlates().add(createTLCPlateObject(object));
+        page.addTLCPlate(createTLCPlateObject(object));
       } else if (name.equals(CDXMLObj_Splitter)) {
-        page.getSplitters().add(createSplitterObject(object));
+        page.addSplitter(createSplitterObject(object));
       } else if (name.equals(CDXMLObj_ChemicalProperty)) {
-        page.getChemicalProperties().add(createChemicalPropertyObject(object));
+        page.addChemicalProperty(createChemicalPropertyObject(object));
       } else {
 
         // TODO arrow, bioshape
@@ -406,19 +406,19 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Node)) {
-        fragment.getAtoms().add(createNodeObject(object));
+        fragment.addAtom(createNodeObject(object));
       } else if (name.equals(CDXMLObj_Bond)) {
-        fragment.getBonds().add(createBondObject(object));
+        fragment.addBond(createBondObject(object));
       } else if (name.equals(CDXMLObj_Graphic)) {
-        fragment.getGraphics().add(createGraphicObject(object));
+        fragment.addGraphic(createGraphicObject(object));
       } else if (name.equals(CDXMLObj_Curve)) {
-        fragment.getCurves().add(createSplineObject(object));
+        fragment.addCurve(createSplineObject(object));
       } else if (name.equals(CDXMLObj_ObjectTag)) {
-        fragment.getObjectTags().add(createObjectTagObject(object));
+        fragment.addObjectTag(createObjectTagObject(object));
       } else if (name.equals(CDXMLObj_Text)) {
-        fragment.getTexts().add(createTextObject(object));
+        fragment.addText(createTextObject(object));
       } else if (name.equals(CDXMLObj_ColoredMolecularArea)) {
-        fragment.getColoredMolecularAreas().add(createColoredMolecularArea(object));
+        fragment.addColoredMolecularArea(createColoredMolecularArea(object));
       } else {
 
         // regnum
@@ -472,7 +472,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Fragment)) {
-        node.getFragments().add(createFragmentObject(object));
+        node.addFragment(createFragmentObject(object));
       } else if (name.equals(CDXMLObj_Text)) {
         if (node.getText() != null) {
           throw new IOException("Unexpected object");
@@ -480,7 +480,7 @@ public class CDXMLReader {
         node.setText(createTextObject(object));
 
       } else if (name.equals(CDXMLObj_ObjectTag)) {
-        node.getObjectTags().add(createObjectTagObject(object));
+        node.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -634,7 +634,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        bond.getObjectTags().add(createObjectTagObject(object));
+        bond.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -781,27 +781,27 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Group)) {
-        group.getGroups().add(createGroupObject(object));
+        group.addGroup(createGroupObject(object));
       } else if (name.equals(CDXMLObj_Fragment)) {
-        group.getFragments().add(createFragmentObject(object));
+        group.addFragment(createFragmentObject(object));
       } else if (name.equals(CDXMLObj_Text)) {
-        group.getCaptions().add(createTextObject(object));
+        group.addCaption(createTextObject(object));
       } else if (name.equals(CDXMLObj_Graphic)) {
-        group.getGraphics().add(createGraphicObject(object));
+        group.addGraphic(createGraphicObject(object));
       } else if (name.equals(CDXMLObj_Arrow)) {
-        group.getArrows().add(createArrowObject(object));
+        group.addArrow(createArrowObject(object));
       } else if (name.equals(CDXMLObj_Curve)) {
-        group.getCurves().add(createSplineObject(object));
+        group.addCurve(createSplineObject(object));
       } else if (name.equals(CDXMLObj_NamedAlternativeGroup)) {
-        group.getNamedAlternativeGroups().add(createNamedAlternativeGroupObject(object));
+        group.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
       } else if (name.equals(CDXMLObj_ReactionStep)) {
-        group.getReactionSteps().add(createReactionStepObject(object));
+        group.addReactionStep(createReactionStepObject(object));
       } else if (name.equals(CDXMLObj_Spectrum)) {
-        group.getSpectra().add(createSpectrumObject(object));
+        group.addSpectrum(createSpectrumObject(object));
       } else if (name.equals(CDXMLObj_EmbeddedObject)) {
-        group.getEmbeddedObjects().add(createEmbeddedObjectObject(object));
+        group.addEmbeddedObject(createEmbeddedObjectObject(object));
       } else if (name.equals(CDXMLObj_ObjectTag)) {
-        group.getObjectTags().add(createObjectTagObject(object));
+        group.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -839,13 +839,13 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        text.getObjectTags().add(createObjectTagObject(object));
+        text.addObjectTag(createObjectTagObject(object));
       } else if (name.equals(CDXMLObj_String)) {
         CDStyledString string = text.getText();
         if (string == null) {
           string = new CDStyledString();
         }
-        string.getChunks().addAll(createStyledString(object).getChunks());
+        string.addAllChunks(createStyledString(object).getChunks());
         text.setText(string);
       } else {
 
@@ -947,7 +947,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        graphic.getObjectTags().add(createObjectTagObject(object));
+        graphic.addObjectTag(createObjectTagObject(object));
       } else if (name.equals(CDXMLObj_Represent)) {
         createRepresent(object, graphic.getRepresents());
       } else {
@@ -1089,7 +1089,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        arrow.getObjectTags().add(createObjectTagObject(object));
+        arrow.addObjectTag(createObjectTagObject(object));
       } else {
         handleMissingObject(object);
       }
@@ -1189,9 +1189,9 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_BracketedGroup)) {
-        bracketedGroup.getBrackets().add(createBracketedGroupObject(object));
+        bracketedGroup.addBracket(createBracketedGroupObject(object));
       } else if (name.equals(CDXMLObj_BracketAttachment)) {
-        bracketedGroup.getBracketAttachments().add(createBracketAttachmentObject(object));
+        bracketedGroup.addBracketAttachment(createBracketAttachmentObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1244,7 +1244,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_CrossingBond)) {
-        bracketAttachment.getCrossingBonds().add(createCrossingBondObject(object));
+        bracketAttachment.addCrossingBond(createCrossingBondObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1351,9 +1351,9 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        plate.getObjectTags().add(createObjectTagObject(object));
+        plate.addObjectTag(createObjectTagObject(object));
       } else if (name.equals(CDXMLObj_TLCLane)) {
-        plate.getLanes().add(createTLCLaneObject(object));
+        plate.addLane(createTLCLaneObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1432,9 +1432,9 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        lane.getObjectTags().add(createObjectTagObject(object));
+        lane.addObjectTag(createObjectTagObject(object));
       } else if (name.equals(CDXMLObj_TLCSpot)) {
-        lane.getSpots().add(createTLCSpotObject(object));
+        lane.addSpot(createTLCSpotObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1470,7 +1470,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        spot.getObjectTags().add(createObjectTagObject(object));
+        spot.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1520,7 +1520,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        constraint.getObjectTags().add(createObjectTagObject(object));
+        constraint.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1589,7 +1589,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        geometry.getObjectTags().add(createObjectTagObject(object));
+        geometry.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1757,7 +1757,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        spectrum.getObjectTags().add(createObjectTagObject(object));
+        spectrum.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1916,7 +1916,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ReactionStep)) {
-        reactionScheme.getSteps().add(createReactionStepObject(object));
+        reactionScheme.addStep(createReactionStepObject(object));
       } else {
 
         handleMissingObject(object);
@@ -1950,13 +1950,13 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Group)) {
-        namedAlternativeGroup.getGroups().add(createGroupObject(object));
+        namedAlternativeGroup.addGroup(createGroupObject(object));
       } else if (name.equals(CDXMLObj_Fragment)) {
-        namedAlternativeGroup.getFragments().add(createFragmentObject(object));
+        namedAlternativeGroup.addFragment(createFragmentObject(object));
       } else if (name.equals(CDXMLObj_Text)) {
-        namedAlternativeGroup.getCaptions().add(createTextObject(object));
+        namedAlternativeGroup.addCaption(createTextObject(object));
       } else if (name.equals(CDXMLObj_ObjectTag)) {
-        namedAlternativeGroup.getObjectTags().add(createObjectTagObject(object));
+        namedAlternativeGroup.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -2013,9 +2013,9 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Page)) {
-        table.getPages().add(createPageObject(object));
+        table.addPage(createPageObject(object));
       } else if (name.equals(CDXMLObj_ObjectTag)) {
-        table.getObjectTags().add(createObjectTagObject(object));
+        table.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -2073,7 +2073,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        embeddedObject.getObjectTags().add(createObjectTagObject(object));
+        embeddedObject.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -2216,7 +2216,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_ObjectTag)) {
-        curve.getObjectTags().add(createObjectTagObject(object));
+        curve.addObjectTag(createObjectTagObject(object));
       } else {
 
         handleMissingObject(object);
@@ -2299,7 +2299,7 @@ public class CDXMLReader {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
       if (name.equals(CDXMLObj_Text)) {
-        objectTag.getTexts().add(createTextObject(object));
+        objectTag.addText(createTextObject(object));
       } else {
 
         handleMissingObject(object);
@@ -2505,9 +2505,8 @@ public class CDXMLReader {
     CDColor color = readColorAttribute(object, CDXMLProp_ForegroundColor);
 
     CDStyledString string = new CDStyledString();
-    string
-        .getChunks()
-        .add(new CDStyledString.CDXChunk(font, size, fontType, color, object.getTextsAsString()));
+    string.addChunk(
+        new CDStyledString.CDXChunk(font, size, fontType, color, object.getTextsAsString()));
     return string;
   }
 

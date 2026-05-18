@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** Specifies an external connection for a bracket. */
@@ -31,11 +32,15 @@ public class CDBracketAttachment {
   private CDGraphic graphic;
 
   public List<CDCrossingBond> getCrossingBonds() {
-    return crossingBonds;
+    return Collections.unmodifiableList(crossingBonds);
   }
 
   public void setCrossingBonds(List<CDCrossingBond> crossingBonds) {
-    this.crossingBonds = crossingBonds;
+    this.crossingBonds = crossingBonds == null ? new ArrayList<>() : new ArrayList<>(crossingBonds);
+  }
+
+  public void addCrossingBond(CDCrossingBond crossingBond) {
+    this.crossingBonds.add(crossingBond);
   }
 
   public CDGraphic getGraphic() {

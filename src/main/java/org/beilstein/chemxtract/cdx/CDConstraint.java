@@ -21,6 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
 
@@ -60,11 +62,11 @@ public class CDConstraint extends CDObject {
   }
 
   public List<Object> getBasisObjects() {
-    return basisObjects;
+    return basisObjects == null ? null : Collections.unmodifiableList(basisObjects);
   }
 
   public void setBasisObjects(List<Object> basisObjects) {
-    this.basisObjects = basisObjects;
+    this.basisObjects = basisObjects == null ? null : new ArrayList<>(basisObjects);
   }
 
   public CDConstraintType getConstraintType() {

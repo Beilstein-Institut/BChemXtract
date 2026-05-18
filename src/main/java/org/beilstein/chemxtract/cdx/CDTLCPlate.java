@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
@@ -86,11 +87,15 @@ public class CDTLCPlate extends CDObject {
   }
 
   public List<CDTLCLane> getLanes() {
-    return lanes;
+    return Collections.unmodifiableList(lanes);
   }
 
   public void setLanes(List<CDTLCLane> lanes) {
-    this.lanes = lanes;
+    this.lanes = lanes == null ? new ArrayList<>() : new ArrayList<>(lanes);
+  }
+
+  public void addLane(CDTLCLane lane) {
+    this.lanes.add(lane);
   }
 
   public CDPoint2D getTopLeft() {

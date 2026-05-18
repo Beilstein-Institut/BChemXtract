@@ -119,7 +119,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Page:
-          document.getPages().add(createPageObject(object));
+          document.addPage(createPageObject(object));
           break;
         case CDXObj_TemplateGrid:
           if (document.getTemplateGrid() != null) {
@@ -353,68 +353,68 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Group:
-          page.getGroups().add(createGroupObject(object));
+          page.addGroup(createGroupObject(object));
           break;
         case CDXObj_Fragment:
-          page.getFragments().add(createFragmentObject(object));
+          page.addFragment(createFragmentObject(object));
           break;
         case CDXObj_Text:
-          page.getTexts().add(createTextObject(object));
+          page.addText(createTextObject(object));
           break;
         case CDXObj_Graphic:
-          page.getGraphics().add(createGraphicObject(object));
+          page.addGraphic(createGraphicObject(object));
           break;
         case CDXObj_BracketedGroup:
-          page.getBracketedGroups().add(createBracketedGroupObject(object));
+          page.addBracketedGroup(createBracketedGroupObject(object));
           break;
         case CDXObj_Curve:
-          page.getCurves().add(createSplineObject(object));
+          page.addCurve(createSplineObject(object));
           break;
         case CDXObj_EmbeddedObject:
-          page.getEmbeddedObjects().add(createEmbeddedObjectObject(object));
+          page.addEmbeddedObject(createEmbeddedObjectObject(object));
           break;
         case CDXObj_Table:
-          page.getTables().add(createTableObject(object));
+          page.addTable(createTableObject(object));
           break;
         case CDXObj_NamedAlternativeGroup:
-          page.getNamedAlternativeGroups().add(createNamedAlternativeGroupObject(object));
+          page.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
           break;
         case CDXObj_ReactionScheme:
-          page.getReactionSchemes().add(createReactionSchemeObject(object));
+          page.addReactionScheme(createReactionSchemeObject(object));
           break;
         case CDXObj_ReactionStep:
-          page.getReactionSteps().add(createReactionStepObject(object));
+          page.addReactionStep(createReactionStepObject(object));
           break;
         case CDXObj_Spectrum:
-          page.getSpectra().add(createSpectrumObject(object));
+          page.addSpectrum(createSpectrumObject(object));
           break;
         case CDXObj_Sequence:
-          page.getSequences().add(createSequenceObject(object));
+          page.addSequence(createSequenceObject(object));
           break;
         case CDXObj_CrossReference:
-          page.getCrossReferences().add(createCrossReferenceObject(object));
+          page.addCrossReference(createCrossReferenceObject(object));
           break;
         case CDXObj_Border:
-          page.getBorders().add(createBorderObject(object));
+          page.addBorder(createBorderObject(object));
           break;
         case CDXObj_Geometry:
-          page.getGeometries().add(createGeometryObject(object));
+          page.addGeometry(createGeometryObject(object));
           break;
         case CDXObj_Constraint:
-          page.getConstraints().add(createConstraintObject(object));
+          page.addConstraint(createConstraintObject(object));
           break;
         case CDXObj_TLCPlate:
-          page.getTLCPlates().add(createTLCPlateObject(object));
+          page.addTLCPlate(createTLCPlateObject(object));
           break;
         case CDXObj_Splitter:
-          page.getSplitters().add(createSplitterObject(object));
+          page.addSplitter(createSplitterObject(object));
           break;
         case CDXObj_ChemicalProperty:
-          page.getChemicalProperties().add(createChemicalPropertyObject(object));
+          page.addChemicalProperty(createChemicalPropertyObject(object));
           break;
 
         case CDXObj_Arrow:
-          page.getArrows().add(createArrowObject(object));
+          page.addArrow(createArrowObject(object));
           break;
 
         default:
@@ -496,29 +496,29 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Node:
-          fragment.getAtoms().add(createNodeObject(object));
+          fragment.addAtom(createNodeObject(object));
           break;
         case CDXObj_Bond:
-          fragment.getBonds().add(createBondObject(object));
+          fragment.addBond(createBondObject(object));
           break;
         case CDXObj_Graphic:
-          fragment.getGraphics().add(createGraphicObject(object));
+          fragment.addGraphic(createGraphicObject(object));
           break;
         case CDXObj_Curve:
-          fragment.getCurves().add(createSplineObject(object));
+          fragment.addCurve(createSplineObject(object));
           break;
         case CDXObj_ObjectTag:
-          fragment.getObjectTags().add(createObjectTagObject(object));
+          fragment.addObjectTag(createObjectTagObject(object));
           break;
 
         case CDXObj_Text:
-          fragment.getTexts().add(createTextObject(object));
+          fragment.addText(createTextObject(object));
           break;
         case CDXObj_Arrow:
-          fragment.getArrows().add(createArrowObject(object));
+          fragment.addArrow(createArrowObject(object));
           break;
         case CDXObj_ColoredMolecularArea:
-          fragment.getColoredMolecularAreas().add(createColoredMolecularArea(object));
+          fragment.addColoredMolecularArea(createColoredMolecularArea(object));
           break;
 
         default:
@@ -573,7 +573,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Fragment:
-          node.getFragments().add(createFragmentObject(object));
+          node.addFragment(createFragmentObject(object));
           break;
         case CDXObj_Text:
           if (node.getText() != null) {
@@ -582,7 +582,7 @@ public class CDXReader {
           node.setText(createTextObject(object));
           break;
         case CDXObj_ObjectTag:
-          node.getObjectTags().add(createObjectTagObject(object));
+          node.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -794,7 +794,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          bond.getObjectTags().add(createObjectTagObject(object));
+          bond.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -978,38 +978,38 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Group:
-          group.getGroups().add(createGroupObject(object));
+          group.addGroup(createGroupObject(object));
           break;
         case CDXObj_Fragment:
-          group.getFragments().add(createFragmentObject(object));
+          group.addFragment(createFragmentObject(object));
           break;
         case CDXObj_Text:
-          group.getCaptions().add(createTextObject(object));
+          group.addCaption(createTextObject(object));
           break;
         case CDXObj_Graphic:
-          group.getGraphics().add(createGraphicObject(object));
+          group.addGraphic(createGraphicObject(object));
           break;
         case CDXObj_Curve:
-          group.getCurves().add(createSplineObject(object));
+          group.addCurve(createSplineObject(object));
           break;
         case CDXObj_NamedAlternativeGroup:
-          group.getNamedAlternativeGroups().add(createNamedAlternativeGroupObject(object));
+          group.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
           break;
         case CDXObj_ReactionStep:
-          group.getReactionSteps().add(createReactionStepObject(object));
+          group.addReactionStep(createReactionStepObject(object));
           break;
         case CDXObj_Spectrum:
-          group.getSpectra().add(createSpectrumObject(object));
+          group.addSpectrum(createSpectrumObject(object));
           break;
         case CDXObj_EmbeddedObject:
-          group.getEmbeddedObjects().add(createEmbeddedObjectObject(object));
+          group.addEmbeddedObject(createEmbeddedObjectObject(object));
           break;
         case CDXObj_ObjectTag:
-          group.getObjectTags().add(createObjectTagObject(object));
+          group.addObjectTag(createObjectTagObject(object));
           break;
 
         case CDXObj_Arrow:
-          group.getArrows().add(createArrowObject(object));
+          group.addArrow(createArrowObject(object));
           break;
 
         default:
@@ -1050,7 +1050,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          text.getObjectTags().add(createObjectTagObject(object));
+          text.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -1180,7 +1180,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          graphic.getObjectTags().add(createObjectTagObject(object));
+          graphic.addObjectTag(createObjectTagObject(object));
           break;
         default:
           handleMissingTag(object);
@@ -1363,7 +1363,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          arrow.getObjectTags().add(createObjectTagObject(object));
+          arrow.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -1501,10 +1501,10 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_BracketedGroup:
-          bracketedGroup.getBrackets().add(createBracketedGroupObject(object));
+          bracketedGroup.addBracket(createBracketedGroupObject(object));
           break;
         case CDXObj_BracketAttachment:
-          bracketedGroup.getBracketAttachments().add(createBracketAttachmentObject(object));
+          bracketedGroup.addBracketAttachment(createBracketAttachmentObject(object));
           break;
 
         default:
@@ -1561,7 +1561,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_CrossingBond:
-          bracketAttachment.getCrossingBonds().add(createCrossingBondObject(object));
+          bracketAttachment.addCrossingBond(createCrossingBondObject(object));
           break;
 
         default:
@@ -1673,10 +1673,10 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          plate.getObjectTags().add(createObjectTagObject(object));
+          plate.addObjectTag(createObjectTagObject(object));
           break;
         case CDXObj_TLCLane:
-          plate.getLanes().add(createTLCLaneObject(object));
+          plate.addLane(createTLCLaneObject(object));
           break;
 
         default:
@@ -1771,10 +1771,10 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          lane.getObjectTags().add(createObjectTagObject(object));
+          lane.addObjectTag(createObjectTagObject(object));
           break;
         case CDXObj_TLCSpot:
-          lane.getSpots().add(createTLCSpotObject(object));
+          lane.addSpot(createTLCSpotObject(object));
           break;
 
         default:
@@ -1812,7 +1812,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          spot.getObjectTags().add(createObjectTagObject(object));
+          spot.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -1871,7 +1871,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          constraint.getObjectTags().add(createObjectTagObject(object));
+          constraint.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -1951,7 +1951,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          geometry.getObjectTags().add(createObjectTagObject(object));
+          geometry.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2142,7 +2142,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          spectrum.getObjectTags().add(createObjectTagObject(object));
+          spectrum.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2312,7 +2312,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ReactionStep:
-          reactionScheme.getSteps().add(createReactionStepObject(object));
+          reactionScheme.addStep(createReactionStepObject(object));
           break;
 
         default:
@@ -2345,16 +2345,16 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Group:
-          namedAlternativeGroup.getGroups().add(createGroupObject(object));
+          namedAlternativeGroup.addGroup(createGroupObject(object));
           break;
         case CDXObj_Fragment:
-          namedAlternativeGroup.getFragments().add(createFragmentObject(object));
+          namedAlternativeGroup.addFragment(createFragmentObject(object));
           break;
         case CDXObj_Text:
-          namedAlternativeGroup.getCaptions().add(createTextObject(object));
+          namedAlternativeGroup.addCaption(createTextObject(object));
           break;
         case CDXObj_ObjectTag:
-          namedAlternativeGroup.getObjectTags().add(createObjectTagObject(object));
+          namedAlternativeGroup.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2421,10 +2421,10 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Page:
-          table.getPages().add(createPageObject(object));
+          table.addPage(createPageObject(object));
           break;
         case CDXObj_ObjectTag:
-          table.getObjectTags().add(createObjectTagObject(object));
+          table.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2492,7 +2492,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          picture.getObjectTags().add(createObjectTagObject(object));
+          picture.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2642,7 +2642,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_ObjectTag:
-          spline.getObjectTags().add(createObjectTagObject(object));
+          spline.addObjectTag(createObjectTagObject(object));
           break;
 
         default:
@@ -2740,7 +2740,7 @@ public class CDXReader {
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
         case CDXObj_Text:
-          objectTag.getTexts().add(createTextObject(object));
+          objectTag.addText(createTextObject(object));
           break;
 
         default:

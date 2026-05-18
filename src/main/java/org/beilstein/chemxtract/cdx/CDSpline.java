@@ -21,6 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
@@ -70,19 +72,19 @@ public class CDSpline extends CDObject {
   }
 
   public List<CDPoint2D> getPoints2D() {
-    return points2D;
+    return points2D == null ? null : Collections.unmodifiableList(points2D);
   }
 
   public void setPoints2D(List<CDPoint2D> points2D) {
-    this.points2D = points2D;
+    this.points2D = points2D == null ? null : new ArrayList<>(points2D);
   }
 
   public List<CDPoint3D> getPoints3D() {
-    return points3D;
+    return points3D == null ? null : Collections.unmodifiableList(points3D);
   }
 
   public void setPoints3D(List<CDPoint3D> points3D) {
-    this.points3D = points3D;
+    this.points3D = points3D == null ? null : new ArrayList<>(points3D);
   }
 
   public CDArrowHeadType getArrowHeadType() {
