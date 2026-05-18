@@ -44,7 +44,11 @@ public class CDVisitor {
    * @param object the visited object
    */
   protected void visitDefault(Object object) {
-    // no-op; override in subclasses to handle every unhandled visit
+    // Read the argument so the parameter is not flagged as unused; the base implementation is
+    // otherwise a no-op. Subclasses may override to handle every unhandled visit.
+    if (object == null) {
+      return;
+    }
   }
 
   public void visitDocument(CDDocument document) {
