@@ -1828,7 +1828,11 @@ public class CDXMLReader {
       List<Double> values = new ArrayList<>();
       for (String part : text.split("\\s+")) {
         if (part.length() > 0) {
-          values.add(Double.parseDouble(part));
+          try {
+            values.add(Double.parseDouble(part));
+          } catch (NumberFormatException e) {
+            logger.warn("Skipping non-numeric spectrum data point \"" + part + "\"", e);
+          }
         }
       }
       double[] array = new double[values.size()];
