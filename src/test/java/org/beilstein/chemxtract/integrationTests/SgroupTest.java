@@ -40,7 +40,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupsTest() throws Exception {
     String fileName = "multipleGroups.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -55,7 +55,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupNonaneMUL2Test() throws Exception {
     String fileName = "nonane_MUL2.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -68,7 +68,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupDimethylOctanceMUL2Test() throws Exception {
     String fileName = "dimethyloctane_MUL2.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -81,7 +81,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupDimethylStyreneMUL5Test() throws Exception {
     String fileName = "Sgroups_MultipleGroup 01.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -95,7 +95,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupTetramethylnonaneMUL2Test() throws Exception {
     String fileName = "tetramethylnonane_MUL2.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -108,7 +108,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupDecamethylpentadecane_MUL5Test() throws Exception {
     String fileName = "decamethylpentadecane_MUL5.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -121,7 +121,7 @@ public class SgroupTest {
   @Test
   public void multipleGroupTrimethylnonane_MUL3Test() throws Exception {
     String fileName = "trimethylnonane_MUL3.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);
@@ -134,7 +134,7 @@ public class SgroupTest {
   @Test
   public void multiple_groups_Test() throws IOException {
     String fileName = "multiple_groups.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/sgroups/" + fileName);
+    InputStream in = SgroupTest.class.getResourceAsStream("/integrationTests/sgroups/" + fileName);
     Assert.assertNotNull(in);
     CDDocument document = CDXReader.readDocument(in);
     Assert.assertNotNull(document);

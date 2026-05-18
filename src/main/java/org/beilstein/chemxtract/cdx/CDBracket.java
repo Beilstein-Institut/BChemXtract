@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
 import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
@@ -55,19 +56,28 @@ public class CDBracket extends CDObject {
   private List<Object> bracketedObjects = new ArrayList<>();
 
   public List<CDBracket> getBrackets() {
-    return brackets;
+    return Collections.unmodifiableList(brackets);
   }
 
   public void setBrackets(List<CDBracket> brackets) {
-    this.brackets = brackets;
+    this.brackets = brackets == null ? new ArrayList<>() : new ArrayList<>(brackets);
+  }
+
+  public void addBracket(CDBracket bracket) {
+    this.brackets.add(bracket);
   }
 
   public List<CDBracketAttachment> getBracketAttachments() {
-    return bracketAttachments;
+    return Collections.unmodifiableList(bracketAttachments);
   }
 
   public void setBracketAttachments(List<CDBracketAttachment> bracketAttachments) {
-    this.bracketAttachments = bracketAttachments;
+    this.bracketAttachments =
+        bracketAttachments == null ? new ArrayList<>() : new ArrayList<>(bracketAttachments);
+  }
+
+  public void addBracketAttachment(CDBracketAttachment bracketAttachment) {
+    this.bracketAttachments.add(bracketAttachment);
   }
 
   public CDBracketUsage getBracketUsage() {
@@ -95,11 +105,16 @@ public class CDBracket extends CDObject {
   }
 
   public List<Object> getBracketedObjects() {
-    return bracketedObjects;
+    return Collections.unmodifiableList(bracketedObjects);
   }
 
   public void setBracketedObjects(List<Object> bracketedObjects) {
-    this.bracketedObjects = bracketedObjects;
+    this.bracketedObjects =
+        bracketedObjects == null ? new ArrayList<>() : new ArrayList<>(bracketedObjects);
+  }
+
+  public void addBracketedObject(Object bracketedObject) {
+    this.bracketedObjects.add(bracketedObject);
   }
 
   public double getRepeatCount() {

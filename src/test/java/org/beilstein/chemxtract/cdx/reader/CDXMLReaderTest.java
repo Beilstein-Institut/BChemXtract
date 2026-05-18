@@ -49,7 +49,7 @@ public class CDXMLReaderTest {
   @Test
   public void testReadCDXML() throws IOException {
     String fileName = "test_fixture.cdxml";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = CDXMLReaderTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXMLReader.readDocument(in);

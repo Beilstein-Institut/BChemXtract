@@ -41,7 +41,7 @@ public class MarkushTest {
   @Test
   public void testResidues() throws IOException {
     String fileName = "complex_rgroups.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/" + fileName);
+    InputStream in = MarkushTest.class.getResourceAsStream("/integrationTests/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
@@ -58,7 +58,7 @@ public class MarkushTest {
   @Test
   public void testMarkush_Ar_X_Y() throws IOException {
     String fileName = "Markush_Ar_X_Y.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/markush/" + fileName);
+    InputStream in = MarkushTest.class.getResourceAsStream("/integrationTests/markush/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
@@ -73,7 +73,7 @@ public class MarkushTest {
   @Test
   public void testMarkush_R_R1() throws IOException, CDKException {
     String fileName = "Markush_R_R1.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/integrationTests/markush/" + fileName);
+    InputStream in = MarkushTest.class.getResourceAsStream("/integrationTests/markush/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);

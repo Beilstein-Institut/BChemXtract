@@ -73,7 +73,7 @@ public class XMLReaderHandler implements ContentHandler {
     }
     if (!stack.isEmpty()) {
       XMLObject object = stack.peek();
-      object.getTexts().add(sb.length() > 0 ? sb.toString() : null);
+      object.addText(sb.length() > 0 ? sb.toString() : null);
     }
 
     XMLObject object = new XMLObject();
@@ -85,11 +85,11 @@ public class XMLReaderHandler implements ContentHandler {
     for (int i = 0; i < atts.getLength(); i++) {
       // remove empty attributes
       if (atts.getValue(i) != null && atts.getValue(i).length() > 0) {
-        object.getAttributes().put(atts.getLocalName(i), atts.getValue(i));
+        object.setAttribute(atts.getLocalName(i), atts.getValue(i));
       }
     }
     if (!stack.isEmpty()) {
-      stack.peek().getObjects().add(object);
+      stack.peek().addObject(object);
     }
     stack.push(object);
 
@@ -118,7 +118,7 @@ public class XMLReaderHandler implements ContentHandler {
       setRoot(object);
     }
 
-    object.getTexts().add(sb.length() > 0 ? sb.toString() : null);
+    object.addText(sb.length() > 0 ? sb.toString() : null);
     sb = new StringBuilder();
   }
 

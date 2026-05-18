@@ -22,6 +22,8 @@
 package org.beilstein.chemxtract.cdx.datatypes;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,10 +43,18 @@ public class CDGenericList {
   }
 
   public List<String> getElements() {
-    return elements;
+    return Collections.unmodifiableList(elements);
   }
 
   public void setElements(List<String> elements) {
-    this.elements = elements;
+    this.elements = elements == null ? new ArrayList<>() : new ArrayList<>(elements);
+  }
+
+  public void addElement(String element) {
+    this.elements.add(element);
+  }
+
+  public void addAllElements(Collection<? extends String> elements) {
+    this.elements.addAll(elements);
   }
 }

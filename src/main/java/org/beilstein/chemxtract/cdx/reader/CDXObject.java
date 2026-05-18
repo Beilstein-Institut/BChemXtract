@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx.reader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -80,18 +81,26 @@ public class CDXObject {
   }
 
   public List<CDXObject> getObjects() {
-    return objects;
+    return Collections.unmodifiableList(objects);
   }
 
   public void setObjects(List<CDXObject> objects) {
-    this.objects = objects;
+    this.objects = objects == null ? new ArrayList<>() : new ArrayList<>(objects);
+  }
+
+  public void addObject(CDXObject object) {
+    this.objects.add(object);
   }
 
   public List<CDXProperty> getProperties() {
-    return properties;
+    return Collections.unmodifiableList(properties);
   }
 
   public void setProperties(List<CDXProperty> properties) {
-    this.properties = properties;
+    this.properties = properties == null ? new ArrayList<>() : new ArrayList<>(properties);
+  }
+
+  public void addProperty(CDXProperty property) {
+    this.properties.add(property);
   }
 }

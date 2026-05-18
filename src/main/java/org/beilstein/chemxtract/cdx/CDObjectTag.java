@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
@@ -55,11 +56,15 @@ public class CDObjectTag extends CDObject {
   private Object value;
 
   public List<CDText> getTexts() {
-    return texts;
+    return Collections.unmodifiableList(texts);
   }
 
   public void setTexts(List<CDText> texts) {
-    this.texts = texts;
+    this.texts = texts == null ? new ArrayList<>() : new ArrayList<>(texts);
+  }
+
+  public void addText(CDText text) {
+    this.texts.add(text);
   }
 
   public String getName() {

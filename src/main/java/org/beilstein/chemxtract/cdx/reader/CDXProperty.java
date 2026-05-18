@@ -362,7 +362,6 @@ public class CDXProperty {
     return map;
   }
 
-  @SuppressWarnings("deprecation")
   public Date getDataAsDate() throws IOException {
     checkPropSize(14);
     int year = CDXUtils.readInt16(data, 0);
@@ -371,7 +370,9 @@ public class CDXProperty {
     int hour = CDXUtils.readInt16(data, 6);
     int minute = CDXUtils.readInt16(data, 8);
     int second = CDXUtils.readInt16(data, 10);
-    return new Date(year, month, day, hour, minute, second);
+    // Match the legacy Date(year, month, day, h, m, s) semantics: year is offset from 1900,
+    // month is 0-based — both already true for the values written by CDX.
+    return new GregorianCalendar(year + 1900, month, day, hour, minute, second).getTime();
   }
 
   public String getDataAsString() {
@@ -772,7 +773,7 @@ public class CDXProperty {
       elementList.setExclusive(true);
     }
     for (int i = 0; i < length; i += 2) {
-      elementList.getElements().add(CDXUtils.readUInt16(data, i));
+      elementList.addElement(CDXUtils.readUInt16(data, i));
     }
     return elementList;
   }
@@ -790,7 +791,7 @@ public class CDXProperty {
     for (int i = 0; i < count; i++) {
       int stringLength = CDXUtils.readUInt16(data, position);
       CDStyledString string = readStyledString(position + 2, stringLength, fonts, colors);
-      genericList.getElements().add(string.getText());
+      genericList.addElement(string.getText());
       position += 4 + string.getChunks().size() * 10 + string.getText().length();
     }
     return genericList;
@@ -842,15 +843,13 @@ public class CDXProperty {
           charSetName = "windows-1252";
         }
         try {
-          string
-              .getChunks()
-              .add(
-                  new CDStyledString.CDXChunk(
-                      fontStyles[i].getFont(),
-                      fontStyles[i].getSize(),
-                      fontStyles[i].getFontType(),
-                      fontStyles[i].getColor(),
-                      new String(bytes, charSetName)));
+          string.addChunk(
+              new CDStyledString.CDXChunk(
+                  fontStyles[i].getFont(),
+                  fontStyles[i].getSize(),
+                  fontStyles[i].getFontType(),
+                  fontStyles[i].getColor(),
+                  new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           logger.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
@@ -870,25 +869,21 @@ public class CDXProperty {
           charSetName = "windows-1252";
         }
         try {
-          string
-              .getChunks()
-              .add(
-                  new CDStyledString.CDXChunk(
-                      fontStyles[last].getFont(),
-                      fontStyles[last].getSize(),
-                      fontStyles[last].getFontType(),
-                      fontStyles[last].getColor(),
-                      new String(bytes, charSetName)));
+          string.addChunk(
+              new CDStyledString.CDXChunk(
+                  fontStyles[last].getFont(),
+                  fontStyles[last].getSize(),
+                  fontStyles[last].getFontType(),
+                  fontStyles[last].getColor(),
+                  new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           logger.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
       }
     } else {
-      string
-          .getChunks()
-          .add(
-              new CDStyledString.CDXChunk(
-                  fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
+      string.addChunk(
+          new CDStyledString.CDXChunk(
+              fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
     }
     return string;
   }

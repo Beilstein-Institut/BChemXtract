@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
@@ -196,11 +197,15 @@ public class CDDocument {
   }
 
   public List<CDPage> getPages() {
-    return pages;
+    return Collections.unmodifiableList(pages);
   }
 
   public void setPages(List<CDPage> pages) {
-    this.pages = pages;
+    this.pages = pages == null ? new ArrayList<>() : new ArrayList<>(pages);
+  }
+
+  public void addPage(CDPage page) {
+    this.pages.add(page);
   }
 
   public byte[] getMacPrintInfo() {

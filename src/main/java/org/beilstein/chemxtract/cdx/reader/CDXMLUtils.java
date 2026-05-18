@@ -533,7 +533,13 @@ public class CDXMLUtils {
   public static byte[] convertStringToByteArray(String value) {
     byte[] array = new byte[value.length() / 2];
     for (int offset = 0; offset < value.length(); offset += 2) {
-      array[offset / 2] = (byte) Integer.parseInt(value.substring(offset, offset + 2), 16);
+      String hex = value.substring(offset, offset + 2);
+      try {
+        array[offset / 2] = (byte) Integer.parseInt(hex, 16);
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException(
+            "Invalid hexadecimal byte \"" + hex + "\" at offset " + offset, e);
+      }
     }
     return array;
   }
@@ -551,7 +557,12 @@ public class CDXMLUtils {
     List<String> stringList = convertStringToStringList(value);
     List<Integer> list = new ArrayList<>(stringList.size());
     for (String element : stringList) {
-      list.add(Integer.parseInt(element));
+      try {
+        list.add(Integer.parseInt(element));
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException(
+            "Invalid integer \"" + element + "\" in list \"" + value + "\"", e);
+      }
     }
     return list;
   }
@@ -581,10 +592,14 @@ public class CDXMLUtils {
   public static CDRectangle convertStringToRectangle(String value) {
     List<String> list = convertStringToStringList(value);
     CDRectangle rectangle = new CDRectangle();
-    rectangle.setLeft(Float.parseFloat(list.get(0)));
-    rectangle.setTop(Float.parseFloat(list.get(1)));
-    rectangle.setRight(Float.parseFloat(list.get(2)));
-    rectangle.setBottom(Float.parseFloat(list.get(3)));
+    try {
+      rectangle.setLeft(Float.parseFloat(list.get(0)));
+      rectangle.setTop(Float.parseFloat(list.get(1)));
+      rectangle.setRight(Float.parseFloat(list.get(2)));
+      rectangle.setBottom(Float.parseFloat(list.get(3)));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid rectangle value \"" + value + "\"", e);
+    }
     return rectangle;
   }
 
@@ -595,8 +610,12 @@ public class CDXMLUtils {
   public static CDPoint2D convertStringToPoint2D(String value) {
     List<String> list = convertStringToStringList(value);
     CDPoint2D point = new CDPoint2D();
-    point.setX(Float.parseFloat(list.get(0)));
-    point.setY(Float.parseFloat(list.get(1)));
+    try {
+      point.setX(Float.parseFloat(list.get(0)));
+      point.setY(Float.parseFloat(list.get(1)));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid 2D point value \"" + value + "\"", e);
+    }
     return point;
   }
 
@@ -615,8 +634,13 @@ public class CDXMLUtils {
     List<CDPoint2D> pointList = new ArrayList<>(count);
     for (int i = 0, offset = 0; i < count; i++, offset += 2) {
       CDPoint2D point = new CDPoint2D();
-      point.setX(Float.parseFloat(list.get(offset)));
-      point.setY(Float.parseFloat(list.get(offset + 1)));
+      try {
+        point.setX(Float.parseFloat(list.get(offset)));
+        point.setY(Float.parseFloat(list.get(offset + 1)));
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException(
+            "Invalid 2D point at index " + i + " in \"" + value + "\"", e);
+      }
       pointList.add(point);
     }
     return pointList;
@@ -629,9 +653,13 @@ public class CDXMLUtils {
   public static CDPoint3D convertStringToPoint3D(String value) {
     List<String> list = convertStringToStringList(value);
     CDPoint3D point = new CDPoint3D();
-    point.setX(Float.parseFloat(list.get(0)));
-    point.setY(Float.parseFloat(list.get(1)));
-    point.setZ(Float.parseFloat(list.get(2)));
+    try {
+      point.setX(Float.parseFloat(list.get(0)));
+      point.setY(Float.parseFloat(list.get(1)));
+      point.setZ(Float.parseFloat(list.get(2)));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid 3D point value \"" + value + "\"", e);
+    }
     return point;
   }
 
@@ -650,9 +678,14 @@ public class CDXMLUtils {
     List<CDPoint3D> pointList = new ArrayList<>(count);
     for (int i = 0, offset = 0; i < count; i++, offset += 3) {
       CDPoint3D point = new CDPoint3D();
-      point.setX(Float.parseFloat(list.get(offset)));
-      point.setY(Float.parseFloat(list.get(offset + 1)));
-      point.setZ(Float.parseFloat(list.get(offset + 2)));
+      try {
+        point.setX(Float.parseFloat(list.get(offset)));
+        point.setY(Float.parseFloat(list.get(offset + 1)));
+        point.setZ(Float.parseFloat(list.get(offset + 2)));
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException(
+            "Invalid 3D point at index " + i + " in \"" + value + "\"", e);
+      }
       pointList.add(point);
     }
     return pointList;
@@ -678,7 +711,11 @@ public class CDXMLUtils {
       stringList.remove(0);
     }
     for (String element : stringList) {
-      list.getElements().add(Integer.parseInt(element));
+      try {
+        list.addElement(Integer.parseInt(element));
+      } catch (NumberFormatException e) {
+        logger.warn("Skipping non-integer element in CDElementList: \"" + element + "\"", e);
+      }
     }
     return list;
   }
@@ -702,7 +739,7 @@ public class CDXMLUtils {
       list.setExclusive(true);
       stringList.remove(0);
     }
-    list.getElements().addAll(stringList);
+    list.addAllElements(stringList);
     return list;
   }
 
@@ -745,7 +782,11 @@ public class CDXMLUtils {
     if (value.equals("auto")) {
       return CDSettings.LineHeight_Automatic;
     }
-    return (int) Float.parseFloat(value);
+    try {
+      return (int) Float.parseFloat(value);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid line height value \"" + value + "\"", e);
+    }
   }
 
   public static String convertObjectRefToString(Object value, Map<Object, Integer> references)
@@ -759,7 +800,13 @@ public class CDXMLUtils {
   @SuppressWarnings("unchecked")
   public static <T> T convertStringToObjectRef(String value, Class<T> clazz, RefManager refManager)
       throws IOException {
-    return refManager.getObjectRef(Integer.parseInt(value), clazz, CDXMLReader.RIGID);
+    final int ref;
+    try {
+      ref = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new IOException("Invalid object reference \"" + value + "\"", e);
+    }
+    return refManager.getObjectRef(ref, clazz, CDXMLReader.RIGID);
   }
 
   public static String convertObjectRefList(List<?> value, Map<Object, Integer> references) {

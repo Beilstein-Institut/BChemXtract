@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
 import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
@@ -99,11 +100,15 @@ public class CDText extends CDObject {
   }
 
   public List<Integer> getLineStarts() {
-    return lineStarts;
+    return Collections.unmodifiableList(lineStarts);
   }
 
   public void setLineStarts(List<Integer> lineStarts) {
-    this.lineStarts = lineStarts;
+    this.lineStarts = lineStarts == null ? new ArrayList<>() : new ArrayList<>(lineStarts);
+  }
+
+  public void addLineStart(Integer lineStart) {
+    this.lineStarts.add(lineStart);
   }
 
   public CDLabelDisplay getLabelAlignment() {
