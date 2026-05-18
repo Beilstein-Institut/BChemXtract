@@ -95,7 +95,9 @@ public class BondVisitor extends CDVisitor {
                   .orElseThrow(
                       () ->
                           new IllegalArgumentException(
-                              "Missing external connection point in fragment: " + fragment));
+                              "Missing external connection point in fragment with "
+                                  + fragment.getAtoms().size()
+                                  + " atoms"));
 
           CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
           if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
@@ -174,7 +176,9 @@ public class BondVisitor extends CDVisitor {
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
-                        "No bond connected to external atom: " + external));
+                        "No bond connected to external atom (atomNumber="
+                            + external.getAtomNumber()
+                            + ")"));
     return external.equals(exBond.getBegin()) ? exBond.getEnd() : exBond.getBegin();
   }
 

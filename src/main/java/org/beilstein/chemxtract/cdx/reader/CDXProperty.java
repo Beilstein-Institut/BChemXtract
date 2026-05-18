@@ -362,7 +362,6 @@ public class CDXProperty {
     return map;
   }
 
-  @SuppressWarnings("deprecation")
   public Date getDataAsDate() throws IOException {
     checkPropSize(14);
     int year = CDXUtils.readInt16(data, 0);
@@ -371,7 +370,9 @@ public class CDXProperty {
     int hour = CDXUtils.readInt16(data, 6);
     int minute = CDXUtils.readInt16(data, 8);
     int second = CDXUtils.readInt16(data, 10);
-    return new Date(year, month, day, hour, minute, second);
+    // Match the legacy Date(year, month, day, h, m, s) semantics: year is offset from 1900,
+    // month is 0-based — both already true for the values written by CDX.
+    return new GregorianCalendar(year + 1900, month, day, hour, minute, second).getTime();
   }
 
   public String getDataAsString() {

@@ -193,4 +193,15 @@ public class BCXSubstance implements Serializable {
   public void setAtomContainer(IAtomContainer atomContainer) {
     this.atomContainer = atomContainer;
   }
+
+  @Override
+  public String toString() {
+    return "BCXSubstance [inchiKey="
+        + inchiKey
+        + ", smiles="
+        + smiles
+        + ", molecularFormula="
+        + molecularFormula
+        + "]";
+  }
 }

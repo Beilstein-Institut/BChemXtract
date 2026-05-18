@@ -140,7 +140,7 @@ public class ExtractionTest {
 
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     BCXReactionInfo reactionInfo = new BCXReactionInfo();
-    List<BCXReaction> reactions = xtractor.xtract(document, reactionInfo);
+    xtractor.xtract(document, reactionInfo);
 
     assertThat(reactionInfo.getNoReactionSteps()).isEqualTo(4);
     assertThat(reactionInfo.getNoValidReactions()).isEqualTo(3);
