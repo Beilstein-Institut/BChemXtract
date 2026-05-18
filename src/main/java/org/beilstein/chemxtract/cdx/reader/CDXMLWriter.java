@@ -2141,12 +2141,13 @@ public class CDXMLWriter {
     attributes.addAttribute("", name, name, CDATA, value);
   }
 
-  // CDXML date serialization is intentionally a no-op (parity with current behavior).
-  @SuppressWarnings("unused")
+  // CDXML date serialization is intentionally a no-op for parity with current behavior;
+  // route through the String overload so the parameters are referenced.
   private void addAttribute(AttributesImpl attributes, String name, Date value) {
     if (value == null) {
       return;
     }
+    addAttribute(attributes, name, (String) null);
   }
 
   private void addAttribute(AttributesImpl attributes, String name, CDFont value)
