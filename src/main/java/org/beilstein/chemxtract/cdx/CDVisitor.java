@@ -30,140 +30,152 @@ import org.beilstein.chemxtract.cdx.datatypes.CDFont;
  * the accept method of {@link CDPage}.
  *
  * <p>Methods on this base class are intentional no-ops: they exist to provide a default for
- * subclasses that only override a subset of the visitor protocol. The unused parameters are part of
- * the visitor contract.
+ * subclasses that only override a subset of the visitor protocol. Each method delegates to {@link
+ * #visitDefault(Object)} so subclasses may also override that single hook to react to every
+ * otherwise-unhandled visit.
  */
-@SuppressWarnings("unused")
 public class CDVisitor {
+
+  /**
+   * Default callback invoked from every unoverridden {@code visitXxx} method. The base
+   * implementation does nothing; subclasses may override it to handle the otherwise-unhandled
+   * cases.
+   *
+   * @param object the visited object
+   */
+  protected void visitDefault(Object object) {
+    // no-op; override in subclasses to handle every unhandled visit
+  }
+
   public void visitDocument(CDDocument document) {
-    // to be implemented in subclasses
+    visitDefault(document);
   }
 
   public void visitPage(CDPage page) {
-    // to be implemented in subclasses
+    visitDefault(page);
   }
 
   public void visitGroup(CDGroup group) {
-    // to be implemented in subclasses
+    visitDefault(group);
   }
 
   public void visitFragment(CDFragment fragment) {
-    // to be implemented in subclasses
+    visitDefault(fragment);
   }
 
   public void visitAtom(CDAtom node) {
-    // to be implemented in subclasses
+    visitDefault(node);
   }
 
   public void visitBond(CDBond bond) {
-    // to be implemented in subclasses
+    visitDefault(bond);
   }
 
   public void visitText(CDText text) {
-    // to be implemented in subclasses
+    visitDefault(text);
   }
 
   public void visitGraphic(CDGraphic graphic) {
-    // to be implemented in subclasses
+    visitDefault(graphic);
   }
 
   public void visitBracketedGroup(CDBracket bracketedGroup) {
-    // to be implemented in subclasses
+    visitDefault(bracketedGroup);
   }
 
   public void visitBracketAttachment(CDBracketAttachment bracketAttachment) {
-    // to be implemented in subclasses
+    visitDefault(bracketAttachment);
   }
 
   public void visitCrossingBond(CDCrossingBond crossingBond) {
-    // to be implemented in subclasses
+    visitDefault(crossingBond);
   }
 
   public void visitCurve(CDSpline curve) {
-    // to be implemented in subclasses
+    visitDefault(curve);
   }
 
   public void visitEmbeddedObject(CDPicture embeddedObject) {
-    // to be implemented in subclasses
+    visitDefault(embeddedObject);
   }
 
   public void visitTable(CDTable table) {
-    // to be implemented in subclasses
+    visitDefault(table);
   }
 
   public void visitNamedAlternativeGroup(CDAltGroup namedAlternativeGroup) {
-    // to be implemented in subclasses
+    visitDefault(namedAlternativeGroup);
   }
 
   public void visitTemplateGrid(CDTemplateGrid templateGrid) {
-    // to be implemented in subclasses
+    visitDefault(templateGrid);
   }
 
   public void visitReactionScheme(CDReactionScheme reactionScheme) {
-    // to be implemented in subclasses
+    visitDefault(reactionScheme);
   }
 
   public void visitReactionStep(CDReactionStep reactionStep) {
-    // to be implemented in subclasses
+    visitDefault(reactionStep);
   }
 
   public void visitSpectrum(CDSpectrum spectrum) {
-    // to be implemented in subclasses
+    visitDefault(spectrum);
   }
 
   public void visitObjectTag(CDObjectTag objectTag) {
-    // to be implemented in subclasses
+    visitDefault(objectTag);
   }
 
   public void visitSequence(CDSequence sequence) {
-    // to be implemented in subclasses
+    visitDefault(sequence);
   }
 
   public void visitCrossReference(CDCrossReference crossReference) {
-    // to be implemented in subclasses
+    visitDefault(crossReference);
   }
 
   public void visitBorder(CDBorder border) {
-    // to be implemented in subclasses
+    visitDefault(border);
   }
 
   public void visitGeometry(CDGeometry geometry) {
-    // to be implemented in subclasses
+    visitDefault(geometry);
   }
 
   public void visitConstraint(CDConstraint constraint) {
-    // to be implemented in subclasses
+    visitDefault(constraint);
   }
 
   public void visitTLCPlate(CDTLCPlate tlcPlate) {
-    // to be implemented in subclasses
+    visitDefault(tlcPlate);
   }
 
   public void visitTLCLane(CDTLCLane tlcLane) {
-    // to be implemented in subclasses
+    visitDefault(tlcLane);
   }
 
   public void visitTLCSpot(CDTLCSpot tlcSpot) {
-    // to be implemented in subclasses
+    visitDefault(tlcSpot);
   }
 
   public void visitSplitter(CDSplitter splitter) {
-    // to be implemented in subclasses
+    visitDefault(splitter);
   }
 
   public void visitChemicalProperty(CDChemicalProperty chemicalProperty) {
-    // to be implemented in subclasses
+    visitDefault(chemicalProperty);
   }
 
   public void visitColor(CDColor color) {
-    // to be implemented in subclasses
+    visitDefault(color);
   }
 
   public void visitFont(CDFont font) {
-    // to be implemented in subclasses
+    visitDefault(font);
   }
 
   public void visitArrow(CDArrow arrow) {
-    // to be implemented in subclasses
+    visitDefault(arrow);
   }
 }
