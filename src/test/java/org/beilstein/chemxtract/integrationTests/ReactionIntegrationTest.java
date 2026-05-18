@@ -272,7 +272,7 @@ public class ReactionIntegrationTest {
 
   private BCXReaction convertFirstReactionFromCdxFile(String fileName) throws IOException {
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
-    try (InputStream in = this.getClass().getResourceAsStream(fileName)) {
+    try (InputStream in = ReactionIntegrationTest.class.getResourceAsStream(fileName)) {
       Assert.assertNotNull(in);
       CDDocument document;
       if (fileName.endsWith(".cdx")) {
@@ -295,7 +295,7 @@ public class ReactionIntegrationTest {
       throws IOException {
     ReactionXtractor xtractor =
         new ReactionXtractor(SilentChemObjectBuilder.getInstance(), sanitize);
-    try (InputStream in = this.getClass().getResourceAsStream(fileName)) {
+    try (InputStream in = ReactionIntegrationTest.class.getResourceAsStream(fileName)) {
       Assert.assertNotNull(in);
       CDDocument document;
       if (fileName.endsWith(".cdx")) {
@@ -316,7 +316,7 @@ public class ReactionIntegrationTest {
         new String[] {"RInChI", "RAuxInfo", "Long-RInChIKey", "Short-RInChIKey", "Web-RInChIKey"};
     final Map<String, String> rinchiFullInformation = new HashMap<>();
 
-    final URL resource = this.getClass().getResource(filename);
+    final URL resource = ReactionIntegrationTest.class.getResource(filename);
     assertThat(resource)
         .describedAs(String.format("File %s not found in classpath!", filename))
         .isNotNull();

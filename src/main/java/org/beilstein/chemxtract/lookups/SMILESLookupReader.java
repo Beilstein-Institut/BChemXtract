@@ -55,7 +55,7 @@ public class SMILESLookupReader {
    * @throws IOException if file could not be imported
    */
   public Map<String, String> loadSmilesLookup(String path, int initialSize) throws IOException {
-    try (InputStream in = this.getClass().getResourceAsStream(path)) {
+    try (InputStream in = SMILESLookupReader.class.getResourceAsStream(path)) {
       if (in != null) return this.loadAbbreviations(in, initialSize);
       File file = new File(path);
       if (file.exists() && file.canRead())

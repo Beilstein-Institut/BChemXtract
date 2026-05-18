@@ -43,7 +43,7 @@ public class ColoredMolecularAreaTest {
   public void testColoredMolecularArea() throws Exception {
 
     String fileName = "colored_molecular_area.cdxml";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = ColoredMolecularAreaTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXMLReader.readDocument(in);
