@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class XMLObjectTest {
 
@@ -41,7 +41,7 @@ public class XMLObjectTest {
 
   String xml;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
 
     StringBuilder tmp = new StringBuilder();
@@ -82,7 +82,7 @@ public class XMLObjectTest {
     child.setObjects(Arrays.asList(grandchild));
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {}
 
   @Test
