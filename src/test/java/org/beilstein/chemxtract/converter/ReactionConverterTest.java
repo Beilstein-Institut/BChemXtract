@@ -21,21 +21,21 @@
  */
 package org.beilstein.chemxtract.converter;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.model.BCXSubstance;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactionConverterTest {
 
   // Mocks required to satisfy the constructor
@@ -44,7 +44,7 @@ public class ReactionConverterTest {
 
   private ReactionConverter converter;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     // Instantiate the class with mocks.
     // We set 'sanitize' to false as it doesn't affect the geometry logic.
@@ -83,7 +83,7 @@ public class ReactionConverterTest {
   public void testDiagonalIntersection() throws Exception {
     // Rectangle: (0,0) to (10,10)
     // Line: (-5,-5) to (15,15) -> Perfectly diagonal
-    assertTrue("Diagonal line should intersect", invokeIntersects(-5, -5, 15, 15, 0, 0, 10, 10));
+    assertTrue(invokeIntersects(-5, -5, 15, 15, 0, 0, 10, 10), "Diagonal line should intersect");
   }
 
   @Test
@@ -91,8 +91,8 @@ public class ReactionConverterTest {
     // Rectangle: (0,0) to (10,10)
     // Line: (12,0) to (12,10) -> Vertical line at x=12 (outside)
     assertFalse(
-        "Line outside rectangle should not intersect",
-        invokeIntersects(12, 0, 12, 10, 0, 0, 10, 10));
+        invokeIntersects(12, 0, 12, 10, 0, 0, 10, 10),
+        "Line outside rectangle should not intersect");
   }
 
   @Test
@@ -102,14 +102,14 @@ public class ReactionConverterTest {
     // NOTE: The segment is far away, but the INFINITE line (y=x) hits the rect.
     // Your current implementation checks the infinite line.
     assertTrue(
-        "Infinite line extension should intersect", invokeIntersects(20, 20, 30, 30, 0, 0, 10, 10));
+        invokeIntersects(20, 20, 30, 30, 0, 0, 10, 10), "Infinite line extension should intersect");
   }
 
   @Test
   public void testEdgeIntersection() throws Exception {
     // Rectangle: (0,0) to (10,10)
     // Line: (0,0) to (0,10) -> Left vertical edge
-    assertTrue("Line touching edge should intersect", invokeIntersects(0, 0, 0, 10, 0, 0, 10, 10));
+    assertTrue(invokeIntersects(0, 0, 0, 10, 0, 0, 10, 10), "Line touching edge should intersect");
   }
 
   @Test
@@ -117,7 +117,7 @@ public class ReactionConverterTest {
     // Rectangle defined via (10,10) and (0,0) instead of (0,0) and (10,10)
     // Line: (5, -5) to (5, 15) -> Vertical cut through middle
     assertTrue(
-        "Unordered coordinates should be handled correctly",
-        invokeIntersects(5, -5, 5, 15, 10, 10, 0, 0));
+        invokeIntersects(5, -5, 5, 15, 10, 10, 0, 0),
+        "Unordered coordinates should be handled correctly");
   }
 }
