@@ -21,16 +21,16 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.beilstein.chemxtract.cdx.CDDocument;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class CDXMLWriterTest {
 
@@ -38,13 +38,13 @@ public class CDXMLWriterTest {
       System.getProperty("user.dir") + "/target/test-output/cdx";
   private File outputDir;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     outputDir = new File(OUTPUT_DIR);
     outputDir.mkdirs();
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {}
 
   @Test
