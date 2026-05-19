@@ -21,7 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,12 +32,12 @@ import org.beilstein.chemxtract.cdx.CDColoredMolecularArea;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ColoredMolecularAreaTest {
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {}
 
   @Test
