@@ -22,8 +22,13 @@
 package org.beilstein.chemxtract.visitor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,9 +41,11 @@ import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class FragmentVisitorTest {
 
   @Test
@@ -59,23 +66,18 @@ public class FragmentVisitorTest {
     System.out.println(fragmentVisitor.getAllFragments().size());
   }
 
-  private CDPage pageMock;
-  private CDFragment fragmentWithNoExternal;
-  private CDFragment fragmentWithExternal;
-  private CDAtom externalAtom;
-  private CDAtom normalAtom;
+  @Test
+  public void fragmentsClassificationTest() {
+    // D-09 step 1: stubs relocated from a former @BeforeEach into the only test that
+    // consumes them — the other two tests in this class do not exercise this fixture.
+    CDPage pageMock = mock(CDPage.class);
+    CDFragment fragmentWithNoExternal = mock(CDFragment.class);
+    CDFragment fragmentWithExternal = mock(CDFragment.class);
 
-  @Before
-  public void setUp() {
-    pageMock = mock(CDPage.class);
-
-    fragmentWithNoExternal = mock(CDFragment.class);
-    fragmentWithExternal = mock(CDFragment.class);
-
-    externalAtom = mock(CDAtom.class);
+    CDAtom externalAtom = mock(CDAtom.class);
     when(externalAtom.getNodeType()).thenReturn(CDNodeType.ExternalConnectionPoint);
 
-    normalAtom = mock(CDAtom.class);
+    CDAtom normalAtom = mock(CDAtom.class);
     when(normalAtom.getNodeType()).thenReturn(CDNodeType.Element);
 
     // fragments atoms setup
@@ -92,10 +94,7 @@ public class FragmentVisitorTest {
             })
         .when(pageMock)
         .accept(any(FragmentVisitor.class));
-  }
 
-  @Test
-  public void fragmentsClassificationTest() {
     FragmentVisitor visitor = new FragmentVisitor(pageMock);
 
     // fragmentWithNoExternal should be in both lists
