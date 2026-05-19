@@ -22,6 +22,9 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +43,7 @@ import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXReaction;
 import org.beilstein.chemxtract.model.BCXReactionInfo;
 import org.beilstein.chemxtract.xtractor.ReactionXtractor;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 public class ReactionIntegrationTest {
@@ -108,7 +110,7 @@ public class ReactionIntegrationTest {
             "RInChI=1.00.1S/C15H8F4O/c16-14-8-11-7-10(3-6-13(11)20-14)9-1-4-12(5-2-9)15(17,18)19/h1-8H<>C8H4BrFO/c9-6-1-2-7-5(3-6)4-8(10)11-7/h1-4H<>3K.H3O4P/c;;;1-5(2,3)4/h;;;(H3,1,2,3,4)/q3*+1;/p-3!C4H8O2/c1-2-6-4-3-5-1/h1-4H2!C7H6BF3O2/c9-7(10,11)5-1-3-6(4-2-5)8(12)13/h1-4,12-13H!H2O/h1H2/d-",
             "RInChI=1.00.1S/C15H8F4O/c16-14-8-11-7-10(3-6-13(11)20-14)9-1-4-12(5-2-9)15(17,18)19/h1-8H<>C21H13F3O/c22-21(23,24)18-9-6-14(7-10-18)16-8-11-19-17(12-16)13-20(25-19)15-4-2-1-3-5-15/h1-13H<>C18H33P/c1-4-10-16(11-5-1)19(17-12-6-2-7-13-17)18-14-8-3-9-15-18/h16-18H,1-15H2!C6H7BO2/c8-7(9)6-4-2-1-3-5-6/h1-5,8-9H!CH2O3.2K/c2-1(3)4;;/h(H2,2,3,4);;/q;2*+1/p-2/d+");
     for (int i = 0; i < reactions.size(); i++) {
-      Assert.assertEquals(rinchis.get(i), reactions.get(i).getRinchi());
+      assertEquals(rinchis.get(i), reactions.get(i).getRinchi());
     }
   }
 
@@ -126,7 +128,7 @@ public class ReactionIntegrationTest {
             "C=CCC[C@H](C)CC(=O)O>>C=CCC[C@H](C)CCO",
             "C=CCC[C@H](C)CCO>>C=CCC[C@H](C)CCOS(=O)(=O)C1=CC=C(C)C=C1");
     for (int i = 0; i < reactions.size(); i++) {
-      Assert.assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
+      assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
     }
   }
 
@@ -134,42 +136,42 @@ public class ReactionIntegrationTest {
   public void backwards_no_products_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/backwards_no_products.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
   public void backwards_no_reactants_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/backwards_no_reactants.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
   public void forward_no_products_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/forward_no_products.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
   public void forward_no_reactants_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/forward_no_reactants.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
   public void reversible_no_products_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/reversible_no_products.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
   public void reversible_no_reactants_Test() throws IOException {
     String cdxFile = "/integrationTests/reactions/reversible_no_reactants.cdx";
     List<BCXReaction> reactions = convertReactions(cdxFile);
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -183,7 +185,7 @@ public class ReactionIntegrationTest {
             "CC(C)(/C=C\\C1=CC=CC=C1)C#N>C1CCOC1.[AlH4-].[Li+]>CC(C)(/C=C/C1=CC=CC=C1)CN",
             "C=CC(C)(C#N)C1=C(C=CC=C1)Br>CC(C)(C)O.[Na]O>C=CC1(C)C2=C(C=CC=C2)NC1=O");
     for (int i = 0; i < reactions.size(); i++) {
-      Assert.assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
+      assertEquals(rinchis.get(i), reactions.get(i).getReactionSmiles());
     }
   }
 
@@ -192,7 +194,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/horizontal_reactant_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -200,7 +202,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/horizontal_product_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -208,7 +210,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/horizontal_both_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -216,7 +218,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/vertical_reactant_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -224,7 +226,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/vertical_product_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -232,7 +234,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/vertical_both_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -240,7 +242,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/diagonal_reactant_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -248,7 +250,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/diagonal_product_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   @Test
@@ -256,7 +258,7 @@ public class ReactionIntegrationTest {
     String cdxFile = "/integrationTests/reactions/diagonal_both_off.cdx";
     List<BCXReaction> reactions = convertReactionsWithSanitizeOption(cdxFile, true);
     assert reactions != null;
-    Assert.assertTrue(reactions.isEmpty());
+    assertTrue(reactions.isEmpty());
   }
 
   void cdxReactionRinchiFullInformationForFirstReactionTest(
@@ -264,16 +266,16 @@ public class ReactionIntegrationTest {
     final BCXReaction reaction = convertFirstReactionFromCdxFile(cdxFile);
     final Map<String, String> rinchiInfo = readRinchiFullInformationFromResourceFile(rinchiFile);
 
-    Assert.assertEquals(rinchiInfo.get("RInChI"), reaction.getRinchi());
-    Assert.assertEquals(rinchiInfo.get("Long-RInChIKey"), reaction.getLongRinchiKey());
-    Assert.assertEquals(rinchiInfo.get("Short-RInChIKey"), reaction.getShortRinchiKey());
-    Assert.assertEquals(rinchiInfo.get("Web-RInChIKey"), reaction.getWebRinchiKey());
+    assertEquals(rinchiInfo.get("RInChI"), reaction.getRinchi());
+    assertEquals(rinchiInfo.get("Long-RInChIKey"), reaction.getLongRinchiKey());
+    assertEquals(rinchiInfo.get("Short-RInChIKey"), reaction.getShortRinchiKey());
+    assertEquals(rinchiInfo.get("Web-RInChIKey"), reaction.getWebRinchiKey());
   }
 
   private BCXReaction convertFirstReactionFromCdxFile(String fileName) throws IOException {
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     try (InputStream in = this.getClass().getResourceAsStream(fileName)) {
-      Assert.assertNotNull(in);
+      assertNotNull(in);
       CDDocument document;
       if (fileName.endsWith(".cdx")) {
         document = CDXReader.readDocument(in);
@@ -282,7 +284,7 @@ public class ReactionIntegrationTest {
       } else {
         return null;
       }
-      Assert.assertNotNull(document);
+      assertNotNull(document);
       return xtractor.xtract(document, new BCXReactionInfo()).get(0);
     }
   }
@@ -296,7 +298,7 @@ public class ReactionIntegrationTest {
     ReactionXtractor xtractor =
         new ReactionXtractor(SilentChemObjectBuilder.getInstance(), sanitize);
     try (InputStream in = this.getClass().getResourceAsStream(fileName)) {
-      Assert.assertNotNull(in);
+      assertNotNull(in);
       CDDocument document;
       if (fileName.endsWith(".cdx")) {
         document = CDXReader.readDocument(in);
@@ -305,7 +307,7 @@ public class ReactionIntegrationTest {
       } else {
         return null;
       }
-      Assert.assertNotNull(document);
+      assertNotNull(document);
       return xtractor.xtract(document, new BCXReactionInfo());
     }
   }
