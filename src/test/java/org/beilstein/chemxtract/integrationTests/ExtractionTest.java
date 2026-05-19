@@ -22,7 +22,7 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.awt.Color;
 import java.io.File;
@@ -35,8 +35,8 @@ import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.*;
 import org.beilstein.chemxtract.xtractor.ReactionXtractor;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.depict.Depiction;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
@@ -51,7 +51,7 @@ public class ExtractionTest {
       System.getProperty("user.dir") + "/target/test-output/bchemxtract";
   private File outputDir;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     outputDir = new File(OUTPUT_DIR);
     outputDir.mkdirs();
