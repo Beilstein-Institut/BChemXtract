@@ -21,7 +21,9 @@
  */
 package org.beilstein.chemxtract.converter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,9 +34,13 @@ import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -42,6 +48,13 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
+// rationale: mockBond() is a parametric fixture-factory stubbing 5 properties
+// (begin, end, bondOrder, bondDisplay, stereochemistry); converter.convert(...) reads
+// different subsets per (order, display, stereo) tuple, so multiple stubs are routinely
+// unread per-test. Per-stub lenient() across all 5 would be uniform clutter; class-level
+// LENIENT is D-09 tier 3 (3+ stubs needing leniency) and keeps the helper readable.
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class BondConverterTest {
 
   private BondConverter converter;
@@ -52,7 +65,7 @@ public class BondConverterTest {
   private IAtom atom1;
   private IAtom atom2;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     atomMap = new HashMap<>();
     builder = SilentChemObjectBuilder.getInstance();
@@ -94,7 +107,7 @@ public class BondConverterTest {
     assertEquals(IBond.Display.Dash, result.getDisplay());
   }
 
-  @Ignore
+  @Disabled
   @Deprecated
   @Test
   public void singleHashBondTest() throws CDKException {
@@ -128,7 +141,7 @@ public class BondConverterTest {
     assertEquals(IBond.Display.WedgedHashEnd, result.getDisplay());
   }
 
-  @Ignore
+  @Disabled
   @Deprecated
   @Test
   public void singleBoldBondTest() throws CDKException {
@@ -187,7 +200,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Disabled("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondETest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.E);
     IBond result = converter.convert(bond);
@@ -196,7 +209,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Disabled("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondZTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.Z);
     IBond result = converter.convert(bond);
@@ -205,7 +218,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Disabled("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondNoneStereoTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.None);
     IBond result = converter.convert(bond);
@@ -214,7 +227,7 @@ public class BondConverterTest {
   }
 
   @Test
-  @Ignore("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
+  @Disabled("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondNullStereoTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, null);
     IBond result = converter.convert(bond);
