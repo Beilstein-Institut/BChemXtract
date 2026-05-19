@@ -33,3 +33,4 @@ replay_pid*
 /src/test/java/org/openscience/cdk/layout/
 /.planning/
 /CLAUDE.md
+/.claude/
