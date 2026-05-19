@@ -21,15 +21,18 @@
  */
 package org.beilstein.chemxtract.converter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.datatypes.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -41,7 +44,7 @@ public class AtomConverterTest {
 
   private IChemObjectBuilder builder;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     builder = SilentChemObjectBuilder.getInstance();
   }
