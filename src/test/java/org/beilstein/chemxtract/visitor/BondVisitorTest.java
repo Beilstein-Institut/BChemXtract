@@ -21,17 +21,37 @@
  */
 package org.beilstein.chemxtract.visitor;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.*;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+// rationale: @BeforeEach setUp() stubs an 8-property shared fixture (bond + fragment +
+// 2 atoms, each with NodeType / Fragments / getBegin / getEnd / getBonds / getAtoms),
+// but the 7 @Test methods exercise different code paths through BondVisitor — each
+// test reads a different subset of those stubs and at least one test (noBondsTest)
+// uses a real CDFragment that bypasses the entire fixture. Per-stub lenient() across
+// all 8 fixture stubs would be uniform clutter; class-level LENIENT is D-09 tier 3
+// (3+ stubs needing leniency) and preserves the shared-fixture readability.
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class BondVisitorTest {
 
   private CDAtom atom1;
@@ -39,7 +59,7 @@ public class BondVisitorTest {
   private CDBond bond;
   private CDFragment fragment;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     atom1 = mock(CDAtom.class);
     atom2 = mock(CDAtom.class);
@@ -130,7 +150,7 @@ public class BondVisitorTest {
     verify(bond).setEnd(connected);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void missingExternalConnectionPointThrowsTest() {
     CDFragment nested = mock(CDFragment.class);
     when(nested.getAtoms()).thenReturn(Collections.emptyList());
@@ -144,10 +164,10 @@ public class BondVisitorTest {
         .when(fragment)
         .accept(any());
 
-    new BondVisitor(fragment);
+    assertThrows(IllegalArgumentException.class, () -> new BondVisitor(fragment));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void noBondForExternalThrowsTest() {
     CDAtom external = mock(CDAtom.class);
     CDFragment nested = mock(CDFragment.class);
@@ -166,7 +186,7 @@ public class BondVisitorTest {
         .when(fragment)
         .accept(any());
 
-    new BondVisitor(fragment);
+    assertThrows(IllegalArgumentException.class, () -> new BondVisitor(fragment));
   }
 
   @Test
