@@ -217,12 +217,12 @@ public class BondConverterTest {
   }
 
   @Test
-  @Disabled("getStereo is deprecated and returns E_Z_BY_COORDINATES as default since CDK v2.12")
   public void doubleBondZTest() throws CDKException {
     CDBond bond = mockBond(CDBondOrder.Double, null, CDBondCIPType.Z);
     IBond result = converter.convert(bond);
     assertEquals(IBond.Order.DOUBLE, result.getOrder());
-    assertEquals(IBond.Stereo.Z, result.getStereo());
+    // Post-CDK-2.12: see doubleBondETest. convertDoubleBondStereoToCDKDisplay(Z) -> Solid.
+    assertEquals(IBond.Display.Solid, result.getDisplay());
   }
 
   @Test
