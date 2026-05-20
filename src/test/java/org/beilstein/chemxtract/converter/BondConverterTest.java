@@ -107,7 +107,10 @@ public class BondConverterTest {
     assertEquals(IBond.Display.Dash, result.getDisplay());
   }
 
-  @Disabled
+  @Disabled(
+      "Tests obsolete CDK 1.x IBond.Display.Hash enum value removed in CDK 2.12; superseded by"
+          + " singleHashBondToWedgeHashBeginTest below which exercises the post-2.12 routing of"
+          + " CDBondDisplay.Hash to IBond.Display.WedgedHashBegin.")
   @Deprecated
   @Test
   public void singleHashBondTest() throws CDKException {
@@ -141,7 +144,10 @@ public class BondConverterTest {
     assertEquals(IBond.Display.WedgedHashEnd, result.getDisplay());
   }
 
-  @Disabled
+  @Disabled(
+      "Tests obsolete CDK 1.x IBond.Display.Bold enum value removed in CDK 2.12; superseded by"
+          + " singleBoldBondToWedgeBeginTest below which exercises the post-2.12 routing of"
+          + " CDBondDisplay.Bold to IBond.Display.WedgeBegin.")
   @Deprecated
   @Test
   public void singleBoldBondTest() throws CDKException {
