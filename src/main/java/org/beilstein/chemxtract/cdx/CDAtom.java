@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.*;
 
@@ -145,11 +146,15 @@ public class CDAtom extends CDObject {
   private CDGenericList genericList;
 
   public List<CDFragment> getFragments() {
-    return fragments;
+    return Collections.unmodifiableList(fragments);
   }
 
   public void setFragments(List<CDFragment> fragments) {
-    this.fragments = fragments;
+    this.fragments = fragments == null ? new ArrayList<>() : new ArrayList<>(fragments);
+  }
+
+  public void addFragment(CDFragment fragment) {
+    this.fragments.add(fragment);
   }
 
   public CDText getText() {
@@ -321,19 +326,19 @@ public class CDAtom extends CDObject {
   }
 
   public List<CDBond> getBondOrdering() {
-    return bondOrdering;
+    return bondOrdering == null ? null : Collections.unmodifiableList(bondOrdering);
   }
 
   public void setBondOrdering(List<CDBond> bondOrdering) {
-    this.bondOrdering = bondOrdering;
+    this.bondOrdering = bondOrdering == null ? null : new ArrayList<>(bondOrdering);
   }
 
   public List<CDAtom> getAttachedAtoms() {
-    return attachedAtoms;
+    return attachedAtoms == null ? null : Collections.unmodifiableList(attachedAtoms);
   }
 
   public void setAttachedAtoms(List<CDAtom> attachedAtoms) {
-    this.attachedAtoms = attachedAtoms;
+    this.attachedAtoms = attachedAtoms == null ? null : new ArrayList<>(attachedAtoms);
   }
 
   public String getLabelText() {

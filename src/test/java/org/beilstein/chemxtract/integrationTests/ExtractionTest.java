@@ -60,7 +60,7 @@ public class ExtractionTest {
   @Test
   public void testExtractSubstances() throws IOException {
     String fileName = "test_fixture.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = ExtractionTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
@@ -97,7 +97,7 @@ public class ExtractionTest {
   @Test
   public void testExtractReactions() throws IOException {
     String fileName = "test_fixture.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = ExtractionTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
@@ -132,7 +132,7 @@ public class ExtractionTest {
   @Test
   public void testBCXReactionInfo() throws IOException {
     String fileName = "test_fixture.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = ExtractionTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);
@@ -140,7 +140,7 @@ public class ExtractionTest {
 
     ReactionXtractor xtractor = new ReactionXtractor(SilentChemObjectBuilder.getInstance());
     BCXReactionInfo reactionInfo = new BCXReactionInfo();
-    List<BCXReaction> reactions = xtractor.xtract(document, reactionInfo);
+    xtractor.xtract(document, reactionInfo);
 
     assertThat(reactionInfo.getNoReactionSteps()).isEqualTo(4);
     assertThat(reactionInfo.getNoValidReactions()).isEqualTo(3);

@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
@@ -69,59 +70,92 @@ public class CDFragment extends CDObject {
   private CDSequenceType sequenceType = CDSequenceType.Unknown;
 
   public List<CDAtom> getAtoms() {
-    return atoms;
+    return Collections.unmodifiableList(atoms);
   }
 
   public void setAtoms(List<CDAtom> atoms) {
-    this.atoms = atoms;
+    this.atoms = atoms == null ? new ArrayList<>() : new ArrayList<>(atoms);
+  }
+
+  public void addAtom(CDAtom atom) {
+    this.atoms.add(atom);
+  }
+
+  public void addAllAtoms(java.util.Collection<? extends CDAtom> atoms) {
+    this.atoms.addAll(atoms);
   }
 
   public List<CDBond> getBonds() {
-    return bonds;
+    return Collections.unmodifiableList(bonds);
   }
 
   public void setBonds(List<CDBond> bonds) {
-    this.bonds = bonds;
+    this.bonds = bonds == null ? new ArrayList<>() : new ArrayList<>(bonds);
+  }
+
+  public void addBond(CDBond bond) {
+    this.bonds.add(bond);
   }
 
   public List<CDGraphic> getGraphics() {
-    return graphics;
+    return Collections.unmodifiableList(graphics);
   }
 
   public void setGraphics(List<CDGraphic> graphics) {
-    this.graphics = graphics;
+    this.graphics = graphics == null ? new ArrayList<>() : new ArrayList<>(graphics);
+  }
+
+  public void addGraphic(CDGraphic graphic) {
+    this.graphics.add(graphic);
   }
 
   public List<CDSpline> getCurves() {
-    return curves;
+    return Collections.unmodifiableList(curves);
   }
 
   public void setCurves(List<CDSpline> curves) {
-    this.curves = curves;
+    this.curves = curves == null ? new ArrayList<>() : new ArrayList<>(curves);
+  }
+
+  public void addCurve(CDSpline curve) {
+    this.curves.add(curve);
   }
 
   public List<CDText> getTexts() {
-    return texts;
+    return Collections.unmodifiableList(texts);
   }
 
   public void setTexts(List<CDText> texts) {
-    this.texts = texts;
+    this.texts = texts == null ? new ArrayList<>() : new ArrayList<>(texts);
+  }
+
+  public void addText(CDText text) {
+    this.texts.add(text);
   }
 
   public List<CDArrow> getArrows() {
-    return arrows;
+    return Collections.unmodifiableList(arrows);
   }
 
   public void setArrows(List<CDArrow> arrows) {
-    this.arrows = arrows;
+    this.arrows = arrows == null ? new ArrayList<>() : new ArrayList<>(arrows);
+  }
+
+  public void addArrow(CDArrow arrow) {
+    this.arrows.add(arrow);
   }
 
   public List<CDColoredMolecularArea> getColoredMolecularAreas() {
-    return coloredMolecularAreas;
+    return Collections.unmodifiableList(coloredMolecularAreas);
   }
 
   public void setColoredMolecularAreas(List<CDColoredMolecularArea> coloredMolecularAreas) {
-    this.coloredMolecularAreas = coloredMolecularAreas;
+    this.coloredMolecularAreas =
+        coloredMolecularAreas == null ? new ArrayList<>() : new ArrayList<>(coloredMolecularAreas);
+  }
+
+  public void addColoredMolecularArea(CDColoredMolecularArea coloredMolecularArea) {
+    this.coloredMolecularAreas.add(coloredMolecularArea);
   }
 
   public boolean isRacemic() {
@@ -157,11 +191,16 @@ public class CDFragment extends CDObject {
   }
 
   public List<CDAtom> getConnectionOrder() {
-    return connectionOrder;
+    return Collections.unmodifiableList(connectionOrder);
   }
 
   public void setConnectionOrder(List<CDAtom> connectionOrder) {
-    this.connectionOrder = connectionOrder;
+    this.connectionOrder =
+        connectionOrder == null ? new ArrayList<>() : new ArrayList<>(connectionOrder);
+  }
+
+  public void addConnectionOrder(CDAtom atom) {
+    this.connectionOrder.add(atom);
   }
 
   public byte[] getFormula() {

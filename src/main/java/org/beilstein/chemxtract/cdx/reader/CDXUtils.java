@@ -124,10 +124,10 @@ public class CDXUtils {
       } else if (tag >= CDXTag_Object) {
         CDXObject object2 = readCDXObject(tag, bytes, position);
         object2.setTag(tag);
-        object.getObjects().add(object2);
+        object.addObject(object2);
       } else {
         CDXProperty property = readCDXProperty(tag, bytes, position);
-        object.getProperties().add(property);
+        object.addProperty(property);
       }
     }
     return object;

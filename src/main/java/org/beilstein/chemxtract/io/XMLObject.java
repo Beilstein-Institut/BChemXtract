@@ -133,7 +133,7 @@ public class XMLObject {
    * @return Text elements
    */
   public List<String> getTexts() {
-    return texts;
+    return Collections.unmodifiableList(texts);
   }
 
   /**
@@ -142,7 +142,16 @@ public class XMLObject {
    * @param texts Text elements.
    */
   public void setTexts(List<String> texts) {
-    this.texts = texts;
+    this.texts = texts == null ? new ArrayList<>() : new ArrayList<>(texts);
+  }
+
+  /**
+   * Adds a text element to the XML element.
+   *
+   * @param text Text element
+   */
+  public void addText(String text) {
+    this.texts.add(text);
   }
 
   /**
@@ -170,7 +179,7 @@ public class XMLObject {
    * @return Element attributes
    */
   public Map<String, String> getAttributes() {
-    return attributes;
+    return Collections.unmodifiableMap(attributes);
   }
 
   /**
@@ -179,7 +188,7 @@ public class XMLObject {
    * @param attributes Element attributes
    */
   public void setAttributes(Map<String, String> attributes) {
-    this.attributes = attributes;
+    this.attributes = attributes == null ? new LinkedHashMap<>() : new LinkedHashMap<>(attributes);
   }
 
   /**
@@ -188,7 +197,7 @@ public class XMLObject {
    * @return Child elements
    */
   public List<XMLObject> getObjects() {
-    return objects;
+    return Collections.unmodifiableList(objects);
   }
 
   /**
@@ -197,7 +206,7 @@ public class XMLObject {
    * @param objects Child elements
    */
   public void setObjects(List<XMLObject> objects) {
-    this.objects = objects;
+    this.objects = objects == null ? new ArrayList<>() : new ArrayList<>(objects);
   }
 
   /**

@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -167,11 +168,12 @@ public class CDBond extends CDObject {
   }
 
   public List<CDBond> getBondCircularOrdering() {
-    return bondCircularOrdering;
+    return bondCircularOrdering == null ? null : Collections.unmodifiableList(bondCircularOrdering);
   }
 
   public void setBondCircularOrdering(List<CDBond> bondCircularOrdering) {
-    this.bondCircularOrdering = bondCircularOrdering;
+    this.bondCircularOrdering =
+        bondCircularOrdering == null ? null : new ArrayList<>(bondCircularOrdering);
   }
 
   public Set<CDBond> getCrossingBonds() {

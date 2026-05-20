@@ -121,4 +121,17 @@ public class BCXSubstanceOccurrence implements Serializable {
     }
     return true;
   }
+
+  @Override
+  public String toString() {
+    return "BCXSubstanceOccurrence [cdxTop="
+        + cdxTop
+        + ", cdxLeft="
+        + cdxLeft
+        + ", cdxBottom="
+        + cdxBottom
+        + ", cdxRight="
+        + cdxRight
+        + "]";
+  }
 }

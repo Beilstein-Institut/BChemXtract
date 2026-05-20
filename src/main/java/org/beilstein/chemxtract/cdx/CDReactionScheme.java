@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,11 +35,15 @@ public class CDReactionScheme extends CDObject {
   private List<CDReactionStep> steps = new ArrayList<>();
 
   public List<CDReactionStep> getSteps() {
-    return steps;
+    return Collections.unmodifiableList(steps);
   }
 
   public void setSteps(List<CDReactionStep> steps) {
-    this.steps = steps;
+    this.steps = steps == null ? new ArrayList<>() : new ArrayList<>(steps);
+  }
+
+  public void addStep(CDReactionStep step) {
+    this.steps.add(step);
   }
 
   @Override

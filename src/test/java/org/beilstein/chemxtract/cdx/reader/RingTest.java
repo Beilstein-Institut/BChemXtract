@@ -48,7 +48,7 @@ public class RingTest {
   @Test
   public void testRingsCDXML() throws IOException {
     String fileName = "testcase-ringe-simple.cdxml";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = RingTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXMLReader.readDocument(in);
@@ -85,7 +85,7 @@ public class RingTest {
   @Test
   public void testRingsCDX() throws IOException {
     String fileName = "testcase-ringe-simple.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = RingTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);

@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** An object for grouping several other objects. */
@@ -47,83 +48,127 @@ public class CDGroup extends CDObject {
   private List<CDArrow> arrows = new ArrayList<>();
 
   public List<CDGroup> getGroups() {
-    return groups;
+    return Collections.unmodifiableList(groups);
   }
 
   public void setGroups(List<CDGroup> groups) {
-    this.groups = groups;
+    this.groups = groups == null ? new ArrayList<>() : new ArrayList<>(groups);
+  }
+
+  public void addGroup(CDGroup group) {
+    this.groups.add(group);
   }
 
   public List<CDFragment> getFragments() {
-    return fragments;
+    return Collections.unmodifiableList(fragments);
   }
 
   public void setFragments(List<CDFragment> fragments) {
-    this.fragments = fragments;
+    this.fragments = fragments == null ? new ArrayList<>() : new ArrayList<>(fragments);
+  }
+
+  public void addFragment(CDFragment fragment) {
+    this.fragments.add(fragment);
   }
 
   public List<CDText> getCaptions() {
-    return captions;
+    return Collections.unmodifiableList(captions);
   }
 
   public void setCaptions(List<CDText> captions) {
-    this.captions = captions;
+    this.captions = captions == null ? new ArrayList<>() : new ArrayList<>(captions);
+  }
+
+  public void addCaption(CDText caption) {
+    this.captions.add(caption);
   }
 
   public List<CDGraphic> getGraphics() {
-    return graphics;
+    return Collections.unmodifiableList(graphics);
   }
 
   public void setGraphics(List<CDGraphic> graphics) {
-    this.graphics = graphics;
+    this.graphics = graphics == null ? new ArrayList<>() : new ArrayList<>(graphics);
+  }
+
+  public void addGraphic(CDGraphic graphic) {
+    this.graphics.add(graphic);
   }
 
   public List<CDSpline> getCurves() {
-    return curves;
+    return Collections.unmodifiableList(curves);
   }
 
   public void setCurves(List<CDSpline> curves) {
-    this.curves = curves;
+    this.curves = curves == null ? new ArrayList<>() : new ArrayList<>(curves);
+  }
+
+  public void addCurve(CDSpline curve) {
+    this.curves.add(curve);
   }
 
   public List<CDAltGroup> getNamedAlternativeGroups() {
-    return altGroups;
+    return Collections.unmodifiableList(altGroups);
   }
 
   public void setNamedAlternativeGroups(List<CDAltGroup> namedAlternativeGroups) {
-    altGroups = namedAlternativeGroups;
+    altGroups =
+        namedAlternativeGroups == null
+            ? new ArrayList<>()
+            : new ArrayList<>(namedAlternativeGroups);
+  }
+
+  public void addNamedAlternativeGroup(CDAltGroup namedAlternativeGroup) {
+    this.altGroups.add(namedAlternativeGroup);
   }
 
   public List<CDReactionStep> getReactionSteps() {
-    return reactionSteps;
+    return Collections.unmodifiableList(reactionSteps);
   }
 
   public void setReactionSteps(List<CDReactionStep> reactionSteps) {
-    this.reactionSteps = reactionSteps;
+    this.reactionSteps = reactionSteps == null ? new ArrayList<>() : new ArrayList<>(reactionSteps);
+  }
+
+  public void addReactionStep(CDReactionStep reactionStep) {
+    this.reactionSteps.add(reactionStep);
   }
 
   public List<CDSpectrum> getSpectra() {
-    return spectra;
+    return Collections.unmodifiableList(spectra);
   }
 
   public void setSpectra(List<CDSpectrum> spectra) {
-    this.spectra = spectra;
+    this.spectra = spectra == null ? new ArrayList<>() : new ArrayList<>(spectra);
+  }
+
+  public void addSpectrum(CDSpectrum spectrum) {
+    this.spectra.add(spectrum);
   }
 
   public List<CDPicture> getEmbeddedObjects() {
-    return embeddedObjects;
+    return Collections.unmodifiableList(embeddedObjects);
   }
 
   public void setEmbeddedObjects(List<CDPicture> embeddedObjects) {
-    this.embeddedObjects = embeddedObjects;
+    this.embeddedObjects =
+        embeddedObjects == null ? new ArrayList<>() : new ArrayList<>(embeddedObjects);
+  }
+
+  public void addEmbeddedObject(CDPicture embeddedObject) {
+    this.embeddedObjects.add(embeddedObject);
   }
 
   public List<CDArrow> getArrows() {
-    return arrows;
+    return Collections.unmodifiableList(arrows);
   }
 
   public void setArrows(List<CDArrow> arrows) {
-    this.arrows = arrows;
+    this.arrows = arrows == null ? new ArrayList<>() : new ArrayList<>(arrows);
+  }
+
+  public void addArrow(CDArrow arrow) {
+    this.arrows.add(arrow);
   }
 
   public boolean isIntegral() {

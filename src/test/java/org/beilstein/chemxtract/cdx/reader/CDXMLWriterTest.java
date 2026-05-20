@@ -50,7 +50,7 @@ public class CDXMLWriterTest {
   @Test
   public void testWriteCDXML() throws IOException {
     String fileName = "test_fixture.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = CDXMLWriterTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);

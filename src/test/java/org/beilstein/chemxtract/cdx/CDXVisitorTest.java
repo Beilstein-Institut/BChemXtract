@@ -53,7 +53,7 @@ public class CDXVisitorTest extends CDVisitor {
   public void testVisitor() throws IOException {
 
     String fileName = "test_fixture.cdxml";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = CDXVisitorTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertThat(in).isNotNull();
 
     CDDocument document = CDXMLReader.readDocument(in);

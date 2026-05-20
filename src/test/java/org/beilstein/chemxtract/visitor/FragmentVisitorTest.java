@@ -52,7 +52,7 @@ public class FragmentVisitorTest {
   public void test() throws IOException {
     String fileName = "nicknames.cdx";
     //    String fileName = "abbreviation.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = FragmentVisitorTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertThat(in).isNotNull();
 
     CDDocument document = CDXReader.readDocument(in);

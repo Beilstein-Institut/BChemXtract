@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
@@ -54,11 +55,15 @@ public class CDTLCSpot {
   private CDSplineType curveType;
 
   public List<CDObjectTag> getObjectTags() {
-    return objectTags;
+    return Collections.unmodifiableList(objectTags);
   }
 
   public void setObjectTags(List<CDObjectTag> objectTags) {
-    this.objectTags = objectTags;
+    this.objectTags = objectTags == null ? new ArrayList<>() : new ArrayList<>(objectTags);
+  }
+
+  public void addObjectTag(CDObjectTag objectTag) {
+    this.objectTags.add(objectTag);
   }
 
   public boolean isVisible() {

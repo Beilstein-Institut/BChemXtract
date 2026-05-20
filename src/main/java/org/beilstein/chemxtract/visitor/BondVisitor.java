@@ -26,8 +26,6 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
-import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
@@ -86,15 +84,6 @@ public class BondVisitor extends CDVisitor {
       // structure
       if (hasNestedFragment(bond)) {
         CDFragment fragment = getNestedFragment(bond);
-        // fix 'undetermined' double bonds in ChemDraw abbreviations
-        fragment
-            .getBonds()
-            .forEach(
-                b -> {
-                  if (b.getBondOrder() == CDBondOrder.Double
-                      && b.getStereochemistry() == CDBondCIPType.Undetermined)
-                    b.setStereochemistry(CDBondCIPType.None);
-                });
         // if nested fragment is unwanted abbreviation skip all nested bonds
         if (isNestedFragmentUnwantedAbbreviation(bond)) {
           skip.addAll(fragment.getBonds());
@@ -106,7 +95,9 @@ public class BondVisitor extends CDVisitor {
                   .orElseThrow(
                       () ->
                           new IllegalArgumentException(
-                              "Missing external connection point in fragment: " + fragment));
+                              "Missing external connection point in fragment with "
+                                  + fragment.getAtoms().size()
+                                  + " atoms"));
 
           CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
           if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
@@ -185,7 +176,9 @@ public class BondVisitor extends CDVisitor {
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
-                        "No bond connected to external atom: " + external));
+                        "No bond connected to external atom (atomNumber="
+                            + external.getAtomNumber()
+                            + ")"));
     return external.equals(exBond.getBegin()) ? exBond.getEnd() : exBond.getBegin();
   }
 

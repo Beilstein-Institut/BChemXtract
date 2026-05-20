@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
@@ -65,171 +66,263 @@ public class CDPage extends CDObject {
   private CDRectangle boundsInParent;
 
   public List<CDGroup> getGroups() {
-    return groups;
+    return Collections.unmodifiableList(groups);
   }
 
   public void setGroups(List<CDGroup> groups) {
-    this.groups = groups;
+    this.groups = groups == null ? new ArrayList<>() : new ArrayList<>(groups);
+  }
+
+  public void addGroup(CDGroup group) {
+    this.groups.add(group);
   }
 
   public List<CDFragment> getFragments() {
-    return fragments;
+    return Collections.unmodifiableList(fragments);
   }
 
   public void setFragments(List<CDFragment> fragments) {
-    this.fragments = fragments;
+    this.fragments = fragments == null ? new ArrayList<>() : new ArrayList<>(fragments);
+  }
+
+  public void addFragment(CDFragment fragment) {
+    this.fragments.add(fragment);
   }
 
   public List<CDText> getTexts() {
-    return texts;
+    return Collections.unmodifiableList(texts);
   }
 
   public void setTexts(List<CDText> texts) {
-    this.texts = texts;
+    this.texts = texts == null ? new ArrayList<>() : new ArrayList<>(texts);
+  }
+
+  public void addText(CDText text) {
+    this.texts.add(text);
   }
 
   public List<CDGraphic> getGraphics() {
-    return graphics;
+    return Collections.unmodifiableList(graphics);
   }
 
   public void setGraphics(List<CDGraphic> graphics) {
-    this.graphics = graphics;
+    this.graphics = graphics == null ? new ArrayList<>() : new ArrayList<>(graphics);
+  }
+
+  public void addGraphic(CDGraphic graphic) {
+    this.graphics.add(graphic);
   }
 
   public List<CDBracket> getBracketedGroups() {
-    return bracketedGroups;
+    return Collections.unmodifiableList(bracketedGroups);
   }
 
   public void setBracketedGroups(List<CDBracket> bracketedGroups) {
-    this.bracketedGroups = bracketedGroups;
+    this.bracketedGroups =
+        bracketedGroups == null ? new ArrayList<>() : new ArrayList<>(bracketedGroups);
+  }
+
+  public void addBracketedGroup(CDBracket bracketedGroup) {
+    this.bracketedGroups.add(bracketedGroup);
   }
 
   public List<CDSpline> getCurves() {
-    return curves;
+    return Collections.unmodifiableList(curves);
   }
 
   public void setCurves(List<CDSpline> curves) {
-    this.curves = curves;
+    this.curves = curves == null ? new ArrayList<>() : new ArrayList<>(curves);
+  }
+
+  public void addCurve(CDSpline curve) {
+    this.curves.add(curve);
   }
 
   public List<CDPicture> getEmbeddedObjects() {
-    return embeddedObjects;
+    return Collections.unmodifiableList(embeddedObjects);
   }
 
   public void setEmbeddedObjects(List<CDPicture> embeddedObjects) {
-    this.embeddedObjects = embeddedObjects;
+    this.embeddedObjects =
+        embeddedObjects == null ? new ArrayList<>() : new ArrayList<>(embeddedObjects);
+  }
+
+  public void addEmbeddedObject(CDPicture embeddedObject) {
+    this.embeddedObjects.add(embeddedObject);
   }
 
   public List<CDTable> getTables() {
-    return tables;
+    return Collections.unmodifiableList(tables);
   }
 
   public void setTables(List<CDTable> tables) {
-    this.tables = tables;
+    this.tables = tables == null ? new ArrayList<>() : new ArrayList<>(tables);
+  }
+
+  public void addTable(CDTable table) {
+    this.tables.add(table);
   }
 
   public List<CDAltGroup> getNamedAlternativeGroups() {
-    return namedAlternativeGroups;
+    return Collections.unmodifiableList(namedAlternativeGroups);
   }
 
   public void setNamedAlternativeGroups(List<CDAltGroup> namedAlternativeGroups) {
-    this.namedAlternativeGroups = namedAlternativeGroups;
+    this.namedAlternativeGroups =
+        namedAlternativeGroups == null
+            ? new ArrayList<>()
+            : new ArrayList<>(namedAlternativeGroups);
+  }
+
+  public void addNamedAlternativeGroup(CDAltGroup namedAlternativeGroup) {
+    this.namedAlternativeGroups.add(namedAlternativeGroup);
   }
 
   public List<CDReactionScheme> getReactionSchemes() {
-    return reactionSchemes;
+    return Collections.unmodifiableList(reactionSchemes);
   }
 
   public void setReactionSchemes(List<CDReactionScheme> reactionSchemes) {
-    this.reactionSchemes = reactionSchemes;
+    this.reactionSchemes =
+        reactionSchemes == null ? new ArrayList<>() : new ArrayList<>(reactionSchemes);
+  }
+
+  public void addReactionScheme(CDReactionScheme reactionScheme) {
+    this.reactionSchemes.add(reactionScheme);
   }
 
   public List<CDReactionStep> getReactionSteps() {
-    return reactionSteps;
+    return Collections.unmodifiableList(reactionSteps);
   }
 
   public void setReactionSteps(List<CDReactionStep> reactionSteps) {
-    this.reactionSteps = reactionSteps;
+    this.reactionSteps = reactionSteps == null ? new ArrayList<>() : new ArrayList<>(reactionSteps);
+  }
+
+  public void addReactionStep(CDReactionStep reactionStep) {
+    this.reactionSteps.add(reactionStep);
   }
 
   public List<CDSpectrum> getSpectra() {
-    return spectra;
+    return Collections.unmodifiableList(spectra);
   }
 
   public void setSpectra(List<CDSpectrum> spectra) {
-    this.spectra = spectra;
+    this.spectra = spectra == null ? new ArrayList<>() : new ArrayList<>(spectra);
+  }
+
+  public void addSpectrum(CDSpectrum spectrum) {
+    this.spectra.add(spectrum);
   }
 
   public List<CDSequence> getSequences() {
-    return sequences;
+    return Collections.unmodifiableList(sequences);
   }
 
   public void setSequences(List<CDSequence> sequences) {
-    this.sequences = sequences;
+    this.sequences = sequences == null ? new ArrayList<>() : new ArrayList<>(sequences);
+  }
+
+  public void addSequence(CDSequence sequence) {
+    this.sequences.add(sequence);
   }
 
   public List<CDCrossReference> getCrossReferences() {
-    return crossReferences;
+    return Collections.unmodifiableList(crossReferences);
   }
 
   public void setCrossReferences(List<CDCrossReference> crossReferences) {
-    this.crossReferences = crossReferences;
+    this.crossReferences =
+        crossReferences == null ? new ArrayList<>() : new ArrayList<>(crossReferences);
+  }
+
+  public void addCrossReference(CDCrossReference crossReference) {
+    this.crossReferences.add(crossReference);
   }
 
   public List<CDBorder> getBorders() {
-    return borders;
+    return Collections.unmodifiableList(borders);
   }
 
   public void setBorders(List<CDBorder> borders) {
-    this.borders = borders;
+    this.borders = borders == null ? new ArrayList<>() : new ArrayList<>(borders);
+  }
+
+  public void addBorder(CDBorder border) {
+    this.borders.add(border);
   }
 
   public List<CDGeometry> getGeometries() {
-    return geometries;
+    return Collections.unmodifiableList(geometries);
   }
 
   public void setGeometries(List<CDGeometry> geometries) {
-    this.geometries = geometries;
+    this.geometries = geometries == null ? new ArrayList<>() : new ArrayList<>(geometries);
+  }
+
+  public void addGeometry(CDGeometry geometry) {
+    this.geometries.add(geometry);
   }
 
   public List<CDConstraint> getConstraints() {
-    return constraints;
+    return Collections.unmodifiableList(constraints);
   }
 
   public void setConstraints(List<CDConstraint> constraints) {
-    this.constraints = constraints;
+    this.constraints = constraints == null ? new ArrayList<>() : new ArrayList<>(constraints);
+  }
+
+  public void addConstraint(CDConstraint constraint) {
+    this.constraints.add(constraint);
   }
 
   public List<CDTLCPlate> getTLCPlates() {
-    return tLCPlates;
+    return Collections.unmodifiableList(tLCPlates);
   }
 
   public void setTLCPlates(List<CDTLCPlate> plates) {
-    tLCPlates = plates;
+    tLCPlates = plates == null ? new ArrayList<>() : new ArrayList<>(plates);
+  }
+
+  public void addTLCPlate(CDTLCPlate plate) {
+    this.tLCPlates.add(plate);
   }
 
   public List<CDSplitter> getSplitters() {
-    return splitters;
+    return Collections.unmodifiableList(splitters);
   }
 
   public void setSplitters(List<CDSplitter> splitters) {
-    this.splitters = splitters;
+    this.splitters = splitters == null ? new ArrayList<>() : new ArrayList<>(splitters);
+  }
+
+  public void addSplitter(CDSplitter splitter) {
+    this.splitters.add(splitter);
   }
 
   public List<CDChemicalProperty> getChemicalProperties() {
-    return chemicalProperties;
+    return Collections.unmodifiableList(chemicalProperties);
   }
 
   public void setChemicalProperties(List<CDChemicalProperty> chemicalProperties) {
-    this.chemicalProperties = chemicalProperties;
+    this.chemicalProperties =
+        chemicalProperties == null ? new ArrayList<>() : new ArrayList<>(chemicalProperties);
+  }
+
+  public void addChemicalProperty(CDChemicalProperty chemicalProperty) {
+    this.chemicalProperties.add(chemicalProperty);
   }
 
   public List<CDArrow> getArrows() {
-    return arrows;
+    return Collections.unmodifiableList(arrows);
   }
 
   public void setArrows(List<CDArrow> arrows) {
-    this.arrows = arrows;
+    this.arrows = arrows == null ? new ArrayList<>() : new ArrayList<>(arrows);
+  }
+
+  public void addArrow(CDArrow arrow) {
+    this.arrows.add(arrow);
   }
 
   public int getWidthPages() {

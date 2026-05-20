@@ -48,7 +48,7 @@ public class CDXReaderTest {
   @Test
   public void testReadCDX() throws Exception {
     String fileName = "test_fixture.cdx";
-    InputStream in = this.getClass().getResourceAsStream("/cdx/reader/" + fileName);
+    InputStream in = CDXReaderTest.class.getResourceAsStream("/cdx/reader/" + fileName);
     assertNotNull(in);
 
     CDDocument document = CDXReader.readDocument(in);

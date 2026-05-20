@@ -88,12 +88,14 @@ public class UnwantedWords {
     if (in == null) {
       throw new IOException("unwantedWords.txt not found on classpath");
     }
-    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-    String line;
-    while ((line = reader.readLine()) != null) {
-      line = line.trim();
-      if (!line.isBlank()) {
-        words.add(line);
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (!line.isBlank()) {
+          words.add(line);
+        }
       }
     }
     return Collections.unmodifiableSet(words);

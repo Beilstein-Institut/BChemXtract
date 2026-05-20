@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,51 +63,77 @@ public class CDReactionStep extends CDObject {
   }
 
   public List<Object> getReactants() {
-    return reactants;
+    return Collections.unmodifiableList(reactants);
   }
 
   public void setReactants(List<Object> reactants) {
-    this.reactants = reactants;
+    this.reactants = reactants == null ? new ArrayList<>() : new ArrayList<>(reactants);
+  }
+
+  public void addReactant(Object reactant) {
+    this.reactants.add(reactant);
   }
 
   public List<Object> getProducts() {
-    return products;
+    return Collections.unmodifiableList(products);
   }
 
   public void setProducts(List<Object> products) {
-    this.products = products;
+    this.products = products == null ? new ArrayList<>() : new ArrayList<>(products);
+  }
+
+  public void addProduct(Object product) {
+    this.products.add(product);
   }
 
   public List<Object> getPlusses() {
-    return plusses;
+    return Collections.unmodifiableList(plusses);
   }
 
   public void setPlusses(List<Object> plusses) {
-    this.plusses = plusses;
+    this.plusses = plusses == null ? new ArrayList<>() : new ArrayList<>(plusses);
+  }
+
+  public void addPlus(Object plus) {
+    this.plusses.add(plus);
   }
 
   public List<Object> getArrows() {
-    return arrows;
+    return Collections.unmodifiableList(arrows);
   }
 
   public void setArrows(List<Object> arrows) {
-    this.arrows = arrows;
+    this.arrows = arrows == null ? new ArrayList<>() : new ArrayList<>(arrows);
+  }
+
+  public void addArrow(Object arrow) {
+    this.arrows.add(arrow);
   }
 
   public List<Object> getObjectsAboveArrow() {
-    return objectsAboveArrow;
+    return Collections.unmodifiableList(objectsAboveArrow);
   }
 
   public void setObjectsAboveArrow(List<Object> objectsAboveArrow) {
-    this.objectsAboveArrow = objectsAboveArrow;
+    this.objectsAboveArrow =
+        objectsAboveArrow == null ? new ArrayList<>() : new ArrayList<>(objectsAboveArrow);
+  }
+
+  public void addObjectAboveArrow(Object objectAboveArrow) {
+    this.objectsAboveArrow.add(objectAboveArrow);
   }
 
   public List<Object> getObjectsBelowArrow() {
-    return objectsBelowArrow;
+    return Collections.unmodifiableList(objectsBelowArrow);
   }
 
   public void setObjectsBelowArrow(List<Object> objectsBelowArrow) {
-    this.objectsBelowArrow = objectsBelowArrow;
+    this.objectsBelowArrow =
+        objectsBelowArrow == null ? new ArrayList<>() : new ArrayList<>(objectsBelowArrow);
+  }
+
+  public void addObjectBelowArrow(Object objectBelowArrow) {
+    this.objectsBelowArrow.add(objectBelowArrow);
   }
 
   public Map<CDAtom, CDAtom> getAtomMapManual() {

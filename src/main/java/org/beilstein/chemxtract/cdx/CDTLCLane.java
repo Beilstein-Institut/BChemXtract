@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** Represents a lane of spots arranged vertically on a TLC plate. */
@@ -34,19 +35,27 @@ public class CDTLCLane {
   private boolean visible = true;
 
   public List<CDObjectTag> getObjectTags() {
-    return objectTags;
+    return Collections.unmodifiableList(objectTags);
   }
 
   public void setObjectTags(List<CDObjectTag> objectTags) {
-    this.objectTags = objectTags;
+    this.objectTags = objectTags == null ? new ArrayList<>() : new ArrayList<>(objectTags);
+  }
+
+  public void addObjectTag(CDObjectTag objectTag) {
+    this.objectTags.add(objectTag);
   }
 
   public List<CDTLCSpot> getSpots() {
-    return spots;
+    return Collections.unmodifiableList(spots);
   }
 
   public void setSpots(List<CDTLCSpot> spots) {
-    this.spots = spots;
+    this.spots = spots == null ? new ArrayList<>() : new ArrayList<>(spots);
+  }
+
+  public void addSpot(CDTLCSpot spot) {
+    this.spots.add(spot);
   }
 
   public boolean isVisible() {

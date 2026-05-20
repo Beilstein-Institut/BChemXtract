@@ -90,7 +90,7 @@ public class XMLEntityCatalog implements EntityResolver {
 
     // resolve URL to input stream
     if (url != null) {
-      InputStream in = getClass().getClassLoader().getResourceAsStream(url);
+      InputStream in = XMLEntityCatalog.class.getClassLoader().getResourceAsStream(url);
       if (in == null) {
         logger.debug("No resource found for url " + url);
         File file = new File(url);
@@ -101,14 +101,23 @@ public class XMLEntityCatalog implements EntityResolver {
         in = new FileInputStream(file);
         systemId = file.toURI().toString();
       } else {
-        systemId = getClass().getClassLoader().getResource(url).toString();
+        systemId = XMLEntityCatalog.class.getClassLoader().getResource(url).toString();
       }
 
-      // create input source
-      InputSource inputSource = new InputSource(in);
-      inputSource.setPublicId(publicId);
-      inputSource.setSystemId(systemId);
-      return inputSource;
+      // Hand ownership of the stream to InputSource; close it ourselves if construction fails.
+      try {
+        InputSource inputSource = new InputSource(in);
+        inputSource.setPublicId(publicId);
+        inputSource.setSystemId(systemId);
+        return inputSource;
+      } catch (RuntimeException e) {
+        try {
+          in.close();
+        } catch (IOException ignored) {
+          // best-effort close on the error path
+        }
+        throw e;
+      }
     }
     logger.warn("No entry found for public id:" + publicId + " and system id:" + systemId);
     return null;

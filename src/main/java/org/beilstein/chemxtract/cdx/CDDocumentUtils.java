@@ -422,7 +422,7 @@ public class CDDocumentUtils {
         label = text;
       }
     }
-    if (label != null) fragment.getTexts().add(label);
+    if (label != null) fragment.addText(label);
   }
 
   /**
