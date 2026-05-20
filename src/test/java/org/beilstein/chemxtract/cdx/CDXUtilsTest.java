@@ -21,11 +21,11 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import junit.framework.TestCase;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
@@ -74,10 +74,11 @@ import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
 import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 import org.beilstein.chemxtract.cdx.reader.CDXProperty;
 import org.beilstein.chemxtract.cdx.reader.CDXUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CDXUtilsTest extends TestCase {
+public class CDXUtilsTest {
 
+  @Test
   public void testFixedPoint() {
     byte[] bytes = new byte[] {0x66, (byte) 0xA6, 0x4C, 0x00};
     assertEquals(76.65f, CDXUtils.readFixedPoint(bytes, 0), 0.01f);
@@ -98,6 +99,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(144f, CDXUtils.readFixedPoint(bytes, 0), 0.1f);
   }
 
+  @Test
   public void testFloat64() {
     byte[] bytes = new byte[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     assertEquals(0.0, CDXUtils.readFloat64(bytes, 0), 0.001);
@@ -137,6 +139,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(-123.45, CDXUtils.readFloat64(bytes, 0), 0.001);
   }
 
+  @Test
   public void testInt16() {
     byte[] bytes = new byte[] {0x00, 0x00};
     assertEquals(0, CDXUtils.readInt16(bytes, 0));
@@ -157,6 +160,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(-1, CDXUtils.readInt16(bytes, 0));
   }
 
+  @Test
   public void testInt32() {
     byte[] bytes = new byte[] {0x00, 0x00, 0x00, 0x00};
     assertEquals(0, CDXUtils.readInt32(bytes, 0));
@@ -183,6 +187,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(-1L, CDXUtils.readInt32(bytes, 0));
   }
 
+  @Test
   public void testInt8() {
     byte[] bytes = new byte[] {0x00};
     assertEquals(0, CDXUtils.readInt8(bytes, 0));
@@ -203,6 +208,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(-1, CDXUtils.readInt8(bytes, 0));
   }
 
+  @Test
   public void testUInt16() {
     byte[] bytes = new byte[] {0x00, 0x00};
     assertEquals(0, CDXUtils.readUInt16(bytes, 0));
@@ -223,6 +229,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(65535, CDXUtils.readUInt16(bytes, 0));
   }
 
+  @Test
   public void testUInt32() {
     byte[] bytes = new byte[] {0x00, 0x00, 0x00, 0x00};
     assertEquals(0, CDXUtils.readUInt32(bytes, 0));
@@ -246,6 +253,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(4294967295L, CDXUtils.readUInt32(bytes, 0));
   }
 
+  @Test
   public void testUInt8() {
     byte[] bytes = new byte[] {0x00};
     assertEquals(0, CDXUtils.readInt8(bytes, 0));
@@ -260,6 +268,7 @@ public class CDXUtilsTest extends TestCase {
     assertEquals(255, CDXUtils.readUInt8(bytes, 0));
   }
 
+  @Test
   public void testColorEquals() {
     CDColor expected = new CDColor(1f, 0.0f, 1f);
     CDColor actual = new CDColor(0.99998474f, 0.0f, 0.99998474f);

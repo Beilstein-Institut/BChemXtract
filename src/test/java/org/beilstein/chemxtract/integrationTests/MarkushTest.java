@@ -21,7 +21,8 @@
  */
 package org.beilstein.chemxtract.integrationTests;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +32,7 @@ import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
@@ -67,7 +67,7 @@ public class MarkushTest {
     BCXSubstanceInfo info = new BCXSubstanceInfo();
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
-    Assert.assertEquals(9, substances.size());
+    assertEquals(9, substances.size());
   }
 
   @Test
@@ -82,6 +82,6 @@ public class MarkushTest {
     BCXSubstanceInfo info = new BCXSubstanceInfo();
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
-    Assert.assertEquals(14, substances.size());
+    assertEquals(14, substances.size());
   }
 }

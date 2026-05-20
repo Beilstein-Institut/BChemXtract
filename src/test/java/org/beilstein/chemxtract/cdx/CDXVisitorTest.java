@@ -28,9 +28,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.reader.CDXMLReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Implements an object "visiting" all CD objects within the tree. Each visited object accepts the
@@ -43,10 +43,10 @@ public class CDXVisitorTest extends CDVisitor {
   List<CDAtom> atomsWithWarnings = new ArrayList<CDAtom>();
   List<CDBond> bondsWithWarnings = new ArrayList<CDBond>();
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {}
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {}
 
   @Test

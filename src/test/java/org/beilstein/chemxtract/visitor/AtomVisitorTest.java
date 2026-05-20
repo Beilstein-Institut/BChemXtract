@@ -21,8 +21,12 @@
  */
 package org.beilstein.chemxtract.visitor;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -30,8 +34,11 @@ import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class AtomVisitorTest {
 
   private void mockDeepText(CDAtom atom, String value) {
@@ -61,7 +68,7 @@ public class AtomVisitorTest {
     visitor.visitAtom(atom);
 
     assertEquals(frag, visitor.getNicknames().get("Nick"));
-    assertTrue("nickname atoms should not be added to atoms list", visitor.getAtoms().isEmpty());
+    assertTrue(visitor.getAtoms().isEmpty(), "nickname atoms should not be added to atoms list");
   }
 
   @Test
