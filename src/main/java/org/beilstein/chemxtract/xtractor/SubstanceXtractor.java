@@ -289,7 +289,7 @@ public class SubstanceXtractor {
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
     // set InChI, InChIKey and AuxInfo
-    if (atomContainer.getAtomCount() < 500) {
+    if (atomContainer.getAtomCount() <= 500) {
       InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
       substance.setInchi(gen.getInchi());
       substance.setInchiKey(gen.getInchiKey());
