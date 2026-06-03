@@ -2,6 +2,14 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.1.3](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.2...v1.1.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* align InChI generation boundary with SMILES at 500 atoms ([aba0033](https://github.com/Beilstein-Institut/BChemXtract/commit/aba0033f3c9d9f172af215a1cadc523a1fde6182))
+* align InChI generation boundary with SMILES at 500 atoms ([5cbf6b7](https://github.com/Beilstein-Institut/BChemXtract/commit/5cbf6b73140ecbc8bad5ac162331693639da34f1))
+
 ## [1.1.2](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.1...v1.1.2) (2026-05-08)
 
 
