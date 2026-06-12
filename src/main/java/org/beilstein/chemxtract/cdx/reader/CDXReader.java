@@ -21,349 +21,6 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Arrow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Bond;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Border;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_BracketAttachment;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_BracketedGroup;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_ChemicalProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_ColoredMolecularArea;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Constraint;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_CrossReference;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_CrossingBond;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Curve;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Document;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_EmbeddedObject;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Fragment;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Geometry;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Graphic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Group;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_NamedAlternativeGroup;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Node;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_ObjectTag;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Page;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_ReactionScheme;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_ReactionStep;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Sequence;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Spectrum;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Splitter;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_TLCLane;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_TLCPlate;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_TLCSpot;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Table;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_TemplateGrid;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObj_Text;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_2DExtent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_2DPosition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_3DCenter;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_3DHead;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_3DPosition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_3DTail;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arc_AngularSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_Dipole;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_EquilibriumRatio;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_HeadSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_NoGo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_ShaftSpacing;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Arrow_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_AbnormalValence;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_AltGroupID;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_AtomNumber;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_BondOrdering;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_CIPStereochemistry;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Charge;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ElementList;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ExternalConnectionType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Formula;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_GenericList;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_GenericNickname;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Geometry;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_HDash;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_HDot;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Isotope;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_IsotopicAbundance;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_LinkCountHigh;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_LinkCountLow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_NumHydrogens;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Radical;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictFreeSites;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictImplicitHydrogens;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictRingBondCount;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictRxnChange;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictRxnStereo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictSubstituentsExactly;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictSubstituentsUpTo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_RestrictUnsaturatedBonds;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ShowAtomNumber;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ShowEnhancedStereo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ShowQuery;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_ShowStereo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Translation;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BMP;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BackgroundColor;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BasisObjects;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BoldWidth;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BondLength;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BondSpacing;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BondSpacingAbs;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_Begin;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_BeginAttach;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_BondOrdering;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_CIPStereochemistry;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_CrossingBonds;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_Display;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_Display2;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_DoublePosition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_End;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_EndAttach;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_Order;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_RestrictRxnParticipation;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_RestrictTopology;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_ShowQuery;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_ShowRxn;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bond_ShowStereo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BottomLeft;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BottomRight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BoundingBox;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BoundsInParent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_BondID;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_ComponentOrder;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_GraphicID;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_InnerAtomID;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_LipSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_RepeatCount;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_SRULabel;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Bracket_Usage;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_BracketedObjects;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionJustification;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionLineHeight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionStyle;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionStyleColor;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionStyleFace;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionStyleFont;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CaptionStyleSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CartridgeData;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ChainAngle;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ChemicalPropertyDisplayID;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ChemicalPropertyIsActive;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ChemicalPropertyType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ChemicalWarning;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ColorTable;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Comment;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CompressedEnhancedMetafile;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CompressedOLEObject;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CompressedWindowsMetafile;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ConstraintMax;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ConstraintMin;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ConstraintType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CornerRadius;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CreationDate;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CreationProgram;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CreationUserName;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CrossReference_Container;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CrossReference_Document;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CrossReference_Identifier;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_CrossReference_Sequence;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_ArrowheadCenterSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_ArrowheadHead;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_ArrowheadTail;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_ArrowheadType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_ArrowheadWidth;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_Closed;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_FillType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_Points;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_Points3D;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Curve_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_DihedralIsChiral;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_DrawingSpaceType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_EnhancedMetafile;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FadePercent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FixInplaceExtent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FixInplaceGap;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FontTable;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Footer;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FooterPosition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ForegroundColor;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_FractionalWidths;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Frag_ConnectionOrder;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_GIF;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_GeometricFeature;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Graphic_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Group_Integral;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_HashSpacing;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Header;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_HeaderPosition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Height;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_HeightPages;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_HideImplicitHydrogens;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_HighlightColor;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_IgnoreUnconnectedAtoms;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_IgnoreWarnings;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_InterpretChemically;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_JPEG;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Justification;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelAlignment;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelJustification;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelLineHeight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelStyle;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelStyleColor;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelStyleFace;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelStyleFont;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LabelStyleSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LineHeight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LineStarts;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_LineWidth;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Line_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_MacPICT;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_MacPrintInfo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Magnification;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_MajorAxisEnd3D;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_MarginWidth;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_MinorAxisEnd3D;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ModificationDate;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ModificationProgram;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ModificationUserName;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Mole_Absolute;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Mole_Formula;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Mole_Racemic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Mole_Relative;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Mole_Weight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Name;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_NamedAlternativeGroup_GroupFrame;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_NamedAlternativeGroup_TextFrame;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_NamedAlternativeGroup_Valence;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Node_Attachments;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Node_Element;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Node_LabelDisplay;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Node_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_OLEObject;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ObjectTag_Persistent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ObjectTag_Tracking;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ObjectTag_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ObjectTag_Value;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Orbital_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Oval_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PNG;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PageDefinition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PageOverlap;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Picture_Edition;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Picture_EditionAlias;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PointIsDirected;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Polymer_FlipType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Polymer_RepeatPattern;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Positioning;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PositioningAngle;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PositioningOffset;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PrintMargins;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_PrintTrimMarks;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Arrows;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Atom_Map;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Atom_Map_Auto;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Atom_Map_Manual;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_ObjectsAboveArrow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_ObjectsBelowArrow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Plusses;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Products;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ReactionStep_Reactants;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Rectangle_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_RelationValue;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_RepresentsProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_RotationAngle;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Sequence_Identifier;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ShadowSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ShowNonTerminalCarbonLabels;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ShowTerminalCarbonLabels;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Side;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_Class;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_DataPoint;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_XAxisLabel;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_XLow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_XSpacing;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_XType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_YAxisLabel;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_YLow;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_YScale;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Spectrum_YType;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_SplitterPositions;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_SupersededBy;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Symbol_Type;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TIFF;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_OriginFraction;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_Rf;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_ShowBorders;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_ShowOrigin;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_ShowRf;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_ShowSolventFront;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_SolventFrontFraction;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TLC_Tail;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Template_NumColumns;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Template_NumRows;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Template_PaneHeight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Text;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TopLeft;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_TopRight;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_UncompressedEnhancedMetafileSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_UncompressedOLEObjectSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_UncompressedWindowsMetafileSize;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Visible;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Width;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_WidthPages;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_WinPrintInfo;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Window_IsZoomed;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Window_Position;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Window_Size;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_WindowsMetafile;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_WordWrapWidth;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_ZOrder;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.getPositionAsString;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readAbundanceProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readArrowTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readArrowheadProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readArrowheadTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readAtomCIPTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readAtomGeometryProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondCIPTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondDisplayProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondDoublePositionProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondOrdersProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondReactionParticipationProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBondTopologyProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBracketTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readBracketUsageProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readCDXDocument;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readConstraintTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readCurveTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readDrawingSpaceTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readExternalConnectionTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readFillTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readGeometricFeatureProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readGraphicTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readLabelDisplayProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readLineHeight;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readLineTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readNoGoProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readNodeTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readObjectTagTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readOrbitalTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readOvalTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readPageDefinitionProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readPolymerFlipTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readPolymerRepeatPatternProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readPositioningTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readRadicalProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readReactionStereoProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readRectangleTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readRingBondCountProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readSideTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readSpectrumClassProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readSpectrumXTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readSpectrumYTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readSymbolTypeProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readTextJustificationProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readTranslationProperty;
-import static org.beilstein.chemxtract.cdx.reader.CDXUtils.readUnsaturationProperty;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -438,7 +95,7 @@ public class CDXReader {
     byte[] bytes = IOUtils.readBytes(in);
     CDXReader reader = new CDXReader();
     LOGGER.debug("Create object tree");
-    CDXObject object = readCDXDocument(bytes, new int[] {0});
+    CDXObject object = CDXUtils.readCDXDocument(bytes, new int[] {0});
 
     LOGGER.debug("Create model tree");
     CDDocument document = reader.createDocumentObject(object);
@@ -458,10 +115,10 @@ public class CDXReader {
 
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Page:
+        case CDXConstants.CDXObj_Page:
           document.addPage(createPageObject(object));
           break;
-        case CDXObj_TemplateGrid:
+        case CDXConstants.CDXObj_TemplateGrid:
           if (document.getTemplateGrid() != null) {
             throw new IOException("Multiple instances of template grid not allowed");
           }
@@ -483,7 +140,7 @@ public class CDXReader {
     // first color table
     for (CDXProperty property : root.getProperties()) {
       switch (property.getTag()) {
-        case CDXProp_ColorTable:
+        case CDXConstants.CDXProp_ColorTable:
           colors = property.getDataAsColorTable();
           // Color 2 & 3 are the standard foreground and background color
           document.getSettings().setColor(colors.get(3));
@@ -497,7 +154,7 @@ public class CDXReader {
     // second font table
     for (CDXProperty property : root.getProperties()) {
       switch (property.getTag()) {
-        case CDXProp_FontTable:
+        case CDXConstants.CDXProp_FontTable:
           fonts = property.getDataAsFontTable();
           break;
         default:
@@ -508,175 +165,179 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_CreationUserName:
+        case CDXConstants.CDXProp_CreationUserName:
           document.setCreationUserName(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_CreationDate:
+        case CDXConstants.CDXProp_CreationDate:
           document.setCreationDate(property.getDataAsDate());
           break;
-        case CDXProp_CreationProgram:
+        case CDXConstants.CDXProp_CreationProgram:
           document.setCreationProgram(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_ModificationUserName:
+        case CDXConstants.CDXProp_ModificationUserName:
           document.setModificationUserName(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_ModificationDate:
+        case CDXConstants.CDXProp_ModificationDate:
           document.setModificationDate(property.getDataAsDate());
           break;
-        case CDXProp_ModificationProgram:
+        case CDXConstants.CDXProp_ModificationProgram:
           document.setModificationProgram(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Name:
+        case CDXConstants.CDXProp_Name:
           document.setName(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Comment:
+        case CDXConstants.CDXProp_Comment:
           document.setComment(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_FontTable:
+        case CDXConstants.CDXProp_FontTable:
           // ignore here
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           document.setBoundingBox(property.getDataAsRectangle());
           break;
-        case CDXProp_ColorTable:
+        case CDXConstants.CDXProp_ColorTable:
           // ignore here
           break;
-        case CDXProp_Atom_ShowQuery:
+        case CDXConstants.CDXProp_Atom_ShowQuery:
           document.getSettings().setShowAtomQuery(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_ShowStereo:
+        case CDXConstants.CDXProp_Atom_ShowStereo:
           document.getSettings().setShowAtomStereo(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_ShowAtomNumber:
+        case CDXConstants.CDXProp_Atom_ShowAtomNumber:
           document.getSettings().setShowAtomNumber(property.getDataAsBoolean());
           break;
-        case CDXProp_Bond_ShowQuery:
+        case CDXConstants.CDXProp_Bond_ShowQuery:
           document.getSettings().setShowBondQuery(property.getDataAsBoolean());
           break;
-        case CDXProp_Bond_ShowStereo:
+        case CDXConstants.CDXProp_Bond_ShowStereo:
           document.getSettings().setShowBondStereo(property.getDataAsBoolean());
           break;
-        case CDXProp_Bond_ShowRxn:
+        case CDXConstants.CDXProp_Bond_ShowRxn:
           document.getSettings().setShowBondReaction(property.getDataAsBoolean());
           break;
-        case CDXProp_LabelLineHeight:
-          document.getSettings().setLabelLineHeight(readLineHeight(property));
+        case CDXConstants.CDXProp_LabelLineHeight:
+          document.getSettings().setLabelLineHeight(CDXUtils.readLineHeight(property));
           break;
-        case CDXProp_CaptionLineHeight:
-          document.getSettings().setCaptionLineHeight(readLineHeight(property));
+        case CDXConstants.CDXProp_CaptionLineHeight:
+          document.getSettings().setCaptionLineHeight(CDXUtils.readLineHeight(property));
           break;
-        case CDXProp_InterpretChemically:
+        case CDXConstants.CDXProp_InterpretChemically:
           document.getSettings().setInterpretChemically(property.getDataAsBoolean());
           break;
-        case CDXProp_MacPrintInfo:
+        case CDXConstants.CDXProp_MacPrintInfo:
           document.setMacPrintInfo(property.getData());
           break;
-        case CDXProp_WinPrintInfo:
+        case CDXConstants.CDXProp_WinPrintInfo:
           document.setWinPrintInfo(property.getData());
           break;
-        case CDXProp_PrintMargins:
+        case CDXConstants.CDXProp_PrintMargins:
           document.setPrintMargins(property.getDataAsRectangle());
           break;
-        case CDXProp_ChainAngle:
+        case CDXConstants.CDXProp_ChainAngle:
           document.getSettings().setChainAngle(property.getDataAsCoordinate());
           break;
-        case CDXProp_BondSpacing:
+        case CDXConstants.CDXProp_BondSpacing:
           document.getSettings().setBondSpacing(property.getDataAsInt16() / 10f);
           break;
-        case CDXProp_BondSpacingAbs:
+        case CDXConstants.CDXProp_BondSpacingAbs:
           document.getSettings().setBondSpacingAbs(Math.max(property.getDataAsCoordinate(), 0f));
           break;
-        case CDXProp_BondLength:
+        case CDXConstants.CDXProp_BondLength:
           document.getSettings().setBondLength(property.getDataAsCoordinate());
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           document.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           document.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_MarginWidth:
+        case CDXConstants.CDXProp_MarginWidth:
           document.getSettings().setMarginWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           document.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyle:
+        case CDXConstants.CDXProp_LabelStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           document.getSettings().setLabelFont(fontStyle.getFont());
           document.getSettings().setLabelSize(fontStyle.getSize());
           document.getSettings().setLabelFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionStyle:
+        case CDXConstants.CDXProp_CaptionStyle:
           fontStyle = property.getDataAsFontStyle(fonts, colors);
           document.getSettings().setCaptionFont(fontStyle.getFont());
           document.getSettings().setCaptionSize(fontStyle.getSize());
           document.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionJustification:
-          document.getSettings().setCaptionJustification(readTextJustificationProperty(property));
+        case CDXConstants.CDXProp_CaptionJustification:
+          document
+              .getSettings()
+              .setCaptionJustification(CDXUtils.readTextJustificationProperty(property));
           break;
-        case CDXProp_FractionalWidths:
+        case CDXConstants.CDXProp_FractionalWidths:
           document.setFractionalWidths(property.getDataAsBoolean());
           break;
-        case CDXProp_Magnification:
+        case CDXConstants.CDXProp_Magnification:
           document.setMagnification(property.getDataAsInt16() / 10f);
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           document.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_CaptionStyleFont:
+        case CDXConstants.CDXProp_CaptionStyleFont:
           document.getSettings().setCaptionFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           document.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_CaptionStyleSize:
+        case CDXConstants.CDXProp_CaptionStyleSize:
           document.getSettings().setCaptionSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           document.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_CaptionStyleFace:
+        case CDXConstants.CDXProp_CaptionStyleFace:
           document.getSettings().setCaptionFace(property.getDataAsFontFace());
           break;
-        case CDXProp_LabelStyleColor:
+        case CDXConstants.CDXProp_LabelStyleColor:
           document.getSettings().setLabelColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_CaptionStyleColor:
+        case CDXConstants.CDXProp_CaptionStyleColor:
           document.getSettings().setCaptionColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_LabelJustification:
-          document.getSettings().setLabelJustification(readTextJustificationProperty(property));
+        case CDXConstants.CDXProp_LabelJustification:
+          document
+              .getSettings()
+              .setLabelJustification(CDXUtils.readTextJustificationProperty(property));
           break;
-        case CDXProp_FixInplaceExtent:
+        case CDXConstants.CDXProp_FixInplaceExtent:
           document.setFixInPlaceExtent(property.getDataAsPoint2D());
           break;
-        case CDXProp_FixInplaceGap:
+        case CDXConstants.CDXProp_FixInplaceGap:
           document.setFixInPlaceGap(property.getDataAsPoint2D());
           break;
-        case CDXProp_CartridgeData:
+        case CDXConstants.CDXProp_CartridgeData:
           document.setCartridgeData(property.getData());
           break;
-        case CDXProp_Window_IsZoomed:
+        case CDXConstants.CDXProp_Window_IsZoomed:
           document.setWindowIsZoomed(property.getDataAsBoolean());
           break;
-        case CDXProp_Window_Position:
+        case CDXConstants.CDXProp_Window_Position:
           document.setWindowPosition(property.getDataAsPoint2D());
           break;
-        case CDXProp_Window_Size:
+        case CDXConstants.CDXProp_Window_Size:
           document.setWindowSize(property.getDataAsPoint2D());
           break;
-        case CDXProp_ShowTerminalCarbonLabels:
+        case CDXConstants.CDXProp_ShowTerminalCarbonLabels:
           document.getSettings().setShowTerminalCarbonLabels(property.getDataAsBoolean());
           break;
-        case CDXProp_ShowNonTerminalCarbonLabels:
+        case CDXConstants.CDXProp_ShowNonTerminalCarbonLabels:
           document.getSettings().setShowNonTerminalCarbonLabels(property.getDataAsBoolean());
           break;
-        case CDXProp_HideImplicitHydrogens:
+        case CDXConstants.CDXProp_HideImplicitHydrogens:
           document.getSettings().setHideImplicitHydrogens(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_ShowEnhancedStereo:
+        case CDXConstants.CDXProp_Atom_ShowEnhancedStereo:
           document.getSettings().setShowAtomEnhancedStereo(property.getDataAsBoolean());
           break;
 
@@ -696,68 +357,68 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Group:
+        case CDXConstants.CDXObj_Group:
           page.addGroup(createGroupObject(object));
           break;
-        case CDXObj_Fragment:
+        case CDXConstants.CDXObj_Fragment:
           page.addFragment(createFragmentObject(object));
           break;
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           page.addText(createTextObject(object));
           break;
-        case CDXObj_Graphic:
+        case CDXConstants.CDXObj_Graphic:
           page.addGraphic(createGraphicObject(object));
           break;
-        case CDXObj_BracketedGroup:
+        case CDXConstants.CDXObj_BracketedGroup:
           page.addBracketedGroup(createBracketedGroupObject(object));
           break;
-        case CDXObj_Curve:
+        case CDXConstants.CDXObj_Curve:
           page.addCurve(createSplineObject(object));
           break;
-        case CDXObj_EmbeddedObject:
+        case CDXConstants.CDXObj_EmbeddedObject:
           page.addEmbeddedObject(createEmbeddedObjectObject(object));
           break;
-        case CDXObj_Table:
+        case CDXConstants.CDXObj_Table:
           page.addTable(createTableObject(object));
           break;
-        case CDXObj_NamedAlternativeGroup:
+        case CDXConstants.CDXObj_NamedAlternativeGroup:
           page.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
           break;
-        case CDXObj_ReactionScheme:
+        case CDXConstants.CDXObj_ReactionScheme:
           page.addReactionScheme(createReactionSchemeObject(object));
           break;
-        case CDXObj_ReactionStep:
+        case CDXConstants.CDXObj_ReactionStep:
           page.addReactionStep(createReactionStepObject(object));
           break;
-        case CDXObj_Spectrum:
+        case CDXConstants.CDXObj_Spectrum:
           page.addSpectrum(createSpectrumObject(object));
           break;
-        case CDXObj_Sequence:
+        case CDXConstants.CDXObj_Sequence:
           page.addSequence(createSequenceObject(object));
           break;
-        case CDXObj_CrossReference:
+        case CDXConstants.CDXObj_CrossReference:
           page.addCrossReference(createCrossReferenceObject(object));
           break;
-        case CDXObj_Border:
+        case CDXConstants.CDXObj_Border:
           page.addBorder(createBorderObject(object));
           break;
-        case CDXObj_Geometry:
+        case CDXConstants.CDXObj_Geometry:
           page.addGeometry(createGeometryObject(object));
           break;
-        case CDXObj_Constraint:
+        case CDXConstants.CDXObj_Constraint:
           page.addConstraint(createConstraintObject(object));
           break;
-        case CDXObj_TLCPlate:
+        case CDXConstants.CDXObj_TLCPlate:
           page.addTLCPlate(createTLCPlateObject(object));
           break;
-        case CDXObj_Splitter:
+        case CDXConstants.CDXObj_Splitter:
           page.addSplitter(createSplitterObject(object));
           break;
-        case CDXObj_ChemicalProperty:
+        case CDXConstants.CDXObj_ChemicalProperty:
           page.addChemicalProperty(createChemicalPropertyObject(object));
           break;
 
-        case CDXObj_Arrow:
+        case CDXConstants.CDXObj_Arrow:
           page.addArrow(createArrowObject(object));
           break;
 
@@ -775,51 +436,51 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           page.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           page.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_WidthPages:
+        case CDXConstants.CDXProp_WidthPages:
           page.setWidthPages(property.getDataAsInt16());
           break;
-        case CDXProp_HeightPages:
+        case CDXConstants.CDXProp_HeightPages:
           page.setHeightPages(property.getDataAsInt16());
           break;
-        case CDXProp_DrawingSpaceType:
-          page.setDrawingSpaceType(readDrawingSpaceTypeProperty(property));
+        case CDXConstants.CDXProp_DrawingSpaceType:
+          page.setDrawingSpaceType(CDXUtils.readDrawingSpaceTypeProperty(property));
           break;
-        case CDXProp_Width:
+        case CDXConstants.CDXProp_Width:
           page.setWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_Height:
+        case CDXConstants.CDXProp_Height:
           page.setHeight(property.getDataAsCoordinate());
           break;
-        case CDXProp_PageOverlap:
+        case CDXConstants.CDXProp_PageOverlap:
           page.setPageOverlap(property.getDataAsCoordinate());
           break;
-        case CDXProp_Header:
+        case CDXConstants.CDXProp_Header:
           page.setHeader(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_HeaderPosition:
+        case CDXConstants.CDXProp_HeaderPosition:
           page.setHeaderPosition(property.getDataAsCoordinate());
           break;
-        case CDXProp_Footer:
+        case CDXConstants.CDXProp_Footer:
           page.setFooter(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_FooterPosition:
+        case CDXConstants.CDXProp_FooterPosition:
           page.setFooterPosition(property.getDataAsCoordinate());
           break;
-        case CDXProp_PrintTrimMarks:
+        case CDXConstants.CDXProp_PrintTrimMarks:
           page.setPrintTrimMarks(property.getDataAsBoolean());
           break;
-        case CDXProp_SplitterPositions:
+        case CDXConstants.CDXProp_SplitterPositions:
           break;
-        case CDXProp_PageDefinition:
-          page.setPageDefinition(readPageDefinitionProperty(property));
+        case CDXConstants.CDXProp_PageDefinition:
+          page.setPageDefinition(CDXUtils.readPageDefinitionProperty(property));
           break;
-        case CDXProp_BoundsInParent:
+        case CDXConstants.CDXProp_BoundsInParent:
           page.setBoundsInParent(property.getDataAsRectangle());
           break;
 
@@ -839,29 +500,29 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Node:
+        case CDXConstants.CDXObj_Node:
           fragment.addAtom(createNodeObject(object));
           break;
-        case CDXObj_Bond:
+        case CDXConstants.CDXObj_Bond:
           fragment.addBond(createBondObject(object));
           break;
-        case CDXObj_Graphic:
+        case CDXConstants.CDXObj_Graphic:
           fragment.addGraphic(createGraphicObject(object));
           break;
-        case CDXObj_Curve:
+        case CDXConstants.CDXObj_Curve:
           fragment.addCurve(createSplineObject(object));
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           fragment.addObjectTag(createObjectTagObject(object));
           break;
 
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           fragment.addText(createTextObject(object));
           break;
-        case CDXObj_Arrow:
+        case CDXConstants.CDXObj_Arrow:
           fragment.addArrow(createArrowObject(object));
           break;
-        case CDXObj_ColoredMolecularArea:
+        case CDXConstants.CDXObj_ColoredMolecularArea:
           fragment.addColoredMolecularArea(createColoredMolecularArea(object));
           break;
 
@@ -878,25 +539,25 @@ public class CDXReader {
 
     for (CDXProperty property : root.getProperties()) {
       switch (property.getTag()) {
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           fragment.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_Mole_Racemic:
+        case CDXConstants.CDXProp_Mole_Racemic:
           fragment.setRacemic(property.getDataAsBoolean());
           break;
-        case CDXProp_Mole_Absolute:
+        case CDXConstants.CDXProp_Mole_Absolute:
           fragment.setAbsolute(property.getDataAsBoolean());
           break;
-        case CDXProp_Mole_Relative:
+        case CDXConstants.CDXProp_Mole_Relative:
           fragment.setRelative(property.getDataAsBoolean());
           break;
-        case CDXProp_Mole_Formula:
+        case CDXConstants.CDXProp_Mole_Formula:
           fragment.setFormula(property.getData());
           break;
-        case CDXProp_Mole_Weight:
+        case CDXConstants.CDXProp_Mole_Weight:
           fragment.setWeight(property.getDataAsFloat64());
           break;
-        case CDXProp_Frag_ConnectionOrder:
+        case CDXConstants.CDXProp_Frag_ConnectionOrder:
           fragment.setConnectionOrder(property.getDataAsObjectRefArray(CDAtom.class, refManager));
           break;
 
@@ -916,16 +577,16 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Fragment:
+        case CDXConstants.CDXObj_Fragment:
           node.addFragment(createFragmentObject(object));
           break;
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           if (node.getText() != null) {
             throw new IOException("Unexpected object");
           }
           node.setText(createTextObject(object));
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           node.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -943,175 +604,175 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           node.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           node.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           node.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           node.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_2DPosition:
+        case CDXConstants.CDXProp_2DPosition:
           node.setPosition2D(property.getDataAsPoint2D());
           break;
-        case CDXProp_3DPosition:
+        case CDXConstants.CDXProp_3DPosition:
           node.setPosition3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           node.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           node.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_HighlightColor:
+        case CDXConstants.CDXProp_HighlightColor:
           node.getSettings().setHighlightColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_Node_Type:
-          node.setNodeType(readNodeTypeProperty(property));
+        case CDXConstants.CDXProp_Node_Type:
+          node.setNodeType(CDXUtils.readNodeTypeProperty(property));
           break;
-        case CDXProp_Node_LabelDisplay:
-          node.setLabelDisplay(readLabelDisplayProperty(property));
+        case CDXConstants.CDXProp_Node_LabelDisplay:
+          node.setLabelDisplay(CDXUtils.readLabelDisplayProperty(property));
           break;
-        case CDXProp_Node_Element:
+        case CDXConstants.CDXProp_Node_Element:
           node.setElementNumber(property.getDataAsInt16());
           break;
-        case CDXProp_Atom_ElementList:
+        case CDXConstants.CDXProp_Atom_ElementList:
           node.setElementList(property.getDataAsElementList());
           break;
-        case CDXProp_Atom_Formula:
+        case CDXConstants.CDXProp_Atom_Formula:
           node.setFormula(property.getData());
           break;
-        case CDXProp_Atom_Isotope:
+        case CDXConstants.CDXProp_Atom_Isotope:
           node.setIsotope(property.getDataAsInt16());
           break;
-        case CDXProp_Atom_Charge:
+        case CDXConstants.CDXProp_Atom_Charge:
           node.setCharge(property.getDataAsInt());
           break;
-        case CDXProp_Atom_Radical:
-          node.setRadical(readRadicalProperty(property));
+        case CDXConstants.CDXProp_Atom_Radical:
+          node.setRadical(CDXUtils.readRadicalProperty(property));
           break;
-        case CDXProp_Atom_RestrictFreeSites:
+        case CDXConstants.CDXProp_Atom_RestrictFreeSites:
           node.setSubstituentCount(property.getDataAsUInt8());
           node.setSubstituentType(CDAtomSubstituentType.FreeSites);
           break;
-        case CDXProp_Atom_RestrictImplicitHydrogens:
+        case CDXConstants.CDXProp_Atom_RestrictImplicitHydrogens:
           node.setImplicitHydrogensAllowed(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_RestrictRingBondCount:
-          node.setRingBondCount(readRingBondCountProperty(property));
+        case CDXConstants.CDXProp_Atom_RestrictRingBondCount:
+          node.setRingBondCount(CDXUtils.readRingBondCountProperty(property));
           break;
-        case CDXProp_Atom_RestrictUnsaturatedBonds:
-          node.setUnsaturatedBonds(readUnsaturationProperty(property));
+        case CDXConstants.CDXProp_Atom_RestrictUnsaturatedBonds:
+          node.setUnsaturatedBonds(CDXUtils.readUnsaturationProperty(property));
           break;
-        case CDXProp_Atom_RestrictRxnChange:
+        case CDXConstants.CDXProp_Atom_RestrictRxnChange:
           node.setRestrictReactionChange(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_RestrictRxnStereo:
-          node.setReactionStereo(readReactionStereoProperty(property));
+        case CDXConstants.CDXProp_Atom_RestrictRxnStereo:
+          node.setReactionStereo(CDXUtils.readReactionStereoProperty(property));
           break;
-        case CDXProp_Atom_AbnormalValence:
+        case CDXConstants.CDXProp_Atom_AbnormalValence:
           node.setAbnormalValenceAllowed(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_NumHydrogens:
+        case CDXConstants.CDXProp_Atom_NumHydrogens:
           node.setNumImplicitHydrogens(property.getDataAsInt16());
           break;
-        case CDXProp_Atom_HDot:
+        case CDXConstants.CDXProp_Atom_HDot:
           node.setHDot(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_HDash:
+        case CDXConstants.CDXProp_Atom_HDash:
           node.setHDash(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_Geometry:
-          node.setAtomGeometry(readAtomGeometryProperty(property));
+        case CDXConstants.CDXProp_Atom_Geometry:
+          node.setAtomGeometry(CDXUtils.readAtomGeometryProperty(property));
           break;
-        case CDXProp_Atom_BondOrdering:
+        case CDXConstants.CDXProp_Atom_BondOrdering:
           node.setBondOrdering(property.getDataAsObjectRefArray(CDBond.class, refManager));
           break;
-        case CDXProp_Node_Attachments:
+        case CDXConstants.CDXProp_Node_Attachments:
           node.setAttachedAtoms(
               property.getDataAsObjectRefArrayWithCounts(CDAtom.class, refManager));
           break;
-        case CDXProp_Atom_GenericNickname:
+        case CDXConstants.CDXProp_Atom_GenericNickname:
           node.setLabelText(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Atom_AltGroupID:
+        case CDXConstants.CDXProp_Atom_AltGroupID:
           node.setAltGroup(property.getDataAsObjectRef(CDAltGroup.class, refManager));
           break;
-        case CDXProp_Atom_RestrictSubstituentsUpTo:
+        case CDXConstants.CDXProp_Atom_RestrictSubstituentsUpTo:
           node.setSubstituentCount(property.getDataAsUInt8());
           node.setSubstituentType(CDAtomSubstituentType.SubstituentsUpTo);
           break;
-        case CDXProp_Atom_RestrictSubstituentsExactly:
+        case CDXConstants.CDXProp_Atom_RestrictSubstituentsExactly:
           node.setSubstituentCount(property.getDataAsUInt8());
           node.setSubstituentType(CDAtomSubstituentType.SubstituentsExactly);
           break;
-        case CDXProp_Atom_CIPStereochemistry:
-          node.setStereochemistry(readAtomCIPTypeProperty(property));
+        case CDXConstants.CDXProp_Atom_CIPStereochemistry:
+          node.setStereochemistry(CDXUtils.readAtomCIPTypeProperty(property));
           break;
-        case CDXProp_Atom_Translation:
-          node.setTranslation(readTranslationProperty(property));
+        case CDXConstants.CDXProp_Atom_Translation:
+          node.setTranslation(CDXUtils.readTranslationProperty(property));
           break;
-        case CDXProp_Atom_AtomNumber:
+        case CDXConstants.CDXProp_Atom_AtomNumber:
           node.setAtomNumber(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Atom_ShowQuery:
+        case CDXConstants.CDXProp_Atom_ShowQuery:
           node.getSettings().setShowAtomQuery(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_ShowStereo:
+        case CDXConstants.CDXProp_Atom_ShowStereo:
           node.getSettings().setShowAtomStereo(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_ShowAtomNumber:
+        case CDXConstants.CDXProp_Atom_ShowAtomNumber:
           node.getSettings().setShowAtomNumber(property.getDataAsBoolean());
           break;
-        case CDXProp_Atom_LinkCountLow:
+        case CDXConstants.CDXProp_Atom_LinkCountLow:
           node.setLinkCountLow(property.getDataAsInt16());
           break;
-        case CDXProp_Atom_LinkCountHigh:
+        case CDXConstants.CDXProp_Atom_LinkCountHigh:
           node.setLinkCountHigh(property.getDataAsInt16());
           break;
-        case CDXProp_Atom_IsotopicAbundance:
-          node.setIsotopicAbundance(readAbundanceProperty(property));
+        case CDXConstants.CDXProp_Atom_IsotopicAbundance:
+          node.setIsotopicAbundance(CDXUtils.readAbundanceProperty(property));
           break;
-        case CDXProp_Atom_ExternalConnectionType:
-          node.setAttachmentPointType(readExternalConnectionTypeProperty(property));
+        case CDXConstants.CDXProp_Atom_ExternalConnectionType:
+          node.setAttachmentPointType(CDXUtils.readExternalConnectionTypeProperty(property));
           break;
-        case CDXProp_Atom_GenericList:
+        case CDXConstants.CDXProp_Atom_GenericList:
           node.setGenericList(property.getDataAsGenericList(fonts, colors));
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           node.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyle:
+        case CDXConstants.CDXProp_LabelStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           node.getSettings().setLabelFont(fontStyle.getFont());
           node.getSettings().setLabelSize(fontStyle.getSize());
           node.getSettings().setLabelFace(fontStyle.getFontType());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           node.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           node.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           node.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
 
-        case CDXProp_MarginWidth:
+        case CDXConstants.CDXProp_MarginWidth:
           node.getSettings().setMarginWidth(property.getDataAsCoordinate());
           break;
 
-        case CDXProp_ShowTerminalCarbonLabels:
+        case CDXConstants.CDXProp_ShowTerminalCarbonLabels:
           node.getSettings().setShowTerminalCarbonLabels(property.getDataAsBoolean());
           break;
-        case CDXProp_ShowNonTerminalCarbonLabels:
+        case CDXConstants.CDXProp_ShowNonTerminalCarbonLabels:
           node.getSettings().setShowNonTerminalCarbonLabels(property.getDataAsBoolean());
           break;
-        case CDXProp_HideImplicitHydrogens:
+        case CDXConstants.CDXProp_HideImplicitHydrogens:
           node.getSettings().setHideImplicitHydrogens(property.getDataAsBoolean());
           break;
 
@@ -1137,7 +798,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           bond.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -1155,110 +816,110 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           bond.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           bond.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           bond.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           bond.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           bond.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           bond.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_HighlightColor:
+        case CDXConstants.CDXProp_HighlightColor:
           bond.getSettings().setHighlightColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_Bond_Order:
-          bond.setBondOrder(readBondOrdersProperty(property));
+        case CDXConstants.CDXProp_Bond_Order:
+          bond.setBondOrder(CDXUtils.readBondOrdersProperty(property));
           break;
-        case CDXProp_Bond_Display:
-          bond.setBondDisplay(readBondDisplayProperty(property));
+        case CDXConstants.CDXProp_Bond_Display:
+          bond.setBondDisplay(CDXUtils.readBondDisplayProperty(property));
           break;
-        case CDXProp_Bond_Display2:
-          bond.setBondDisplay2(readBondDisplayProperty(property));
+        case CDXConstants.CDXProp_Bond_Display2:
+          bond.setBondDisplay2(CDXUtils.readBondDisplayProperty(property));
           break;
-        case CDXProp_Bond_DoublePosition:
-          bond.setBondDoublePosition(readBondDoublePositionProperty(property));
+        case CDXConstants.CDXProp_Bond_DoublePosition:
+          bond.setBondDoublePosition(CDXUtils.readBondDoublePositionProperty(property));
           break;
-        case CDXProp_Bond_Begin:
+        case CDXConstants.CDXProp_Bond_Begin:
           bond.setBegin(property.getDataAsObjectRef(CDAtom.class, refManager));
           break;
-        case CDXProp_Bond_End:
+        case CDXConstants.CDXProp_Bond_End:
           bond.setEnd(property.getDataAsObjectRef(CDAtom.class, refManager));
           break;
-        case CDXProp_Bond_RestrictTopology:
-          bond.setTopology(readBondTopologyProperty(property));
+        case CDXConstants.CDXProp_Bond_RestrictTopology:
+          bond.setTopology(CDXUtils.readBondTopologyProperty(property));
           break;
-        case CDXProp_Bond_RestrictRxnParticipation:
-          bond.setReactionParticipation(readBondReactionParticipationProperty(property));
+        case CDXConstants.CDXProp_Bond_RestrictRxnParticipation:
+          bond.setReactionParticipation(CDXUtils.readBondReactionParticipationProperty(property));
           break;
-        case CDXProp_Bond_BeginAttach:
+        case CDXConstants.CDXProp_Bond_BeginAttach:
           bond.setBeginAttach(property.getDataAsUInt8());
           break;
-        case CDXProp_Bond_EndAttach:
+        case CDXConstants.CDXProp_Bond_EndAttach:
           bond.setEndAttach(property.getDataAsUInt8());
           break;
-        case CDXProp_Bond_CIPStereochemistry:
-          bond.setStereochemistry(readBondCIPTypeProperty(property));
+        case CDXConstants.CDXProp_Bond_CIPStereochemistry:
+          bond.setStereochemistry(CDXUtils.readBondCIPTypeProperty(property));
           break;
-        case CDXProp_Bond_BondOrdering:
+        case CDXConstants.CDXProp_Bond_BondOrdering:
           bond.setBondCircularOrdering(property.getDataAsObjectRefArray(CDBond.class, refManager));
           break;
-        case CDXProp_Bond_ShowQuery:
+        case CDXConstants.CDXProp_Bond_ShowQuery:
           bond.getSettings().setShowBondQuery(property.getDataAsBoolean());
           break;
-        case CDXProp_Bond_ShowStereo:
+        case CDXConstants.CDXProp_Bond_ShowStereo:
           bond.getSettings().setShowBondStereo(property.getDataAsBoolean());
           break;
-        case CDXProp_Bond_CrossingBonds:
+        case CDXConstants.CDXProp_Bond_CrossingBonds:
           bond.setCrossingBonds(
               new HashSet<CDBond>(property.getDataAsObjectRefArray(CDBond.class, refManager)));
           break;
-        case CDXProp_Bond_ShowRxn:
+        case CDXConstants.CDXProp_Bond_ShowRxn:
           bond.getSettings().setShowBondReaction(property.getDataAsBoolean());
           break;
-        case CDXProp_BondSpacing:
+        case CDXConstants.CDXProp_BondSpacing:
           bond.getSettings().setBondSpacing(property.getDataAsInt16() / 10f);
           break;
-        case CDXProp_BondLength:
+        case CDXConstants.CDXProp_BondLength:
           bond.getSettings().setBondLength(property.getDataAsCoordinate());
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           bond.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           bond.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_MarginWidth:
+        case CDXConstants.CDXProp_MarginWidth:
           bond.getSettings().setMarginWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           bond.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyle:
+        case CDXConstants.CDXProp_LabelStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           bond.getSettings().setLabelFont(fontStyle.getFont());
           bond.getSettings().setLabelSize(fontStyle.getSize());
           bond.getSettings().setLabelFace(fontStyle.getFontType());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           bond.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           bond.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           bond.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_BondSpacingAbs:
+        case CDXConstants.CDXProp_BondSpacingAbs:
           bond.getSettings().setBondSpacingAbs(property.getDataAsCoordinate());
           break;
 
@@ -1292,16 +953,16 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_2DExtent:
+        case CDXConstants.CDXProp_2DExtent:
           templateGrid.setExtent(property.getDataAsPoint2D());
           break;
-        case CDXProp_Template_PaneHeight:
+        case CDXConstants.CDXProp_Template_PaneHeight:
           templateGrid.setPaneHeight(property.getDataAsCoordinate());
           break;
-        case CDXProp_Template_NumRows:
+        case CDXConstants.CDXProp_Template_NumRows:
           templateGrid.setNumRows(property.getDataAsInt16());
           break;
-        case CDXProp_Template_NumColumns:
+        case CDXConstants.CDXProp_Template_NumColumns:
           templateGrid.setNumColumns(property.getDataAsInt16());
           break;
 
@@ -1321,38 +982,38 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Group:
+        case CDXConstants.CDXObj_Group:
           group.addGroup(createGroupObject(object));
           break;
-        case CDXObj_Fragment:
+        case CDXConstants.CDXObj_Fragment:
           group.addFragment(createFragmentObject(object));
           break;
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           group.addCaption(createTextObject(object));
           break;
-        case CDXObj_Graphic:
+        case CDXConstants.CDXObj_Graphic:
           group.addGraphic(createGraphicObject(object));
           break;
-        case CDXObj_Curve:
+        case CDXConstants.CDXObj_Curve:
           group.addCurve(createSplineObject(object));
           break;
-        case CDXObj_NamedAlternativeGroup:
+        case CDXConstants.CDXObj_NamedAlternativeGroup:
           group.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
           break;
-        case CDXObj_ReactionStep:
+        case CDXConstants.CDXObj_ReactionStep:
           group.addReactionStep(createReactionStepObject(object));
           break;
-        case CDXObj_Spectrum:
+        case CDXConstants.CDXObj_Spectrum:
           group.addSpectrum(createSpectrumObject(object));
           break;
-        case CDXObj_EmbeddedObject:
+        case CDXConstants.CDXObj_EmbeddedObject:
           group.addEmbeddedObject(createEmbeddedObjectObject(object));
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           group.addObjectTag(createObjectTagObject(object));
           break;
 
-        case CDXObj_Arrow:
+        case CDXConstants.CDXObj_Arrow:
           group.addArrow(createArrowObject(object));
           break;
 
@@ -1370,10 +1031,10 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           group.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_Group_Integral:
+        case CDXConstants.CDXProp_Group_Integral:
           group.setIntegral(property.getDataAsBoolean());
           break;
 
@@ -1393,7 +1054,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           text.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -1411,99 +1072,102 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           text.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           text.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           text.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           text.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_2DPosition:
+        case CDXConstants.CDXProp_2DPosition:
           text.setPosition2D(property.getDataAsPoint2D());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           text.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_RotationAngle:
+        case CDXConstants.CDXProp_RotationAngle:
           text.setAngle(property.getDataAsCoordinate());
           break;
-        case CDXProp_Text:
+        case CDXConstants.CDXProp_Text:
           text.setText(property.getDataAsStyledString(fonts, colors));
           break;
-        case CDXProp_Justification:
-          text.setJustification(readTextJustificationProperty(property));
-          text.getSettings().setLabelJustification(readTextJustificationProperty(property));
+        case CDXConstants.CDXProp_Justification:
+          text.setJustification(CDXUtils.readTextJustificationProperty(property));
+          text.getSettings()
+              .setLabelJustification(CDXUtils.readTextJustificationProperty(property));
           break;
-        case CDXProp_LineHeight:
-          text.setLineHeight(readLineHeight(property));
+        case CDXConstants.CDXProp_LineHeight:
+          text.setLineHeight(CDXUtils.readLineHeight(property));
           break;
-        case CDXProp_WordWrapWidth:
+        case CDXConstants.CDXProp_WordWrapWidth:
           text.setWrapWidth(property.getDataAsInt16());
           break;
-        case CDXProp_LineStarts:
+        case CDXConstants.CDXProp_LineStarts:
           text.setLineStarts(property.getDataAsInt16ListWithCounts());
           break;
-        case CDXProp_LabelAlignment:
-          text.setLabelAlignment(readLabelDisplayProperty(property));
+        case CDXConstants.CDXProp_LabelAlignment:
+          text.setLabelAlignment(CDXUtils.readLabelDisplayProperty(property));
           break;
-        case CDXProp_LabelLineHeight:
-          text.getSettings().setLabelLineHeight(readLineHeight(property));
+        case CDXConstants.CDXProp_LabelLineHeight:
+          text.getSettings().setLabelLineHeight(CDXUtils.readLineHeight(property));
           break;
-        case CDXProp_CaptionLineHeight:
-          text.getSettings().setCaptionLineHeight(readLineHeight(property));
+        case CDXConstants.CDXProp_CaptionLineHeight:
+          text.getSettings().setCaptionLineHeight(CDXUtils.readLineHeight(property));
           break;
-        case CDXProp_InterpretChemically:
+        case CDXConstants.CDXProp_InterpretChemically:
           text.getSettings().setInterpretChemically(property.getDataAsBoolean());
           break;
-        case CDXProp_LabelStyle:
+        case CDXConstants.CDXProp_LabelStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           text.getSettings().setLabelFont(fontStyle.getFont());
           text.getSettings().setLabelSize(fontStyle.getSize());
           text.getSettings().setLabelFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionStyle:
+        case CDXConstants.CDXProp_CaptionStyle:
           fontStyle = property.getDataAsFontStyle(fonts, colors);
           text.getSettings().setCaptionFont(fontStyle.getFont());
           text.getSettings().setCaptionSize(fontStyle.getSize());
           text.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionJustification:
-          text.getSettings().setCaptionJustification(readTextJustificationProperty(property));
+        case CDXConstants.CDXProp_CaptionJustification:
+          text.getSettings()
+              .setCaptionJustification(CDXUtils.readTextJustificationProperty(property));
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           text.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_CaptionStyleFont:
+        case CDXConstants.CDXProp_CaptionStyleFont:
           text.getSettings().setCaptionFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           text.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_CaptionStyleSize:
+        case CDXConstants.CDXProp_CaptionStyleSize:
           text.getSettings().setCaptionSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           text.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_CaptionStyleFace:
+        case CDXConstants.CDXProp_CaptionStyleFace:
           text.getSettings().setCaptionFace(property.getDataAsFontFace());
           break;
-        case CDXProp_LabelStyleColor:
+        case CDXConstants.CDXProp_LabelStyleColor:
           text.getSettings().setLabelColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_CaptionStyleColor:
+        case CDXConstants.CDXProp_CaptionStyleColor:
           text.getSettings().setCaptionColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_LabelJustification:
-          text.setJustification(readTextJustificationProperty(property));
-          text.getSettings().setLabelJustification(readTextJustificationProperty(property));
+        case CDXConstants.CDXProp_LabelJustification:
+          text.setJustification(CDXUtils.readTextJustificationProperty(property));
+          text.getSettings()
+              .setLabelJustification(CDXUtils.readTextJustificationProperty(property));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           text.setColor(property.getDataAsColorRef(colors));
           break;
 
@@ -1523,7 +1187,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           graphic.addObjectTag(createObjectTagObject(object));
           break;
         default:
@@ -1540,126 +1204,126 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_RepresentsProperty:
+        case CDXConstants.CDXProp_RepresentsProperty:
           graphic.setRepresents(property.getDataAsRepresentsProperties(refManager));
           break;
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           graphic.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           graphic.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           graphic.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           graphic.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_SupersededBy:
+        case CDXConstants.CDXProp_SupersededBy:
           graphic.setSupersededBy(property.getDataAsObjectRef(CDObject.class, refManager));
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           graphic.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_3DHead:
+        case CDXConstants.CDXProp_3DHead:
           graphic.setHead3D(property.getDataAsPoint3D(false));
           break;
-        case CDXProp_3DTail:
+        case CDXConstants.CDXProp_3DTail:
           graphic.setTail3D(property.getDataAsPoint3D(false));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           graphic.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           graphic.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           graphic.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           graphic.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           graphic.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_CaptionStyle:
+        case CDXConstants.CDXProp_CaptionStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           graphic.getSettings().setCaptionFont(fontStyle.getFont());
           graphic.getSettings().setCaptionSize(fontStyle.getSize());
           graphic.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionStyleFont:
+        case CDXConstants.CDXProp_CaptionStyleFont:
           graphic.getSettings().setCaptionFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_CaptionStyleSize:
+        case CDXConstants.CDXProp_CaptionStyleSize:
           graphic.getSettings().setCaptionSize(property.getDataAsInt16());
           break;
-        case CDXProp_CaptionStyleFace:
+        case CDXConstants.CDXProp_CaptionStyleFace:
           graphic.getSettings().setCaptionFace(property.getDataAsFontFace());
           break;
-        case CDXProp_Graphic_Type:
-          graphic.setGraphicType(readGraphicTypeProperty(property));
+        case CDXConstants.CDXProp_Graphic_Type:
+          graphic.setGraphicType(CDXUtils.readGraphicTypeProperty(property));
           break;
-        case CDXProp_Line_Type:
-          graphic.setLineType(readLineTypeProperty(property));
+        case CDXConstants.CDXProp_Line_Type:
+          graphic.setLineType(CDXUtils.readLineTypeProperty(property));
           break;
-        case CDXProp_Arrow_Type:
-          graphic.setArrowType(readArrowTypeProperty(property));
+        case CDXConstants.CDXProp_Arrow_Type:
+          graphic.setArrowType(CDXUtils.readArrowTypeProperty(property));
           break;
-        case CDXProp_Rectangle_Type:
-          graphic.setRectangleType(readRectangleTypeProperty(property));
+        case CDXConstants.CDXProp_Rectangle_Type:
+          graphic.setRectangleType(CDXUtils.readRectangleTypeProperty(property));
           break;
-        case CDXProp_Oval_Type:
-          graphic.setOvalType(readOvalTypeProperty(property));
+        case CDXConstants.CDXProp_Oval_Type:
+          graphic.setOvalType(CDXUtils.readOvalTypeProperty(property));
           break;
-        case CDXProp_Orbital_Type:
-          graphic.setOrbitalType(readOrbitalTypeProperty(property));
+        case CDXConstants.CDXProp_Orbital_Type:
+          graphic.setOrbitalType(CDXUtils.readOrbitalTypeProperty(property));
           break;
-        case CDXProp_Bracket_Type:
-          graphic.setBracketType(readBracketTypeProperty(property));
+        case CDXConstants.CDXProp_Bracket_Type:
+          graphic.setBracketType(CDXUtils.readBracketTypeProperty(property));
           break;
-        case CDXProp_Symbol_Type:
-          graphic.setSymbolType(readSymbolTypeProperty(property));
+        case CDXConstants.CDXProp_Symbol_Type:
+          graphic.setSymbolType(CDXUtils.readSymbolTypeProperty(property));
           break;
-        case CDXProp_Arrow_HeadSize:
+        case CDXConstants.CDXProp_Arrow_HeadSize:
           graphic.setArrowHeadSize(property.getDataAsInt16() / 100f);
           break;
-        case CDXProp_Arc_AngularSize:
+        case CDXConstants.CDXProp_Arc_AngularSize:
           graphic.setArcAngularSize(property.getDataAsInt16() / 10f);
           break;
-        case CDXProp_Bracket_LipSize:
+        case CDXConstants.CDXProp_Bracket_LipSize:
           graphic.setBracketLipSize(property.getDataAsInt16());
           break;
-        case CDXProp_Bracket_Usage:
-          graphic.setBracketUsage(readBracketUsageProperty(property));
+        case CDXConstants.CDXProp_Bracket_Usage:
+          graphic.setBracketUsage(CDXUtils.readBracketUsageProperty(property));
           break;
-        case CDXProp_Polymer_RepeatPattern:
-          graphic.setPolymerRepeatPattern(readPolymerRepeatPatternProperty(property));
+        case CDXConstants.CDXProp_Polymer_RepeatPattern:
+          graphic.setPolymerRepeatPattern(CDXUtils.readPolymerRepeatPatternProperty(property));
           break;
-        case CDXProp_Polymer_FlipType:
-          graphic.setPolymerFlipType(readPolymerFlipTypeProperty(property));
+        case CDXConstants.CDXProp_Polymer_FlipType:
+          graphic.setPolymerFlipType(CDXUtils.readPolymerFlipTypeProperty(property));
           break;
 
-        case CDXProp_Curve_FillType:
-          graphic.setFillType(readFillTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_FillType:
+          graphic.setFillType(CDXUtils.readFillTypeProperty(property));
           break;
-        case CDXProp_ShadowSize:
+        case CDXConstants.CDXProp_ShadowSize:
           graphic.setShadowSize(property.getDataAsUInt16());
           break;
-        case CDXProp_CornerRadius:
+        case CDXConstants.CDXProp_CornerRadius:
           graphic.setCornerRadius(property.getDataAsUInt16());
           break;
-        case CDXProp_3DCenter:
+        case CDXConstants.CDXProp_3DCenter:
           graphic.setCenter3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_MajorAxisEnd3D:
+        case CDXConstants.CDXProp_MajorAxisEnd3D:
           graphic.setMajorAxisEnd3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_MinorAxisEnd3D:
+        case CDXConstants.CDXProp_MinorAxisEnd3D:
           graphic.setMinorAxisEnd3D(property.getDataAsPoint3D(true));
           break;
 
-        case CDXProp_FadePercent:
+        case CDXConstants.CDXProp_FadePercent:
           graphic.setFadePercent(property.getDataAsUInt16());
           break;
 
@@ -1685,10 +1349,10 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           area.setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BasisObjects:
+        case CDXConstants.CDXProp_BasisObjects:
           area.setBasisObjects(property.getDataAsObjectRefArray(CDBond.class, refManager));
           break;
         default:
@@ -1706,7 +1370,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           arrow.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -1724,104 +1388,104 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           arrow.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           arrow.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           arrow.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           arrow.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           arrow.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_3DHead:
+        case CDXConstants.CDXProp_3DHead:
           arrow.setHead3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_3DTail:
+        case CDXConstants.CDXProp_3DTail:
           arrow.setTail3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           arrow.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           arrow.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           arrow.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           arrow.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           arrow.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_CaptionStyle:
+        case CDXConstants.CDXProp_CaptionStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           arrow.getSettings().setCaptionFont(fontStyle.getFont());
           arrow.getSettings().setCaptionSize(fontStyle.getSize());
           arrow.getSettings().setCaptionFace(fontStyle.getFontType());
           break;
-        case CDXProp_CaptionStyleFont:
+        case CDXConstants.CDXProp_CaptionStyleFont:
           arrow.getSettings().setCaptionFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_CaptionStyleSize:
+        case CDXConstants.CDXProp_CaptionStyleSize:
           arrow.getSettings().setCaptionSize(property.getDataAsInt16());
           break;
-        case CDXProp_CaptionStyleFace:
+        case CDXConstants.CDXProp_CaptionStyleFace:
           arrow.getSettings().setCaptionFace(property.getDataAsFontFace());
           break;
-        case CDXProp_Line_Type:
-          arrow.setLineType(readLineTypeProperty(property));
+        case CDXConstants.CDXProp_Line_Type:
+          arrow.setLineType(CDXUtils.readLineTypeProperty(property));
           break;
-        case CDXProp_Arrow_HeadSize:
+        case CDXConstants.CDXProp_Arrow_HeadSize:
           arrow.setHeadSize(property.getDataAsInt16() / 100f);
           break;
-        case CDXProp_Arc_AngularSize:
+        case CDXConstants.CDXProp_Arc_AngularSize:
           arrow.setAngularSize(property.getDataAsInt16() / 10f);
           break;
 
-        case CDXProp_Curve_ArrowheadType:
-          arrow.setArrowHeadType(readArrowheadTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadType:
+          arrow.setArrowHeadType(CDXUtils.readArrowheadTypeProperty(property));
           break;
-        case CDXProp_Curve_ArrowheadHead:
-          arrow.setArrowHeadPositionStart(readArrowheadProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadHead:
+          arrow.setArrowHeadPositionStart(CDXUtils.readArrowheadProperty(property));
           break;
-        case CDXProp_Curve_ArrowheadTail:
-          arrow.setArrowHeadPositionTail(readArrowheadProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadTail:
+          arrow.setArrowHeadPositionTail(CDXUtils.readArrowheadProperty(property));
           break;
-        case CDXProp_Curve_ArrowheadCenterSize:
+        case CDXConstants.CDXProp_Curve_ArrowheadCenterSize:
           arrow.setHeadCenterSize(property.getDataAsUInt16() / 100f);
           break;
-        case CDXProp_Curve_ArrowheadWidth:
+        case CDXConstants.CDXProp_Curve_ArrowheadWidth:
           arrow.setHeadWidth(property.getDataAsUInt16() / 100f);
           break;
-        case CDXProp_3DCenter:
+        case CDXConstants.CDXProp_3DCenter:
           arrow.setCenter3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_MajorAxisEnd3D:
+        case CDXConstants.CDXProp_MajorAxisEnd3D:
           arrow.setMajorAxisEnd3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_MinorAxisEnd3D:
+        case CDXConstants.CDXProp_MinorAxisEnd3D:
           arrow.setMinorAxisEnd3D(property.getDataAsPoint3D(true));
           break;
-        case CDXProp_Arrow_NoGo:
-          arrow.setNoGoType(readNoGoProperty(property));
+        case CDXConstants.CDXProp_Arrow_NoGo:
+          arrow.setNoGoType(CDXUtils.readNoGoProperty(property));
           break;
-        case CDXProp_Arrow_ShaftSpacing:
+        case CDXConstants.CDXProp_Arrow_ShaftSpacing:
           arrow.setShaftSpacing(property.getDataAsUInt16() / 100f);
           break;
-        case CDXProp_Curve_FillType:
-          arrow.setFillType(readFillTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_FillType:
+          arrow.setFillType(CDXUtils.readFillTypeProperty(property));
           break;
-        case CDXProp_Arrow_Dipole:
+        case CDXConstants.CDXProp_Arrow_Dipole:
           arrow.setDipole(property.getDataAsBoolean());
           break;
-        case CDXProp_Arrow_EquilibriumRatio:
+        case CDXConstants.CDXProp_Arrow_EquilibriumRatio:
           arrow.setEquilibriumRatio(property.getDataAsUInt16() / 100f);
           break;
 
@@ -1844,10 +1508,10 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_BracketedGroup:
+        case CDXConstants.CDXObj_BracketedGroup:
           bracketedGroup.addBracket(createBracketedGroupObject(object));
           break;
-        case CDXObj_BracketAttachment:
+        case CDXConstants.CDXObj_BracketAttachment:
           bracketedGroup.addBracketAttachment(createBracketAttachmentObject(object));
           break;
 
@@ -1865,26 +1529,27 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Bracket_Usage:
-          bracketedGroup.setBracketUsage(readBracketUsageProperty(property));
+        case CDXConstants.CDXProp_Bracket_Usage:
+          bracketedGroup.setBracketUsage(CDXUtils.readBracketUsageProperty(property));
           break;
-        case CDXProp_Polymer_RepeatPattern:
-          bracketedGroup.setPolymerRepeatPattern(readPolymerRepeatPatternProperty(property));
+        case CDXConstants.CDXProp_Polymer_RepeatPattern:
+          bracketedGroup.setPolymerRepeatPattern(
+              CDXUtils.readPolymerRepeatPatternProperty(property));
           break;
-        case CDXProp_Polymer_FlipType:
-          bracketedGroup.setPolymerFlipType(readPolymerFlipTypeProperty(property));
+        case CDXConstants.CDXProp_Polymer_FlipType:
+          bracketedGroup.setPolymerFlipType(CDXUtils.readPolymerFlipTypeProperty(property));
           break;
-        case CDXProp_BracketedObjects:
+        case CDXConstants.CDXProp_BracketedObjects:
           bracketedGroup.setBracketedObjects(
               property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_Bracket_RepeatCount:
+        case CDXConstants.CDXProp_Bracket_RepeatCount:
           bracketedGroup.setRepeatCount(property.getDataAsFloat64());
           break;
-        case CDXProp_Bracket_ComponentOrder:
+        case CDXConstants.CDXProp_Bracket_ComponentOrder:
           bracketedGroup.setComponentOrder(property.getDataAsInt16());
           break;
-        case CDXProp_Bracket_SRULabel:
+        case CDXConstants.CDXProp_Bracket_SRULabel:
           bracketedGroup.setSRULabel(property.getDataAsUnstyledString(fonts, colors));
           break;
 
@@ -1904,7 +1569,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_CrossingBond:
+        case CDXConstants.CDXObj_CrossingBond:
           bracketAttachment.addCrossingBond(createCrossingBondObject(object));
           break;
 
@@ -1922,7 +1587,7 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Bracket_GraphicID:
+        case CDXConstants.CDXProp_Bracket_GraphicID:
           bracketAttachment.setGraphic(property.getDataAsObjectRef(CDGraphic.class, refManager));
           break;
 
@@ -1956,10 +1621,10 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Bracket_BondID:
+        case CDXConstants.CDXProp_Bracket_BondID:
           crossingBond.setBond(property.getDataAsObjectRef(CDBond.class, refManager));
           break;
-        case CDXProp_Bracket_InnerAtomID:
+        case CDXConstants.CDXProp_Bracket_InnerAtomID:
           crossingBond.setInnerAtom(property.getDataAsObjectRef(CDAtom.class, refManager));
           break;
 
@@ -1993,11 +1658,11 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_2DPosition:
+        case CDXConstants.CDXProp_2DPosition:
           splitter.setPosition2D(property.getDataAsPoint2D());
           break;
-        case CDXProp_PageDefinition:
-          splitter.setPageDefinition(readPageDefinitionProperty(property));
+        case CDXConstants.CDXProp_PageDefinition:
+          splitter.setPageDefinition(CDXUtils.readPageDefinitionProperty(property));
           break;
 
         default:
@@ -2016,10 +1681,10 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           plate.addObjectTag(createObjectTagObject(object));
           break;
-        case CDXObj_TLCLane:
+        case CDXConstants.CDXObj_TLCLane:
           plate.addLane(createTLCLaneObject(object));
           break;
 
@@ -2037,64 +1702,64 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           plate.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           plate.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           plate.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_TopLeft:
+        case CDXConstants.CDXProp_TopLeft:
           plate.setTopLeft(property.getDataAsPoint2D());
           break;
-        case CDXProp_TopRight:
+        case CDXConstants.CDXProp_TopRight:
           plate.setTopRight(property.getDataAsPoint2D());
           break;
-        case CDXProp_BottomRight:
+        case CDXConstants.CDXProp_BottomRight:
           plate.setBottomRight(property.getDataAsPoint2D());
           break;
-        case CDXProp_BottomLeft:
+        case CDXConstants.CDXProp_BottomLeft:
           plate.setBottomLeft(property.getDataAsPoint2D());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           plate.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           plate.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           plate.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           plate.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_MarginWidth:
+        case CDXConstants.CDXProp_MarginWidth:
           plate.getSettings().setMarginWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           plate.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           plate.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           plate.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_TLC_OriginFraction:
+        case CDXConstants.CDXProp_TLC_OriginFraction:
           plate.setOriginFraction(property.getDataAsFloat64());
           break;
-        case CDXProp_TLC_SolventFrontFraction:
+        case CDXConstants.CDXProp_TLC_SolventFrontFraction:
           plate.setSolventFrontFraction(property.getDataAsFloat64());
           break;
-        case CDXProp_TLC_ShowOrigin:
+        case CDXConstants.CDXProp_TLC_ShowOrigin:
           plate.setShowOrigin(property.getDataAsBoolean());
           break;
-        case CDXProp_TLC_ShowSolventFront:
+        case CDXConstants.CDXProp_TLC_ShowSolventFront:
           plate.setShowSolventFront(property.getDataAsBoolean());
           break;
-        case CDXProp_TLC_ShowBorders:
+        case CDXConstants.CDXProp_TLC_ShowBorders:
           plate.setShowBorders(property.getDataAsBoolean());
           break;
 
@@ -2114,10 +1779,10 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           lane.addObjectTag(createObjectTagObject(object));
           break;
-        case CDXObj_TLCSpot:
+        case CDXConstants.CDXObj_TLCSpot:
           lane.addSpot(createTLCSpotObject(object));
           break;
 
@@ -2135,7 +1800,7 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           lane.setVisible(property.getDataAsBoolean());
           break;
 
@@ -2155,7 +1820,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           spot.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2173,28 +1838,28 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           spot.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_Width:
+        case CDXConstants.CDXProp_Width:
           spot.setWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_Height:
+        case CDXConstants.CDXProp_Height:
           spot.setHeight(property.getDataAsCoordinate());
           break;
-        case CDXProp_Curve_Type:
-          spot.setCurveType(readCurveTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_Type:
+          spot.setCurveType(CDXUtils.readCurveTypeProperty(property));
           break;
-        case CDXProp_TLC_Rf:
+        case CDXConstants.CDXProp_TLC_Rf:
           spot.setRf(property.getDataAsFloat64());
           break;
-        case CDXProp_TLC_Tail:
+        case CDXConstants.CDXProp_TLC_Tail:
           spot.setTail(property.getDataAsCoordinate());
           break;
-        case CDXProp_TLC_ShowRf:
+        case CDXConstants.CDXProp_TLC_ShowRf:
           spot.setShowRf(property.getDataAsBoolean());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           spot.setColor(property.getDataAsColorRef(colors));
           break;
 
@@ -2214,7 +1879,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           constraint.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2232,49 +1897,49 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Name:
+        case CDXConstants.CDXProp_Name:
           constraint.setName(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           constraint.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BondLength:
+        case CDXConstants.CDXProp_BondLength:
           constraint.getSettings().setBondLength(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           constraint.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           constraint.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           constraint.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           constraint.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           constraint.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_LabelStyleColor:
+        case CDXConstants.CDXProp_LabelStyleColor:
           constraint.getSettings().setLabelColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BasisObjects:
+        case CDXConstants.CDXProp_BasisObjects:
           constraint.setBasisObjects(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ConstraintType:
-          constraint.setConstraintType(readConstraintTypeProperty(property));
+        case CDXConstants.CDXProp_ConstraintType:
+          constraint.setConstraintType(CDXUtils.readConstraintTypeProperty(property));
           break;
-        case CDXProp_ConstraintMin:
+        case CDXConstants.CDXProp_ConstraintMin:
           constraint.setMinRange(property.getDataAsFloat64());
           break;
-        case CDXProp_ConstraintMax:
+        case CDXConstants.CDXProp_ConstraintMax:
           constraint.setMaxRange(property.getDataAsFloat64());
           break;
-        case CDXProp_IgnoreUnconnectedAtoms:
+        case CDXConstants.CDXProp_IgnoreUnconnectedAtoms:
           constraint.setIgnoreUnconnectedAtoms(property.getDataAsBoolean());
           break;
-        case CDXProp_DihedralIsChiral:
+        case CDXConstants.CDXProp_DihedralIsChiral:
           constraint.setDihedralIsChiral(property.getDataAsBoolean());
           break;
 
@@ -2294,7 +1959,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           geometry.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2312,40 +1977,40 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Name:
+        case CDXConstants.CDXProp_Name:
           geometry.setName(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           geometry.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BondLength:
+        case CDXConstants.CDXProp_BondLength:
           geometry.getSettings().setBondLength(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           geometry.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           geometry.getSettings().setLabelFont(property.getDataAsFontRef(fonts)); // deprecated
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           geometry.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           geometry.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_LabelStyleColor:
+        case CDXConstants.CDXProp_LabelStyleColor:
           geometry.getSettings().setLabelColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_GeometricFeature:
-          geometry.setGeometricType(readGeometricFeatureProperty(property));
+        case CDXConstants.CDXProp_GeometricFeature:
+          geometry.setGeometricType(CDXUtils.readGeometricFeatureProperty(property));
           break;
-        case CDXProp_RelationValue:
+        case CDXConstants.CDXProp_RelationValue:
           geometry.setRelationValue(property.getDataAsFloat64());
           break;
-        case CDXProp_BasisObjects:
+        case CDXConstants.CDXProp_BasisObjects:
           geometry.setBasisObjects(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_PointIsDirected:
+        case CDXConstants.CDXProp_PointIsDirected:
           geometry.setPointIsDirected(property.getDataAsBoolean());
           break;
 
@@ -2379,17 +2044,17 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           border.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           border.setWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_Side:
-          border.setSide(readSideTypeProperty(property));
+        case CDXConstants.CDXProp_Side:
+          border.setSide(CDXUtils.readSideTypeProperty(property));
           break;
-        case CDXProp_Line_Type:
-          border.setLineType(readLineTypeProperty(property));
+        case CDXConstants.CDXProp_Line_Type:
+          border.setLineType(CDXUtils.readLineTypeProperty(property));
           break;
 
         default:
@@ -2422,16 +2087,16 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_CrossReference_Container:
+        case CDXConstants.CDXProp_CrossReference_Container:
           crossReference.setContainer(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_CrossReference_Document:
+        case CDXConstants.CDXProp_CrossReference_Document:
           crossReference.setDocument(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_CrossReference_Identifier:
+        case CDXConstants.CDXProp_CrossReference_Identifier:
           crossReference.setIdentifier(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_CrossReference_Sequence:
+        case CDXConstants.CDXProp_CrossReference_Sequence:
           crossReference.setSequence(property.getDataAsUnstyledString(fonts, colors));
           break;
 
@@ -2465,7 +2130,7 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Sequence_Identifier:
+        case CDXConstants.CDXProp_Sequence_Identifier:
           sequence.setIdentifier(property.getDataAsUnstyledString(fonts, colors));
           break;
 
@@ -2485,7 +2150,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           spectrum.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2503,76 +2168,76 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           spectrum.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           spectrum.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           spectrum.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           spectrum.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           spectrum.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           spectrum.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           spectrum.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           spectrum.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           spectrum.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyle:
+        case CDXConstants.CDXProp_LabelStyle:
           CDXFontStyle fontStyle = property.getDataAsFontStyle(fonts, colors);
           spectrum.getSettings().setLabelFont(fontStyle.getFont());
           spectrum.getSettings().setLabelSize(fontStyle.getSize());
           spectrum.getSettings().setLabelFace(fontStyle.getFontType());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           spectrum.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           spectrum.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           spectrum.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
-        case CDXProp_Spectrum_XSpacing:
+        case CDXConstants.CDXProp_Spectrum_XSpacing:
           spectrum.setXSpacing(property.getDataAsFloat64());
           break;
-        case CDXProp_Spectrum_XLow:
+        case CDXConstants.CDXProp_Spectrum_XLow:
           spectrum.setXLow(property.getDataAsFloat64());
           break;
-        case CDXProp_Spectrum_XType:
-          spectrum.setXType(readSpectrumXTypeProperty(property));
+        case CDXConstants.CDXProp_Spectrum_XType:
+          spectrum.setXType(CDXUtils.readSpectrumXTypeProperty(property));
           break;
-        case CDXProp_Spectrum_YType:
-          spectrum.setYType(readSpectrumYTypeProperty(property));
+        case CDXConstants.CDXProp_Spectrum_YType:
+          spectrum.setYType(CDXUtils.readSpectrumYTypeProperty(property));
           break;
-        case CDXProp_Spectrum_XAxisLabel:
+        case CDXConstants.CDXProp_Spectrum_XAxisLabel:
           spectrum.setXAxisLabel(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Spectrum_YAxisLabel:
+        case CDXConstants.CDXProp_Spectrum_YAxisLabel:
           spectrum.setYAxisLabel(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Spectrum_DataPoint:
+        case CDXConstants.CDXProp_Spectrum_DataPoint:
           spectrum.setDataPoint(property.getDataAsFloat64Array());
           break;
-        case CDXProp_Spectrum_Class:
-          spectrum.setSpectrumClass(readSpectrumClassProperty(property));
+        case CDXConstants.CDXProp_Spectrum_Class:
+          spectrum.setSpectrumClass(CDXUtils.readSpectrumClassProperty(property));
           break;
-        case CDXProp_Spectrum_YLow:
+        case CDXConstants.CDXProp_Spectrum_YLow:
           spectrum.setYLow(property.getDataAsFloat64());
           break;
-        case CDXProp_Spectrum_YScale:
+        case CDXConstants.CDXProp_Spectrum_YScale:
           spectrum.setYLow(property.getDataAsFloat64());
           break;
 
@@ -2606,35 +2271,35 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ReactionStep_Atom_Map:
+        case CDXConstants.CDXProp_ReactionStep_Atom_Map:
           reactionStep.setAtomMap(
               property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
-        case CDXProp_ReactionStep_Reactants:
+        case CDXConstants.CDXProp_ReactionStep_Reactants:
           reactionStep.setReactants(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_Products:
+        case CDXConstants.CDXProp_ReactionStep_Products:
           reactionStep.setProducts(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_Plusses:
+        case CDXConstants.CDXProp_ReactionStep_Plusses:
           reactionStep.setPlusses(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_Arrows:
+        case CDXConstants.CDXProp_ReactionStep_Arrows:
           reactionStep.setArrows(property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_ObjectsAboveArrow:
+        case CDXConstants.CDXProp_ReactionStep_ObjectsAboveArrow:
           reactionStep.setObjectsAboveArrow(
               property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_ObjectsBelowArrow:
+        case CDXConstants.CDXProp_ReactionStep_ObjectsBelowArrow:
           reactionStep.setObjectsBelowArrow(
               property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ReactionStep_Atom_Map_Manual:
+        case CDXConstants.CDXProp_ReactionStep_Atom_Map_Manual:
           reactionStep.setAtomMapManual(
               property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
-        case CDXProp_ReactionStep_Atom_Map_Auto:
+        case CDXConstants.CDXProp_ReactionStep_Atom_Map_Auto:
           reactionStep.setAtomMapAuto(
               property.getDataObjectRefMap(CDAtom.class, CDAtom.class, refManager));
           break;
@@ -2655,7 +2320,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ReactionStep:
+        case CDXConstants.CDXObj_ReactionStep:
           reactionScheme.addStep(createReactionStepObject(object));
           break;
 
@@ -2688,16 +2353,16 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Group:
+        case CDXConstants.CDXObj_Group:
           namedAlternativeGroup.addGroup(createGroupObject(object));
           break;
-        case CDXObj_Fragment:
+        case CDXConstants.CDXObj_Fragment:
           namedAlternativeGroup.addFragment(createFragmentObject(object));
           break;
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           namedAlternativeGroup.addCaption(createTextObject(object));
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           namedAlternativeGroup.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2715,36 +2380,36 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           namedAlternativeGroup.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           namedAlternativeGroup.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           namedAlternativeGroup.setChemicalWarning(property.getDataAsString());
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           namedAlternativeGroup.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           namedAlternativeGroup.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           namedAlternativeGroup.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           namedAlternativeGroup
               .getSettings()
               .setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_NamedAlternativeGroup_TextFrame:
+        case CDXConstants.CDXProp_NamedAlternativeGroup_TextFrame:
           namedAlternativeGroup.setTextFrame(property.getDataAsRectangle());
           break;
-        case CDXProp_NamedAlternativeGroup_GroupFrame:
+        case CDXConstants.CDXProp_NamedAlternativeGroup_GroupFrame:
           namedAlternativeGroup.setGroupFrame(property.getDataAsRectangle());
           break;
-        case CDXProp_NamedAlternativeGroup_Valence:
+        case CDXConstants.CDXProp_NamedAlternativeGroup_Valence:
           namedAlternativeGroup.setValence(property.getDataAsInt16());
           break;
 
@@ -2764,10 +2429,10 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Page:
+        case CDXConstants.CDXObj_Page:
           table.addPage(createPageObject(object));
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           table.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2785,37 +2450,37 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           table.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           table.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           table.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           table.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           table.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           table.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           table.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_MarginWidth:
+        case CDXConstants.CDXProp_MarginWidth:
           table.getSettings().setMarginWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_LabelStyleFont:
+        case CDXConstants.CDXProp_LabelStyleFont:
           table.getSettings().setLabelFont(property.getDataAsFontRef(fonts));
           break;
-        case CDXProp_LabelStyleSize:
+        case CDXConstants.CDXProp_LabelStyleSize:
           table.getSettings().setLabelSize(property.getDataAsInt16());
           break;
-        case CDXProp_LabelStyleFace:
+        case CDXConstants.CDXProp_LabelStyleFace:
           table.getSettings().setLabelFace(property.getDataAsFontFace());
           break;
 
@@ -2835,7 +2500,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           picture.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -2860,73 +2525,73 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           picture.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           picture.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_RotationAngle:
+        case CDXConstants.CDXProp_RotationAngle:
           picture.setRotationAngle(property.getDataAsCoordinate());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           picture.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           picture.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_Picture_Edition:
+        case CDXConstants.CDXProp_Picture_Edition:
           picture.setPictureEdition(property.getData());
           break;
-        case CDXProp_Picture_EditionAlias:
+        case CDXConstants.CDXProp_Picture_EditionAlias:
           picture.setPictureEditionAlias(property.getData());
           break;
-        case CDXProp_MacPICT:
+        case CDXConstants.CDXProp_MacPICT:
           picture.setMacPICT(property.getData());
           break;
-        case CDXProp_WindowsMetafile:
+        case CDXConstants.CDXProp_WindowsMetafile:
           picture.setWindowsMetafile(property.getData());
           break;
-        case CDXProp_OLEObject:
+        case CDXConstants.CDXProp_OLEObject:
           picture.setOleObject(property.getData());
           break;
-        case CDXProp_EnhancedMetafile:
+        case CDXConstants.CDXProp_EnhancedMetafile:
           picture.setEnhancedMetafile(property.getData());
           break;
 
-        case CDXProp_CompressedWindowsMetafile:
+        case CDXConstants.CDXProp_CompressedWindowsMetafile:
           compressedWindowsMetafile = property.getData();
           break;
-        case CDXProp_CompressedOLEObject:
+        case CDXConstants.CDXProp_CompressedOLEObject:
           compressedOLEObject = property.getData();
           break;
-        case CDXProp_CompressedEnhancedMetafile:
+        case CDXConstants.CDXProp_CompressedEnhancedMetafile:
           compressedEnhancedMetafile = property.getData();
           break;
 
-        case CDXProp_UncompressedWindowsMetafileSize:
+        case CDXConstants.CDXProp_UncompressedWindowsMetafileSize:
           uncompressedWindowsMetafileSize = property.getDataAsInt();
           break;
-        case CDXProp_UncompressedOLEObjectSize:
+        case CDXConstants.CDXProp_UncompressedOLEObjectSize:
           uncompressedOLEObjectSize = property.getDataAsInt();
           break;
-        case CDXProp_UncompressedEnhancedMetafileSize:
+        case CDXConstants.CDXProp_UncompressedEnhancedMetafileSize:
           uncompressedEnhancedMetafileSize = property.getDataAsInt();
           break;
 
-        case CDXProp_GIF:
+        case CDXConstants.CDXProp_GIF:
           picture.setGif(property.getData());
           break;
-        case CDXProp_TIFF:
+        case CDXConstants.CDXProp_TIFF:
           picture.setTiff(property.getData());
           break;
-        case CDXProp_PNG:
+        case CDXConstants.CDXProp_PNG:
           picture.setPng(property.getData());
           break;
-        case CDXProp_JPEG:
+        case CDXConstants.CDXProp_JPEG:
           picture.setJpeg(property.getData());
           break;
-        case CDXProp_BMP:
+        case CDXConstants.CDXProp_BMP:
           picture.setBmp(property.getData());
           break;
 
@@ -2985,7 +2650,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           spline.addObjectTag(createObjectTagObject(object));
           break;
 
@@ -3003,68 +2668,68 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_ZOrder:
+        case CDXConstants.CDXProp_ZOrder:
           spline.setZOrder(property.getDataAsInt16());
           break;
-        case CDXProp_IgnoreWarnings:
+        case CDXConstants.CDXProp_IgnoreWarnings:
           spline.setIgnoreWarnings(property.getDataAsBoolean());
           break;
-        case CDXProp_ChemicalWarning:
+        case CDXConstants.CDXProp_ChemicalWarning:
           spline.setChemicalWarning(property.getDataAsUnstyledString(fonts, colors));
           break;
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           spline.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_BoundingBox:
+        case CDXConstants.CDXProp_BoundingBox:
           spline.setBounds(property.getDataAsRectangle());
           break;
-        case CDXProp_ForegroundColor:
+        case CDXConstants.CDXProp_ForegroundColor:
           spline.setColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_BackgroundColor:
+        case CDXConstants.CDXProp_BackgroundColor:
           spline.getSettings().setBackgroundColor(property.getDataAsColorRef(colors));
           break;
-        case CDXProp_Curve_Type:
-          CDSplineType curveType = readCurveTypeProperty(property);
+        case CDXConstants.CDXProp_Curve_Type:
+          CDSplineType curveType = CDXUtils.readCurveTypeProperty(property);
           spline.setFillType(curveType.getFillType());
           spline.setLineType(curveType.getLineType());
           spline.setClosed(curveType.isClosed());
           break;
-        case CDXProp_Curve_Points:
+        case CDXConstants.CDXProp_Curve_Points:
           spline.setPoints2D(property.getDataAsPoint2DArray());
           break;
-        case CDXProp_Curve_Points3D:
+        case CDXConstants.CDXProp_Curve_Points3D:
           spline.setPoints3D(property.getDataAsPoint3DArray());
           break;
 
-        case CDXProp_LineWidth:
+        case CDXConstants.CDXProp_LineWidth:
           spline.getSettings().setLineWidth(property.getDataAsCoordinate());
           break;
-        case CDXProp_HashSpacing:
+        case CDXConstants.CDXProp_HashSpacing:
           spline.getSettings().setHashSpacing(property.getDataAsCoordinate());
           break;
-        case CDXProp_BoldWidth:
+        case CDXConstants.CDXProp_BoldWidth:
           spline.getSettings().setBoldWidth(property.getDataAsCoordinate());
           break;
 
-        case CDXProp_Curve_ArrowheadType:
-          spline.setArrowHeadType(readArrowheadTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadType:
+          spline.setArrowHeadType(CDXUtils.readArrowheadTypeProperty(property));
           break;
-        case CDXProp_Curve_ArrowheadHead:
-          spline.setArrowHeadPositionAtStart(readArrowheadProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadHead:
+          spline.setArrowHeadPositionAtStart(CDXUtils.readArrowheadProperty(property));
           break;
-        case CDXProp_Curve_ArrowheadTail:
-          spline.setArrowHeadPositionAtEnd(readArrowheadProperty(property));
+        case CDXConstants.CDXProp_Curve_ArrowheadTail:
+          spline.setArrowHeadPositionAtEnd(CDXUtils.readArrowheadProperty(property));
           break;
-        case CDXProp_Curve_Closed:
+        case CDXConstants.CDXProp_Curve_Closed:
           spline.setClosed(property.getDataAsBoolean());
           break;
 
-        case CDXProp_Line_Type:
-          spline.setLineType(readLineTypeProperty(property));
+        case CDXConstants.CDXProp_Line_Type:
+          spline.setLineType(CDXUtils.readLineTypeProperty(property));
           break;
-        case CDXProp_Curve_FillType:
-          spline.setFillType(readFillTypeProperty(property));
+        case CDXConstants.CDXProp_Curve_FillType:
+          spline.setFillType(CDXUtils.readFillTypeProperty(property));
           break;
 
         default:
@@ -3083,7 +2748,7 @@ public class CDXReader {
     // read content
     for (CDXObject object : root.getObjects()) {
       switch (object.getTag()) {
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           objectTag.addText(createTextObject(object));
           break;
 
@@ -3101,8 +2766,8 @@ public class CDXReader {
     // read first type of property
     for (CDXProperty property : root.getProperties()) {
       switch (property.getTag()) {
-        case CDXProp_ObjectTag_Type:
-          objectTag.setObjectTagType(readObjectTagTypeProperty(property));
+        case CDXConstants.CDXProp_ObjectTag_Type:
+          objectTag.setObjectTagType(CDXUtils.readObjectTagTypeProperty(property));
           break;
         default:
           break;
@@ -3112,22 +2777,22 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_Visible:
+        case CDXConstants.CDXProp_Visible:
           objectTag.setVisible(property.getDataAsBoolean());
           break;
-        case CDXProp_Name:
+        case CDXConstants.CDXProp_Name:
           objectTag.setName(property.getDataAsString());
           break;
-        case CDXProp_ObjectTag_Type:
-          objectTag.setObjectTagType(readObjectTagTypeProperty(property));
+        case CDXConstants.CDXProp_ObjectTag_Type:
+          objectTag.setObjectTagType(CDXUtils.readObjectTagTypeProperty(property));
           break;
-        case CDXProp_ObjectTag_Tracking:
+        case CDXConstants.CDXProp_ObjectTag_Tracking:
           objectTag.setTracking(property.getDataAsBoolean());
           break;
-        case CDXProp_ObjectTag_Persistent:
+        case CDXConstants.CDXProp_ObjectTag_Persistent:
           objectTag.setPersistent(property.getDataAsBoolean());
           break;
-        case CDXProp_ObjectTag_Value:
+        case CDXConstants.CDXProp_ObjectTag_Value:
           switch (objectTag.getObjectTagType()) {
             case Long:
               objectTag.setValue(property.getDataAsInt32());
@@ -3145,13 +2810,13 @@ public class CDXReader {
               throw new IOException();
           }
           break;
-        case CDXProp_Positioning:
-          objectTag.setPositioningType(readPositioningTypeProperty(property));
+        case CDXConstants.CDXProp_Positioning:
+          objectTag.setPositioningType(CDXUtils.readPositioningTypeProperty(property));
           break;
-        case CDXProp_PositioningAngle:
+        case CDXConstants.CDXProp_PositioningAngle:
           objectTag.setPositioningAngle(property.getDataAsCoordinate());
           break;
-        case CDXProp_PositioningOffset:
+        case CDXConstants.CDXProp_PositioningOffset:
           objectTag.setPositioningOffset(property.getDataAsPoint2D());
           break;
 
@@ -3185,17 +2850,17 @@ public class CDXReader {
     for (CDXProperty property : root.getProperties()) {
       handleProperty(property);
       switch (property.getTag()) {
-        case CDXProp_BasisObjects:
+        case CDXConstants.CDXProp_BasisObjects:
           chemicalProperty.setBasisObjects(
               property.getDataAsObjectRefArray(Object.class, refManager));
           break;
-        case CDXProp_ChemicalPropertyType:
+        case CDXConstants.CDXProp_ChemicalPropertyType:
           chemicalProperty.setType(property.getDataAsInt32());
           break;
-        case CDXProp_ChemicalPropertyDisplayID:
+        case CDXConstants.CDXProp_ChemicalPropertyDisplayID:
           chemicalProperty.setDisplay(property.getDataAsObjectRef(Object.class, refManager));
           break;
-        case CDXProp_ChemicalPropertyIsActive:
+        case CDXConstants.CDXProp_ChemicalPropertyIsActive:
           chemicalProperty.setActive(property.getDataAsBoolean());
           break;
 
@@ -3213,106 +2878,106 @@ public class CDXReader {
         LOGGER.warn(
             "Omit object with tag 0x{} not recognized at {}",
             Integer.toHexString(object.getTag()),
-            getPositionAsString(object));
+            CDXUtils.getPositionAsString(object));
         continue;
       }
       switch (object.getTag()) {
-        case CDXObj_Document:
+        case CDXConstants.CDXObj_Document:
           populateDocumentObject(object);
           break;
-        case CDXObj_Page:
+        case CDXConstants.CDXObj_Page:
           populatePageObject(object);
           break;
-        case CDXObj_Group:
+        case CDXConstants.CDXObj_Group:
           populateGroupObject(object);
           break;
-        case CDXObj_Fragment:
+        case CDXConstants.CDXObj_Fragment:
           populateFragmentObject(object);
           break;
-        case CDXObj_Node:
+        case CDXConstants.CDXObj_Node:
           populateNodeObject(object);
           break;
-        case CDXObj_Bond:
+        case CDXConstants.CDXObj_Bond:
           populateBondObject(object);
           break;
-        case CDXObj_Text:
+        case CDXConstants.CDXObj_Text:
           populateTextObject(object);
           break;
-        case CDXObj_Graphic:
+        case CDXConstants.CDXObj_Graphic:
           populateGraphicObject(object);
           break;
-        case CDXObj_Curve:
+        case CDXConstants.CDXObj_Curve:
           populateSplineObject(object);
           break;
-        case CDXObj_EmbeddedObject:
+        case CDXConstants.CDXObj_EmbeddedObject:
           populateEmbeddedObjectObject(object);
           break;
-        case CDXObj_NamedAlternativeGroup:
+        case CDXConstants.CDXObj_NamedAlternativeGroup:
           populateNamedAlternativeGroupObject(object);
           break;
-        case CDXObj_TemplateGrid:
+        case CDXConstants.CDXObj_TemplateGrid:
           populateTemplateGridObject(object);
           break;
-        case CDXObj_ReactionScheme:
+        case CDXConstants.CDXObj_ReactionScheme:
           populateReactionSchemeObject(object);
           break;
-        case CDXObj_ReactionStep:
+        case CDXConstants.CDXObj_ReactionStep:
           populateReactionStepObject(object);
           break;
-        case CDXObj_Spectrum:
+        case CDXConstants.CDXObj_Spectrum:
           populateSpectrumObject(object);
           break;
-        case CDXObj_ObjectTag:
+        case CDXConstants.CDXObj_ObjectTag:
           populateObjectTagObject(object);
           break;
-        case CDXObj_Sequence:
+        case CDXConstants.CDXObj_Sequence:
           populateSequenceObject(object);
           break;
-        case CDXObj_CrossReference:
+        case CDXConstants.CDXObj_CrossReference:
           populateCrossReferenceObject(object);
           break;
-        case CDXObj_Splitter:
+        case CDXConstants.CDXObj_Splitter:
           populateSplitterObject(object);
           break;
-        case CDXObj_Table:
+        case CDXConstants.CDXObj_Table:
           populateTableObject(object);
           break;
-        case CDXObj_BracketedGroup:
+        case CDXConstants.CDXObj_BracketedGroup:
           populateBracketedGroupObject(object);
           break;
-        case CDXObj_BracketAttachment:
+        case CDXConstants.CDXObj_BracketAttachment:
           populateBracketAttachmentObject(object);
           break;
-        case CDXObj_CrossingBond:
+        case CDXConstants.CDXObj_CrossingBond:
           populateCrossingBondObject(object);
           break;
-        case CDXObj_Border:
+        case CDXConstants.CDXObj_Border:
           populateBorderObject(object);
           break;
-        case CDXObj_Geometry:
+        case CDXConstants.CDXObj_Geometry:
           populateGeometryObject(object);
           break;
-        case CDXObj_Constraint:
+        case CDXConstants.CDXObj_Constraint:
           populateConstraintObject(object);
           break;
-        case CDXObj_TLCPlate:
+        case CDXConstants.CDXObj_TLCPlate:
           populateTLCPlateObject(object);
           break;
-        case CDXObj_TLCLane:
+        case CDXConstants.CDXObj_TLCLane:
           populateTLCLaneObject(object);
           break;
-        case CDXObj_TLCSpot:
+        case CDXConstants.CDXObj_TLCSpot:
           populateTLCSpotObject(object);
           break;
-        case CDXObj_ChemicalProperty:
+        case CDXConstants.CDXObj_ChemicalProperty:
           populateChemicalPropertyObject(object);
           break;
 
-        case CDXObj_Arrow:
+        case CDXConstants.CDXObj_Arrow:
           populateArrowObject(object);
           break;
 
-        case CDXObj_ColoredMolecularArea:
+        case CDXConstants.CDXObj_ColoredMolecularArea:
           populateColoredMolecularArea(object);
           break;
 
@@ -3334,7 +2999,7 @@ public class CDXReader {
           name,
           object.getId(),
           Integer.toHexString(object.getId()),
-          getPositionAsString(object));
+          CDXUtils.getPositionAsString(object));
     }
   }
 
@@ -3345,7 +3010,7 @@ public class CDXReader {
           name,
           object.getId(),
           Integer.toHexString(object.getId()),
-          getPositionAsString(object));
+          CDXUtils.getPositionAsString(object));
     }
   }
 
@@ -3355,7 +3020,7 @@ public class CDXReader {
           "handle tag {} (0x{}) at {} with length {}(0x{})",
           property.getTag(),
           Integer.toHexString(property.getTag()),
-          getPositionAsString(property),
+          CDXUtils.getPositionAsString(property),
           property.getLength(),
           Integer.toHexString(property.getLength()));
     }
@@ -3366,7 +3031,7 @@ public class CDXReader {
         "Object with tag 0x"
             + Integer.toHexString(object.getTag())
             + " not recognized at "
-            + getPositionAsString(object);
+            + CDXUtils.getPositionAsString(object);
     if (RIGID) {
       throw new IOException(message);
     }
@@ -3380,7 +3045,7 @@ public class CDXReader {
             + " and with length "
             + property.getLength()
             + " not recognized at "
-            + getPositionAsString(property);
+            + CDXUtils.getPositionAsString(property);
     if (RIGID) {
       throw new IOException(message);
     }
