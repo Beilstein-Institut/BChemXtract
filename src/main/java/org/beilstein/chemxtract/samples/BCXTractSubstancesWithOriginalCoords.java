@@ -57,11 +57,11 @@ public class BCXTractSubstancesWithOriginalCoords {
   }
 
   public void extract(String filename) throws Exception {
-    // load input CDX file
-    InputStream in = new FileInputStream(filename);
-
-    // parse CDX into in-memory model
-    CDDocument document = CDXReader.readDocument(in);
+    // load input CDX file and parse into in-memory model
+    CDDocument document;
+    try (InputStream in = new FileInputStream(filename)) {
+      document = CDXReader.readDocument(in);
+    }
 
     // extract substances from CDX document
     BCXSubstanceInfo info = new BCXSubstanceInfo();
@@ -73,7 +73,6 @@ public class BCXTractSubstancesWithOriginalCoords {
     int i = 0;
     for (BCXSubstance bcxSubstance : bcxSubstances) {
       String outputfile = bcxSubstance.getInchiKey() + "-original-coords.png";
-      FileOutputStream fos = new FileOutputStream(outputfile);
 
       // use extended smiles that carries coordinates
       IAtomContainer container = sp.parseSmiles(bcxSubstance.getExtendedSmiles());
@@ -102,9 +101,9 @@ public class BCXTractSubstancesWithOriginalCoords {
               .withBackgroundColor(Color.WHITE)
               .withMolTitle();
       Depiction d = dg.depict(container);
-      d.writeTo(Depiction.PNG_FMT, fos);
-      fos.flush();
-      fos.close();
+      try (FileOutputStream fos = new FileOutputStream(outputfile)) {
+        d.writeTo(Depiction.PNG_FMT, fos);
+      }
       i++;
     }
 

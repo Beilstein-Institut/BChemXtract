@@ -100,6 +100,7 @@ import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Radi
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -859,7 +860,6 @@ public class CDXProperty {
     CDElementList elementList = new CDElementList();
     int count = CDXUtils.readInt16(data, 0);
     if (count < 0) {
-      count = -count;
       elementList.setExclusive(true);
     }
     for (int i = 0; i < length; i += 2) {
@@ -929,7 +929,7 @@ public class CDXProperty {
         if (charSet == CDCharSet.Unknown) {
           charSetName = "windows-1252";
         } else if (charSetName == null) {
-          LOGGER.warn("Unsupported charset {}({})", charSet, charSetName);
+          LOGGER.warn("Unsupported charset {}", charSet);
           charSetName = "windows-1252";
         }
         try {
@@ -955,7 +955,7 @@ public class CDXProperty {
         if (charSet == CDCharSet.Unknown) {
           charSetName = "windows-1252";
         } else if (charSetName == null) {
-          LOGGER.warn("Unsupported charset {}({})", charSet, charSetName);
+          LOGGER.warn("Unsupported charset {}", charSet);
           charSetName = "windows-1252";
         }
         try {
@@ -973,7 +973,11 @@ public class CDXProperty {
     } else {
       string.addChunk(
           new CDStyledString.CDXChunk(
-              fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
+              fonts.get(0),
+              12,
+              new CDFontFace(),
+              colors.get(0),
+              new String(text, Charset.forName("windows-1252"))));
     }
     return string;
   }

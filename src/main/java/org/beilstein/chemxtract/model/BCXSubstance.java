@@ -58,8 +58,11 @@ public class BCXSubstance implements Serializable {
   /**
    * The atom container being constructed or processed by this converter. Holds the chemical
    * structure representation including atoms, bonds, and associated properties.
+   *
+   * <p>CDK atom containers are not serializable, so this field is marked {@code transient}; it is
+   * {@code null} after deserialization and must be regenerated if needed.
    */
-  private IAtomContainer atomContainer;
+  private transient IAtomContainer atomContainer;
 
   /** The MDL V3000 format string representation of the chemical structure. */
   private String mdlv3000;

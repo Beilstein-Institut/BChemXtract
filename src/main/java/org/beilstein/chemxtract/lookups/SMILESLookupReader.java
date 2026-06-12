@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,9 +63,11 @@ public class SMILESLookupReader {
       if (in != null) {
         return this.loadAbbreviations(in, initialSize);
       }
-      File file = new File(path);
-      if (file.exists() && file.canRead()) {
-        return this.loadAbbreviations(new FileInputStream(file), initialSize);
+    }
+    File file = new File(path);
+    if (file.exists() && file.canRead()) {
+      try (InputStream fileIn = new FileInputStream(file)) {
+        return this.loadAbbreviations(fileIn, initialSize);
       }
     }
     return Collections.emptyMap();
@@ -80,7 +83,8 @@ public class SMILESLookupReader {
   private Map<String, String> loadAbbreviations(InputStream inputStream, int initialSize)
       throws IOException {
     Map<String, String> abbreviations = new HashMap<>(initialSize);
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         if (line.isEmpty() || line.charAt(0) == '#') {

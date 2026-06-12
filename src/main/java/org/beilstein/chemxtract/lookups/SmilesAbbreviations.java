@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.lookups;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -99,12 +100,12 @@ public class SmilesAbbreviations {
   }
 
   /**
-   * Return complete Abbreviation SMILES lookup map
+   * Return complete Abbreviation SMILES lookup map.
    *
-   * @return the lookup table
+   * @return an unmodifiable view of the lookup table
    * @throws IOException if the lookup table cannot be initialized
    */
   public static Map<String, String> getSmilesLookup() throws IOException {
-    return getInstance().smilesLookup;
+    return Collections.unmodifiableMap(getInstance().smilesLookup);
   }
 }

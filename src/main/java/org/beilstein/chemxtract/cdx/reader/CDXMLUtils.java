@@ -950,13 +950,15 @@ public class CDXMLUtils {
   public static String convertObjectRefMapToString(
       Map<?, ?> values, Map<Object, Integer> references) {
     StringBuilder sb = new StringBuilder();
-    for (Object key : values.keySet()) {
+    for (Map.Entry<?, ?> entry : values.entrySet()) {
       if (sb.length() > 0) {
         sb.append(" ");
       }
-      sb.append(references.get(key) != null ? references.get(key) : "0");
+      Integer keyRef = references.get(entry.getKey());
+      sb.append(keyRef != null ? keyRef : "0");
       sb.append(" ");
-      sb.append(references.get(values.get(key)) != null ? references.get(values.get(key)) : "0");
+      Integer valueRef = references.get(entry.getValue());
+      sb.append(valueRef != null ? valueRef : "0");
     }
     return sb.toString();
   }

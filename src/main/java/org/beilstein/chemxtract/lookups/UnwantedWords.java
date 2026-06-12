@@ -110,7 +110,7 @@ public class UnwantedWords {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedWords() throws IOException {
-    return getInstance().words;
+    return Collections.unmodifiableSet(getInstance().words);
   }
 
   /**

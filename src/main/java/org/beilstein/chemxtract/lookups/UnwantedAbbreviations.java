@@ -94,7 +94,7 @@ public class UnwantedAbbreviations {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedAbbreviations() throws IOException {
-    return getInstance().words;
+    return Collections.unmodifiableSet(getInstance().words);
   }
 
   /**

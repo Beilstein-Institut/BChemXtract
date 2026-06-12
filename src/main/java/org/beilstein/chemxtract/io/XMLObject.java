@@ -28,6 +28,7 @@ import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -679,7 +680,7 @@ public class XMLObject {
     handler.endPrefixMapping("");
     handler.endDocument();
 
-    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(out);
+    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(out, StandardCharsets.US_ASCII);
     outputStreamWriter.write(new String(writer.toCharArray()));
     outputStreamWriter.flush();
     outputStreamWriter.close();
