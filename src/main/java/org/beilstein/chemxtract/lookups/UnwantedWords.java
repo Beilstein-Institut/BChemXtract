@@ -69,7 +69,9 @@ public class UnwantedWords {
    * @throws IOException if the unwanted words file cannot be loaded
    */
   private static UnwantedWords getInstance() throws IOException {
-    if (instance == null) instance = new UnwantedWords();
+    if (instance == null) {
+      instance = new UnwantedWords();
+    }
     return instance;
   }
 

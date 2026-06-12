@@ -23,8 +23,17 @@ package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.model.BCXSubstance;
@@ -172,8 +181,11 @@ public class SubstanceXtractor {
   protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page)
       throws CDKException, IOException {
     List<BCXSubstance> substances = xtractSubstances(fragment, page, null);
-    if (!substances.isEmpty()) return substances.get(0);
-    else return null;
+    if (!substances.isEmpty()) {
+      return substances.get(0);
+    } else {
+      return null;
+    }
   }
 
   /**

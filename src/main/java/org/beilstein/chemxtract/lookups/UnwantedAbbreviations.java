@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/** Singleton lookup of abbreviation tokens that should be ignored during extraction. */
 public class UnwantedAbbreviations {
 
   private static UnwantedAbbreviations instance;
@@ -52,7 +53,9 @@ public class UnwantedAbbreviations {
    * @throws IOException if the unwanted words file cannot be loaded
    */
   private static UnwantedAbbreviations getInstance() throws IOException {
-    if (instance == null) instance = new UnwantedAbbreviations();
+    if (instance == null) {
+      instance = new UnwantedAbbreviations();
+    }
     return instance;
   }
 

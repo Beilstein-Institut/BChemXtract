@@ -22,10 +22,23 @@
 package org.beilstein.chemxtract.converter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.vecmath.Point2d;
-import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.CDArrow;
+import org.beilstein.chemxtract.cdx.CDDocumentUtils;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDGraphic;
+import org.beilstein.chemxtract.cdx.CDGroup;
+import org.beilstein.chemxtract.cdx.CDReactionStep;
+import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
@@ -37,7 +50,11 @@ import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.Reaction;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -191,18 +208,22 @@ public class ReactionConverter {
     if (arrows.get(0) instanceof CDGraphic graphic
         && graphic.getSupersededBy() instanceof CDArrow arrow) {
       if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfLeft
-          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfLeft)
+          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfLeft) {
         return IReaction.Direction.BIDIRECTIONAL;
+      }
       if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfRight
-          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfRight)
+          && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfRight) {
         return IReaction.Direction.BIDIRECTIONAL;
+      }
 
       CDPoint3D head = arrow.getHead3D();
 
       double distToReactants = this.getDistanceToCompounds2D(reactants, head);
       double distToProducts = this.getDistanceToCompounds2D(products, head);
 
-      if (distToReactants < distToProducts) return IReaction.Direction.BACKWARD;
+      if (distToReactants < distToProducts) {
+        return IReaction.Direction.BACKWARD;
+      }
     }
     return IReaction.Direction.FORWARD;
   }
@@ -226,12 +247,13 @@ public class ReactionConverter {
     for (IAtomContainer ac : compounds) {
       for (IAtom atom : ac.atoms()) {
         double atomDistSquared;
-        if (atom.getPoint2d() != null)
+        if (atom.getPoint2d() != null) {
           atomDistSquared = this.getPoint2DDistanceSquared(headPoint, atom.getPoint2d());
-        else
+        } else {
           atomDistSquared =
               this.getPoint2DDistanceSquared(
                   headPoint, new Point2d(atom.getPoint3d().x, atom.getPoint3d().y));
+        }
         distClosestCompound = Math.min(distClosestCompound, atomDistSquared);
       }
     }
@@ -278,7 +300,9 @@ public class ReactionConverter {
             && fragment.getAtoms().get(0).getNodeType() == CDNodeType.Unspecified
             && fragment.getAtoms().get(0).getText() != null) {
           agents.add(fragment.getAtoms().get(0).getText().getText().getText());
-        } else agents.add(fragment);
+        } else {
+          agents.add(fragment);
+        }
       } else if (object instanceof String agentName) {
         agents.add(agentName);
       } else if (object instanceof CDText cdText) {
@@ -312,8 +336,12 @@ public class ReactionConverter {
         .filter(a -> a.length() > 1)
         .map(
             s -> {
-              if (s.startsWith("(")) s = s.substring(1);
-              if (s.endsWith(")")) s = s.substring(0, s.length() - 1);
+              if (s.startsWith("(")) {
+                s = s.substring(1);
+              }
+              if (s.endsWith(")")) {
+                s = s.substring(0, s.length() - 1);
+              }
               return s;
             })
         .filter(a -> !a.matches("-?\\d+(\\.\\d+)?"))

@@ -97,7 +97,7 @@ public class RefManager {
     public final Object reference;
     public final ReferenceContainer next;
 
-    public ReferenceContainer(Object reference, ReferenceContainer next) {
+    ReferenceContainer(Object reference, ReferenceContainer next) {
       this.reference = reference;
       this.next = next;
     }

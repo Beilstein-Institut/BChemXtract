@@ -70,7 +70,9 @@ public class SmilesAbbreviations {
    * @throws IOException if the abbreviation file cannot be loaded
    */
   private static SmilesAbbreviations getInstance() throws IOException {
-    if (instance == null) instance = new SmilesAbbreviations();
+    if (instance == null) {
+      instance = new SmilesAbbreviations();
+    }
     return instance;
   }
 

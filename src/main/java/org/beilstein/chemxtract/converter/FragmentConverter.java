@@ -22,7 +22,12 @@
 package org.beilstein.chemxtract.converter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -36,7 +41,13 @@ import org.beilstein.chemxtract.visitor.BondVisitor;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomType;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.ISingleElectron;
 import org.openscience.cdk.io.IChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -114,6 +125,7 @@ public class FragmentConverter {
    * and stereo elements.
    *
    * @param fragment the ChemDraw fragment to convert
+   * @param rawMode when {@code true}, atoms and bonds are visited in raw mode without filtering
    * @return the converted {@link IAtomContainer} representation
    * @throws CDKException if a conversion error occurs or invalid data is encountered
    */
@@ -368,7 +380,9 @@ public class FragmentConverter {
       String[] originalAtomTypeNames = new String[atomCount];
       for (int i = 0; i < atomCount; i++) {
         IAtom atom = container.getAtom(i);
-        if (atom instanceof IPseudoAtom) atom.setImplicitHydrogenCount(0);
+        if (atom instanceof IPseudoAtom) {
+          atom.setImplicitHydrogenCount(0);
+        }
         IAtomType type = matcher.findMatchingAtomType(container, atom);
         originalAtomTypeNames[i] = atom.getAtomTypeName();
         atom.setAtomTypeName(type.getAtomTypeName());

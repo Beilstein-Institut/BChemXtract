@@ -22,7 +22,13 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
@@ -111,9 +117,8 @@ public class AtomVisitor extends CDVisitor {
           abbreviations.add(nickname);
           atoms.add(node);
         }
-      }
-      // collect abbreviations that could not be handled by ChemDraw
-      else if ((!CDNodeType.Element.equals(node.getNodeType()) && nickname != null)
+      } else if ((!CDNodeType.Element.equals(node.getNodeType()) && nickname != null)
+          // collect abbreviations that could not be handled by ChemDraw
           || isUnwantedAbbreviation(nickname)) {
         abbreviations.add(nickname);
         atoms.add(node);

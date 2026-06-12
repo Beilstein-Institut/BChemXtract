@@ -69,7 +69,9 @@ public class ReactionAgents {
    * @throws IOException if the SMILES abbreviation file cannot be loaded
    */
   private static ReactionAgents getInstance() throws IOException {
-    if (instance == null) instance = new ReactionAgents();
+    if (instance == null) {
+      instance = new ReactionAgents();
+    }
     return instance;
   }
 

@@ -23,6 +23,9 @@ package org.beilstein.chemxtract.utils;
 
 import java.util.regex.Pattern;
 
+/**
+ * Shared constants: R-group regular expressions, abbreviation resource paths, and split patterns.
+ */
 public class Definitions {
 
   private Definitions() {

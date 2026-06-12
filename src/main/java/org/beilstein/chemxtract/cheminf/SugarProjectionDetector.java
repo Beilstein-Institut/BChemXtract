@@ -117,16 +117,22 @@ public class SugarProjectionDetector {
     RingSearch ringSearch = new RingSearch(container, graph);
     for (int[] isolated : ringSearch.isolated()) {
       // Sugar rings are typically 5-7 atoms (furanose/pyranose)
-      if (isolated.length < 5 || isolated.length > 7) continue;
+      if (isolated.length < 5 || isolated.length > 7) {
+        continue;
+      }
 
       int[] cycle = Arrays.copyOf(GraphUtil.cycle(graph, isolated), isolated.length);
       Point2d[] points = coordinatesOfCycle(cycle, container);
 
       // Check if the ring is aligned correctly for Haworth
-      if (projectionType == Projection.Haworth && !checkHaworthAlignment(points)) continue;
+      if (projectionType == Projection.Haworth && !checkHaworthAlignment(points)) {
+        continue;
+      }
 
       Turn[] turns = turns(points);
-      if (turns == null) continue;
+      if (turns == null) {
+        continue;
+      }
 
       WoundProjection projection = WoundProjection.ofTurns(turns);
       if (projection.projection == projectionType) {
@@ -154,7 +160,9 @@ public class SugarProjectionDetector {
 
       int parity =
           (int) Math.signum(det(prevXy.x, prevXy.y, currXy.x, currXy.y, nextXy.x, nextXy.y));
-      if (parity == 0) return null;
+      if (parity == 0) {
+        return null;
+      }
       turns[i % points.length] = parity < 0 ? Turn.Right : Turn.Left;
     }
 
@@ -175,7 +183,9 @@ public class SugarProjectionDetector {
 
       double deltaY = curr.y - next.y;
 
-      if (Math.abs(deltaY) < CARDINALITY_THRESHOLD) return true;
+      if (Math.abs(deltaY) < CARDINALITY_THRESHOLD) {
+        return true;
+      }
     }
 
     return false;
@@ -283,7 +293,9 @@ public class SugarProjectionDetector {
     }
 
     static WoundProjection ofTurns(Turn[] turns) {
-      if (turns == null) return Other;
+      if (turns == null) {
+        return Other;
+      }
       WoundProjection type = map.get(new Key(turns));
       return type != null ? type : Other;
     }
@@ -297,8 +309,12 @@ public class SugarProjectionDetector {
 
       @Override
       public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+          return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+          return false;
+        }
 
         Key key = (Key) o;
 

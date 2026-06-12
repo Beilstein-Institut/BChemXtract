@@ -21,13 +21,401 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Any;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Deficient;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Enriched;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Natural;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Nonnatural;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAbundance_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowNoGo_Cross;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowNoGo_Hash;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowNoGo_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowNoGo_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_Equilibrium;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_FullHead;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_HalfHead;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_Hollow;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_NoHead;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_Resonance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowType_RetroSynthetic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowheadType_Angle;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowheadType_Hollow;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowheadType_Solid;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowhead_Full;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowhead_HalfLeft;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowhead_HalfRight;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowhead_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXArrowhead_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_10Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_1Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_5Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_6Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_7Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_8Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_9Ligand;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_Bent;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_Linear;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_Octahedral;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_SquarePlanar;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_SquarePyramidal;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_Tetrahedral;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_TrigonalBipyramidal;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_TrigonalPlanar;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_TrigonalPyramidal;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXAtomGeometry_Unknown;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Dash;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_DashDot;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Dot;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Hash;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_HollowWedgeBegin;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_HollowWedgeEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Solid;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_Wavy;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WavyWedgeBegin;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WavyWedgeEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WedgeBegin;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WedgeEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WedgedHashBegin;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDisplay_WedgedHashEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_AutoCenter;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_AutoLeft;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_AutoRight;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_UserCenter;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_UserLeft;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondDoublePosition_UserRight;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Any;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Dative;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Double;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_DoubleOrAromatic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_FiveHalf;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_FourHalf;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Half;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Hydrogen;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Ionic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_OneHalf;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Quadruple;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Quintuple;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Sextuple;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Single;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_SingleOrAromatic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_SingleOrDouble;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_ThreeCenter;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_ThreeHalf;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_Triple;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondOrder_TwoHalf;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_ChangeType;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_MakeAndChange;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_MakeOrBreak;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_NoChange;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_NotReactionCenter;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_ReactionCenter;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_Unmapped;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondReactionParticipation_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondTopology_Chain;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondTopology_Ring;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondTopology_RingOrChain;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBondTopology_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_Curly;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_CurlyPair;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_Round;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_RoundPair;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_Square;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketType_SquarePair;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Anypolymer;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Component;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Copolymer;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_CopolymerAlternating;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_CopolymerBlock;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_CopolymerRandom;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Crosslink;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Generic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Graft;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Mer;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_MixtureOrdered;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_MixtureUnordered;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Modification;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Monomer;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_MultipleGroup;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_SRU;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Unused1;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXBracketUsage_Unused2;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_R;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_S;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_Undetermined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_r;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPAtom_s;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPBond_E;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPBond_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPBond_Undetermined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCIPBond_Z;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXConstraintType_Angle;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXConstraintType_Distance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXConstraintType_ExclusionSphere;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXConstraintType_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_ArrowAtEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_ArrowAtStart;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Closed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Dashed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Doubled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Filled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_HalfArrowAtEnd;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_HalfArrowAtStart;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCurveType_Shaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXDrawingSpace_Pages;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXDrawingSpace_Poster;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_Diamond;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_PolymerBead;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_Residue;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_Star;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXExternalConnection_Wavy;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFillType_Faded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFillType_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFillType_Shaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFillType_Solid;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFillType_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Formula;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Italic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Outline;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Shadow;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Subscript;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Superscript;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXFontFace_Underline;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_CentroidFromPoints;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_LineFromPoints;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_NormalFromPointPlane;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_PlaneFromPointLine;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_PlaneFromPoints;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_PointFromPointNormalDistance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_PointFromPointPointDistance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_PointFromPointPointPercentage;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGeometricFeature_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Arc;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Bracket;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Line;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Orbital;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Oval;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Rectangle;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Symbol;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXGraphicType_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Above;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Auto;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Below;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_BestInitial;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Center;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Left;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLabelDisplay_Right;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLineType_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLineType_Dashed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXLineType_Wavy;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_AnonymousAlternativeGroup;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_Element;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_ElementList;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_ElementListNickname;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_ExternalConnectionPoint;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_Formula;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_Fragment;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_GenericNickname;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_LinkNode;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_MultiAttachment;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_NamedAlternativeGroup;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_Nickname;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXNodeType_VariableAttachment;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObjectTagType_Double;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObjectTagType_Long;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObjectTagType_String;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXObjectTagType_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dxy;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dxyFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dz2Minus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dz2MinusFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dz2Plus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_dz2PlusFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_hybridMinus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_hybridMinusFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_hybridPlus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_hybridPlusFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_lobe;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_lobeFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_lobeShaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_oval;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_ovalFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_ovalShaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_p;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_pFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_pShaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_s;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_sFilled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOrbitalType_sShaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Circle;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Dashed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Filled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Shaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXOvalType_Shadowed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_Center;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_FlushLeft;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_FlushRight;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_IDTerm;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_MulticolumnNonTL4;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_MulticolumnTL4;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_Reaction1;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_Reaction2;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_TL4;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPageDefinition_UserDefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerFlipType_Flip;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerFlipType_NoFlip;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerFlipType_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerRepeatPattern_EitherUnknown;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerRepeatPattern_HeadToHead;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPolymerRepeatPattern_HeadToTail;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPositioningType_Absolute;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPositioningType_Angle;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPositioningType_Auto;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXPositioningType_Offset;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_EndObject;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRadical_Doublet;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRadical_None;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRadical_Singlet;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRadical_Triplet;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXReactionStereo_Inversion;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXReactionStereo_Retention;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXReactionStereo_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_Bold;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_Dashed;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_Filled;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_RoundEdge;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_Shaded;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRectangleType_Shadow;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_AsDrawn;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_Fusion;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_NoRingBonds;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_SimpleRing;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_SpiroOrHigher;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXRingBondCount_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSideType_Bottom;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSideType_Left;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSideType_Right;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSideType_Top;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSideType_Undefined;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Atomic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Chromatogram;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Fluorescence;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Infrared;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_MassSpectrum;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_NMR;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Raman;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_UVVis;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_Unknown;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumClass_XRayDiffraction;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_Hertz;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_MassUnits;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_Microns;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_Other;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_PartsPerMillion;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_Unknown;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumXType_Wavenumbers;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_Absorbance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_ArbitraryUnits;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_Other;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_PercentTransmittance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_Transmittance;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSpectrumYType_Unknown;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Absolute;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_CircleMinus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_CirclePlus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Dagger;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_DoubleDagger;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Electron;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_LonePair;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Minus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Plus;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Racemic;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_RadicalAnion;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_RadicalCation;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXSymbolType_Relative;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTag_Object;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Above;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Auto;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Below;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_BestInitial;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Center;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Full;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Left;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTextJustification_Right;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTranslation_Any;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTranslation_Broad;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTranslation_Equal;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXTranslation_Narrow;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXUnsaturation_MustBeAbsent;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXUnsaturation_MustBePresent;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXUnsaturation_Unspecified;
+import static org.beilstein.chemxtract.cdx.reader.CDXConstants.getCdxSignature;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.CDAltGroup;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDGroup;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDSettings;
+import org.beilstein.chemxtract.cdx.CDText;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
+import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
+import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDGeometryType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGraphicType;
+import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
+import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
+import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNoGoType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOvalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
+import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
+import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRingBondCount;
+import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumClass;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumXType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumYType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
+import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
+import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
+import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 import org.beilstein.chemxtract.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +434,9 @@ public class CDXUtils {
   /**
    * The main entry for reading a binary CDX document.
    *
-   * @param bytes
-   * @param position
-   * @return
+   * @param bytes the raw CDX document bytes
+   * @param position single-element cursor holding the current read offset into {@code bytes}
+   * @return the root {@link CDXObject} parsed from the document
    * @throws IOException If header is not recognized.
    */
   public static CDXObject readCDXDocument(byte[] bytes, int[] position) throws IOException {
@@ -355,6 +743,8 @@ public class CDXUtils {
         return CDBondCIPType.E;
       case CDXCIPBond_Z:
         return CDBondCIPType.Z;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bond CIP type 0x"
@@ -384,6 +774,8 @@ public class CDXUtils {
         return CDJustification.Auto;
       case CDXTextJustification_BestInitial:
         return CDJustification.BestInitial;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Text justification 0x"
@@ -419,6 +811,8 @@ public class CDXUtils {
         return CDPageDefinition.MulticolumnNonTL4;
       case CDXPageDefinition_UserDefined:
         return CDPageDefinition.UserDefined;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Page definition 0x"
@@ -436,6 +830,8 @@ public class CDXUtils {
         return CDDrawingSpaceType.Pages;
       case CDXDrawingSpace_Poster:
         return CDDrawingSpaceType.Poster;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Drawing space type 0x"
@@ -454,6 +850,8 @@ public class CDXUtils {
         return CDUnsaturation.MustBeAbsent;
       case CDXUnsaturation_MustBePresent:
         return CDUnsaturation.MustBePresent;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Unsaturation 0x"
@@ -479,6 +877,8 @@ public class CDXUtils {
         return CDExternalConnectionType.Wavy;
       case CDXExternalConnection_Residue:
         return CDExternalConnectionType.Residue;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "External connection type 0x"
@@ -503,6 +903,8 @@ public class CDXUtils {
         return CDIsotopicAbundance.Deficient;
       case CDXAbundance_Nonnatural:
         return CDIsotopicAbundance.Nonnatural;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Abundance 0x"
@@ -523,6 +925,8 @@ public class CDXUtils {
         return CDTranslation.Narrow;
       case CDXTranslation_Any:
         return CDTranslation.Any;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Translation 0x"
@@ -549,6 +953,8 @@ public class CDXUtils {
         return CDAtomCIPType.PseudoS;
       case CDXCIPAtom_Unspecified:
         return CDAtomCIPType.Unspecified;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Atom CIP type 0x"
@@ -595,6 +1001,8 @@ public class CDXUtils {
         return CDAtomGeometry.NineLigand;
       case CDXAtomGeometry_10Ligand:
         return CDAtomGeometry.TenLigand;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Atom geometry 0x"
@@ -614,6 +1022,8 @@ public class CDXUtils {
         return CDReactionStereo.Inversion;
       case CDXReactionStereo_Retention:
         return CDReactionStereo.Retention;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Reaction stereo 0x"
@@ -634,6 +1044,8 @@ public class CDXUtils {
         return CDRadical.Doublet;
       case CDXRadical_Triplet:
         return CDRadical.Triplet;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Radical 0x"
@@ -664,6 +1076,8 @@ public class CDXUtils {
         return CDLabelDisplay.Below;
       case CDXLabelDisplay_BestInitial:
         return CDLabelDisplay.BestInitial;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Radical 0x"
@@ -704,6 +1118,8 @@ public class CDXUtils {
         return CDNodeType.ExternalConnectionPoint;
       case CDXNodeType_LinkNode:
         return CDNodeType.LinkNode;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Node type 0x"
@@ -733,6 +1149,8 @@ public class CDXUtils {
         return CDBondReactionParticipation.NoChange;
       case CDXBondReactionParticipation_Unmapped:
         return CDBondReactionParticipation.Unmapped;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bond reaction participation 0x"
@@ -753,6 +1171,8 @@ public class CDXUtils {
         return CDBondTopology.Chain;
       case CDXBondTopology_RingOrChain:
         return CDBondTopology.RingOrChain;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bond topology 0x"
@@ -778,6 +1198,8 @@ public class CDXUtils {
         return CDBondDoublePosition.UserRight;
       case CDXBondDoublePosition_UserLeft:
         return CDBondDoublePosition.UserLeft;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bond double position 0x"
@@ -820,6 +1242,8 @@ public class CDXUtils {
         return CDBondDisplay.Dot;
       case CDXBondDisplay_DashDot:
         return CDBondDisplay.DashDot;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bond display 0x"
@@ -872,6 +1296,8 @@ public class CDXUtils {
         return CDBondOrder.DoubleOrAromatic;
       case CDXBondOrder_Any:
         return CDBondOrder.Any;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bonder order 0x"
@@ -900,6 +1326,8 @@ public class CDXUtils {
         return CDGraphicType.Bracket;
       case CDXGraphicType_Symbol:
         return CDGraphicType.Symbol;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Graphic type 0x"
@@ -942,6 +1370,8 @@ public class CDXUtils {
         return CDArrowType.Hollow;
       case CDXArrowType_RetroSynthetic:
         return CDArrowType.RetroSynthetic;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Arrow type 0x"
@@ -1016,6 +1446,8 @@ public class CDXUtils {
         return CDFillType.Shaded;
       case CDXFillType_Faded:
         return CDFillType.Faded;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Fill type 0x"
@@ -1072,6 +1504,8 @@ public class CDXUtils {
         return CDOrbitalType.dz2MinusFilled;
       case CDXOrbitalType_dxyFilled:
         return CDOrbitalType.dxyFilled;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Orbital type 0x"
@@ -1096,6 +1530,8 @@ public class CDXUtils {
         return CDBracketType.Curly;
       case CDXBracketType_Round:
         return CDBracketType.Round;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bracket type 0x"
@@ -1134,6 +1570,8 @@ public class CDXUtils {
         return CDSymbolType.Absolute;
       case CDXSymbolType_Relative:
         return CDSymbolType.Relative;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Symbol type 0x"
@@ -1184,6 +1622,8 @@ public class CDXUtils {
         return CDBracketUsage.Unused1;
       case CDXBracketUsage_Unused2:
         return CDBracketUsage.Unused2;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Bracket usage 0x"
@@ -1203,6 +1643,8 @@ public class CDXUtils {
         return CDPolymerRepeatPattern.HeadToHead;
       case CDXPolymerRepeatPattern_EitherUnknown:
         return CDPolymerRepeatPattern.EitherUnknown;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Polymer repeat pattern 0x"
@@ -1222,6 +1664,8 @@ public class CDXUtils {
         return CDPolymerFlipType.NoFlip;
       case CDXPolymerFlipType_Flip:
         return CDPolymerFlipType.Flip;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Polymer flip type 0x"
@@ -1253,6 +1697,8 @@ public class CDXUtils {
         return CDGeometryType.CentroidFromPoints;
       case CDXGeometricFeature_NormalFromPointPlane:
         return CDGeometryType.NormalFromPointPlane;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Geometric feature 0x"
@@ -1274,6 +1720,8 @@ public class CDXUtils {
         return CDConstraintType.Angle;
       case CDXConstraintType_ExclusionSphere:
         return CDConstraintType.ExclusionSphere;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Constraint type 0x"
@@ -1296,6 +1744,8 @@ public class CDXUtils {
         return CDSideType.Bottom;
       case CDXSideType_Right:
         return CDSideType.Right;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Side type 0x"
@@ -1316,6 +1766,8 @@ public class CDXUtils {
         return CDObjectTagType.Long;
       case CDXObjectTagType_String:
         return CDObjectTagType.String;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Object tag type 0x"
@@ -1337,6 +1789,8 @@ public class CDXUtils {
         return CDPositioningType.Offset;
       case CDXPositioningType_Absolute:
         return CDPositioningType.Absolute;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Positioning type 0x"
@@ -1369,6 +1823,8 @@ public class CDXUtils {
         return CDSpectrumClass.Fluorescence;
       case CDXSpectrumClass_Atomic:
         return CDSpectrumClass.Atomic;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Spectrum class 0x"
@@ -1395,6 +1851,8 @@ public class CDXUtils {
         return CDSpectrumXType.PartsPerMillion;
       case CDXSpectrumXType_Other:
         return CDSpectrumXType.Other;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Spectrum x type 0x"
@@ -1419,6 +1877,8 @@ public class CDXUtils {
         return CDSpectrumYType.Other;
       case CDXSpectrumYType_ArbitraryUnits:
         return CDSpectrumYType.ArbitraryUnits;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Spectrum y type 0x"
@@ -1443,6 +1903,8 @@ public class CDXUtils {
         return CDRingBondCount.Unspecified;
       case CDXRingBondCount_SpiroOrHigher:
         return CDRingBondCount.Unspecified;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Ring bond count 0x"
@@ -1472,6 +1934,8 @@ public class CDXUtils {
         return CDArrowHeadType.Hollow;
       case CDXArrowheadType_Angle:
         return CDArrowHeadType.Angle;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Arrow head type 0x"
@@ -1495,6 +1959,8 @@ public class CDXUtils {
         return CDArrowHeadPositionType.HalfLeft;
       case CDXArrowhead_HalfRight:
         return CDArrowHeadPositionType.HalfRight;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Arrow head 0x"
@@ -1515,6 +1981,8 @@ public class CDXUtils {
         return CDNoGoType.Cross;
       case CDXArrowNoGo_Hash:
         return CDNoGoType.Hash;
+      default:
+        break;
     }
     handleUnrecognizedValue(
         "Arrow no go 0x"

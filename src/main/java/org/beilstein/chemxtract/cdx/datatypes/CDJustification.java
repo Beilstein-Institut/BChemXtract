@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Text justification and alignment modes defined by the ChemDraw CDX specification. */
 public enum CDJustification {
   /** Right justified text */
   Right,

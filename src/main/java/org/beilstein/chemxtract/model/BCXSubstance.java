@@ -22,7 +22,11 @@
 package org.beilstein.chemxtract.model;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 /** A substance with structure and Inchi that could be extracted from a CDX file. */

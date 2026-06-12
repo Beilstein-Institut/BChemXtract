@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Graphic object fill styles defined by the ChemDraw CDX specification. */
 public enum CDFillType {
   /** Unspecified fill type. */
   Unspecified,

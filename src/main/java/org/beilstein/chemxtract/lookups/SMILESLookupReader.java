@@ -38,6 +38,7 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Loads abbreviation-to-SMILES lookup tables and resolves abbreviations to CDK structures. */
 public class SMILESLookupReader {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SMILESLookupReader.class);
@@ -52,14 +53,19 @@ public class SMILESLookupReader {
    * path
    *
    * @param path String path to the abbreviation file
+   * @param initialSize the initial capacity for the backing lookup map
+   * @return a map of abbreviation to its corresponding SMILES string
    * @throws IOException if file could not be imported
    */
   public Map<String, String> loadSmilesLookup(String path, int initialSize) throws IOException {
     try (InputStream in = SMILESLookupReader.class.getResourceAsStream(path)) {
-      if (in != null) return this.loadAbbreviations(in, initialSize);
+      if (in != null) {
+        return this.loadAbbreviations(in, initialSize);
+      }
       File file = new File(path);
-      if (file.exists() && file.canRead())
+      if (file.exists() && file.canRead()) {
         return this.loadAbbreviations(new FileInputStream(file), initialSize);
+      }
     }
     return Collections.emptyMap();
   }

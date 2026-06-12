@@ -21,6 +21,9 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/**
+ * Document drawing-space layout modes (paged or poster) defined by the ChemDraw CDX specification.
+ */
 public enum CDDrawingSpaceType {
   Pages,
   Poster;

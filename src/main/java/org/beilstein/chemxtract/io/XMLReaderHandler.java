@@ -55,7 +55,8 @@ public class XMLReaderHandler implements ContentHandler {
   }
 
   /* (non-Javadoc)
-   * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
+   * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String,
+   *     java.lang.String, org.xml.sax.Attributes)
    */
   @Override
   public void startElement(String uri, String localName, String name, Attributes atts)

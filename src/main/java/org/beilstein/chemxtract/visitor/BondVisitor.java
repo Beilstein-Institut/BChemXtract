@@ -22,8 +22,16 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.io.IOException;
-import java.util.*;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBond;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDText;
+import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
@@ -100,15 +108,20 @@ public class BondVisitor extends CDVisitor {
                                   + " atoms"));
 
           CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
-          if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
-          else bond.setEnd(conAtom);
+          if (!bond.getBegin().getFragments().isEmpty()) {
+            bond.setBegin(conAtom);
+          } else {
+            bond.setEnd(conAtom);
+          }
         }
       }
       if ((onlyElementsAtBond(bond)
               || isRGroupBond(bond)
               || isMultiAttachmentBond(bond)
               || isAbbreviationAtBond(bond))
-          && !skip.contains(bond)) bonds.add(bond);
+          && !skip.contains(bond)) {
+        bonds.add(bond);
+      }
     }
   }
 

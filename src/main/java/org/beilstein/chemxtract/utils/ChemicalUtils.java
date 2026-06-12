@@ -175,6 +175,7 @@ public class ChemicalUtils {
    * Creates an SMILES representation for the given AtomContainer with the given SmiFlavor.
    *
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
+   * @param flavor the CDK {@code SmiFlavor} bitmask controlling SMILES generation options
    * @return absolute SMILES string representing the structure of the AtomContainer
    */
   public static String createSmiles(IAtomContainer atomContainer, int flavor) throws CDKException {

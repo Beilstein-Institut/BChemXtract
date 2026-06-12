@@ -22,8 +22,18 @@
 package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
-import java.util.*;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDReactionStep;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.converter.ReactionConverter;
 import org.beilstein.chemxtract.model.BCXReaction;
 import org.beilstein.chemxtract.model.BCXReactionComponent;
@@ -106,6 +116,8 @@ public class ReactionXtractor {
    * agents linked to their corresponding components.
    *
    * @param document the ChemDraw {@link CDDocument} to extract reactions from
+   * @param reactionInfo populated with the number of reaction steps found and valid reactions
+   *     extracted
    * @return a list of extracted {@link BCXReaction} objects
    */
   public List<BCXReaction> xtract(CDDocument document, BCXReactionInfo reactionInfo) {

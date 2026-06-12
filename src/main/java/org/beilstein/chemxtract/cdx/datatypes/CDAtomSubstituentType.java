@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Atom substituent count restriction types defined by the ChemDraw CDX specification. */
 public enum CDAtomSubstituentType {
   None,
   FreeSites,
