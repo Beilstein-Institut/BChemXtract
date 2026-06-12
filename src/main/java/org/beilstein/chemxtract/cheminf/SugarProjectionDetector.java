@@ -242,48 +242,49 @@ public class SugarProjectionDetector {
     Other(null);
 
     private final Projection projection;
-    private static final Map<Key, WoundProjection> map = new HashMap<>();
+    private static final Map<Key, WoundProjection> PROJECTION_MAP = new HashMap<>();
 
     static {
       // Haworth |V| = 5
-      map.put(new Key(Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left), HaworthAnticlockwise);
-      map.put(
+      PROJECTION_MAP.put(
+          new Key(Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left), HaworthAnticlockwise);
+      PROJECTION_MAP.put(
           new Key(Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right), HaworthClockwise);
 
       // Haworth |V| = 6
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left),
           HaworthAnticlockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right),
           HaworthClockwise);
 
       // Haworth |V| = 7
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left, Turn.Left),
           HaworthAnticlockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(
               Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right, Turn.Right),
           HaworthClockwise);
 
       // Chair
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Left, Turn.Right, Turn.Right, Turn.Left, Turn.Right, Turn.Right),
           ChairClockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Right, Turn.Left, Turn.Right, Turn.Right, Turn.Left, Turn.Right),
           ChairClockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Right, Turn.Right, Turn.Left, Turn.Right, Turn.Right, Turn.Left),
           ChairClockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Right, Turn.Left, Turn.Left, Turn.Right, Turn.Left, Turn.Left),
           ChairAnticlockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Left, Turn.Right, Turn.Left, Turn.Left, Turn.Right, Turn.Left),
           ChairAnticlockwise);
-      map.put(
+      PROJECTION_MAP.put(
           new Key(Turn.Left, Turn.Left, Turn.Right, Turn.Left, Turn.Left, Turn.Right),
           ChairAnticlockwise);
     }
@@ -296,7 +297,7 @@ public class SugarProjectionDetector {
       if (turns == null) {
         return Other;
       }
-      WoundProjection type = map.get(new Key(turns));
+      WoundProjection type = PROJECTION_MAP.get(new Key(turns));
       return type != null ? type : Other;
     }
 
