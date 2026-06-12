@@ -40,7 +40,7 @@ public class CDXUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(CDXUtils.class);
 
   public static boolean isCDX(byte[] bytes) {
-    return IOUtils.startsWithBytes(bytes, CDXConstants.getCdxSignature());
+    return IOUtils.startsWithBytes(bytes, getCdxSignature());
   }
 
   /**
@@ -66,7 +66,7 @@ public class CDXUtils {
     position[0] += 10;
     // position += 16;
 
-    int tag = CDXUtils.readUInt16(bytes, position[0]);
+    int tag = readUInt16(bytes, position[0]);
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug(
           "read root tag={} position={}",
@@ -81,7 +81,7 @@ public class CDXUtils {
   private static CDXObject readCDXObject(int rootTag, byte[] bytes, int[] position)
       throws IOException {
     // read object id
-    int id = CDXUtils.readInt32(bytes, position[0]);
+    int id = readInt32(bytes, position[0]);
     position[0] += 4;
 
     if (LOGGER.isDebugEnabled()) {
@@ -101,7 +101,7 @@ public class CDXUtils {
 
     // read content
     while (position[0] < bytes.length) {
-      int tag = CDXUtils.readUInt16(bytes, position[0]);
+      int tag = readUInt16(bytes, position[0]);
       position[0] += 2;
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug(
@@ -139,10 +139,10 @@ public class CDXUtils {
     property.setPosition(position[0] - 2);
 
     // read property length
-    int length = CDXUtils.readUInt16(bytes, position[0]);
+    int length = readUInt16(bytes, position[0]);
     position[0] += 2;
     if (length == 0xFFFF) {
-      length = CDXUtils.readInt32(bytes, position[0]);
+      length = readInt32(bytes, position[0]);
       position[0] += 4;
     }
     if (LOGGER.isDebugEnabled()) {
@@ -1000,7 +1000,7 @@ public class CDXUtils {
   }
 
   public static CDSplineType readCurveTypeProperty(CDXProperty property) throws IOException {
-    return CDXUtils.convertIntToSplineType(property.getDataAsInt16());
+    return convertIntToSplineType(property.getDataAsInt16());
   }
 
   public static CDFillType readFillTypeProperty(CDXProperty property) throws IOException {
@@ -1730,7 +1730,7 @@ public class CDXUtils {
   }
 
   public static boolean containsLineWrapBugCharacter(String t) {
-    return (t.contains("\u00B0")
+    return t.contains("\u00B0")
         || // degree sign
         t.contains("\u00B7")
         || // middle dot
@@ -1750,6 +1750,6 @@ public class CDXUtils {
         || // not equals (actually superscript one)
         t.contains("\u00BB")
         || // almost equal to (actually right-pointing double angle quotation mark)
-        t.contains("\u00C5")); // latin capital letter A with ring above
+        t.contains("\u00C5"); // latin capital letter A with ring above
   }
 }

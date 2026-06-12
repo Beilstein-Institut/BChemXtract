@@ -268,7 +268,7 @@ public class SubstanceXtractor {
     substance.setAtomContainer(atomContainer);
     // add MDLV3000 mol file as string
     final StringWriter sw = new StringWriter();
-    try (final MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
+    try (MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
       mdlw.write(atomContainer);
       substance.setMdlv3000(sw.toString());
     } catch (IOException e) {

@@ -83,7 +83,7 @@ public class ReactionAgents {
    * @throws IOException if the lookup table could not be loaded
    */
   public static String get(String key) throws IOException {
-    return ReactionAgents.getInstance().lookup.get(key.toLowerCase());
+    return getInstance().lookup.get(key.toLowerCase());
   }
 
   /**
@@ -96,6 +96,6 @@ public class ReactionAgents {
    * @throws IOException if the lookup table could not be loaded
    */
   public static boolean contains(String key) throws IOException {
-    return ReactionAgents.getInstance().lookup.containsKey(key.toLowerCase());
+    return getInstance().lookup.containsKey(key.toLowerCase());
   }
 }

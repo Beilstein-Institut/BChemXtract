@@ -158,11 +158,10 @@ public class StereoHandler {
         stereoElements.stream()
             .filter(
                 element ->
-                    (element.getFocus() instanceof IAtom atom
+                    element.getFocus() instanceof IAtom atom
                         && wavyBonds.stream()
                             .anyMatch(
-                                bond ->
-                                    bond.getBegin().equals(atom) || bond.getEnd().equals(atom))))
+                                bond -> bond.getBegin().equals(atom) || bond.getEnd().equals(atom)))
             .toList();
     stereoElements.removeAll(wavyElements);
   }
@@ -228,26 +227,5 @@ public class StereoHandler {
       stereoElements.add(chirality);
     }
     return stereoElements;
-  }
-
-  /**
-   * Sets bond stereochemistry in an {@link IAtomContainer} based on CDK bond display types.
-   *
-   * @param atomContainer the {@link IAtomContainer} whose bonds will be updated
-   */
-  private static void setBondStereoByDisplayType(IAtomContainer atomContainer) {
-    for (IBond bond : atomContainer.bonds()) {
-      if (bond.getDisplay() == null) {
-        bond.setStereo(IBond.Stereo.NONE);
-      }
-      switch (bond.getDisplay()) {
-        case WedgeBegin, Bold -> bond.setStereo(IBond.Stereo.UP);
-        case WedgedHashBegin, Hash -> bond.setStereo(IBond.Stereo.DOWN);
-        case WedgeEnd -> bond.setStereo(IBond.Stereo.UP_INVERTED);
-        case WedgedHashEnd -> bond.setStereo(IBond.Stereo.DOWN_INVERTED);
-        case Wavy -> bond.setStereo(IBond.Stereo.UP_OR_DOWN);
-        default -> bond.setStereo(IBond.Stereo.NONE);
-      }
-    }
   }
 }

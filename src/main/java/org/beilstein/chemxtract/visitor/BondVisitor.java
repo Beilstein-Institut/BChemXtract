@@ -134,10 +134,10 @@ public class BondVisitor extends CDVisitor {
             && bond.getBegin().getChemicalWarning() != null)
         || (!CDNodeType.Element.equals(bond.getEnd().getNodeType())
             && bond.getEnd().getChemicalWarning() != null)
-        || (CDNodeType.Fragment.equals(bond.getBegin().getNodeType())
-            || CDNodeType.Fragment.equals(bond.getEnd().getNodeType())
-            || CDNodeType.Nickname.equals(bond.getBegin().getNodeType())
-            || CDNodeType.Nickname.equals(bond.getEnd().getNodeType()));
+        || CDNodeType.Fragment.equals(bond.getBegin().getNodeType())
+        || CDNodeType.Fragment.equals(bond.getEnd().getNodeType())
+        || CDNodeType.Nickname.equals(bond.getBegin().getNodeType())
+        || CDNodeType.Nickname.equals(bond.getEnd().getNodeType());
   }
 
   /**
@@ -207,7 +207,7 @@ public class BondVisitor extends CDVisitor {
             .orElseGet(() -> bond.getEnd().getLabelText());
 
     try {
-      return (UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd));
+      return UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd);
     } catch (IOException e) {
       LOGGER.error("Unable to load unwanted abbreviations", e);
     }

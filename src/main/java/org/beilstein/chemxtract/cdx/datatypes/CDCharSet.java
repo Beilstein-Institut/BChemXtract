@@ -101,7 +101,7 @@ public enum CDCharSet {
 
   private final String charSet;
 
-  private CDCharSet(String charSet) {
+  CDCharSet(String charSet) {
     this.charSet = charSet;
   }
 

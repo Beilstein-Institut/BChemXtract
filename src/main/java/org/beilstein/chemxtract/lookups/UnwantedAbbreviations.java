@@ -91,7 +91,7 @@ public class UnwantedAbbreviations {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedAbbreviations() throws IOException {
-    return UnwantedAbbreviations.getInstance().words;
+    return getInstance().words;
   }
 
   /**
@@ -102,6 +102,6 @@ public class UnwantedAbbreviations {
    * @throws IOException if the word list cannot be initialized or loaded
    */
   public static boolean contains(String word) throws IOException {
-    return UnwantedAbbreviations.getInstance().words.contains(word);
+    return getInstance().words.contains(word);
   }
 }

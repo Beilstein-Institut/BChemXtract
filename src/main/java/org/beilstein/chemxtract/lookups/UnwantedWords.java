@@ -108,7 +108,7 @@ public class UnwantedWords {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedWords() throws IOException {
-    return UnwantedWords.getInstance().words;
+    return getInstance().words;
   }
 
   /**
@@ -119,6 +119,6 @@ public class UnwantedWords {
    * @throws IOException if the word list cannot be initialized or loaded
    */
   public static boolean contains(String word) throws IOException {
-    return UnwantedWords.getInstance().words.contains(word);
+    return getInstance().words.contains(word);
   }
 }

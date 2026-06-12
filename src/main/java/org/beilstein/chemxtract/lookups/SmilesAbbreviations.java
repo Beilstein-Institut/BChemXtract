@@ -82,7 +82,7 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static String get(String key) throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup.get(key.toLowerCase());
+    return getInstance().smilesLookup.get(key.toLowerCase());
   }
 
   /**
@@ -93,7 +93,7 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static boolean contains(String key) throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup.containsKey(key.toLowerCase());
+    return getInstance().smilesLookup.containsKey(key.toLowerCase());
   }
 
   /**
@@ -103,6 +103,6 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static Map<String, String> getSmilesLookup() throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup;
+    return getInstance().smilesLookup;
   }
 }

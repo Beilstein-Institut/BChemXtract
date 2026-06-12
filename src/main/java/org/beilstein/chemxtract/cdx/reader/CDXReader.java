@@ -98,7 +98,7 @@ public class CDXReader {
     byte[] bytes = IOUtils.readBytes(in);
     CDXReader reader = new CDXReader();
     LOGGER.debug("Create object tree");
-    CDXObject object = CDXUtils.readCDXDocument(bytes, new int[] {0});
+    CDXObject object = readCDXDocument(bytes, new int[] {0});
 
     LOGGER.debug("Create model tree");
     CDDocument document = reader.createDocumentObject(object);
@@ -2704,13 +2704,13 @@ public class CDXReader {
           break;
 
         case CDXProp_Curve_ArrowheadType:
-          spline.setArrowHeadType(CDXUtils.readArrowheadTypeProperty(property));
+          spline.setArrowHeadType(readArrowheadTypeProperty(property));
           break;
         case CDXProp_Curve_ArrowheadHead:
-          spline.setArrowHeadPositionAtStart(CDXUtils.readArrowheadProperty(property));
+          spline.setArrowHeadPositionAtStart(readArrowheadProperty(property));
           break;
         case CDXProp_Curve_ArrowheadTail:
-          spline.setArrowHeadPositionAtEnd(CDXUtils.readArrowheadProperty(property));
+          spline.setArrowHeadPositionAtEnd(readArrowheadProperty(property));
           break;
         case CDXProp_Curve_Closed:
           spline.setClosed(property.getDataAsBoolean());
