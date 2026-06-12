@@ -163,7 +163,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_CreationUserName)) {
         document.setCreationUserName(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_CreationDate)) {
@@ -354,7 +354,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_BoundingBox)) {
         page.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_BackgroundColor)) {
@@ -383,7 +383,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_PrintTrimMarks)) {
         page.setPrintTrimMarks(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_SplitterPositions)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_PageDefinition)) {
         page.setPageDefinition(CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_BoundsInParent)) {
@@ -435,7 +435,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_BoundingBox)) {
         fragment.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Mole_Racemic)) {
@@ -495,7 +495,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         node.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -616,7 +616,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_HideImplicitHydrogens)) {
         node.getSettings().setHideImplicitHydrogens(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_NeedsClean)) {
-        // do nothing
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -649,7 +649,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         bond.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -754,7 +754,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_2DExtent)) {
         templateGrid.setExtent(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Template_PaneHeight)) {
@@ -816,7 +816,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_BoundingBox)) {
         group.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_Group_Integral)) {
@@ -861,7 +861,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         text.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -964,7 +964,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_SupercededBy)) {
         graphic.setSupersededBy(
             CDXMLUtils.convertStringToObjectRef(
@@ -1103,7 +1103,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         graphic.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -1171,7 +1171,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_NoGo)) {
         graphic.setNoGoType(CDXMLUtils.convertStringToNoGoType(root.getAttribute(name)));
       } else if (name.equals("FadePercent")) {
-        // empty
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -1206,7 +1206,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Bracket_Usage)) {
         bracketedGroup.setBracketUsage(
             CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
@@ -1259,7 +1259,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Bracket_GraphicID)) {
         bracketAttachment.setGraphic(
             CDXMLUtils.convertStringToObjectRef(
@@ -1292,7 +1292,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Bracket_BondID)) {
         crossingBond.setBond(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDBond.class, refManager));
@@ -1327,7 +1327,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_2DPosition)) {
         splitter.setPosition2D(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_PageDefinition)) {
@@ -1368,7 +1368,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         plate.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_Visible)) {
@@ -1449,7 +1449,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Visible)) {
         lane.setVisible(root.getAttributeAsBoolean(name));
       } else {
@@ -1485,7 +1485,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Visible)) {
         spot.setVisible(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Width)) {
@@ -1535,7 +1535,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Name)) {
         constraint.setName(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_ForegroundColor)) {
@@ -1604,7 +1604,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Name)) {
         geometry.setName(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_ForegroundColor)) {
@@ -1662,7 +1662,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ForegroundColor)) {
         border.setColor(readColorAttribute(root, name));
       } else if (name.equals(CDXMLProp_LineWidth)) {
@@ -1699,7 +1699,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_CrossReference_Container)) {
         crossReference.setContainer(root.getAttribute(name));
       } else if (name.equals(CDXMLProp_CrossReference_Document)) {
@@ -1736,7 +1736,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Sequence_Identifier)) {
         sequence.setIdentifier(root.getAttribute(name));
       } else {
@@ -1772,7 +1772,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         spectrum.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -1865,7 +1865,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map)) {
         reactionStep.setAtomMap(
             CDXMLUtils.convertStringtoObjectRefMap(
@@ -1935,7 +1935,7 @@ public class CDXMLReader {
     for (String name : root.getAttributes().keySet()) {
 
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else {
 
         handleMissingAttribute(root, name);
@@ -1975,7 +1975,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         namedAlternativeGroup.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -2034,7 +2034,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         table.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_Visible)) {
@@ -2099,7 +2099,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         embeddedObject.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_BoundingBox)) {
@@ -2235,7 +2235,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_ZOrder)) {
         spline.setZOrder(root.getAttributeAsInt(name));
       } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
@@ -2326,7 +2326,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_Visible)) {
         objectTag.setVisible(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_Name)) {
@@ -2391,7 +2391,7 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
       if (name.equals(CDXMLProp_Id)) {
-        // ignore
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else if (name.equals(CDXMLProp_BasisObjects)) {
         chemicalProperty.setBasisObjects(
             CDXMLUtils.convertStringToObjectRefList(
@@ -2418,9 +2418,9 @@ public class CDXMLReader {
       if (name.equals(CDXMLObj_Document)) {
         populateDocumentObject(object);
       } else if (name.equals(CDXMLObj_ColorTable)) {
-        // nothing
+        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
       } else if (name.equals(CDXMLObj_FontTable)) {
-        // nothing
+        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
       } else if (name.equals(CDXMLObj_Page)) {
         populatePageObject(object);
       } else if (name.equals(CDXMLObj_Group)) {
@@ -2434,13 +2434,13 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLObj_Text)) {
         populateTextObject(object);
       } else if (name.equals(CDXMLObj_String)) {
-        // nothing
+        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
       } else if (name.equals(CDXMLObj_Graphic)) {
         populateGraphicObject(object);
       } else if (name.equals(CDXMLObj_Arrow)) {
         populateArrowObject(object);
       } else if (name.equals(CDXMLObj_Represent)) {
-        // nothing
+        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
       } else if (name.equals(CDXMLObj_Curve)) {
         populateSplineObject(object);
       } else if (name.equals(CDXMLObj_EmbeddedObject)) {

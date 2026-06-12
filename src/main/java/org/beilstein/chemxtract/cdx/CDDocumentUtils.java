@@ -450,11 +450,9 @@ public class CDDocumentUtils {
     outer:
     for (CDBracket b : brackets) {
       for (Object o : b.getBracketedObjects()) {
-        if (o instanceof CDAtom) {
-          if (fragment.getAtoms().contains(o)) {
-            fragmentBrackets.add(b);
-            continue outer;
-          }
+        if (o instanceof CDAtom && fragment.getAtoms().contains(o)) {
+          fragmentBrackets.add(b);
+          continue outer;
         }
       }
     }
