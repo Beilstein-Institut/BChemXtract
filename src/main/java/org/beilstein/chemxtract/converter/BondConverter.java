@@ -23,8 +23,6 @@ package org.beilstein.chemxtract.converter;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
@@ -63,7 +61,6 @@ import org.openscience.cdk.isomorphism.matchers.QueryBond;
 public class BondConverter {
 
   private final IChemObjectBuilder builder;
-  private static final Log logger = LogFactory.getLog(BondConverter.class);
   private final Map<CDAtom, IAtom> atomMap;
   private final Map<CDBond, IBond> bondMap;
 

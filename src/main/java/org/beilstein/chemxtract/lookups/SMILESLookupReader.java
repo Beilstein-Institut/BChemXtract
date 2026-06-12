@@ -30,17 +30,17 @@ import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SMILESLookupReader {
 
-  private static final Log logger = LogFactory.getLog(SMILESLookupReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SMILESLookupReader.class);
   private final SmilesParser smilesParser;
 
   public SMILESLookupReader(IChemObjectBuilder builder) {
@@ -83,7 +83,7 @@ public class SMILESLookupReader {
         try {
           this.addAbbreviationToMap(line, abbreviations);
         } catch (CDKException e) {
-          logger.warn("Invalid SMILES", e);
+          LOGGER.warn("Invalid SMILES", e);
         }
       }
     }

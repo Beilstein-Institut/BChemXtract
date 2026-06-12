@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
@@ -42,6 +40,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.IChemObjectReader;
 import org.openscience.cdk.tools.periodictable.PeriodicTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts {@link CDAtom} instances (e.g. from ChemDraw/CDX or CDXML) into CDK {@link IAtom}
@@ -64,7 +64,7 @@ public class AtomConverter {
 
   private final IChemObjectBuilder builder;
   private final IChemObjectReader.Mode mode;
-  private static final Log logger = LogFactory.getLog(AtomConverter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AtomConverter.class);
   private final Map<CDAtom, IAtom> atomMap;
 
   /**
@@ -130,8 +130,8 @@ public class AtomConverter {
       try {
         configureIsotope(atom, cdAtom.getIsotope());
       } catch (IOException e) {
-        logger.error("Unable to configure isotope for : " + atomSymbol);
-        logger.error(e.getMessage());
+        LOGGER.error("Unable to configure isotope for : {}", atomSymbol);
+        LOGGER.error(e.getMessage());
       }
     }
     atomMap.putIfAbsent(cdAtom, atom);
@@ -171,13 +171,12 @@ public class AtomConverter {
         return atom;
       }
     } catch (IllegalArgumentException | IOException e) {
-      logger.error(
-          "Unexpected behaviour in creating an atom with symbol: "
-              + symbol
-              + ". PseudoAtom will be created.");
-      logger.error(e.getMessage());
+      LOGGER.error(
+          "Unexpected behaviour in creating an atom with symbol: {}. PseudoAtom will be created.",
+          symbol);
+      LOGGER.error(e.getMessage());
     }
-    logger.info("Unknown symbol, PseudoAtom created for " + symbol + ".");
+    LOGGER.info("Unknown symbol, PseudoAtom created for {}.", symbol);
     if (IChemObjectReader.Mode.STRICT.equals(mode)) {
       throw new CDKException("Invalid atom symbol not allowed in strict mode: " + symbol);
     }

@@ -23,8 +23,6 @@ package org.beilstein.chemxtract.converter;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -44,6 +42,8 @@ import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts a {@link CDFragment} (e.g., a ChemDraw fragment) into a CDK {@link IAtomContainer}.
@@ -67,7 +67,7 @@ public class FragmentConverter {
   private final IChemObjectBuilder builder;
   private final IChemObjectReader.Mode mode;
   private final SmilesParser smilesParser;
-  private static final Log logger = LogFactory.getLog(FragmentConverter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FragmentConverter.class);
 
   /**
    * Constructs a new {@code FragmentConverter} using the given {@link IChemObjectBuilder} and
@@ -249,7 +249,7 @@ public class FragmentConverter {
       try {
         smiles = SmilesAbbreviations.get(abbreviation);
       } catch (IOException e) {
-        logger.error("Could not lookup SMILES for: " + abbreviation);
+        LOGGER.error("Could not lookup SMILES for: {}", abbreviation);
         continue;
       }
       if (smiles == null) {
@@ -260,8 +260,7 @@ public class FragmentConverter {
       try {
         expandedStructure = smilesParser.parseSmiles(smiles);
       } catch (InvalidSmilesException e) {
-        logger.error(
-            "SMILES could not be parsed to AtomContainer: " + abbreviation + ": " + smiles);
+        LOGGER.error("SMILES could not be parsed to AtomContainer: {}: {}", abbreviation, smiles);
         continue;
       }
 
@@ -327,7 +326,7 @@ public class FragmentConverter {
       }
     }
     if (connectionPoints.size() != 1) {
-      logger.error("Expected exactly one connection point for abbreviation.");
+      LOGGER.error("Expected exactly one connection point for abbreviation.");
       return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
@@ -342,7 +341,7 @@ public class FragmentConverter {
     try {
       newBond = bondOrigin.clone();
     } catch (CloneNotSupportedException e) {
-      logger.error("Bond could not be cloned.");
+      LOGGER.error("Bond could not be cloned.");
       return;
     }
     newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});
@@ -382,7 +381,7 @@ public class FragmentConverter {
         atom.setAtomTypeName(originalAtomTypeNames[i]);
       }
     } catch (CDKException e) {
-      logger.error("Unable to add implicit hydrogens, due to: " + e.getMessage());
+      LOGGER.error("Unable to add implicit hydrogens, due to: {}", e.getMessage());
     }
   }
 
@@ -451,7 +450,7 @@ public class FragmentConverter {
         }
       }
     } catch (CDKException e) {
-      logger.error(e.getMessage());
+      LOGGER.error(e.getMessage());
     }
   }
 

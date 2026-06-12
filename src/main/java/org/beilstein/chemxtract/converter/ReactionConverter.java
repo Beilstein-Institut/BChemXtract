@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.vecmath.Point2d;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
@@ -41,6 +39,8 @@ import org.openscience.cdk.Reaction;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts ChemDraw {@link CDReactionStep} objects into CDK {@link IReaction} instances.
@@ -65,7 +65,7 @@ public class ReactionConverter {
 
   private final IChemObjectBuilder builder;
   private final SmilesParser smilesParser;
-  private static final Log logger = LogFactory.getLog(ReactionConverter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReactionConverter.class);
   private final Map<CDFragment, BCXSubstance> fragmentsAtomContainerMap;
   private final Set<String> unknowns;
   private boolean sanitize = false;
@@ -117,11 +117,11 @@ public class ReactionConverter {
         processReactionComponents(agent, cdkReaction::addAgent);
       }
       if (cdkReaction.getReactants().isEmpty() || cdkReaction.getProducts().isEmpty()) {
-        logger.error("Reaction has zero reactants or zero products.");
+        LOGGER.error("Reaction has zero reactants or zero products.");
         return Optional.empty();
       }
     } catch (IOException | CDKException e) {
-      logger.error("Conversion of a reaction component has failed.", e);
+      LOGGER.error("Conversion of a reaction component has failed.", e);
       return Optional.empty();
     }
     cdkReaction.setDirection(
@@ -166,7 +166,7 @@ public class ReactionConverter {
         IAtomContainer ac = smilesParser.parseSmiles(ReactionAgents.get(key));
         addCdkComponent.accept(ac);
       } else {
-        logger.warn("Agent may not be converted (correctly): " + text);
+        LOGGER.warn("Agent may not be converted (correctly): {}", text);
         unknowns.add(text);
       }
     }
@@ -322,7 +322,7 @@ public class ReactionConverter {
               try {
                 return !UnwantedWords.contains(a);
               } catch (IOException e) {
-                logger.error(e.getMessage());
+                LOGGER.error(e.getMessage());
                 return false;
               }
             })
