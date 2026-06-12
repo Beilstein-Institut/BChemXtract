@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.zip.DataFormatException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
 import org.beilstein.chemxtract.cdx.CDArrow;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -71,12 +69,14 @@ import org.beilstein.chemxtract.cdx.datatypes.CDFont;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 import org.beilstein.chemxtract.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Reader for ChemDraw CDX files. Converts a binary file into an in-memory tree of model objects.
  */
 public class CDXReader {
-  private static final Log logger = LogFactory.getLog(CDXReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXReader.class);
 
   private RefManager refManager = new RefManager();
   private Map<Integer, CDColor> colors = new HashMap<>();
@@ -97,16 +97,16 @@ public class CDXReader {
   public static CDDocument readDocument(InputStream in) throws IOException, IOException {
     byte[] bytes = IOUtils.readBytes(in);
     CDXReader reader = new CDXReader();
-    logger.debug("Create object tree");
+    LOGGER.debug("Create object tree");
     CDXObject object = CDXUtils.readCDXDocument(bytes, new int[] {0});
 
-    logger.debug("Create model tree");
+    LOGGER.debug("Create model tree");
     CDDocument document = reader.createDocumentObject(object);
 
-    logger.debug("Populate model tree");
+    LOGGER.debug("Populate model tree");
     reader.populateDocumentObject(object);
 
-    logger.debug("Finished reading document");
+    LOGGER.debug("Finished reading document");
     return document;
   }
 
@@ -2595,7 +2595,7 @@ public class CDXReader {
       try {
         picture.setEnhancedMetafile(IOUtils.uncompress(compressedEnhancedMetafile));
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2603,7 +2603,7 @@ public class CDXReader {
       try {
         picture.setOleObject(IOUtils.uncompress(compressedOLEObject));
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2611,7 +2611,7 @@ public class CDXReader {
       try {
         picture.setWindowsMetafile(IOUtils.uncompress(compressedWindowsMetafile));
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2864,11 +2864,10 @@ public class CDXReader {
   private void populateChildren(CDXObject root) throws IOException {
     for (CDXObject object : root.getObjects()) {
       if (object.getInstance() == null) {
-        logger.warn(
-            "Omit object with tag 0x"
-                + Integer.toHexString(object.getTag())
-                + " not recognized at "
-                + getPositionAsString(object));
+        LOGGER.warn(
+            "Omit object with tag 0x{} not recognized at {}",
+            Integer.toHexString(object.getTag()),
+            getPositionAsString(object));
         continue;
       }
       switch (object.getTag()) {
@@ -2983,48 +2982,31 @@ public class CDXReader {
   }
 
   private void handleCreation(String name, CDXObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "create "
-              + name
-              + " object with id "
-              + object.getId()
-              + "(0x"
-              + Integer.toHexString(object.getId())
-              + ") at "
-              + getPositionAsString(object));
-    }
+    LOGGER.debug(
+        "create {} object with id {}(0x{}) at {}",
+        name,
+        object.getId(),
+        Integer.toHexString(object.getId()),
+        getPositionAsString(object));
   }
 
   private void handlePopulation(String name, CDXObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "populate "
-              + name
-              + " object with id "
-              + object.getId()
-              + "(0x"
-              + Integer.toHexString(object.getId())
-              + ") at "
-              + getPositionAsString(object));
-    }
+    LOGGER.debug(
+        "populate {} object with id {}(0x{}) at {}",
+        name,
+        object.getId(),
+        Integer.toHexString(object.getId()),
+        getPositionAsString(object));
   }
 
   private void handleProperty(CDXProperty property) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "handle tag "
-              + property.getTag()
-              + " (0x"
-              + Integer.toHexString(property.getTag())
-              + ") at "
-              + getPositionAsString(property)
-              + " with length "
-              + property.getLength()
-              + "(0x"
-              + Integer.toHexString(property.getLength())
-              + ")");
-    }
+    LOGGER.debug(
+        "handle tag {} (0x{}) at {} with length {}(0x{})",
+        property.getTag(),
+        Integer.toHexString(property.getTag()),
+        getPositionAsString(property),
+        property.getLength(),
+        Integer.toHexString(property.getLength()));
   }
 
   private void handleMissingTag(CDXObject object) throws IOException {
@@ -3036,7 +3018,7 @@ public class CDXReader {
     if (RIGID) {
       throw new IOException(message);
     }
-    logger.warn(message);
+    LOGGER.warn(message);
   }
 
   private void handleMissingTag(CDXProperty property) throws IOException {
@@ -3050,6 +3032,6 @@ public class CDXReader {
     if (RIGID) {
       throw new IOException(message);
     }
-    logger.warn(message);
+    LOGGER.warn(message);
   }
 }

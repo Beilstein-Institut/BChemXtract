@@ -28,15 +28,15 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDSettings;
 import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This holds various methods to convert values for the CDXML file format. */
 public class CDXMLUtils {
-  private static final Log logger = LogFactory.getLog(CDXMLUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXMLUtils.class);
 
   public static String convertTextJustificationToString(CDJustification value) throws IOException {
     return convertEnumToString(value, CDXMLTextJustification);
@@ -714,7 +714,7 @@ public class CDXMLUtils {
       try {
         list.addElement(Integer.parseInt(element));
       } catch (NumberFormatException e) {
-        logger.warn("Skipping non-integer element in CDElementList: \"" + element + "\"", e);
+        LOGGER.warn("Skipping non-integer element in CDElementList: \"{}\"", element, e);
       }
     }
     return list;
@@ -759,7 +759,7 @@ public class CDXMLUtils {
     try {
       return dateFormat.parse(value);
     } catch (ParseException e) {
-      logger.warn("Cannot convert date " + value, e);
+      LOGGER.warn("Cannot convert date {}", value, e);
       return null;
     }
   }

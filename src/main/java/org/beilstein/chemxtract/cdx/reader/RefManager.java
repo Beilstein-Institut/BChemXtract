@@ -24,12 +24,12 @@ package org.beilstein.chemxtract.cdx.reader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Object reference manger, used by {@link CDXReader} and {@link CDXMLReader}. */
 public class RefManager {
-  private static final Log logger = LogFactory.getLog(RefManager.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(RefManager.class);
 
   private Map<Integer, Object> references = new HashMap<>();
 
@@ -50,7 +50,7 @@ public class RefManager {
       if (rigid) {
         throw new IOException(message);
       }
-      logger.warn(message);
+      LOGGER.warn(message);
       return null;
     }
     while (object instanceof ReferenceContainer) {
@@ -73,7 +73,7 @@ public class RefManager {
       if (rigid) {
         throw new IOException(message);
       }
-      logger.warn(message);
+      LOGGER.warn(message);
       return null;
     }
     return (T) object;

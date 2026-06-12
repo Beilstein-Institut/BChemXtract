@@ -28,17 +28,17 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.cdx.datatypes.*;
 import org.beilstein.chemxtract.io.XMLEntityCatalog;
 import org.beilstein.chemxtract.io.XMLObject;
 import org.beilstein.chemxtract.io.XMLUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Reader for ChemDraw CDXML files. */
 public class CDXMLReader {
-  private static final Log logger = LogFactory.getLog(CDXMLReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXMLReader.class);
 
   private RefManager refManager = new RefManager();
   private Map<Integer, CDColor> colors = new HashMap<>();
@@ -1831,7 +1831,7 @@ public class CDXMLReader {
           try {
             values.add(Double.parseDouble(part));
           } catch (NumberFormatException e) {
-            logger.warn("Skipping non-numeric spectrum data point \"" + part + "\"", e);
+            LOGGER.warn("Skipping non-numeric spectrum data point \"{}\"", part, e);
           }
         }
       }
@@ -2163,7 +2163,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setEnhancedMetafile(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2176,7 +2176,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setOleObject(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2189,7 +2189,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setWindowsMetafile(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2531,7 +2531,7 @@ public class CDXMLReader {
       if (colors.containsKey(object.getAttributeAsInt(name))) {
         return colors.get(object.getAttributeAsInt(name));
       }
-      logger.warn("Could not resolve color index to color: " + object.getAttributeAsInt(name));
+      LOGGER.warn("Could not resolve color index to color: {}", object.getAttributeAsInt(name));
     }
     return null;
   }
@@ -2546,22 +2546,18 @@ public class CDXMLReader {
   }
 
   private void handleCreation(XMLObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("create " + object.getName() + " object at " + object.getLocation());
-    }
+    LOGGER.debug("create {} object at {}", object.getName(), object.getLocation());
   }
 
   private void handlePopulation(XMLObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("populate " + object.getName() + " object at " + object.getLocation());
-    }
+    LOGGER.debug("populate {} object at {}", object.getName(), object.getLocation());
   }
 
   private void handleMissingObject(XMLObject object) throws IOException {
     String message =
         "Encountered unexpected element \'" + object.getName() + "\' at " + object.getLocation();
 
-    logger.warn(message);
+    LOGGER.warn(message);
     if (object.getName().equals("annotation")) {
       return;
     }
@@ -2583,6 +2579,6 @@ public class CDXMLReader {
     if (RIGID) {
       throw new IOException(message);
     }
-    logger.warn(message);
+    LOGGER.warn(message);
   }
 }

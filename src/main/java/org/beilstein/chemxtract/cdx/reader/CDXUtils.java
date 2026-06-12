@@ -26,18 +26,18 @@ import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.cdx.datatypes.*;
 import org.beilstein.chemxtract.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class provides a set of static helper methods to do binary conversions and convert CDX
  * constant values to Java enums.
  */
 public class CDXUtils {
-  private static final Log logger = LogFactory.getLog(CDXUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXUtils.class);
 
   public static boolean isCDX(byte[] bytes) {
     return IOUtils.startsWithBytes(bytes, CDXConstants.getCdxSignature());
@@ -67,12 +67,11 @@ public class CDXUtils {
     // position += 16;
 
     int tag = CDXUtils.readUInt16(bytes, position[0]);
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "read root tag="
-              + Integer.toHexString(tag)
-              + " position="
-              + Integer.toHexString(position[0]));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "read root tag={} position={}",
+          Integer.toHexString(tag),
+          Integer.toHexString(position[0]));
     }
     position[0] += 2;
 
@@ -85,19 +84,14 @@ public class CDXUtils {
     int id = CDXUtils.readInt32(bytes, position[0]);
     position[0] += 4;
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "read object with tag 0x"
-              + Integer.toHexString(rootTag)
-              + " and  id "
-              + id
-              + "(0x"
-              + Integer.toHexString(id)
-              + ") at "
-              + (position[0] - 6)
-              + "(0x"
-              + Integer.toHexString(position[0] - 6)
-              + ")");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "read object with tag 0x{} and  id {}(0x{}) at {}(0x{})",
+          Integer.toHexString(rootTag),
+          id,
+          Integer.toHexString(id),
+          position[0] - 6,
+          Integer.toHexString(position[0] - 6));
     }
 
     CDXObject object = new CDXObject();
@@ -109,15 +103,12 @@ public class CDXUtils {
     while (position[0] < bytes.length) {
       int tag = CDXUtils.readUInt16(bytes, position[0]);
       position[0] += 2;
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "read tag=0x"
-                + Integer.toHexString(tag)
-                + " at "
-                + position[0]
-                + "(0x"
-                + Integer.toHexString(position[0])
-                + ")");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(
+            "read tag=0x{} at {}(0x{})",
+            Integer.toHexString(tag),
+            position[0],
+            Integer.toHexString(position[0]));
       }
       if (tag == CDXProp_EndObject) {
         break;
@@ -135,15 +126,12 @@ public class CDXUtils {
 
   private static CDXProperty readCDXProperty(int tag, byte[] bytes, int[] position)
       throws IOException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "read property with tag 0x"
-              + Integer.toHexString(tag)
-              + " at "
-              + (position[0] - 2)
-              + "(0x"
-              + Integer.toHexString(position[0] - 2)
-              + ")");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "read property with tag 0x{} at {}(0x{})",
+          Integer.toHexString(tag),
+          position[0] - 2,
+          Integer.toHexString(position[0] - 2));
     }
 
     CDXProperty property = new CDXProperty();
@@ -157,8 +145,8 @@ public class CDXUtils {
       length = CDXUtils.readInt32(bytes, position[0]);
       position[0] += 4;
     }
-    if (logger.isDebugEnabled()) {
-      logger.debug("property length=" + length);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("property length={}", length);
     }
     property.setLength(length);
 
@@ -1561,7 +1549,7 @@ public class CDXUtils {
     if (CDXReader.RIGID) {
       throw new IOException(message);
     }
-    logger.warn(message);
+    LOGGER.warn(message);
   }
 
   public static boolean containsLineWrapBug(CDDocument doc) {

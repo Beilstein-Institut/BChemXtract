@@ -26,17 +26,17 @@ import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to store intermediate values during the reading of CDX files. This class is
  * only used by the {@link CDXReader}.
  */
 public class CDXProperty {
-  private final Log logger = LogFactory.getLog(CDXProperty.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXProperty.class);
 
   /** Tag of the property. */
   private int tag;
@@ -500,7 +500,7 @@ public class CDXProperty {
     int index = CDXUtils.readUInt16(data, offset);
     CDFont font = fonts.get(index);
     if (font == null) {
-      logger.warn("Font " + index + "(0x" + Integer.toHexString(index) + ") not found");
+      LOGGER.warn("Font {}(0x{}) not found", index, Integer.toHexString(index));
       font = new CDFont();
       font.setName("Arial");
       font.setCharSet(CDCharSet.Win31Latin1);
@@ -553,7 +553,7 @@ public class CDXProperty {
     } else if (length == 4) {
       index = (int) CDXUtils.readUInt32(data, offset);
     } else {
-      logger.warn("Size of color reference not supported: " + length);
+      LOGGER.warn("Size of color reference not supported: {}", length);
       return null;
     }
 
@@ -839,7 +839,7 @@ public class CDXProperty {
         if (charSet == CDCharSet.Unknown) {
           charSetName = "windows-1252";
         } else if (charSetName == null) {
-          logger.warn("Unsupported charset " + charSet + "(" + charSetName + ")");
+          LOGGER.warn("Unsupported charset {}({})", charSet, charSetName);
           charSetName = "windows-1252";
         }
         try {
@@ -851,7 +851,7 @@ public class CDXProperty {
                   fontStyles[i].getColor(),
                   new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
-          logger.warn("Found unsupported encoding; text chunk discarded.", exception);
+          LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
       }
     }
@@ -865,7 +865,7 @@ public class CDXProperty {
         if (charSet == CDCharSet.Unknown) {
           charSetName = "windows-1252";
         } else if (charSetName == null) {
-          logger.warn("Unsupported charset " + charSet + "(" + charSetName + ")");
+          LOGGER.warn("Unsupported charset {}({})", charSet, charSetName);
           charSetName = "windows-1252";
         }
         try {
@@ -877,7 +877,7 @@ public class CDXProperty {
                   fontStyles[last].getColor(),
                   new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
-          logger.warn("Found unsupported encoding; text chunk discarded.", exception);
+          LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
       }
     } else {
