@@ -62,10 +62,10 @@ public class UnwantedAbbreviations {
   /**
    * Loads the unwanted word list from the {@code UnwantedAbbreviations.txt} resource file.
    *
-   * <p>Each non-blank line in the file is added to a set, which is then made unmodifiable for safe
-   * concurrent access.
+   * <p>Each non-blank line in the file is added to a set. The returned set is exposed only through
+   * an unmodifiable view in {@link #getUnwantedAbbreviations()}.
    *
-   * @return an unmodifiable set of unwanted words
+   * @return the set of unwanted words
    * @throws IOException if the resource cannot be found or read
    */
   private static Set<String> loadUnwantedAbbreviations() throws IOException {
@@ -84,7 +84,7 @@ public class UnwantedAbbreviations {
         }
       }
     }
-    return Collections.unmodifiableSet(words);
+    return words;
   }
 
   /**

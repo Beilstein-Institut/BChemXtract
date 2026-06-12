@@ -127,6 +127,9 @@ import org.slf4j.LoggerFactory;
 public class CDXProperty {
   private static final Logger LOGGER = LoggerFactory.getLogger(CDXProperty.class);
 
+  /** Fallback charset for CDX text whose charset is unknown or unsupported. */
+  private static final Charset CDX_FALLBACK_CHARSET = Charset.forName("windows-1252");
+
   /** Tag of the property. */
   private int tag;
 
@@ -926,11 +929,12 @@ public class CDXProperty {
         byte[] bytes = copyOfRange(text, starts[i], starts[i + 1]);
         CDCharSet charSet = fontStyles[i].getFont().getCharSet();
         String charSetName = charSet != null ? charSet.getCharSet() : null;
+        Charset fallback = null;
         if (charSet == CDCharSet.Unknown) {
-          charSetName = "windows-1252";
+          fallback = CDX_FALLBACK_CHARSET;
         } else if (charSetName == null) {
           LOGGER.warn("Unsupported charset {}", charSet);
-          charSetName = "windows-1252";
+          fallback = CDX_FALLBACK_CHARSET;
         }
         try {
           string.addChunk(
@@ -939,7 +943,7 @@ public class CDXProperty {
                   fontStyles[i].getSize(),
                   fontStyles[i].getFontType(),
                   fontStyles[i].getColor(),
-                  new String(bytes, charSetName)));
+                  fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
@@ -952,11 +956,12 @@ public class CDXProperty {
         CDCharSet charSet = fontStyles[last].getFont().getCharSet();
 
         String charSetName = charSet != null ? charSet.getCharSet() : null;
+        Charset fallback = null;
         if (charSet == CDCharSet.Unknown) {
-          charSetName = "windows-1252";
+          fallback = CDX_FALLBACK_CHARSET;
         } else if (charSetName == null) {
           LOGGER.warn("Unsupported charset {}", charSet);
-          charSetName = "windows-1252";
+          fallback = CDX_FALLBACK_CHARSET;
         }
         try {
           string.addChunk(
@@ -965,7 +970,7 @@ public class CDXProperty {
                   fontStyles[last].getSize(),
                   fontStyles[last].getFontType(),
                   fontStyles[last].getColor(),
-                  new String(bytes, charSetName)));
+                  fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
         } catch (UnsupportedEncodingException exception) {
           LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
         }
@@ -977,7 +982,7 @@ public class CDXProperty {
               12,
               new CDFontFace(),
               colors.get(0),
-              new String(text, Charset.forName("windows-1252"))));
+              new String(text, CDX_FALLBACK_CHARSET)));
     }
     return string;
   }
