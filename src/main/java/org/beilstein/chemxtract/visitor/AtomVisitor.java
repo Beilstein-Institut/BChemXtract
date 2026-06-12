@@ -23,8 +23,6 @@ package org.beilstein.chemxtract.visitor;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
@@ -32,6 +30,8 @@ import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Visitor class for traversing a ChemDraw fragment and collecting atom-related information. */
 public class AtomVisitor extends CDVisitor {
@@ -49,7 +49,7 @@ public class AtomVisitor extends CDVisitor {
   private final Set<CDAtom> skip;
 
   /** Logger instance for this class, used for diagnostic and error reporting. */
-  private static final Log logger = LogFactory.getLog(AtomVisitor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AtomVisitor.class);
 
   /**
    * Flag indicating whether to process atoms in raw unfiltered, untreated mode. When {@code true},
@@ -137,7 +137,7 @@ public class AtomVisitor extends CDVisitor {
     try {
       return UnwantedAbbreviations.contains(nickname);
     } catch (IOException e) {
-      logger.error("Unable to load unwanted abbreviations: " + e.getMessage());
+      LOGGER.error("Unable to load unwanted abbreviations: {}", e.getMessage());
     }
     return false;
   }

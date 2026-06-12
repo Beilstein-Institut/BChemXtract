@@ -23,8 +23,6 @@ package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.converter.ReactionConverter;
 import org.beilstein.chemxtract.model.BCXReaction;
@@ -40,6 +38,8 @@ import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for extracting chemical reactions from a {@link CDDocument}.
@@ -51,7 +51,7 @@ import org.openscience.cdk.interfaces.IReaction;
 public class ReactionXtractor {
 
   private final IChemObjectBuilder builder;
-  private final Log logger = LogFactory.getLog(ReactionXtractor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReactionXtractor.class);
   private Set<String> unknowns;
   private boolean sanitize = false;
 
@@ -131,7 +131,7 @@ public class ReactionXtractor {
           atomContainerReactionComponentMap.putIfAbsent(
               substance.get().getAtomContainer(), component);
         } catch (CDKException | IOException e) {
-          logger.error(e.getMessage());
+          LOGGER.error("Could not process fragment", e);
         }
       }
       ReactionStepVisitor rsVisitor = new ReactionStepVisitor(page);
@@ -147,7 +147,7 @@ public class ReactionXtractor {
           reactions.add(reaction);
           unknowns.addAll(reactionConverter.getUnknowns());
         } else {
-          logger.error("Could not convert reaction in document: " + document.getName());
+          LOGGER.error("Could not convert reaction in document: {}", document.getName());
         }
       }
     }
@@ -206,7 +206,7 @@ public class ReactionXtractor {
       component.setInchi(gen.getInchi());
       component.setInchiKey(gen.getInchiKey());
     } catch (CDKException e) {
-      logger.error("Failed to generate InChI for reaction component: " + e.getMessage(), e);
+      LOGGER.error("Failed to generate InChI for reaction component: {}", e.getMessage(), e);
     }
     Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
     // add bounds

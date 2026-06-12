@@ -23,8 +23,6 @@ package org.beilstein.chemxtract.utils;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.TextVisitor;
@@ -34,6 +32,8 @@ import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for handling Markush structures and replacing R-groups in molecules.
@@ -58,7 +58,7 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  */
 public class MarkushHandler {
 
-  private static final Log logger = LogFactory.getLog(MarkushHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MarkushHandler.class);
   private final Map<String, List<String>> residueLabels;
   private final SmilesParser smilesParser;
 
@@ -382,7 +382,7 @@ public class MarkushHandler {
       }
     }
     if (connectionPoints.size() != 1) {
-      logger.error("More than one or none connection point found.");
+      LOGGER.error("More than one or none connection point found.");
       return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
@@ -401,7 +401,7 @@ public class MarkushHandler {
     try {
       newBond = bondOrigin.clone();
     } catch (CloneNotSupportedException e) {
-      logger.error("Bond could not be cloned.");
+      LOGGER.error("Bond could not be cloned.");
       return;
     }
     newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});

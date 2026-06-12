@@ -23,20 +23,20 @@ package org.beilstein.chemxtract.visitor;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.*;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
 import org.beilstein.chemxtract.utils.Definitions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Visitor class for traversing a ChemDraw fragment and collecting bond-related information. */
 public class BondVisitor extends CDVisitor {
 
   private final List<CDBond> bonds;
   private final Set<CDBond> skip;
-  private static final Log logger = LogFactory.getLog(BondVisitor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(BondVisitor.class);
   private boolean rawMode;
 
   /**
@@ -209,7 +209,7 @@ public class BondVisitor extends CDVisitor {
     try {
       return (UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd));
     } catch (IOException e) {
-      logger.error("Unable to load unwanted abbreviations: " + e.getMessage());
+      LOGGER.error("Unable to load unwanted abbreviations: {}", e.getMessage());
     }
     return false;
   }
