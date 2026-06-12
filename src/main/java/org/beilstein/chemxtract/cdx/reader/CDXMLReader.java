@@ -383,7 +383,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_PrintTrimMarks)) {
         page.setPrintTrimMarks(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_SplitterPositions)) {
-        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
       } else if (name.equals(CDXMLProp_PageDefinition)) {
         page.setPageDefinition(CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
       } else if (name.equals(CDXMLProp_BoundsInParent)) {
@@ -616,7 +616,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_HideImplicitHydrogens)) {
         node.getSettings().setHideImplicitHydrogens(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLProp_NeedsClean)) {
-        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -1171,7 +1171,7 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLProp_NoGo)) {
         graphic.setNoGoType(CDXMLUtils.convertStringToNoGoType(root.getAttribute(name)));
       } else if (name.equals("FadePercent")) {
-        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -2418,9 +2418,11 @@ public class CDXMLReader {
       if (name.equals(CDXMLObj_Document)) {
         populateDocumentObject(object);
       } else if (name.equals(CDXMLObj_ColorTable)) {
-        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
       } else if (name.equals(CDXMLObj_FontTable)) {
-        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
       } else if (name.equals(CDXMLObj_Page)) {
         populatePageObject(object);
       } else if (name.equals(CDXMLObj_Group)) {
@@ -2434,13 +2436,15 @@ public class CDXMLReader {
       } else if (name.equals(CDXMLObj_Text)) {
         populateTextObject(object);
       } else if (name.equals(CDXMLObj_String)) {
-        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
       } else if (name.equals(CDXMLObj_Graphic)) {
         populateGraphicObject(object);
       } else if (name.equals(CDXMLObj_Arrow)) {
         populateArrowObject(object);
       } else if (name.equals(CDXMLObj_Represent)) {
-        LOGGER.debug("CDXML element '{}' not supported, skipping", name);
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
       } else if (name.equals(CDXMLObj_Curve)) {
         populateSplineObject(object);
       } else if (name.equals(CDXMLObj_EmbeddedObject)) {
