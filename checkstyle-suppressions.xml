@@ -7,8 +7,9 @@
     Constant names in these files deliberately mirror the ChemDraw CDX SDK
     specification (e.g. CDXTag_Object, CDXProp_FontTable, LineHeight_Variable)
     so they can be cross-referenced against the official format documentation.
-    Many are public API; renaming would be a breaking change with no
-    readability gain.
+    CDXConstants and CDSettings expose many of these as public API, where
+    renaming would be breaking; CDXMLConstants mirrors the same spec naming
+    for consistency and cross-referencing.
   -->
   <suppress checks="ConstantName" files="CDXConstants\.java"/>
   <suppress checks="ConstantName" files="CDXMLConstants\.java"/>

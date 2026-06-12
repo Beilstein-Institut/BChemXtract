@@ -27,13 +27,44 @@
     </Match>
 
     <!--
-      CT_CONSTRUCTOR_THROW: constructors validate input or load resources
-      and may throw (e.g. the lookup singletons throw IOException, CDK
-      builders can fail). The finalizer-attack vector this rule guards
-      against is not a realistic threat for this library, and the
-      alternative (static factories everywhere) is an API break.
+      CT_CONSTRUCTOR_THROW: scoped per class so a genuinely-bad
+      constructor-throw elsewhere is not silently hidden. Each constructor
+      below throws by design:
+
+        - CDBond: the copy constructor CDBond(CDBond) throws
+          IllegalArgumentException to reject a null source - a defensive
+          guard, not a recoverable condition.
+        - ReactionAgents, SmilesAbbreviations: lookup singletons whose
+          private constructors build a SMILESLookupReader and load a SMILES
+          abbreviation resource at initialization, declaring IOException.
+        - UnwantedAbbreviations, UnwantedWords: lookup singletons whose
+          private constructors load a classpath resource via
+          getResourceAsStream and throw IOException if it is missing or
+          unreadable.
+
+      The finalizer-attack vector this rule guards against is not a
+      realistic threat for these classes (private singleton constructors;
+      a copy constructor with a null-guard), and the alternative (static
+      factories everywhere) is an API break.
     -->
     <Match>
+        <Class name="org.beilstein.chemxtract.cdx.CDBond"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.ReactionAgents"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.SmilesAbbreviations"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.UnwantedAbbreviations"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.UnwantedWords"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
 

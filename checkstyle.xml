@@ -56,7 +56,7 @@
             <property name="scope" value="public"/>
             <property name="allowMissingPropertyJavadoc" value="true"/>
             <!-- Reported for visibility but non-blocking: many public methods
-                 still lack Javadoc; writing them is tracked as a follow-up.
+                 still lack Javadoc; a dedicated documentation pass is deferred.
                  The sibling JavadocMethod check (validates EXISTING Javadoc)
                  stays at blocking severity. -->
             <property name="severity" value="info"/>
