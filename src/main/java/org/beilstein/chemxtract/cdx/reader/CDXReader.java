@@ -2982,31 +2982,37 @@ public class CDXReader {
   }
 
   private void handleCreation(String name, CDXObject object) {
-    LOGGER.debug(
-        "create {} object with id {}(0x{}) at {}",
-        name,
-        object.getId(),
-        Integer.toHexString(object.getId()),
-        getPositionAsString(object));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "create {} object with id {}(0x{}) at {}",
+          name,
+          object.getId(),
+          Integer.toHexString(object.getId()),
+          getPositionAsString(object));
+    }
   }
 
   private void handlePopulation(String name, CDXObject object) {
-    LOGGER.debug(
-        "populate {} object with id {}(0x{}) at {}",
-        name,
-        object.getId(),
-        Integer.toHexString(object.getId()),
-        getPositionAsString(object));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "populate {} object with id {}(0x{}) at {}",
+          name,
+          object.getId(),
+          Integer.toHexString(object.getId()),
+          getPositionAsString(object));
+    }
   }
 
   private void handleProperty(CDXProperty property) {
-    LOGGER.debug(
-        "handle tag {} (0x{}) at {} with length {}(0x{})",
-        property.getTag(),
-        Integer.toHexString(property.getTag()),
-        getPositionAsString(property),
-        property.getLength(),
-        Integer.toHexString(property.getLength()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "handle tag {} (0x{}) at {} with length {}(0x{})",
+          property.getTag(),
+          Integer.toHexString(property.getTag()),
+          getPositionAsString(property),
+          property.getLength(),
+          Integer.toHexString(property.getLength()));
+    }
   }
 
   private void handleMissingTag(CDXObject object) throws IOException {

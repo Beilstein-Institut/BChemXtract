@@ -2546,11 +2546,15 @@ public class CDXMLReader {
   }
 
   private void handleCreation(XMLObject object) {
-    LOGGER.debug("create {} object at {}", object.getName(), object.getLocation());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("create {} object at {}", object.getName(), object.getLocation());
+    }
   }
 
   private void handlePopulation(XMLObject object) {
-    LOGGER.debug("populate {} object at {}", object.getName(), object.getLocation());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("populate {} object at {}", object.getName(), object.getLocation());
+    }
   }
 
   private void handleMissingObject(XMLObject object) throws IOException {

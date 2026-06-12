@@ -60,12 +60,14 @@ public class XMLReaderHandler implements ContentHandler {
   @Override
   public void startElement(String uri, String localName, String name, Attributes atts)
       throws SAXException {
-    LOGGER.debug(
-        "Start element {}{}",
-        localName,
-        locator == null
-            ? ""
-            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "Start element {}{}",
+          localName,
+          locator == null
+              ? ""
+              : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    }
     if (!stack.isEmpty()) {
       XMLObject object = stack.peek();
       object.addText(sb.length() > 0 ? sb.toString() : null);
@@ -96,12 +98,14 @@ public class XMLReaderHandler implements ContentHandler {
    */
   @Override
   public void endElement(String uri, String localName, String name) throws SAXException {
-    LOGGER.debug(
-        "End element {}{}",
-        localName,
-        locator == null
-            ? ""
-            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "End element {}{}",
+          localName,
+          locator == null
+              ? ""
+              : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    }
 
     XMLObject object = stack.pop();
     if (stack.isEmpty()) {
@@ -117,11 +121,13 @@ public class XMLReaderHandler implements ContentHandler {
    */
   @Override
   public void characters(char[] ch, int start, int length) throws SAXException {
-    LOGGER.debug(
-        "Characters{}",
-        locator == null
-            ? ""
-            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "Characters{}",
+          locator == null
+              ? ""
+              : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
+    }
 
     sb.append(new String(ch, start, length));
   }
