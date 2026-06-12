@@ -130,8 +130,7 @@ public class AtomConverter {
       try {
         configureIsotope(atom, cdAtom.getIsotope());
       } catch (IOException e) {
-        LOGGER.error("Unable to configure isotope for : {}", atomSymbol);
-        LOGGER.error(e.getMessage());
+        LOGGER.error("Unable to configure isotope for: {}", atomSymbol, e);
       }
     }
     atomMap.putIfAbsent(cdAtom, atom);
@@ -173,8 +172,8 @@ public class AtomConverter {
     } catch (IllegalArgumentException | IOException e) {
       LOGGER.error(
           "Unexpected behaviour in creating an atom with symbol: {}. PseudoAtom will be created.",
-          symbol);
-      LOGGER.error(e.getMessage());
+          symbol,
+          e);
     }
     LOGGER.info("Unknown symbol, PseudoAtom created for {}.", symbol);
     if (IChemObjectReader.Mode.STRICT.equals(mode)) {

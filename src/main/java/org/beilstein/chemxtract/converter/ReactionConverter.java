@@ -322,7 +322,7 @@ public class ReactionConverter {
               try {
                 return !UnwantedWords.contains(a);
               } catch (IOException e) {
-                LOGGER.error(e.getMessage());
+                LOGGER.error("Unable to check unwanted words list", e);
                 return false;
               }
             })

@@ -381,7 +381,7 @@ public class FragmentConverter {
         atom.setAtomTypeName(originalAtomTypeNames[i]);
       }
     } catch (CDKException e) {
-      LOGGER.error("Unable to add implicit hydrogens, due to: {}", e.getMessage());
+      LOGGER.error("Unable to add implicit hydrogens", e);
     }
   }
 
@@ -450,7 +450,7 @@ public class FragmentConverter {
         }
       }
     } catch (CDKException e) {
-      LOGGER.error(e.getMessage());
+      LOGGER.error("Unable to set radicals on atom container", e);
     }
   }
 

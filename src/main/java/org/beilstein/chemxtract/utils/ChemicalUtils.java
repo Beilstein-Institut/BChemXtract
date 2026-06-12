@@ -80,7 +80,7 @@ public class ChemicalUtils {
       // InChI generation failed
       CDKException exception =
           new CDKException("InChI failed: " + status.toString() + " [" + gen.getMessage() + "]");
-      LOGGER.error("SMILES generation failed", exception);
+      LOGGER.error("InChI generation failed", exception);
       throw exception;
     }
     return gen;

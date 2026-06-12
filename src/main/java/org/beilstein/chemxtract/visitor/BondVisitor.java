@@ -209,7 +209,7 @@ public class BondVisitor extends CDVisitor {
     try {
       return (UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd));
     } catch (IOException e) {
-      LOGGER.error("Unable to load unwanted abbreviations: {}", e.getMessage());
+      LOGGER.error("Unable to load unwanted abbreviations", e);
     }
     return false;
   }

@@ -137,7 +137,7 @@ public class AtomVisitor extends CDVisitor {
     try {
       return UnwantedAbbreviations.contains(nickname);
     } catch (IOException e) {
-      LOGGER.error("Unable to load unwanted abbreviations: {}", e.getMessage());
+      LOGGER.error("Unable to load unwanted abbreviations", e);
     }
     return false;
   }
