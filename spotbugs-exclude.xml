@@ -3,7 +3,7 @@
   SpotBugs exclude filter for BChemXtract.
 
   Add <Match> blocks here to suppress known false positives or accepted
-  issues. Each entry MUST justify itself in a comment. Empty by default.
+  issues. Each entry MUST justify itself in a comment.
 
   See: https://spotbugs.readthedocs.io/en/stable/filter.html
 -->
@@ -11,4 +11,54 @@
     xmlns="https://github.com/spotbugs/filter/3.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+      EI_EXPOSE_REP / EI_EXPOSE_REP2: the CDX object model (CDDocument,
+      CDPage, CDFragment, ...) is an intentionally mutable document tree -
+      readers build it incrementally and visitors return live collections.
+      Defensive copies would change aliasing semantics that consumers rely
+      on. Revisit if the model API is redesigned (major version).
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+      CT_CONSTRUCTOR_THROW: constructors validate input or load resources
+      and may throw (e.g. the lookup singletons throw IOException, CDK
+      builders can fail). The finalizer-attack vector this rule guards
+      against is not a realistic threat for this library, and the
+      alternative (static factories everywhere) is an API break.
+    -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+      DCN_NULLPOINTER_EXCEPTION: CDK's SmilesGenerator throws NPE on some
+      malformed structures; ChemicalUtils deliberately catches it (in a
+      multi-catch) to degrade to a null SMILES instead of failing the whole
+      extraction.
+    -->
+    <Match>
+        <Class name="org.beilstein.chemxtract.utils.ChemicalUtils"/>
+        <Bug pattern="DCN_NULLPOINTER_EXCEPTION"/>
+    </Match>
+
+    <!--
+      DMI_HARDCODED_ABSOLUTE_FILENAME: the flagged strings are classpath
+      resource paths (Definitions.*_PATH used with getResourceAsStream),
+      not filesystem paths.
+    -->
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.ReactionAgents"/>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+    </Match>
+    <Match>
+        <Class name="org.beilstein.chemxtract.lookups.SmilesAbbreviations"/>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+    </Match>
 </FindBugsFilter>

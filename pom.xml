@@ -283,6 +283,7 @@
 						</dependencies>
 						<configuration>
 							<configLocation>${project.basedir}/checkstyle.xml</configLocation>
+							<suppressionsLocation>${project.basedir}/checkstyle-suppressions.xml</suppressionsLocation>
 							<consoleOutput>true</consoleOutput>
 							<failsOnError>false</failsOnError>
 							<failOnViolation>false</failOnViolation>
