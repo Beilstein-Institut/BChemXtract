@@ -584,11 +584,12 @@
 			<version>2.26.0</version>
 		</dependency>
 
-		<!-- The Log4j 2 SLF4J Binding allows applications coded to the SLF4J
-      API to use Log4j 2 as the implementation. -->
+		<!-- The Log4j 2 provider for the SLF4J 2.x API (ServiceLoader-based).
+		     log4j-slf4j-impl only supports SLF4J 1.x and leaves SLF4J 2.x on
+		     its NOP fallback. -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
 			<version>2.26.0</version>
 		</dependency>
 
