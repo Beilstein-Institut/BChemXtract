@@ -24,8 +24,6 @@ package org.beilstein.chemxtract.io;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.XMLConstants;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.*;
@@ -33,7 +31,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 /** This class holds various helper methods for XML related actions. */
 public class XMLUtils {
-  private static final Log logger = LogFactory.getLog(XMLUtils.class);
 
   /**
    * Parse a XML document and return the root XML element.

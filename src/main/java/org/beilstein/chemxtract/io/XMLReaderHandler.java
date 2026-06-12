@@ -22,8 +22,8 @@
 package org.beilstein.chemxtract.io;
 
 import java.util.Stack;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -31,7 +31,7 @@ import org.xml.sax.SAXException;
 
 /** Default content handler to generate an instance of {@link XMLObject}. */
 public class XMLReaderHandler implements ContentHandler {
-  private static final Log logger = LogFactory.getLog(XMLReaderHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(XMLReaderHandler.class);
 
   private Stack<XMLObject> stack = new Stack<>();
   private XMLObject root;
@@ -60,17 +60,12 @@ public class XMLReaderHandler implements ContentHandler {
   @Override
   public void startElement(String uri, String localName, String name, Attributes atts)
       throws SAXException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "Start element "
-              + localName
-              + (locator == null
-                  ? ""
-                  : " at line "
-                      + locator.getLineNumber()
-                      + " and column "
-                      + locator.getColumnNumber()));
-    }
+    LOGGER.debug(
+        "Start element {}{}",
+        localName,
+        locator == null
+            ? ""
+            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
     if (!stack.isEmpty()) {
       XMLObject object = stack.peek();
       object.addText(sb.length() > 0 ? sb.toString() : null);
@@ -101,17 +96,12 @@ public class XMLReaderHandler implements ContentHandler {
    */
   @Override
   public void endElement(String uri, String localName, String name) throws SAXException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "End element "
-              + localName
-              + (locator == null
-                  ? ""
-                  : " at line "
-                      + locator.getLineNumber()
-                      + " and column "
-                      + locator.getColumnNumber()));
-    }
+    LOGGER.debug(
+        "End element {}{}",
+        localName,
+        locator == null
+            ? ""
+            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
 
     XMLObject object = stack.pop();
     if (stack.isEmpty()) {
@@ -127,16 +117,11 @@ public class XMLReaderHandler implements ContentHandler {
    */
   @Override
   public void characters(char[] ch, int start, int length) throws SAXException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "Characters"
-              + (locator == null
-                  ? ""
-                  : " at line "
-                      + locator.getLineNumber()
-                      + " and column "
-                      + locator.getColumnNumber()));
-    }
+    LOGGER.debug(
+        "Characters{}",
+        locator == null
+            ? ""
+            : " at line " + locator.getLineNumber() + " and column " + locator.getColumnNumber());
 
     sb.append(new String(ch, start, length));
   }
@@ -170,7 +155,7 @@ public class XMLReaderHandler implements ContentHandler {
    */
   @Override
   public void skippedEntity(String name) throws SAXException {
-    logger.warn("Skipped entity found:" + name);
+    LOGGER.warn("Skipped entity found:{}", name);
     // ignore
   }
 
