@@ -850,53 +850,14 @@ public class CDXProperty {
     for (int i = 0; i < styles - 1; i++) {
       if (starts[i] != starts[i + 1]) {
         byte[] bytes = copyOfRange(text, starts[i], starts[i + 1]);
-        CDCharSet charSet = fontStyles[i].getFont().getCharSet();
-        String charSetName = charSet != null ? charSet.getCharSet() : null;
-        Charset fallback = null;
-        if (charSet == CDCharSet.Unknown) {
-          fallback = CDX_FALLBACK_CHARSET;
-        } else if (charSetName == null) {
-          LOGGER.warn("Unsupported charset {}", charSet);
-          fallback = CDX_FALLBACK_CHARSET;
-        }
-        try {
-          string.addChunk(
-              new CDStyledString.CDXChunk(
-                  fontStyles[i].getFont(),
-                  fontStyles[i].getSize(),
-                  fontStyles[i].getFontType(),
-                  fontStyles[i].getColor(),
-                  fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
-        } catch (UnsupportedEncodingException exception) {
-          LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
-        }
+        addStyledChunk(string, bytes, fontStyles[i]);
       }
     }
     if (starts.length > 0) {
       int last = starts.length - 1;
       if (starts[last] < text.length) {
         byte[] bytes = copyOfRange(text, starts[last], text.length);
-        CDCharSet charSet = fontStyles[last].getFont().getCharSet();
-
-        String charSetName = charSet != null ? charSet.getCharSet() : null;
-        Charset fallback = null;
-        if (charSet == CDCharSet.Unknown) {
-          fallback = CDX_FALLBACK_CHARSET;
-        } else if (charSetName == null) {
-          LOGGER.warn("Unsupported charset {}", charSet);
-          fallback = CDX_FALLBACK_CHARSET;
-        }
-        try {
-          string.addChunk(
-              new CDStyledString.CDXChunk(
-                  fontStyles[last].getFont(),
-                  fontStyles[last].getSize(),
-                  fontStyles[last].getFontType(),
-                  fontStyles[last].getColor(),
-                  fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
-        } catch (UnsupportedEncodingException exception) {
-          LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
-        }
+        addStyledChunk(string, bytes, fontStyles[last]);
       }
     } else {
       string.addChunk(
@@ -908,6 +869,39 @@ public class CDXProperty {
               new String(text, CDX_FALLBACK_CHARSET)));
     }
     return string;
+  }
+
+  /**
+   * Decodes a styled-text byte range with the font style's charset and appends it as a chunk.
+   *
+   * <p>Falls back to {@link #CDX_FALLBACK_CHARSET} when the charset is {@code Unknown} or its name
+   * is unresolved; a chunk whose bytes cannot be decoded is discarded with a warning.
+   *
+   * @param string the styled string to append the decoded chunk to
+   * @param bytes the raw bytes of the chunk
+   * @param fontStyle the font style (font, size, type, colour, charset) for the chunk
+   */
+  private void addStyledChunk(CDStyledString string, byte[] bytes, CDXFontStyle fontStyle) {
+    CDCharSet charSet = fontStyle.getFont().getCharSet();
+    String charSetName = charSet != null ? charSet.getCharSet() : null;
+    Charset fallback = null;
+    if (charSet == CDCharSet.Unknown) {
+      fallback = CDX_FALLBACK_CHARSET;
+    } else if (charSetName == null) {
+      LOGGER.warn("Unsupported charset {}", charSet);
+      fallback = CDX_FALLBACK_CHARSET;
+    }
+    try {
+      string.addChunk(
+          new CDStyledString.CDXChunk(
+              fontStyle.getFont(),
+              fontStyle.getSize(),
+              fontStyle.getFontType(),
+              fontStyle.getColor(),
+              fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
+    } catch (UnsupportedEncodingException exception) {
+      LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
+    }
   }
 
   private byte[] copyOfRange(byte[] data, int start, int end) {
