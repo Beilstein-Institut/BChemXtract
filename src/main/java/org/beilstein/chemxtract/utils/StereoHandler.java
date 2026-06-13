@@ -21,14 +21,21 @@
  */
 package org.beilstein.chemxtract.utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.stereo.Projection;
 import org.openscience.cdk.stereo.StereoElementFactory;
 import org.openscience.cdk.stereo.TetrahedralChirality;
@@ -158,11 +165,10 @@ public class StereoHandler {
         stereoElements.stream()
             .filter(
                 element ->
-                    (element.getFocus() instanceof IAtom atom
+                    element.getFocus() instanceof IAtom atom
                         && wavyBonds.stream()
                             .anyMatch(
-                                bond ->
-                                    bond.getBegin().equals(atom) || bond.getEnd().equals(atom))))
+                                bond -> bond.getBegin().equals(atom) || bond.getEnd().equals(atom)))
             .toList();
     stereoElements.removeAll(wavyElements);
   }
@@ -181,7 +187,9 @@ public class StereoHandler {
       CDAtom cdAtom = entry.getKey();
       IAtom atom = entry.getValue();
 
-      if (!CDAtomGeometry.Tetrahedral.equals(cdAtom.getAtomGeometry())) continue;
+      if (!CDAtomGeometry.Tetrahedral.equals(cdAtom.getAtomGeometry())) {
+        continue;
+      }
       CDAtomCIPType cipType = cdAtom.getStereochemistry();
       ITetrahedralChirality.Stereo stereo;
       if (cipType == CDAtomCIPType.R) {
@@ -228,26 +236,5 @@ public class StereoHandler {
       stereoElements.add(chirality);
     }
     return stereoElements;
-  }
-
-  /**
-   * Sets bond stereochemistry in an {@link IAtomContainer} based on CDK bond display types.
-   *
-   * @param atomContainer the {@link IAtomContainer} whose bonds will be updated
-   */
-  private static void setBondStereoByDisplayType(IAtomContainer atomContainer) {
-    for (IBond bond : atomContainer.bonds()) {
-      if (bond.getDisplay() == null) {
-        bond.setStereo(IBond.Stereo.NONE);
-      }
-      switch (bond.getDisplay()) {
-        case WedgeBegin, Bold -> bond.setStereo(IBond.Stereo.UP);
-        case WedgedHashBegin, Hash -> bond.setStereo(IBond.Stereo.DOWN);
-        case WedgeEnd -> bond.setStereo(IBond.Stereo.UP_INVERTED);
-        case WedgedHashEnd -> bond.setStereo(IBond.Stereo.DOWN_INVERTED);
-        case Wavy -> bond.setStereo(IBond.Stereo.UP_OR_DOWN);
-        default -> bond.setStereo(IBond.Stereo.NONE);
-      }
-    }
   }
 }

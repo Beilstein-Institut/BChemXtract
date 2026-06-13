@@ -27,20 +27,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/** Loads abbreviation-to-SMILES lookup tables and resolves abbreviations to CDK structures. */
 public class SMILESLookupReader {
 
-  private static final Log logger = LogFactory.getLog(SMILESLookupReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SMILESLookupReader.class);
   private final SmilesParser smilesParser;
 
   public SMILESLookupReader(IChemObjectBuilder builder) {
@@ -52,14 +54,21 @@ public class SMILESLookupReader {
    * path
    *
    * @param path String path to the abbreviation file
+   * @param initialSize the initial capacity for the backing lookup map
+   * @return a map of abbreviation to its corresponding SMILES string
    * @throws IOException if file could not be imported
    */
   public Map<String, String> loadSmilesLookup(String path, int initialSize) throws IOException {
     try (InputStream in = SMILESLookupReader.class.getResourceAsStream(path)) {
-      if (in != null) return this.loadAbbreviations(in, initialSize);
-      File file = new File(path);
-      if (file.exists() && file.canRead())
-        return this.loadAbbreviations(new FileInputStream(file), initialSize);
+      if (in != null) {
+        return this.loadAbbreviations(in, initialSize);
+      }
+    }
+    File file = new File(path);
+    if (file.exists() && file.canRead()) {
+      try (InputStream fileIn = new FileInputStream(file)) {
+        return this.loadAbbreviations(fileIn, initialSize);
+      }
     }
     return Collections.emptyMap();
   }
@@ -74,7 +83,8 @@ public class SMILESLookupReader {
   private Map<String, String> loadAbbreviations(InputStream inputStream, int initialSize)
       throws IOException {
     Map<String, String> abbreviations = new HashMap<>(initialSize);
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         if (line.isEmpty() || line.charAt(0) == '#') {
@@ -83,7 +93,7 @@ public class SMILESLookupReader {
         try {
           this.addAbbreviationToMap(line, abbreviations);
         } catch (CDKException e) {
-          logger.warn("Invalid SMILES", e);
+          LOGGER.warn("Invalid SMILES", e);
         }
       }
     }

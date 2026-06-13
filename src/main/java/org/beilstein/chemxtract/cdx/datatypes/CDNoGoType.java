@@ -21,6 +21,9 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/**
+ * No-go reaction overlay styles drawn over an arrow, as defined by the ChemDraw CDX specification.
+ */
 public enum CDNoGoType {
   Unspecified,
   None,

@@ -21,7 +21,48 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
+import org.beilstein.chemxtract.cdx.datatypes.CDCharSet;
+import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
+import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGeometryType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGraphicType;
+import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
+import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
+import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDNoGoType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
+import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
+import org.beilstein.chemxtract.cdx.datatypes.CDRingBondCount;
+import org.beilstein.chemxtract.cdx.datatypes.CDSequenceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumClass;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumXType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumYType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
+import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
+import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 
 /** Constants defined by the CDXML file format Specification. */
 public class CDXMLConstants {

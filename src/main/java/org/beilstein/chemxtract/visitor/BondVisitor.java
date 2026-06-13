@@ -22,21 +22,29 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.io.IOException;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBond;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDText;
+import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
 import org.beilstein.chemxtract.utils.Definitions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Visitor class for traversing a ChemDraw fragment and collecting bond-related information. */
 public class BondVisitor extends CDVisitor {
 
   private final List<CDBond> bonds;
   private final Set<CDBond> skip;
-  private static final Log logger = LogFactory.getLog(BondVisitor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(BondVisitor.class);
   private boolean rawMode;
 
   /**
@@ -100,15 +108,20 @@ public class BondVisitor extends CDVisitor {
                                   + " atoms"));
 
           CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
-          if (!bond.getBegin().getFragments().isEmpty()) bond.setBegin(conAtom);
-          else bond.setEnd(conAtom);
+          if (!bond.getBegin().getFragments().isEmpty()) {
+            bond.setBegin(conAtom);
+          } else {
+            bond.setEnd(conAtom);
+          }
         }
       }
       if ((onlyElementsAtBond(bond)
               || isRGroupBond(bond)
               || isMultiAttachmentBond(bond)
               || isAbbreviationAtBond(bond))
-          && !skip.contains(bond)) bonds.add(bond);
+          && !skip.contains(bond)) {
+        bonds.add(bond);
+      }
     }
   }
 
@@ -134,10 +147,10 @@ public class BondVisitor extends CDVisitor {
             && bond.getBegin().getChemicalWarning() != null)
         || (!CDNodeType.Element.equals(bond.getEnd().getNodeType())
             && bond.getEnd().getChemicalWarning() != null)
-        || (CDNodeType.Fragment.equals(bond.getBegin().getNodeType())
-            || CDNodeType.Fragment.equals(bond.getEnd().getNodeType())
-            || CDNodeType.Nickname.equals(bond.getBegin().getNodeType())
-            || CDNodeType.Nickname.equals(bond.getEnd().getNodeType()));
+        || CDNodeType.Fragment.equals(bond.getBegin().getNodeType())
+        || CDNodeType.Fragment.equals(bond.getEnd().getNodeType())
+        || CDNodeType.Nickname.equals(bond.getBegin().getNodeType())
+        || CDNodeType.Nickname.equals(bond.getEnd().getNodeType());
   }
 
   /**
@@ -207,9 +220,9 @@ public class BondVisitor extends CDVisitor {
             .orElseGet(() -> bond.getEnd().getLabelText());
 
     try {
-      return (UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd));
+      return UnwantedAbbreviations.contains(textBegin) || UnwantedAbbreviations.contains(textEnd);
     } catch (IOException e) {
-      logger.error("Unable to load unwanted abbreviations: " + e.getMessage());
+      LOGGER.error("Unable to load unwanted abbreviations", e);
     }
     return false;
   }

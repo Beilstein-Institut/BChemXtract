@@ -21,7 +21,11 @@
  */
 package org.beilstein.chemxtract.visitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDPage;
@@ -98,7 +102,9 @@ public class TextVisitor extends CDVisitor {
       // Case 2: plain comma-separated list if no (a)/(b)/(c) found
       if (abbreviations.isEmpty()) {
         for (String part : rhs.split("\\s*,\\s*")) {
-          if (!part.isEmpty()) abbreviations.add(part.trim());
+          if (!part.isEmpty()) {
+            abbreviations.add(part.trim());
+          }
         }
       }
 

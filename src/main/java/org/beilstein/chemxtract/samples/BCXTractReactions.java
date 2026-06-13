@@ -54,11 +54,11 @@ public class BCXTractReactions {
   }
 
   public void extract(String filename) throws Exception {
-    // load input CDX file
-    InputStream in = new FileInputStream(filename);
-
-    // parse CDX into in-memory model
-    CDDocument document = CDXReader.readDocument(in);
+    // load input CDX file and parse into in-memory model
+    CDDocument document;
+    try (InputStream in = new FileInputStream(filename)) {
+      document = CDXReader.readDocument(in);
+    }
 
     // extract reactions from CDX document
     ReactionXtractor xtractor = new ReactionXtractor();
@@ -69,7 +69,6 @@ public class BCXTractReactions {
     int i = 0;
     for (BCXReaction bcxReaction : bcxReactions) {
       String outputfile = bcxReaction.getWebRinchiKey() + ".png";
-      FileOutputStream fos = new FileOutputStream(outputfile);
       IReaction reaction = sp.parseReactionSmiles(bcxReaction.getReactionSmiles());
       DepictionGenerator dg =
           new DepictionGenerator()
@@ -77,9 +76,9 @@ public class BCXTractReactions {
               .withFillToFit()
               .withBackgroundColor(Color.WHITE);
       Depiction d = dg.depict(reaction);
-      d.writeTo(Depiction.PNG_FMT, fos);
-      fos.flush();
-      fos.close();
+      try (FileOutputStream fos = new FileOutputStream(outputfile)) {
+        d.writeTo(Depiction.PNG_FMT, fos);
+      }
       i++;
     }
 

@@ -21,22 +21,37 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.*;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDRectangle;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDCharSet;
+import org.beilstein.chemxtract.cdx.datatypes.CDColor;
+import org.beilstein.chemxtract.cdx.datatypes.CDElementList;
+import org.beilstein.chemxtract.cdx.datatypes.CDFont;
+import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDGenericList;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to store intermediate values during the reading of CDX files. This class is
  * only used by the {@link CDXReader}.
  */
 public class CDXProperty {
-  private final Log logger = LogFactory.getLog(CDXProperty.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXProperty.class);
+
+  /** Fallback charset for CDX text whose charset is unknown or unsupported. */
+  private static final Charset CDX_FALLBACK_CHARSET = Charset.forName("windows-1252");
 
   /** Tag of the property. */
   private int tag;
@@ -443,10 +458,10 @@ public class CDXProperty {
       int tag = CDXUtils.readUInt16(data, i + 4);
 
       switch (tag) {
-        case CDXProp_Atom_Charge:
+        case CDXConstants.CDXProp_Atom_Charge:
           properties.put("Charge", object);
           break;
-        case CDXProp_Atom_Radical:
+        case CDXConstants.CDXProp_Atom_Radical:
           properties.put("Radical", object);
           break;
         default:
@@ -500,7 +515,7 @@ public class CDXProperty {
     int index = CDXUtils.readUInt16(data, offset);
     CDFont font = fonts.get(index);
     if (font == null) {
-      logger.warn("Font " + index + "(0x" + Integer.toHexString(index) + ") not found");
+      LOGGER.warn("Font {}(0x{}) not found", index, Integer.toHexString(index));
       font = new CDFont();
       font.setName("Arial");
       font.setCharSet(CDCharSet.Win31Latin1);
@@ -553,7 +568,7 @@ public class CDXProperty {
     } else if (length == 4) {
       index = (int) CDXUtils.readUInt32(data, offset);
     } else {
-      logger.warn("Size of color reference not supported: " + length);
+      LOGGER.warn("Size of color reference not supported: {}", length);
       return null;
     }
 
@@ -605,154 +620,156 @@ public class CDXProperty {
   private CDCharSet readCharSet(int offset) throws IOException {
     int charSet = CDXUtils.readUInt16(data, offset);
     switch (charSet) {
-      case CDXCharSetUnknown:
+      case CDXConstants.CDXCharSetUnknown:
         return CDCharSet.Unknown;
-      case CDXCharSetEBCDICOEM:
+      case CDXConstants.CDXCharSetEBCDICOEM:
         return CDCharSet.EBCDICOEM;
-      case CDXCharSetMSDOSUS:
+      case CDXConstants.CDXCharSetMSDOSUS:
         return CDCharSet.MSDOSUS;
-      case CDXCharSetEBCDIC500V1:
+      case CDXConstants.CDXCharSetEBCDIC500V1:
         return CDCharSet.EBCDIC500V1;
-      case CDXCharSetArabicASMO708:
+      case CDXConstants.CDXCharSetArabicASMO708:
         return CDCharSet.ArabicASMO708;
-      case CDXCharSetArabicASMO449P:
+      case CDXConstants.CDXCharSetArabicASMO449P:
         return CDCharSet.ArabicASMO449P;
-      case CDXCharSetArabicTransparent:
+      case CDXConstants.CDXCharSetArabicTransparent:
         return CDCharSet.ArabicTransparent;
-      case CDXCharSetArabicTransparentASMO:
+      case CDXConstants.CDXCharSetArabicTransparentASMO:
         return CDCharSet.ArabicTransparentASMO;
-      case CDXCharSetGreek437G:
+      case CDXConstants.CDXCharSetGreek437G:
         return CDCharSet.Greek437G;
-      case CDXCharSetBalticOEM:
+      case CDXConstants.CDXCharSetBalticOEM:
         return CDCharSet.BalticOEM;
-      case CDXCharSetMSDOSLatin1:
+      case CDXConstants.CDXCharSetMSDOSLatin1:
         return CDCharSet.MSDOSLatin1;
-      case CDXCharSetMSDOSLatin2:
+      case CDXConstants.CDXCharSetMSDOSLatin2:
         return CDCharSet.MSDOSLatin2;
-      case CDXCharSetIBMCyrillic:
+      case CDXConstants.CDXCharSetIBMCyrillic:
         return CDCharSet.IBMCyrillic;
-      case CDXCharSetIBMTurkish:
+      case CDXConstants.CDXCharSetIBMTurkish:
         return CDCharSet.IBMTurkish;
-      case CDXCharSetMSDOSPortuguese:
+      case CDXConstants.CDXCharSetMSDOSPortuguese:
         return CDCharSet.MSDOSPortuguese;
-      case CDXCharSetMSDOSIcelandic:
+      case CDXConstants.CDXCharSetMSDOSIcelandic:
         return CDCharSet.MSDOSIcelandic;
-      case CDXCharSetHebrewOEM:
+      case CDXConstants.CDXCharSetHebrewOEM:
         return CDCharSet.HebrewOEM;
-      case CDXCharSetMSDOSCanadianFrench:
+      case CDXConstants.CDXCharSetMSDOSCanadianFrench:
         return CDCharSet.MSDOSCanadianFrench;
-      case CDXCharSetArabicOEM:
+      case CDXConstants.CDXCharSetArabicOEM:
         return CDCharSet.ArabicOEM;
-      case CDXCharSetMSDOSNordic:
+      case CDXConstants.CDXCharSetMSDOSNordic:
         return CDCharSet.MSDOSNordic;
-      case CDXCharSetMSDOSRussian:
+      case CDXConstants.CDXCharSetMSDOSRussian:
         return CDCharSet.MSDOSRussian;
-      case CDXCharSetIBMModernGreek:
+      case CDXConstants.CDXCharSetIBMModernGreek:
         return CDCharSet.IBMModernGreek;
-      case CDXCharSetThai:
+      case CDXConstants.CDXCharSetThai:
         return CDCharSet.Thai;
-      case CDXCharSetEBCDIC:
+      case CDXConstants.CDXCharSetEBCDIC:
         return CDCharSet.EBCDIC;
-      case CDXCharSetJapanese:
+      case CDXConstants.CDXCharSetJapanese:
         return CDCharSet.Japanese;
-      case CDXCharSetChineseSimplified:
+      case CDXConstants.CDXCharSetChineseSimplified:
         return CDCharSet.ChineseSimplified;
-      case CDXCharSetKorean:
+      case CDXConstants.CDXCharSetKorean:
         return CDCharSet.Korean;
-      case CDXCharSetChineseTraditional:
+      case CDXConstants.CDXCharSetChineseTraditional:
         return CDCharSet.ChineseTraditional;
-      case CDXCharSetUnicodeISO10646:
+      case CDXConstants.CDXCharSetUnicodeISO10646:
         return CDCharSet.UnicodeISO10646;
-      case CDXCharSetWin31EasternEuropean:
+      case CDXConstants.CDXCharSetWin31EasternEuropean:
         return CDCharSet.Win31EasternEuropean;
-      case CDXCharSetWin31Cyrillic:
+      case CDXConstants.CDXCharSetWin31Cyrillic:
         return CDCharSet.Win31Cyrillic;
-      case CDXCharSetWin31Latin1:
+      case CDXConstants.CDXCharSetWin31Latin1:
         return CDCharSet.Win31Latin1;
-      case CDXCharSetWin31Greek:
+      case CDXConstants.CDXCharSetWin31Greek:
         return CDCharSet.Win31Greek;
-      case CDXCharSetWin31Turkish:
+      case CDXConstants.CDXCharSetWin31Turkish:
         return CDCharSet.Win31Turkish;
-      case CDXCharSetHebrew:
+      case CDXConstants.CDXCharSetHebrew:
         return CDCharSet.Hebrew;
-      case CDXCharSetArabic:
+      case CDXConstants.CDXCharSetArabic:
         return CDCharSet.Arabic;
-      case CDXCharSetBaltic:
+      case CDXConstants.CDXCharSetBaltic:
         return CDCharSet.Baltic;
-      case CDXCharSetVietnamese:
+      case CDXConstants.CDXCharSetVietnamese:
         return CDCharSet.Vietnamese;
-      case CDXCharSetKoreanJohab:
+      case CDXConstants.CDXCharSetKoreanJohab:
         return CDCharSet.KoreanJohab;
-      case CDXCharSetMacRoman:
+      case CDXConstants.CDXCharSetMacRoman:
         return CDCharSet.MacRoman;
-      case CDXCharSetMacJapanese:
+      case CDXConstants.CDXCharSetMacJapanese:
         return CDCharSet.MacJapanese;
-      case CDXCharSetMacTradChinese:
+      case CDXConstants.CDXCharSetMacTradChinese:
         return CDCharSet.MacTradChinese;
-      case CDXCharSetMacKorean:
+      case CDXConstants.CDXCharSetMacKorean:
         return CDCharSet.MacKorean;
-      case CDXCharSetMacArabic:
+      case CDXConstants.CDXCharSetMacArabic:
         return CDCharSet.MacArabic;
-      case CDXCharSetMacHebrew:
+      case CDXConstants.CDXCharSetMacHebrew:
         return CDCharSet.MacHebrew;
-      case CDXCharSetMacGreek:
+      case CDXConstants.CDXCharSetMacGreek:
         return CDCharSet.MacGreek;
-      case CDXCharSetMacCyrillic:
+      case CDXConstants.CDXCharSetMacCyrillic:
         return CDCharSet.MacCyrillic;
-      case CDXCharSetMacReserved:
+      case CDXConstants.CDXCharSetMacReserved:
         return CDCharSet.MacReserved;
-      case CDXCharSetMacDevanagari:
+      case CDXConstants.CDXCharSetMacDevanagari:
         return CDCharSet.MacDevanagari;
-      case CDXCharSetMacGurmukhi:
+      case CDXConstants.CDXCharSetMacGurmukhi:
         return CDCharSet.MacGurmukhi;
-      case CDXCharSetMacGujarati:
+      case CDXConstants.CDXCharSetMacGujarati:
         return CDCharSet.MacGujarati;
-      case CDXCharSetMacOriya:
+      case CDXConstants.CDXCharSetMacOriya:
         return CDCharSet.MacOriya;
-      case CDXCharSetMacBengali:
+      case CDXConstants.CDXCharSetMacBengali:
         return CDCharSet.MacBengali;
-      case CDXCharSetMacTamil:
+      case CDXConstants.CDXCharSetMacTamil:
         return CDCharSet.MacTamil;
-      case CDXCharSetMacTelugu:
+      case CDXConstants.CDXCharSetMacTelugu:
         return CDCharSet.MacTelugu;
-      case CDXCharSetMacKannada:
+      case CDXConstants.CDXCharSetMacKannada:
         return CDCharSet.MacKannada;
-      case CDXCharSetMacMalayalam:
+      case CDXConstants.CDXCharSetMacMalayalam:
         return CDCharSet.MacMalayalam;
-      case CDXCharSetMacSinhalese:
+      case CDXConstants.CDXCharSetMacSinhalese:
         return CDCharSet.MacSinhalese;
-      case CDXCharSetMacBurmese:
+      case CDXConstants.CDXCharSetMacBurmese:
         return CDCharSet.MacBurmese;
-      case CDXCharSetMacKhmer:
+      case CDXConstants.CDXCharSetMacKhmer:
         return CDCharSet.MacKhmer;
-      case CDXCharSetMacThai:
+      case CDXConstants.CDXCharSetMacThai:
         return CDCharSet.MacThai;
-      case CDXCharSetMacLao:
+      case CDXConstants.CDXCharSetMacLao:
         return CDCharSet.MacLao;
-      case CDXCharSetMacGeorgian:
+      case CDXConstants.CDXCharSetMacGeorgian:
         return CDCharSet.MacGeorgian;
-      case CDXCharSetMacArmenian:
+      case CDXConstants.CDXCharSetMacArmenian:
         return CDCharSet.MacArmenian;
-      case CDXCharSetMacSimpChinese:
+      case CDXConstants.CDXCharSetMacSimpChinese:
         return CDCharSet.MacSimpChinese;
-      case CDXCharSetMacTibetan:
+      case CDXConstants.CDXCharSetMacTibetan:
         return CDCharSet.MacTibetan;
-      case CDXCharSetMacMongolian:
+      case CDXConstants.CDXCharSetMacMongolian:
         return CDCharSet.MacMongolian;
-      case CDXCharSetMacEthiopic:
+      case CDXConstants.CDXCharSetMacEthiopic:
         return CDCharSet.MacEthiopic;
-      case CDXCharSetMacCentralEuroRoman:
+      case CDXConstants.CDXCharSetMacCentralEuroRoman:
         return CDCharSet.MacCentralEuroRoman;
-      case CDXCharSetMacVietnamese:
+      case CDXConstants.CDXCharSetMacVietnamese:
         return CDCharSet.MacVietnamese;
-      case CDXCharSetMacExtArabic:
+      case CDXConstants.CDXCharSetMacExtArabic:
         return CDCharSet.MacExtArabic;
-      case CDXCharSetMacUninterpreted:
+      case CDXConstants.CDXCharSetMacUninterpreted:
         return CDCharSet.MacUninterpreted;
-      case CDXCharSetMacIcelandic:
+      case CDXConstants.CDXCharSetMacIcelandic:
         return CDCharSet.MacIcelandic;
-      case CDXCharSetMacTurkish:
+      case CDXConstants.CDXCharSetMacTurkish:
         return CDCharSet.MacTurkish;
+      default:
+        break;
     }
     throw new IOException(
         "Charset 0x" + Integer.toHexString(charSet) + " no recognized at " + getPositionAsString());
@@ -769,7 +786,6 @@ public class CDXProperty {
     CDElementList elementList = new CDElementList();
     int count = CDXUtils.readInt16(data, 0);
     if (count < 0) {
-      count = -count;
       elementList.setExclusive(true);
     }
     for (int i = 0; i < length; i += 2) {
@@ -834,58 +850,58 @@ public class CDXProperty {
     for (int i = 0; i < styles - 1; i++) {
       if (starts[i] != starts[i + 1]) {
         byte[] bytes = copyOfRange(text, starts[i], starts[i + 1]);
-        CDCharSet charSet = fontStyles[i].getFont().getCharSet();
-        String charSetName = charSet != null ? charSet.getCharSet() : null;
-        if (charSet == CDCharSet.Unknown) {
-          charSetName = "windows-1252";
-        } else if (charSetName == null) {
-          logger.warn("Unsupported charset " + charSet + "(" + charSetName + ")");
-          charSetName = "windows-1252";
-        }
-        try {
-          string.addChunk(
-              new CDStyledString.CDXChunk(
-                  fontStyles[i].getFont(),
-                  fontStyles[i].getSize(),
-                  fontStyles[i].getFontType(),
-                  fontStyles[i].getColor(),
-                  new String(bytes, charSetName)));
-        } catch (UnsupportedEncodingException exception) {
-          logger.warn("Found unsupported encoding; text chunk discarded.", exception);
-        }
+        addStyledChunk(string, bytes, fontStyles[i]);
       }
     }
     if (starts.length > 0) {
       int last = starts.length - 1;
       if (starts[last] < text.length) {
         byte[] bytes = copyOfRange(text, starts[last], text.length);
-        CDCharSet charSet = fontStyles[last].getFont().getCharSet();
-
-        String charSetName = charSet != null ? charSet.getCharSet() : null;
-        if (charSet == CDCharSet.Unknown) {
-          charSetName = "windows-1252";
-        } else if (charSetName == null) {
-          logger.warn("Unsupported charset " + charSet + "(" + charSetName + ")");
-          charSetName = "windows-1252";
-        }
-        try {
-          string.addChunk(
-              new CDStyledString.CDXChunk(
-                  fontStyles[last].getFont(),
-                  fontStyles[last].getSize(),
-                  fontStyles[last].getFontType(),
-                  fontStyles[last].getColor(),
-                  new String(bytes, charSetName)));
-        } catch (UnsupportedEncodingException exception) {
-          logger.warn("Found unsupported encoding; text chunk discarded.", exception);
-        }
+        addStyledChunk(string, bytes, fontStyles[last]);
       }
     } else {
       string.addChunk(
           new CDStyledString.CDXChunk(
-              fonts.get(0), 12, new CDFontFace(), colors.get(0), new String(text)));
+              fonts.get(0),
+              12,
+              new CDFontFace(),
+              colors.get(0),
+              new String(text, CDX_FALLBACK_CHARSET)));
     }
     return string;
+  }
+
+  /**
+   * Decodes a styled-text byte range with the font style's charset and appends it as a chunk.
+   *
+   * <p>Falls back to {@link #CDX_FALLBACK_CHARSET} when the charset is {@code Unknown} or its name
+   * is unresolved; a chunk whose bytes cannot be decoded is discarded with a warning.
+   *
+   * @param string the styled string to append the decoded chunk to
+   * @param bytes the raw bytes of the chunk
+   * @param fontStyle the font style (font, size, type, colour, charset) for the chunk
+   */
+  private void addStyledChunk(CDStyledString string, byte[] bytes, CDXFontStyle fontStyle) {
+    CDCharSet charSet = fontStyle.getFont().getCharSet();
+    String charSetName = charSet != null ? charSet.getCharSet() : null;
+    Charset fallback = null;
+    if (charSet == CDCharSet.Unknown) {
+      fallback = CDX_FALLBACK_CHARSET;
+    } else if (charSetName == null) {
+      LOGGER.warn("Unsupported charset {}", charSet);
+      fallback = CDX_FALLBACK_CHARSET;
+    }
+    try {
+      string.addChunk(
+          new CDStyledString.CDXChunk(
+              fontStyle.getFont(),
+              fontStyle.getSize(),
+              fontStyle.getFontType(),
+              fontStyle.getColor(),
+              fallback != null ? new String(bytes, fallback) : new String(bytes, charSetName)));
+    } catch (UnsupportedEncodingException exception) {
+      LOGGER.warn("Found unsupported encoding; text chunk discarded.", exception);
+    }
   }
 
   private byte[] copyOfRange(byte[] data, int start, int end) {

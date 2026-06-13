@@ -63,6 +63,11 @@ jobs:
           java-version: '21'
           cache: maven
 
+      # Compile first so PMD has the classpath it needs to resolve overloaded
+      # method calls; without it UnusedPrivateMethod misfires on overloads.
+      - name: Compile sources
+        run: mvn -B -ntp -DskipTests compile
+
       - name: Run PMD
         run: mvn -B -ntp -Pquality pmd:check
 

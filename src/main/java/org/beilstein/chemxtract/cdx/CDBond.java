@@ -26,7 +26,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
 
 /**
  * A bond defines a connection between atoms and corresponds to a chemical bond. Each bond has a

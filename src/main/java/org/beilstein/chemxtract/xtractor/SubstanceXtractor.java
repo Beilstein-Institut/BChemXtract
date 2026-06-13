@@ -23,10 +23,17 @@ package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.model.BCXSubstance;
@@ -45,6 +52,8 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.io.MDLV3000Writer;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for extracting chemical substances from a {@link CDDocument}.
@@ -56,7 +65,7 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 public class SubstanceXtractor {
 
   private final IChemObjectBuilder builder;
-  private static final Log logger = LogFactory.getLog(SubstanceXtractor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SubstanceXtractor.class);
 
   /**
    * Constructs a {@code SubstanceXtractor} using a custom CDK {@link IChemObjectBuilder}.
@@ -101,7 +110,7 @@ public class SubstanceXtractor {
         try {
           substances.addAll(xtractSubstances(fragment, page, markushHandler));
         } catch (IOException | CDKException e) {
-          logger.error("Could not extract structures from fragment.");
+          LOGGER.error("Could not extract structures from fragment.");
         }
       }
     }
@@ -172,8 +181,11 @@ public class SubstanceXtractor {
   protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page)
       throws CDKException, IOException {
     List<BCXSubstance> substances = xtractSubstances(fragment, page, null);
-    if (!substances.isEmpty()) return substances.get(0);
-    else return null;
+    if (!substances.isEmpty()) {
+      return substances.get(0);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -198,7 +210,7 @@ public class SubstanceXtractor {
 
     // validate fragment
     if (!fragment.isValid()) {
-      logger.info("Fragment validation failed: The fragment has one or zero atoms.");
+      LOGGER.info("Fragment validation failed: The fragment has one or zero atoms.");
       return substances;
     }
 
@@ -209,7 +221,7 @@ public class SubstanceXtractor {
     try {
       atomContainer = fragmentConverter.convert(fragment);
     } catch (IllegalArgumentException e) {
-      logger.error(e.getMessage());
+      LOGGER.error("Fragment conversion failed", e);
       return substances;
     }
 
@@ -237,7 +249,7 @@ public class SubstanceXtractor {
         return substances;
       }
     } catch (IOException | CloneNotSupportedException e) {
-      logger.error(e.getMessage());
+      LOGGER.error("R-group replacement failed", e);
     }
     BCXSubstance substance = createAndFillBCXSubstance(atomContainer);
     Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
@@ -268,11 +280,11 @@ public class SubstanceXtractor {
     substance.setAtomContainer(atomContainer);
     // add MDLV3000 mol file as string
     final StringWriter sw = new StringWriter();
-    try (final MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
+    try (MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
       mdlw.write(atomContainer);
       substance.setMdlv3000(sw.toString());
     } catch (IOException e) {
-      logger.error("Could not generate MDL V3000 mol file;");
+      LOGGER.error("Could not generate MDL V3000 mol file;");
     }
     // set SMILES
     String smiles;
@@ -284,7 +296,7 @@ public class SubstanceXtractor {
     if (smiles == null) {
       // Fallback to canonical SMILES
       smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical);
-      logger.error("Generated canonical SMILES instead of absolute.");
+      LOGGER.error("Generated canonical SMILES instead of absolute.");
     }
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
@@ -318,7 +330,7 @@ public class SubstanceXtractor {
     for (String abbreviation : fragmentConverter.getAbbreviations(fragment)) {
       String smiles = SmilesAbbreviations.get(abbreviation);
       if (smiles == null) {
-        logger.info("No SMILES found for: " + abbreviation);
+        LOGGER.info("No SMILES found for: {}", abbreviation);
         continue;
       }
       substance.addAbbreviation(smiles, abbreviation);
@@ -332,7 +344,7 @@ public class SubstanceXtractor {
       try {
         nestedAc = fragmentConverter.convert(nested, true);
       } catch (CDKException e) {
-        logger.error("Nested fragment could not be converted: " + nickname);
+        LOGGER.error("Nested fragment could not be converted: {}", nickname);
         continue;
       }
       substance.addAbbreviation(ChemicalUtils.createAbsoluteSmiles(nestedAc), nickname);

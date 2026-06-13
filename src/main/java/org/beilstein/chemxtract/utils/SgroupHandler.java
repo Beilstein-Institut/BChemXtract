@@ -24,7 +24,12 @@ package org.beilstein.chemxtract.utils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBond;
+import org.beilstein.chemxtract.cdx.CDBracket;
+import org.beilstein.chemxtract.cdx.CDCrossingBond;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.visitor.BracketVisitor;
 
 /**
@@ -63,7 +68,9 @@ public class SgroupHandler {
               .map(CDAtom.class::cast)
               .toList();
 
-      if (!bracketAtoms.isEmpty() && !fragment.getAtoms().contains(bracketAtoms.get(0))) continue;
+      if (!bracketAtoms.isEmpty() && !fragment.getAtoms().contains(bracketAtoms.get(0))) {
+        continue;
+      }
 
       // Handle single atom or multiple atom groups
       if (bracketAtoms.size() == 1) {
@@ -97,7 +104,9 @@ public class SgroupHandler {
                         .map(CDCrossingBond::getBond)) // Optional<CDBond>
             .orElse(null);
 
-    if (crossingBond == null) return;
+    if (crossingBond == null) {
+      return;
+    }
 
     int repeatCount = (int) bracket.getRepeatCount();
     CDAtom atom1 = atom;
@@ -113,8 +122,11 @@ public class SgroupHandler {
       fragment.addBond(newBond);
       atom1 = atom2;
       if (i == repeatCount - 2) {
-        if (crossingBond.getBegin().equals(atom)) crossingBond.setBegin(atom2);
-        else crossingBond.setEnd(atom2);
+        if (crossingBond.getBegin().equals(atom)) {
+          crossingBond.setBegin(atom2);
+        } else {
+          crossingBond.setEnd(atom2);
+        }
       }
     }
   }

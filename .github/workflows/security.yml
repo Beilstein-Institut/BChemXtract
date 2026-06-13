@@ -119,7 +119,6 @@ jobs:
         run: mvn -B -ntp -Pquality dependency-check:check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        continue-on-error: true
 
       - name: Upload Dependency-Check SARIF
         if: always()

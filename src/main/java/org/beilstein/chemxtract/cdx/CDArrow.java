@@ -21,7 +21,12 @@
  */
 package org.beilstein.chemxtract.cdx;
 
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNoGoType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
 
 /** A line or an arrow with or without arrowheads on one or both ends. */
 public class CDArrow extends CDObject {

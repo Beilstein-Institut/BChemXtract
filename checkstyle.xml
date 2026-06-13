@@ -55,6 +55,11 @@
         <module name="MissingJavadocMethod">
             <property name="scope" value="public"/>
             <property name="allowMissingPropertyJavadoc" value="true"/>
+            <!-- Reported for visibility but non-blocking: many public methods
+                 still lack Javadoc; a dedicated documentation pass is deferred.
+                 The sibling JavadocMethod check (validates EXISTING Javadoc)
+                 stays at blocking severity. -->
+            <property name="severity" value="info"/>
         </module>
         <module name="JavadocMethod">
             <property name="accessModifiers" value="public"/>

@@ -21,6 +21,8 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
+import java.nio.charset.StandardCharsets;
+
 /** Constants defined by the CDX file format Specification. */
 public class CDXConstants {
   public static final int CDXUndefinedId = -1;
@@ -29,7 +31,8 @@ public class CDXConstants {
 
   public static final int CDX_HeaderLength = 28;
 
-  private static final byte[] CHEMDRAW_INTERCHANGE_FORMAT = "CDIF".getBytes();
+  private static final byte[] CHEMDRAW_INTERCHANGE_FORMAT =
+      "CDIF".getBytes(StandardCharsets.US_ASCII);
 
   public static final int CDXTag_Object = 0x8000;
 
@@ -2445,10 +2448,10 @@ public class CDXConstants {
   public static final int CDXArrowNoGo_Hash = 3;
 
   public static byte[] getCdxSignature() {
-    return CDX_Signature;
+    return CDX_Signature.clone();
   }
 
   public static byte[] getChemdrawInterchangeFormat() {
-    return CHEMDRAW_INTERCHANGE_FORMAT;
+    return CHEMDRAW_INTERCHANGE_FORMAT.clone();
   }
 }

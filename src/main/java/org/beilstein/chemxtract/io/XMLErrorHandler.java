@@ -21,15 +21,15 @@
  */
 package org.beilstein.chemxtract.io;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /** Default XML error handler used for parsing XML documents. */
 public class XMLErrorHandler implements ErrorHandler {
-  private static final Log logger = LogFactory.getLog(XMLErrorHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(XMLErrorHandler.class);
 
   @Override
   public void error(SAXParseException exception) throws SAXException {
@@ -43,7 +43,7 @@ public class XMLErrorHandler implements ErrorHandler {
 
   @Override
   public void warning(SAXParseException exception) throws SAXException {
-    logger.warn(getMessage(exception), exception);
+    LOGGER.warn(getMessage(exception), exception);
   }
 
   private String getMessage(SAXParseException exception) {

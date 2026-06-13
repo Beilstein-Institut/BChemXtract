@@ -19,12 +19,25 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-package org.beilstein.chemxtract.cdx.datatypes;
+package org.beilstein.chemxtract;
 
-/** Atom substituent count restriction types defined by the ChemDraw CDX specification. */
-public enum CDAtomSubstituentType {
-  None,
-  FreeSites,
-  SubstituentsUpTo,
-  SubstituentsExactly,
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Guards the SLF4J-to-Log4j wiring. With a missing or version-incompatible binding, SLF4J 2.x
+ * silently falls back to its NOP implementation and all library log output is discarded.
+ */
+public class LoggingBindingTest {
+
+  @Test
+  public void slf4jMustNotFallBackToNop() {
+    String factoryClass = LoggerFactory.getILoggerFactory().getClass().getName();
+    assertNotEquals(
+        "org.slf4j.helpers.NOPLoggerFactory",
+        factoryClass,
+        "SLF4J resolved to NOP - no SLF4J 2.x provider on the classpath");
+  }
 }

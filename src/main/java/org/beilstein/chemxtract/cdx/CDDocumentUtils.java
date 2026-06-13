@@ -22,7 +22,11 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.awt.geom.Point2D;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 
@@ -154,9 +158,13 @@ public class CDDocumentUtils {
     for (CDText cdText : cDTexts) {
       String text = cdText.getText().getText().trim();
       int idx = text.indexOf('R');
-      if (idx > -1) text = text.substring(idx);
+      if (idx > -1) {
+        text = text.substring(idx);
+      }
       String[] items = text.split("=");
-      if (items.length < 2) continue;
+      if (items.length < 2) {
+        continue;
+      }
       String[] textResidues = items[1].split(", ");
       if (textResidues.length == 1) {
         residues.putIfAbsent(items[0], textResidues[0].trim());
@@ -247,7 +255,9 @@ public class CDDocumentUtils {
           }
         }
       } else {
-        if (atom.getLabelText() != null && atom.getLabelText().contains("R")) return true;
+        if (atom.getLabelText() != null && atom.getLabelText().contains("R")) {
+          return true;
+        }
       }
     }
     return false;
@@ -326,7 +336,9 @@ public class CDDocumentUtils {
   public static List<CDText> getStructureLabels(List<CDText> texts) {
     List<CDText> labels = new ArrayList<>();
     for (CDText text : texts) {
-      if (containsStructureLabel(text)) labels.add(text);
+      if (containsStructureLabel(text)) {
+        labels.add(text);
+      }
     }
     return labels;
   }
@@ -343,7 +355,9 @@ public class CDDocumentUtils {
    *     suitable chunk is found.
    */
   public static String getStructureLabelString(CDText text) {
-    if (text == null || text.getText() == null) return "";
+    if (text == null || text.getText() == null) {
+      return "";
+    }
     String label = "";
     List<CDStyledString.CDXChunk> chunks = text.getText().getChunks();
     for (var chunk : chunks) {
@@ -415,14 +429,18 @@ public class CDDocumentUtils {
     double cutOff = LABEL_MAX_DISTANCE_CUT_OFF + getLongestSideOfCDRectangle(fragment.getBounds());
     CDText label = null;
     for (CDText text : texts) {
-      if (!containsStructureLabel(text)) continue;
+      if (!containsStructureLabel(text)) {
+        continue;
+      }
       double dist = getDistanceOfFragmentToText(fragment, text);
       if (dist < shortestDist && dist < cutOff) {
         shortestDist = dist;
         label = text;
       }
     }
-    if (label != null) fragment.addText(label);
+    if (label != null) {
+      fragment.addText(label);
+    }
   }
 
   /**
@@ -450,11 +468,9 @@ public class CDDocumentUtils {
     outer:
     for (CDBracket b : brackets) {
       for (Object o : b.getBracketedObjects()) {
-        if (o instanceof CDAtom) {
-          if (fragment.getAtoms().contains(o)) {
-            fragmentBrackets.add(b);
-            continue outer;
-          }
+        if (o instanceof CDAtom && fragment.getAtoms().contains(o)) {
+          fragmentBrackets.add(b);
+          continue outer;
         }
       }
     }

@@ -69,7 +69,9 @@ public class ReactionAgents {
    * @throws IOException if the SMILES abbreviation file cannot be loaded
    */
   private static ReactionAgents getInstance() throws IOException {
-    if (instance == null) instance = new ReactionAgents();
+    if (instance == null) {
+      instance = new ReactionAgents();
+    }
     return instance;
   }
 
@@ -83,7 +85,7 @@ public class ReactionAgents {
    * @throws IOException if the lookup table could not be loaded
    */
   public static String get(String key) throws IOException {
-    return ReactionAgents.getInstance().lookup.get(key.toLowerCase());
+    return getInstance().lookup.get(key.toLowerCase());
   }
 
   /**
@@ -96,6 +98,6 @@ public class ReactionAgents {
    * @throws IOException if the lookup table could not be loaded
    */
   public static boolean contains(String key) throws IOException {
-    return ReactionAgents.getInstance().lookup.containsKey(key.toLowerCase());
+    return getInstance().lookup.containsKey(key.toLowerCase());
   }
 }

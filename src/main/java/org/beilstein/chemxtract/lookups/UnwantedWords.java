@@ -69,17 +69,19 @@ public class UnwantedWords {
    * @throws IOException if the unwanted words file cannot be loaded
    */
   private static UnwantedWords getInstance() throws IOException {
-    if (instance == null) instance = new UnwantedWords();
+    if (instance == null) {
+      instance = new UnwantedWords();
+    }
     return instance;
   }
 
   /**
    * Loads the unwanted word list from the {@code unwantedWords.txt} resource file.
    *
-   * <p>Each non-blank line in the file is added to a set, which is then made unmodifiable for safe
-   * concurrent access.
+   * <p>Each non-blank line in the file is added to a set. The returned set is exposed only through
+   * an unmodifiable view in {@link #getUnwantedWords()}.
    *
-   * @return an unmodifiable set of unwanted words
+   * @return the set of unwanted words
    * @throws IOException if the resource cannot be found or read
    */
   private static Set<String> loadUnwantedWords() throws IOException {
@@ -98,7 +100,7 @@ public class UnwantedWords {
         }
       }
     }
-    return Collections.unmodifiableSet(words);
+    return words;
   }
 
   /**
@@ -108,7 +110,7 @@ public class UnwantedWords {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedWords() throws IOException {
-    return UnwantedWords.getInstance().words;
+    return Collections.unmodifiableSet(getInstance().words);
   }
 
   /**
@@ -119,6 +121,6 @@ public class UnwantedWords {
    * @throws IOException if the word list cannot be initialized or loaded
    */
   public static boolean contains(String word) throws IOException {
-    return UnwantedWords.getInstance().words.contains(word);
+    return getInstance().words.contains(word);
   }
 }

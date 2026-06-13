@@ -22,9 +22,12 @@
 package org.beilstein.chemxtract.converter;
 
 import java.io.IOException;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -38,12 +41,20 @@ import org.beilstein.chemxtract.visitor.BondVisitor;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomType;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.ISingleElectron;
 import org.openscience.cdk.io.IChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts a {@link CDFragment} (e.g., a ChemDraw fragment) into a CDK {@link IAtomContainer}.
@@ -67,7 +78,7 @@ public class FragmentConverter {
   private final IChemObjectBuilder builder;
   private final IChemObjectReader.Mode mode;
   private final SmilesParser smilesParser;
-  private static final Log logger = LogFactory.getLog(FragmentConverter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FragmentConverter.class);
 
   /**
    * Constructs a new {@code FragmentConverter} using the given {@link IChemObjectBuilder} and
@@ -114,6 +125,7 @@ public class FragmentConverter {
    * and stereo elements.
    *
    * @param fragment the ChemDraw fragment to convert
+   * @param rawMode when {@code true}, atoms and bonds are visited in raw mode without filtering
    * @return the converted {@link IAtomContainer} representation
    * @throws CDKException if a conversion error occurs or invalid data is encountered
    */
@@ -249,7 +261,7 @@ public class FragmentConverter {
       try {
         smiles = SmilesAbbreviations.get(abbreviation);
       } catch (IOException e) {
-        logger.error("Could not lookup SMILES for: " + abbreviation);
+        LOGGER.error("Could not lookup SMILES for: {}", abbreviation);
         continue;
       }
       if (smiles == null) {
@@ -260,8 +272,7 @@ public class FragmentConverter {
       try {
         expandedStructure = smilesParser.parseSmiles(smiles);
       } catch (InvalidSmilesException e) {
-        logger.error(
-            "SMILES could not be parsed to AtomContainer: " + abbreviation + ": " + smiles);
+        LOGGER.error("SMILES could not be parsed to AtomContainer: {}: {}", abbreviation, smiles);
         continue;
       }
 
@@ -327,7 +338,7 @@ public class FragmentConverter {
       }
     }
     if (connectionPoints.size() != 1) {
-      logger.error("Expected exactly one connection point for abbreviation.");
+      LOGGER.error("Expected exactly one connection point for abbreviation.");
       return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
@@ -342,7 +353,7 @@ public class FragmentConverter {
     try {
       newBond = bondOrigin.clone();
     } catch (CloneNotSupportedException e) {
-      logger.error("Bond could not be cloned.");
+      LOGGER.error("Bond could not be cloned.");
       return;
     }
     newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});
@@ -369,7 +380,9 @@ public class FragmentConverter {
       String[] originalAtomTypeNames = new String[atomCount];
       for (int i = 0; i < atomCount; i++) {
         IAtom atom = container.getAtom(i);
-        if (atom instanceof IPseudoAtom) atom.setImplicitHydrogenCount(0);
+        if (atom instanceof IPseudoAtom) {
+          atom.setImplicitHydrogenCount(0);
+        }
         IAtomType type = matcher.findMatchingAtomType(container, atom);
         originalAtomTypeNames[i] = atom.getAtomTypeName();
         atom.setAtomTypeName(type.getAtomTypeName());
@@ -382,7 +395,7 @@ public class FragmentConverter {
         atom.setAtomTypeName(originalAtomTypeNames[i]);
       }
     } catch (CDKException e) {
-      logger.error("Unable to add implicit hydrogens, due to: " + e.getMessage());
+      LOGGER.error("Unable to add implicit hydrogens", e);
     }
   }
 
@@ -451,7 +464,7 @@ public class FragmentConverter {
         }
       }
     } catch (CDKException e) {
-      logger.error(e.getMessage());
+      LOGGER.error("Unable to set radicals on atom container", e);
     }
   }
 

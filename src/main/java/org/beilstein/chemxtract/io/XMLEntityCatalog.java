@@ -28,8 +28,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -39,7 +39,7 @@ import org.xml.sax.SAXException;
  * and Public IDs to URLs.
  */
 public class XMLEntityCatalog implements EntityResolver {
-  private static final Log logger = LogFactory.getLog(XMLEntityCatalog.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(XMLEntityCatalog.class);
 
   private final Map<String, String> publicIdURLs = new HashMap<>();
   private final Map<String, String> systemIdURLs = new HashMap<>();
@@ -70,7 +70,7 @@ public class XMLEntityCatalog implements EntityResolver {
   @Override
   public InputSource resolveEntity(String publicId, String systemId)
       throws SAXException, IOException {
-    logger.debug("Resolving input source for public id:" + publicId + " and system id:" + systemId);
+    LOGGER.debug("Resolving input source for public id:{} and system id:{}", publicId, systemId);
 
     // resolve public id or system id to URL
     String url = publicIdURLs.get(publicId);
@@ -86,16 +86,16 @@ public class XMLEntityCatalog implements EntityResolver {
       }
     }
 
-    logger.debug("Resolve to url " + url);
+    LOGGER.debug("Resolve to url {}", url);
 
     // resolve URL to input stream
     if (url != null) {
       InputStream in = XMLEntityCatalog.class.getClassLoader().getResourceAsStream(url);
       if (in == null) {
-        logger.debug("No resource found for url " + url);
+        LOGGER.debug("No resource found for url {}", url);
         File file = new File(url);
         if (!file.exists()) {
-          logger.error("Could not load file " + url);
+          LOGGER.error("Could not load file {}", url);
           return null;
         }
         in = new FileInputStream(file);
@@ -119,7 +119,7 @@ public class XMLEntityCatalog implements EntityResolver {
         throw e;
       }
     }
-    logger.warn("No entry found for public id:" + publicId + " and system id:" + systemId);
+    LOGGER.warn("No entry found for public id:{} and system id:{}", publicId, systemId);
     return null;
   }
 }
