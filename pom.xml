@@ -263,8 +263,9 @@
 	<profiles>
 		<!--
 			Quality profile: runs Checkstyle, PMD, SpotBugs, OWASP Dependency-Check.
-			Activate with `mvn -Pquality verify`. Kept off the default lifecycle so
-			day-to-day developer builds stay fast.
+			Activate with `mvn -Pquality verify`. All four gates FAIL the build on
+			violations (CVSS >= 7 for dependency CVEs). Kept off the default
+			lifecycle so day-to-day developer builds stay fast.
 		-->
 		<profile>
 			<id>quality</id>
@@ -285,8 +286,11 @@
 							<configLocation>${project.basedir}/checkstyle.xml</configLocation>
 							<suppressionsLocation>${project.basedir}/checkstyle-suppressions.xml</suppressionsLocation>
 							<consoleOutput>true</consoleOutput>
-							<failsOnError>false</failsOnError>
-							<failOnViolation>false</failOnViolation>
+							<failsOnError>true</failsOnError>
+							<failOnViolation>true</failOnViolation>
+							<!-- checkstyle.xml sets severity=warning globally; without this
+							     the check goal only counts 'error' and never fails. -->
+							<violationSeverity>warning</violationSeverity>
 							<includeTestSourceDirectory>false</includeTestSourceDirectory>
 						</configuration>
 						<executions>
@@ -306,7 +310,7 @@
 						<version>3.28.0</version>
 						<configuration>
 							<targetJdk>${java.version}</targetJdk>
-							<failOnViolation>false</failOnViolation>
+							<failOnViolation>true</failOnViolation>
 							<printFailingErrors>true</printFailingErrors>
 							<includeTests>false</includeTests>
 						</configuration>
@@ -328,7 +332,7 @@
 						<configuration>
 							<effort>Max</effort>
 							<threshold>Default</threshold>
-							<failOnError>false</failOnError>
+							<failOnError>true</failOnError>
 							<excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
 							<includeTests>false</includeTests>
 						</configuration>
@@ -348,7 +352,7 @@
 						<artifactId>dependency-check-maven</artifactId>
 						<version>12.2.2</version>
 						<configuration>
-							<failBuildOnCVSS>11</failBuildOnCVSS>
+							<failBuildOnCVSS>7</failBuildOnCVSS>
 							<formats>
 								<format>HTML</format>
 								<format>SARIF</format>
