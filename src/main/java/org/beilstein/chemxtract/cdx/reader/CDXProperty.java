@@ -21,83 +21,6 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabicASMO449P;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabicASMO708;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabicOEM;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabicTransparent;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetArabicTransparentASMO;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetBaltic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetBalticOEM;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetChineseSimplified;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetChineseTraditional;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetEBCDIC;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetEBCDIC500V1;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetEBCDICOEM;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetGreek437G;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetHebrew;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetHebrewOEM;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetIBMCyrillic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetIBMModernGreek;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetIBMTurkish;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetJapanese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetKorean;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetKoreanJohab;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSCanadianFrench;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSIcelandic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSLatin1;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSLatin2;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSNordic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSPortuguese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSRussian;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMSDOSUS;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacArabic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacArmenian;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacBengali;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacBurmese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacCentralEuroRoman;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacCyrillic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacDevanagari;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacEthiopic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacExtArabic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacGeorgian;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacGreek;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacGujarati;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacGurmukhi;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacHebrew;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacIcelandic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacJapanese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacKannada;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacKhmer;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacKorean;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacLao;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacMalayalam;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacMongolian;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacOriya;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacReserved;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacRoman;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacSimpChinese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacSinhalese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacTamil;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacTelugu;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacThai;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacTibetan;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacTradChinese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacTurkish;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacUninterpreted;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetMacVietnamese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetThai;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetUnicodeISO10646;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetUnknown;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetVietnamese;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetWin31Cyrillic;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetWin31EasternEuropean;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetWin31Greek;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetWin31Latin1;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXCharSetWin31Turkish;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Charge;
-import static org.beilstein.chemxtract.cdx.reader.CDXConstants.CDXProp_Atom_Radical;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -535,10 +458,10 @@ public class CDXProperty {
       int tag = CDXUtils.readUInt16(data, i + 4);
 
       switch (tag) {
-        case CDXProp_Atom_Charge:
+        case CDXConstants.CDXProp_Atom_Charge:
           properties.put("Charge", object);
           break;
-        case CDXProp_Atom_Radical:
+        case CDXConstants.CDXProp_Atom_Radical:
           properties.put("Radical", object);
           break;
         default:
@@ -697,153 +620,153 @@ public class CDXProperty {
   private CDCharSet readCharSet(int offset) throws IOException {
     int charSet = CDXUtils.readUInt16(data, offset);
     switch (charSet) {
-      case CDXCharSetUnknown:
+      case CDXConstants.CDXCharSetUnknown:
         return CDCharSet.Unknown;
-      case CDXCharSetEBCDICOEM:
+      case CDXConstants.CDXCharSetEBCDICOEM:
         return CDCharSet.EBCDICOEM;
-      case CDXCharSetMSDOSUS:
+      case CDXConstants.CDXCharSetMSDOSUS:
         return CDCharSet.MSDOSUS;
-      case CDXCharSetEBCDIC500V1:
+      case CDXConstants.CDXCharSetEBCDIC500V1:
         return CDCharSet.EBCDIC500V1;
-      case CDXCharSetArabicASMO708:
+      case CDXConstants.CDXCharSetArabicASMO708:
         return CDCharSet.ArabicASMO708;
-      case CDXCharSetArabicASMO449P:
+      case CDXConstants.CDXCharSetArabicASMO449P:
         return CDCharSet.ArabicASMO449P;
-      case CDXCharSetArabicTransparent:
+      case CDXConstants.CDXCharSetArabicTransparent:
         return CDCharSet.ArabicTransparent;
-      case CDXCharSetArabicTransparentASMO:
+      case CDXConstants.CDXCharSetArabicTransparentASMO:
         return CDCharSet.ArabicTransparentASMO;
-      case CDXCharSetGreek437G:
+      case CDXConstants.CDXCharSetGreek437G:
         return CDCharSet.Greek437G;
-      case CDXCharSetBalticOEM:
+      case CDXConstants.CDXCharSetBalticOEM:
         return CDCharSet.BalticOEM;
-      case CDXCharSetMSDOSLatin1:
+      case CDXConstants.CDXCharSetMSDOSLatin1:
         return CDCharSet.MSDOSLatin1;
-      case CDXCharSetMSDOSLatin2:
+      case CDXConstants.CDXCharSetMSDOSLatin2:
         return CDCharSet.MSDOSLatin2;
-      case CDXCharSetIBMCyrillic:
+      case CDXConstants.CDXCharSetIBMCyrillic:
         return CDCharSet.IBMCyrillic;
-      case CDXCharSetIBMTurkish:
+      case CDXConstants.CDXCharSetIBMTurkish:
         return CDCharSet.IBMTurkish;
-      case CDXCharSetMSDOSPortuguese:
+      case CDXConstants.CDXCharSetMSDOSPortuguese:
         return CDCharSet.MSDOSPortuguese;
-      case CDXCharSetMSDOSIcelandic:
+      case CDXConstants.CDXCharSetMSDOSIcelandic:
         return CDCharSet.MSDOSIcelandic;
-      case CDXCharSetHebrewOEM:
+      case CDXConstants.CDXCharSetHebrewOEM:
         return CDCharSet.HebrewOEM;
-      case CDXCharSetMSDOSCanadianFrench:
+      case CDXConstants.CDXCharSetMSDOSCanadianFrench:
         return CDCharSet.MSDOSCanadianFrench;
-      case CDXCharSetArabicOEM:
+      case CDXConstants.CDXCharSetArabicOEM:
         return CDCharSet.ArabicOEM;
-      case CDXCharSetMSDOSNordic:
+      case CDXConstants.CDXCharSetMSDOSNordic:
         return CDCharSet.MSDOSNordic;
-      case CDXCharSetMSDOSRussian:
+      case CDXConstants.CDXCharSetMSDOSRussian:
         return CDCharSet.MSDOSRussian;
-      case CDXCharSetIBMModernGreek:
+      case CDXConstants.CDXCharSetIBMModernGreek:
         return CDCharSet.IBMModernGreek;
-      case CDXCharSetThai:
+      case CDXConstants.CDXCharSetThai:
         return CDCharSet.Thai;
-      case CDXCharSetEBCDIC:
+      case CDXConstants.CDXCharSetEBCDIC:
         return CDCharSet.EBCDIC;
-      case CDXCharSetJapanese:
+      case CDXConstants.CDXCharSetJapanese:
         return CDCharSet.Japanese;
-      case CDXCharSetChineseSimplified:
+      case CDXConstants.CDXCharSetChineseSimplified:
         return CDCharSet.ChineseSimplified;
-      case CDXCharSetKorean:
+      case CDXConstants.CDXCharSetKorean:
         return CDCharSet.Korean;
-      case CDXCharSetChineseTraditional:
+      case CDXConstants.CDXCharSetChineseTraditional:
         return CDCharSet.ChineseTraditional;
-      case CDXCharSetUnicodeISO10646:
+      case CDXConstants.CDXCharSetUnicodeISO10646:
         return CDCharSet.UnicodeISO10646;
-      case CDXCharSetWin31EasternEuropean:
+      case CDXConstants.CDXCharSetWin31EasternEuropean:
         return CDCharSet.Win31EasternEuropean;
-      case CDXCharSetWin31Cyrillic:
+      case CDXConstants.CDXCharSetWin31Cyrillic:
         return CDCharSet.Win31Cyrillic;
-      case CDXCharSetWin31Latin1:
+      case CDXConstants.CDXCharSetWin31Latin1:
         return CDCharSet.Win31Latin1;
-      case CDXCharSetWin31Greek:
+      case CDXConstants.CDXCharSetWin31Greek:
         return CDCharSet.Win31Greek;
-      case CDXCharSetWin31Turkish:
+      case CDXConstants.CDXCharSetWin31Turkish:
         return CDCharSet.Win31Turkish;
-      case CDXCharSetHebrew:
+      case CDXConstants.CDXCharSetHebrew:
         return CDCharSet.Hebrew;
-      case CDXCharSetArabic:
+      case CDXConstants.CDXCharSetArabic:
         return CDCharSet.Arabic;
-      case CDXCharSetBaltic:
+      case CDXConstants.CDXCharSetBaltic:
         return CDCharSet.Baltic;
-      case CDXCharSetVietnamese:
+      case CDXConstants.CDXCharSetVietnamese:
         return CDCharSet.Vietnamese;
-      case CDXCharSetKoreanJohab:
+      case CDXConstants.CDXCharSetKoreanJohab:
         return CDCharSet.KoreanJohab;
-      case CDXCharSetMacRoman:
+      case CDXConstants.CDXCharSetMacRoman:
         return CDCharSet.MacRoman;
-      case CDXCharSetMacJapanese:
+      case CDXConstants.CDXCharSetMacJapanese:
         return CDCharSet.MacJapanese;
-      case CDXCharSetMacTradChinese:
+      case CDXConstants.CDXCharSetMacTradChinese:
         return CDCharSet.MacTradChinese;
-      case CDXCharSetMacKorean:
+      case CDXConstants.CDXCharSetMacKorean:
         return CDCharSet.MacKorean;
-      case CDXCharSetMacArabic:
+      case CDXConstants.CDXCharSetMacArabic:
         return CDCharSet.MacArabic;
-      case CDXCharSetMacHebrew:
+      case CDXConstants.CDXCharSetMacHebrew:
         return CDCharSet.MacHebrew;
-      case CDXCharSetMacGreek:
+      case CDXConstants.CDXCharSetMacGreek:
         return CDCharSet.MacGreek;
-      case CDXCharSetMacCyrillic:
+      case CDXConstants.CDXCharSetMacCyrillic:
         return CDCharSet.MacCyrillic;
-      case CDXCharSetMacReserved:
+      case CDXConstants.CDXCharSetMacReserved:
         return CDCharSet.MacReserved;
-      case CDXCharSetMacDevanagari:
+      case CDXConstants.CDXCharSetMacDevanagari:
         return CDCharSet.MacDevanagari;
-      case CDXCharSetMacGurmukhi:
+      case CDXConstants.CDXCharSetMacGurmukhi:
         return CDCharSet.MacGurmukhi;
-      case CDXCharSetMacGujarati:
+      case CDXConstants.CDXCharSetMacGujarati:
         return CDCharSet.MacGujarati;
-      case CDXCharSetMacOriya:
+      case CDXConstants.CDXCharSetMacOriya:
         return CDCharSet.MacOriya;
-      case CDXCharSetMacBengali:
+      case CDXConstants.CDXCharSetMacBengali:
         return CDCharSet.MacBengali;
-      case CDXCharSetMacTamil:
+      case CDXConstants.CDXCharSetMacTamil:
         return CDCharSet.MacTamil;
-      case CDXCharSetMacTelugu:
+      case CDXConstants.CDXCharSetMacTelugu:
         return CDCharSet.MacTelugu;
-      case CDXCharSetMacKannada:
+      case CDXConstants.CDXCharSetMacKannada:
         return CDCharSet.MacKannada;
-      case CDXCharSetMacMalayalam:
+      case CDXConstants.CDXCharSetMacMalayalam:
         return CDCharSet.MacMalayalam;
-      case CDXCharSetMacSinhalese:
+      case CDXConstants.CDXCharSetMacSinhalese:
         return CDCharSet.MacSinhalese;
-      case CDXCharSetMacBurmese:
+      case CDXConstants.CDXCharSetMacBurmese:
         return CDCharSet.MacBurmese;
-      case CDXCharSetMacKhmer:
+      case CDXConstants.CDXCharSetMacKhmer:
         return CDCharSet.MacKhmer;
-      case CDXCharSetMacThai:
+      case CDXConstants.CDXCharSetMacThai:
         return CDCharSet.MacThai;
-      case CDXCharSetMacLao:
+      case CDXConstants.CDXCharSetMacLao:
         return CDCharSet.MacLao;
-      case CDXCharSetMacGeorgian:
+      case CDXConstants.CDXCharSetMacGeorgian:
         return CDCharSet.MacGeorgian;
-      case CDXCharSetMacArmenian:
+      case CDXConstants.CDXCharSetMacArmenian:
         return CDCharSet.MacArmenian;
-      case CDXCharSetMacSimpChinese:
+      case CDXConstants.CDXCharSetMacSimpChinese:
         return CDCharSet.MacSimpChinese;
-      case CDXCharSetMacTibetan:
+      case CDXConstants.CDXCharSetMacTibetan:
         return CDCharSet.MacTibetan;
-      case CDXCharSetMacMongolian:
+      case CDXConstants.CDXCharSetMacMongolian:
         return CDCharSet.MacMongolian;
-      case CDXCharSetMacEthiopic:
+      case CDXConstants.CDXCharSetMacEthiopic:
         return CDCharSet.MacEthiopic;
-      case CDXCharSetMacCentralEuroRoman:
+      case CDXConstants.CDXCharSetMacCentralEuroRoman:
         return CDCharSet.MacCentralEuroRoman;
-      case CDXCharSetMacVietnamese:
+      case CDXConstants.CDXCharSetMacVietnamese:
         return CDCharSet.MacVietnamese;
-      case CDXCharSetMacExtArabic:
+      case CDXConstants.CDXCharSetMacExtArabic:
         return CDCharSet.MacExtArabic;
-      case CDXCharSetMacUninterpreted:
+      case CDXConstants.CDXCharSetMacUninterpreted:
         return CDCharSet.MacUninterpreted;
-      case CDXCharSetMacIcelandic:
+      case CDXConstants.CDXCharSetMacIcelandic:
         return CDCharSet.MacIcelandic;
-      case CDXCharSetMacTurkish:
+      case CDXConstants.CDXCharSetMacTurkish:
         return CDCharSet.MacTurkish;
       default:
         break;
