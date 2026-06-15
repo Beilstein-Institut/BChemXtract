@@ -149,24 +149,56 @@ public class FragmentConverter {
     for (CDAtom cdAtom : cdAtoms) {
       atoms.add(atomConverter.convert(cdAtom));
     }
-    // convert CDBonds to IBonds
+    // Convert CDBonds to IBonds, holding coordination (haptic) bonds aside. They are added only
+    // after hydrogen perception so that each ligand atom keeps the valence of the free ligand
+    // (CDK's atom typing treats a metal sigma-bond inconsistently across ligand types).
     BondConverter bondConverter = new BondConverter(builder, atomConverter.getAtomMap());
-    List<IBond> bonds = new ArrayList<>(cdBonds.size());
+    List<IBond> structuralBonds = new ArrayList<>(cdBonds.size());
+    List<IBond> coordinationBonds = new ArrayList<>();
     for (CDBond cdBond : cdBonds) {
-      bonds.add(bondConverter.convert(cdBond));
+      IBond bond = bondConverter.convert(cdBond);
+      if (cdBond.isCoordination()) {
+        coordinationBonds.add(bond);
+      } else {
+        structuralBonds.add(bond);
+      }
     }
-    // create IAtomContainer
+    // create IAtomContainer from the structural (non-coordination) skeleton
     IAtomContainer atomContainer =
-        createAtomContainer(atoms.toArray(IAtom[]::new), bonds.toArray(IBond[]::new));
+        createAtomContainer(atoms.toArray(IAtom[]::new), structuralBonds.toArray(IBond[]::new));
     // check for radicals
     setRadicals(atomContainer, atomConverter.getAtomMap());
-    // add implicit hydrogens
+    // add implicit hydrogens (ligands are still free of their coordinating metal here)
     addImplicitHydrogens(atomContainer);
     // perceive atom types and configure atoms
     AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(atomContainer);
+    // restore connectivity for coordination bonds now that ligand valences are fixed
+    addCoordinationBonds(atomContainer, coordinationBonds);
     // check for tetrahedral stereo
     StereoHandler.setStereo(atomContainer, bondConverter.getBondMap(), atomConverter.getAtomMap());
     return atomContainer;
+  }
+
+  /**
+   * Adds previously withheld coordination (haptic) bonds to the assembled atom container. Adding a
+   * bond does not alter the stored implicit hydrogen counts, so the ligand valences fixed during
+   * hydrogen perception are preserved while the central atom regains its full connectivity.
+   *
+   * @param atomContainer the assembled atom container
+   * @param coordinationBonds the coordination bonds to add
+   */
+  private void addCoordinationBonds(IAtomContainer atomContainer, List<IBond> coordinationBonds) {
+    for (IBond bond : coordinationBonds) {
+      IAtom begin = bond.getBegin();
+      IAtom end = bond.getEnd();
+      if (begin != null
+          && end != null
+          && atomContainer.contains(begin)
+          && atomContainer.contains(end)
+          && !atomContainer.contains(bond)) {
+        atomContainer.addBond(bond);
+      }
+    }
   }
 
   /**
