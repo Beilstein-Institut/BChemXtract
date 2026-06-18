@@ -97,6 +97,24 @@ public class CDFragment extends CDObject {
     this.bonds.add(bond);
   }
 
+  /**
+   * Removes the given atom from this fragment by object identity.
+   *
+   * @param atom the atom to remove
+   */
+  public void removeAtom(CDAtom atom) {
+    this.atoms.remove(atom);
+  }
+
+  /**
+   * Removes the given bond from this fragment by object identity.
+   *
+   * @param bond the bond to remove
+   */
+  public void removeBond(CDBond bond) {
+    this.bonds.remove(bond);
+  }
+
   public List<CDGraphic> getGraphics() {
     return Collections.unmodifiableList(graphics);
   }

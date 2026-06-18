@@ -84,6 +84,13 @@ public class CDBond extends CDObject {
   /** Ordered list of attached bond IDs; plays a role in retaining stereochemistry. */
   private List<CDBond> bondCircularOrdering;
 
+  /**
+   * Internal marker (not part of the CDX specification) flagging a bond synthesised from a
+   * multicenter (haptic) attachment. Such coordination bonds connect a central atom to each atom of
+   * a coordinated &pi;-system and must not reduce the ligand atom's hydrogen count.
+   */
+  private boolean coordination = false;
+
   public CDBondOrder getBondOrder() {
     return bondOrder;
   }
@@ -189,6 +196,25 @@ public class CDBond extends CDObject {
     this.crossingBonds = crossingBonds;
   }
 
+  /**
+   * Indicates whether this bond is a synthesised coordination (haptic) bond whose order must not
+   * count against the ligand atom's valence.
+   *
+   * @return {@code true} if this is a coordination bond
+   */
+  public boolean isCoordination() {
+    return coordination;
+  }
+
+  /**
+   * Marks this bond as a synthesised coordination (haptic) bond.
+   *
+   * @param coordination {@code true} to flag the bond as a coordination bond
+   */
+  public void setCoordination(boolean coordination) {
+    this.coordination = coordination;
+  }
+
   @Override
   public void accept(CDVisitor visitor) {
     visitor.visitBond(this);
@@ -218,5 +244,6 @@ public class CDBond extends CDObject {
     this.topology = other.topology;
     this.bondCircularOrdering =
         other.bondCircularOrdering != null ? new ArrayList<>(other.bondCircularOrdering) : null;
+    this.coordination = other.coordination;
   }
 }
