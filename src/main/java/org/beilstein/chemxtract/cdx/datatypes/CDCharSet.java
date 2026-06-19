@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Character sets used to encode text strings, as defined by the ChemDraw CDX specification. */
 public enum CDCharSet {
   Unknown(null),
   EBCDICOEM(null),
@@ -101,7 +102,7 @@ public enum CDCharSet {
 
   private final String charSet;
 
-  private CDCharSet(String charSet) {
+  CDCharSet(String charSet) {
     this.charSet = charSet;
   }
 

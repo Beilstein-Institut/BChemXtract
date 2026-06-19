@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Kekulization;
 import org.openscience.cdk.exception.CDKException;
@@ -43,6 +41,8 @@ import org.openscience.cdk.rinchi.RInChIGenerator;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class providing static methods for common chemical operations such as generating InChI,
@@ -50,7 +50,7 @@ import org.openscience.cdk.smiles.SmilesParser;
  */
 public class ChemicalUtils {
 
-  private static final Log logger = LogFactory.getLog(ChemicalUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ChemicalUtils.class);
 
   private ChemicalUtils() {
     // hide implicit public constructor
@@ -75,12 +75,12 @@ public class ChemicalUtils {
     InchiStatus status = gen.getStatus();
     if (status == InchiStatus.WARNING) {
       // InChI generated, but with warning message
-      logger.warn("InChI warning: " + gen.getMessage());
+      LOGGER.warn("InChI warning: {}", gen.getMessage());
     } else if (status != InchiStatus.SUCCESS) {
       // InChI generation failed
       CDKException exception =
           new CDKException("InChI failed: " + status.toString() + " [" + gen.getMessage() + "]");
-      logger.error(exception);
+      LOGGER.error("InChI generation failed", exception);
       throw exception;
     }
     return gen;
@@ -113,7 +113,7 @@ public class ChemicalUtils {
         | NullPointerException
         | IllegalArgumentException
         | ArrayIndexOutOfBoundsException anException) {
-      logger.error(anException.getMessage());
+      LOGGER.error("Reaction SMILES generation failed", anException);
     }
     return smiles;
   }
@@ -175,6 +175,7 @@ public class ChemicalUtils {
    * Creates an SMILES representation for the given AtomContainer with the given SmiFlavor.
    *
    * @param atomContainer AtomContainer for which to generate an absolute SMILES representation
+   * @param flavor the CDK {@code SmiFlavor} bitmask controlling SMILES generation options
    * @return absolute SMILES string representing the structure of the AtomContainer
    */
   public static String createSmiles(IAtomContainer atomContainer, int flavor) throws CDKException {
@@ -188,14 +189,14 @@ public class ChemicalUtils {
         IAtomContainer clone = atomContainer.clone();
         Kekulization.kekulize(clone);
         smiles = smilesGen.create(clone);
-        logger.info("Kekulized structure: " + smiles);
+        LOGGER.info("Kekulized structure: {}", smiles);
       }
     } catch (CDKException
         | NullPointerException
         | IllegalArgumentException
         | CloneNotSupportedException
         | IllegalStateException anException) {
-      logger.error(anException);
+      LOGGER.error("SMILES generation failed", anException);
       throw new CDKException("Unable to generate SMILES.", anException.getCause());
     }
     return smiles;

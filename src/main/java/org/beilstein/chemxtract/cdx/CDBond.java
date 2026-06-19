@@ -26,7 +26,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
 
 /**
  * A bond defines a connection between atoms and corresponds to a chemical bond. Each bond has a
@@ -78,6 +83,13 @@ public class CDBond extends CDObject {
 
   /** Ordered list of attached bond IDs; plays a role in retaining stereochemistry. */
   private List<CDBond> bondCircularOrdering;
+
+  /**
+   * Internal marker (not part of the CDX specification) flagging a bond synthesised from a
+   * multicenter (haptic) attachment. Such coordination bonds connect a central atom to each atom of
+   * a coordinated &pi;-system and must not reduce the ligand atom's hydrogen count.
+   */
+  private boolean coordination = false;
 
   public CDBondOrder getBondOrder() {
     return bondOrder;
@@ -184,6 +196,25 @@ public class CDBond extends CDObject {
     this.crossingBonds = crossingBonds;
   }
 
+  /**
+   * Indicates whether this bond is a synthesised coordination (haptic) bond whose order must not
+   * count against the ligand atom's valence.
+   *
+   * @return {@code true} if this is a coordination bond
+   */
+  public boolean isCoordination() {
+    return coordination;
+  }
+
+  /**
+   * Marks this bond as a synthesised coordination (haptic) bond.
+   *
+   * @param coordination {@code true} to flag the bond as a coordination bond
+   */
+  public void setCoordination(boolean coordination) {
+    this.coordination = coordination;
+  }
+
   @Override
   public void accept(CDVisitor visitor) {
     visitor.visitBond(this);
@@ -213,5 +244,6 @@ public class CDBond extends CDObject {
     this.topology = other.topology;
     this.bondCircularOrdering =
         other.bondCircularOrdering != null ? new ArrayList<>(other.bondCircularOrdering) : null;
+    this.coordination = other.coordination;
   }
 }

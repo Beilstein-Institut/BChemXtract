@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.model;
 import java.io.Serial;
 import java.io.Serializable;
 
+/** Holds summary counts of reaction steps and valid reactions extracted from a document. */
 public class BCXReactionInfo implements Serializable {
 
   @Serial private static final long serialVersionUID = 3345067415014408831L;

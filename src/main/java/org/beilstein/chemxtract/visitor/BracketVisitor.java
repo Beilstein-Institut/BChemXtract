@@ -23,7 +23,10 @@ package org.beilstein.chemxtract.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.beilstein.chemxtract.cdx.*;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBracket;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
 
 /** Visitor class for traversing a ChemDraw page and collecting multiple-atom brackets. */

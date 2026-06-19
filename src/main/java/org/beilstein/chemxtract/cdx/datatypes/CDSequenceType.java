@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Biopolymer sequence types (peptide, DNA, RNA) defined by the ChemDraw CDX specification. */
 public enum CDSequenceType {
   Unknown,
   Peptide1,

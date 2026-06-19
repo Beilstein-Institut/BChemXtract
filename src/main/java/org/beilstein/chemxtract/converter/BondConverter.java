@@ -23,11 +23,8 @@ package org.beilstein.chemxtract.converter;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
-import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.openscience.cdk.CDKConstants;
@@ -63,7 +60,6 @@ import org.openscience.cdk.isomorphism.matchers.QueryBond;
 public class BondConverter {
 
   private final IChemObjectBuilder builder;
-  private static final Log logger = LogFactory.getLog(BondConverter.class);
   private final Map<CDAtom, IAtom> atomMap;
   private final Map<CDBond, IBond> bondMap;
 
@@ -162,57 +158,6 @@ public class BondConverter {
       case Dash -> IBond.Display.Dash;
       default -> IBond.Display.Solid;
     };
-  }
-
-  /**
-   * Converts a ChemDraw-defined double bond stereochemistry (E/Z/Undetermined) into the
-   * corresponding CDK {@link IBond.Stereo} value.
-   *
-   * <p>Returns {@link IBond.Stereo#NONE} if the stereochemistry is null or unrecognized.
-   *
-   * @param stereo the ChemDraw CIP-type stereo designation
-   * @return the corresponding {@link IBond.Stereo} value
-   */
-  private IBond.Stereo convertDoubleBondStereo(CDBondCIPType stereo) {
-    if (stereo == null) {
-      return IBond.Stereo.NONE;
-    }
-    switch (stereo) {
-      case E -> {
-        return IBond.Stereo.E;
-      }
-      case Z -> {
-        return IBond.Stereo.Z;
-      }
-      case Undetermined -> {
-        return IBond.Stereo.E_OR_Z;
-      }
-      default -> {
-        return IBond.Stereo.NONE;
-      }
-    }
-  }
-
-  /**
-   * Converts a ChemDraw-defined double bond stereochemistry (E/Z/Undetermined/None) into the
-   * corresponding CDK {@link IBond.Display} value.
-   *
-   * <p>Returns {@link IBond.Display#Solid} if the stereochemistry is null. Returns {@link
-   * IBond.Display#Crossed} for {@link CDBondCIPType#Undetermined}, return {@link
-   * IBond.Display#Solid} in any other case.
-   *
-   * @param stereo the ChemDraw CIP-type stereo designation
-   * @return the corresponding {@link IBond.Display} value
-   */
-  private IBond.Display convertDoubleBondStereoToCDKDisplay(CDBondCIPType stereo) {
-    if (stereo == null) {
-      return IBond.Display.Solid;
-    }
-    if (stereo == CDBondCIPType.Undetermined) {
-      return IBond.Display.Crossed;
-    } else {
-      return IBond.Display.Solid;
-    }
   }
 
   /**

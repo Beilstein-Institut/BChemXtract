@@ -21,6 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/**
+ * Positions at which an arrowhead is drawn on an arrow, as defined by the ChemDraw CDX
+ * specification.
+ */
 public enum CDArrowHeadPositionType {
   Unspecified,
   None,

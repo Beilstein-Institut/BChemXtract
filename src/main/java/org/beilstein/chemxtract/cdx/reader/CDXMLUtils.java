@@ -21,278 +21,335 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
-
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.StringTokenizer;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDSettings;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadPositionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowHeadType;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDoublePosition;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondReactionParticipation;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondTopology;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
+import org.beilstein.chemxtract.cdx.datatypes.CDCharSet;
+import org.beilstein.chemxtract.cdx.datatypes.CDConstraintType;
+import org.beilstein.chemxtract.cdx.datatypes.CDDrawingSpaceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDElementList;
+import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGenericList;
+import org.beilstein.chemxtract.cdx.datatypes.CDGeometryType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGraphicType;
+import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
+import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
+import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNoGoType;
+import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDObjectTagType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOvalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
+import org.beilstein.chemxtract.cdx.datatypes.CDPositioningType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
+import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
+import org.beilstein.chemxtract.cdx.datatypes.CDRingBondCount;
+import org.beilstein.chemxtract.cdx.datatypes.CDSequenceType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumClass;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumXType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSpectrumYType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
+import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
+import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This holds various methods to convert values for the CDXML file format. */
 public class CDXMLUtils {
-  private static final Log logger = LogFactory.getLog(CDXMLUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXMLUtils.class);
 
   public static String convertTextJustificationToString(CDJustification value) throws IOException {
-    return convertEnumToString(value, CDXMLTextJustification);
+    return convertEnumToString(value, CDXMLConstants.CDXMLTextJustification);
   }
 
   public static CDJustification convertStringToTextJustification(String value) throws IOException {
-    return (CDJustification) convertStringToEnum(value, CDXMLTextJustification);
+    return (CDJustification) convertStringToEnum(value, CDXMLConstants.CDXMLTextJustification);
   }
 
   public static String convertDrawingSpaceTypeToString(CDDrawingSpaceType value)
       throws IOException {
-    return convertEnumToString(value, CDXMLDrawingSpaceType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLDrawingSpaceType);
   }
 
   public static CDDrawingSpaceType convertStringToDrawingSpaceType(String value)
       throws IOException {
-    return (CDDrawingSpaceType) convertStringToEnum(value, CDXMLDrawingSpaceType);
+    return (CDDrawingSpaceType) convertStringToEnum(value, CDXMLConstants.CDXMLDrawingSpaceType);
   }
 
   public static String convertPageDefinitionToString(CDPageDefinition value) throws IOException {
-    return convertEnumToString(value, CDXMLPageDefinition);
+    return convertEnumToString(value, CDXMLConstants.CDXMLPageDefinition);
   }
 
   public static CDPageDefinition convertStringToPageDefinition(String value) throws IOException {
-    return (CDPageDefinition) convertStringToEnum(value, CDXMLPageDefinition);
+    return (CDPageDefinition) convertStringToEnum(value, CDXMLConstants.CDXMLPageDefinition);
   }
 
   public static String convertLabelDisplayToString(CDLabelDisplay value) throws IOException {
-    return convertEnumToString(value, CDXMLLabelDisplay);
+    return convertEnumToString(value, CDXMLConstants.CDXMLLabelDisplay);
   }
 
   public static CDLabelDisplay convertStringToLabelDisplay(String value) throws IOException {
-    return (CDLabelDisplay) convertStringToEnum(value, CDXMLLabelDisplay);
+    return (CDLabelDisplay) convertStringToEnum(value, CDXMLConstants.CDXMLLabelDisplay);
   }
 
   public static String convertNodeTypeToString(CDNodeType value) throws IOException {
-    return convertEnumToString(value, CDXMLNodeType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLNodeType);
   }
 
   public static CDNodeType convertStringToNodeType(String value) throws IOException {
-    return (CDNodeType) convertStringToEnum(value, CDXMLNodeType);
+    return (CDNodeType) convertStringToEnum(value, CDXMLConstants.CDXMLNodeType);
   }
 
   public static String convertRadicalToString(CDRadical value) throws IOException {
-    return convertEnumToString(value, CDXMLRadical);
+    return convertEnumToString(value, CDXMLConstants.CDXMLRadical);
   }
 
   public static CDRadical convertStringToRadical(String value) throws IOException {
-    return (CDRadical) convertStringToEnum(value, CDXMLRadical);
+    return (CDRadical) convertStringToEnum(value, CDXMLConstants.CDXMLRadical);
   }
 
   public static String convertRingBondCountToString(CDRingBondCount value) throws IOException {
-    return convertEnumToString(value, CDXMLRingBondCount);
+    return convertEnumToString(value, CDXMLConstants.CDXMLRingBondCount);
   }
 
   public static CDRingBondCount convertStringToRingBondCount(String value) throws IOException {
-    return (CDRingBondCount) convertStringToEnum(value, CDXMLRingBondCount);
+    return (CDRingBondCount) convertStringToEnum(value, CDXMLConstants.CDXMLRingBondCount);
   }
 
   public static String convertUnsaturationToString(CDUnsaturation value) throws IOException {
-    return convertEnumToString(value, CDXMLUnsaturation);
+    return convertEnumToString(value, CDXMLConstants.CDXMLUnsaturation);
   }
 
   public static CDUnsaturation convertStringToUnsaturation(String value) throws IOException {
-    return (CDUnsaturation) convertStringToEnum(value, CDXMLUnsaturation);
+    return (CDUnsaturation) convertStringToEnum(value, CDXMLConstants.CDXMLUnsaturation);
   }
 
   public static String convertReactionStereoToString(CDReactionStereo value) throws IOException {
-    return convertEnumToString(value, CDXMLReactionStereo);
+    return convertEnumToString(value, CDXMLConstants.CDXMLReactionStereo);
   }
 
   public static CDReactionStereo convertStringToReactionStereo(String value) throws IOException {
-    return (CDReactionStereo) convertStringToEnum(value, CDXMLReactionStereo);
+    return (CDReactionStereo) convertStringToEnum(value, CDXMLConstants.CDXMLReactionStereo);
   }
 
   public static String convertTranslationToString(CDTranslation value) throws IOException {
-    return convertEnumToString(value, CDXMLTranslation);
+    return convertEnumToString(value, CDXMLConstants.CDXMLTranslation);
   }
 
   public static CDTranslation convertStringToTranslation(String value) throws IOException {
-    return (CDTranslation) convertStringToEnum(value, CDXMLTranslation);
+    return (CDTranslation) convertStringToEnum(value, CDXMLConstants.CDXMLTranslation);
   }
 
   public static String convertAbundanceToString(CDIsotopicAbundance value) throws IOException {
-    return convertEnumToString(value, CDXMLAbundance);
+    return convertEnumToString(value, CDXMLConstants.CDXMLAbundance);
   }
 
   public static CDIsotopicAbundance convertStringToAbundance(String value) throws IOException {
-    return (CDIsotopicAbundance) convertStringToEnum(value, CDXMLAbundance);
+    return (CDIsotopicAbundance) convertStringToEnum(value, CDXMLConstants.CDXMLAbundance);
   }
 
   public static String convertExternalConnectionTypeToString(CDExternalConnectionType value)
       throws IOException {
-    return convertEnumToString(value, CDXMLExternalConnectionType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLExternalConnectionType);
   }
 
   public static CDExternalConnectionType convertStringToExternalConnectionType(String value)
       throws IOException {
-    return (CDExternalConnectionType) convertStringToEnum(value, CDXMLExternalConnectionType);
+    return (CDExternalConnectionType)
+        convertStringToEnum(value, CDXMLConstants.CDXMLExternalConnectionType);
   }
 
   public static String convertAtomGeometryToString(CDAtomGeometry value) throws IOException {
-    return convertEnumToString(value, CDXMLAtomGeometry);
+    return convertEnumToString(value, CDXMLConstants.CDXMLAtomGeometry);
   }
 
   public static CDAtomGeometry convertStringToAtomGeometry(String value) throws IOException {
-    return (CDAtomGeometry) convertStringToEnum(value, CDXMLAtomGeometry);
+    return (CDAtomGeometry) convertStringToEnum(value, CDXMLConstants.CDXMLAtomGeometry);
   }
 
   public static String convertAtomCIPTypeToString(CDAtomCIPType value) throws IOException {
-    return convertEnumToString(value, CDXMLAtomCIPType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLAtomCIPType);
   }
 
   public static CDAtomCIPType convertStringToAtomCIPType(String value) throws IOException {
-    return (CDAtomCIPType) convertStringToEnum(value, CDXMLAtomCIPType);
+    return (CDAtomCIPType) convertStringToEnum(value, CDXMLConstants.CDXMLAtomCIPType);
   }
 
   public static String convertBondOrderToString(CDBondOrder value) throws IOException {
-    return convertEnumToString(value, CDXMLBondOrder);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondOrder);
   }
 
   public static CDBondOrder convertStringToBondOrder(String value) throws IOException {
-    return (CDBondOrder) convertStringToEnum(value, CDXMLBondOrder);
+    return (CDBondOrder) convertStringToEnum(value, CDXMLConstants.CDXMLBondOrder);
   }
 
   public static String convertBondDisplayToString(CDBondDisplay value) throws IOException {
-    return convertEnumToString(value, CDXMLBondDisplay);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondDisplay);
   }
 
   public static CDBondDisplay convertStringToBondDisplay(String value) throws IOException {
-    return (CDBondDisplay) convertStringToEnum(value, CDXMLBondDisplay);
+    return (CDBondDisplay) convertStringToEnum(value, CDXMLConstants.CDXMLBondDisplay);
   }
 
   public static String convertBondDoublePositionToString(CDBondDoublePosition value)
       throws IOException {
-    return convertEnumToString(value, CDXMLBondDoublePosition);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondDoublePosition);
   }
 
   public static CDBondDoublePosition convertStringToBondDoublePosition(String value)
       throws IOException {
-    return (CDBondDoublePosition) convertStringToEnum(value, CDXMLBondDoublePosition);
+    return (CDBondDoublePosition)
+        convertStringToEnum(value, CDXMLConstants.CDXMLBondDoublePosition);
   }
 
   public static String convertBondTopologyToString(CDBondTopology value) throws IOException {
-    return convertEnumToString(value, CDXMLBondTopology);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondTopology);
   }
 
   public static CDBondTopology convertStringToBondTopology(String value) throws IOException {
-    return (CDBondTopology) convertStringToEnum(value, CDXMLBondTopology);
+    return (CDBondTopology) convertStringToEnum(value, CDXMLConstants.CDXMLBondTopology);
   }
 
   public static String convertBondReactionParticipationToString(CDBondReactionParticipation value)
       throws IOException {
-    return convertEnumToString(value, CDXMLBondReactionParticipation);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondReactionParticipation);
   }
 
   public static CDBondReactionParticipation convertStringToBondReactionParticipation(String value)
       throws IOException {
-    return (CDBondReactionParticipation) convertStringToEnum(value, CDXMLBondReactionParticipation);
+    return (CDBondReactionParticipation)
+        convertStringToEnum(value, CDXMLConstants.CDXMLBondReactionParticipation);
   }
 
   public static String convertBondCIPTypeToString(CDBondCIPType value) throws IOException {
-    return convertEnumToString(value, CDXMLBondCIPType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBondCIPType);
   }
 
   public static CDBondCIPType convertStringToBondCIPType(String value) throws IOException {
-    return (CDBondCIPType) convertStringToEnum(value, CDXMLBondCIPType);
+    return (CDBondCIPType) convertStringToEnum(value, CDXMLConstants.CDXMLBondCIPType);
   }
 
   public static String convertGraphicTypeToString(CDGraphicType value) throws IOException {
-    return convertEnumToString(value, CDXMLGraphicType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLGraphicType);
   }
 
   public static CDGraphicType convertStringToGraphicType(String value) throws IOException {
-    return (CDGraphicType) convertStringToEnum(value, CDXMLGraphicType);
+    return (CDGraphicType) convertStringToEnum(value, CDXMLConstants.CDXMLGraphicType);
   }
 
   public static String convertLineTypeToString(CDLineType value) {
     StringBuilder sb = new StringBuilder();
     if (value.isDashed()) {
-      sb.append(CDXLineType_Dashed);
+      sb.append(CDXMLConstants.CDXLineType_Dashed);
     }
     if (value.isBold()) {
       if (sb.length() > 0) {
         sb.append(" ");
       }
-      sb.append(CDXLineType_Bold);
+      sb.append(CDXMLConstants.CDXLineType_Bold);
     }
     if (value.isWavy()) {
       if (sb.length() > 0) {
         sb.append(" ");
       }
-      sb.append(CDXLineType_Wavy);
+      sb.append(CDXMLConstants.CDXLineType_Wavy);
     }
     if (sb.length() > 0) {
       return sb.toString();
     }
-    return CDXLineType_Solid;
+    return CDXMLConstants.CDXLineType_Solid;
   }
 
   public static CDLineType convertStringToLineType(String value) {
     CDLineType lineType = new CDLineType();
-    if (value.indexOf(CDXLineType_Dashed) >= 0) {
+    if (value.indexOf(CDXMLConstants.CDXLineType_Dashed) >= 0) {
       lineType.setDashed(true);
-    } else if (value.indexOf(CDXLineType_Bold) >= 0) {
+    } else if (value.indexOf(CDXMLConstants.CDXLineType_Bold) >= 0) {
       lineType.setBold(true);
-    } else if (value.indexOf(CDXLineType_Wavy) >= 0) {
+    } else if (value.indexOf(CDXMLConstants.CDXLineType_Wavy) >= 0) {
       lineType.setWavy(true);
     }
     return lineType;
   }
 
   public static String convertArrowTypeToString(CDArrowType value) throws IOException {
-    return convertEnumToString(value, CDXMLArrowType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLArrowType);
   }
 
   public static CDArrowType convertStringToArrowType(String value) throws IOException {
-    return (CDArrowType) convertStringToEnum(value, CDXMLArrowType);
+    return (CDArrowType) convertStringToEnum(value, CDXMLConstants.CDXMLArrowType);
   }
 
   public static String convertBracketTypeToString(CDBracketType value) throws IOException {
-    return convertEnumToString(value, CDXMLBracketType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBracketType);
   }
 
   public static CDBracketType convertStringToBracketType(String value) throws IOException {
-    return (CDBracketType) convertStringToEnum(value, CDXMLBracketType);
+    return (CDBracketType) convertStringToEnum(value, CDXMLConstants.CDXMLBracketType);
   }
 
   public static String convertRectangleTypeToString(CDRectangleType value) {
     StringBuilder sb = new StringBuilder();
     if (value.isPlain()) {
-      sb.append(CDXRectangleType_Plain);
+      sb.append(CDXMLConstants.CDXRectangleType_Plain);
     }
     if (value.isRoundEdge()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_RoundEdge);
+      sb.append(CDXMLConstants.CDXRectangleType_RoundEdge);
     }
     if (value.isShadow()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_Shadow);
+      sb.append(CDXMLConstants.CDXRectangleType_Shadow);
     }
     if (value.isShaded()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_Shaded);
+      sb.append(CDXMLConstants.CDXRectangleType_Shaded);
     }
     if (value.isFilled()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_Filled);
+      sb.append(CDXMLConstants.CDXRectangleType_Filled);
     }
     if (value.isDashed()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_Dashed);
+      sb.append(CDXMLConstants.CDXRectangleType_Dashed);
     }
     if (value.isBold()) {
       appendSeparator(sb);
-      sb.append(CDXRectangleType_Bold);
+      sb.append(CDXMLConstants.CDXRectangleType_Bold);
     }
     return sb.toString();
   }
@@ -302,19 +359,19 @@ public class CDXMLUtils {
     CDRectangleType result = new CDRectangleType();
     while (st.hasMoreTokens()) {
       String element = st.nextToken();
-      if (element.equals(CDXRectangleType_Plain)) {
+      if (element.equals(CDXMLConstants.CDXRectangleType_Plain)) {
         result.setPlain(true);
-      } else if (element.equals(CDXRectangleType_RoundEdge)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_RoundEdge)) {
         result.setRoundEdge(true);
-      } else if (element.equals(CDXRectangleType_Shadow)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_Shadow)) {
         result.setShadow(true);
-      } else if (element.equals(CDXRectangleType_Shaded)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_Shaded)) {
         result.setShaded(true);
-      } else if (element.equals(CDXRectangleType_Filled)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_Filled)) {
         result.setFilled(true);
-      } else if (element.equals(CDXRectangleType_Dashed)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_Dashed)) {
         result.setDashed(true);
-      } else if (element.equals(CDXRectangleType_Bold)) {
+      } else if (element.equals(CDXMLConstants.CDXRectangleType_Bold)) {
         result.setBold(true);
       } else {
         throw new IOException("Rectangle type \"" + element + "\" not recognized");
@@ -326,27 +383,27 @@ public class CDXMLUtils {
   public static String convertOvalTypeToString(CDOvalType value) {
     StringBuilder sb = new StringBuilder();
     if (value.isCircle()) {
-      sb.append(CDXMLOvalType_Circle);
+      sb.append(CDXMLConstants.CDXMLOvalType_Circle);
     }
     if (value.isShaded()) {
       appendSeparator(sb);
-      sb.append(CDXMLOvalType_Shaded);
+      sb.append(CDXMLConstants.CDXMLOvalType_Shaded);
     }
     if (value.isFilled()) {
       appendSeparator(sb);
-      sb.append(CDXMLOvalType_Filled);
+      sb.append(CDXMLConstants.CDXMLOvalType_Filled);
     }
     if (value.isDashed()) {
       appendSeparator(sb);
-      sb.append(CDXMLOvalType_Dashed);
+      sb.append(CDXMLConstants.CDXMLOvalType_Dashed);
     }
     if (value.isBold()) {
       appendSeparator(sb);
-      sb.append(CDXMLOvalType_Bold);
+      sb.append(CDXMLConstants.CDXMLOvalType_Bold);
     }
     if (value.isShadowed()) {
       appendSeparator(sb);
-      sb.append(CDXMLOvalType_Shadowed);
+      sb.append(CDXMLConstants.CDXMLOvalType_Shadowed);
     }
     return sb.toString();
   }
@@ -356,17 +413,17 @@ public class CDXMLUtils {
     CDOvalType result = new CDOvalType();
     while (st.hasMoreTokens()) {
       String element = st.nextToken();
-      if (element.equals(CDXMLOvalType_Circle)) {
+      if (element.equals(CDXMLConstants.CDXMLOvalType_Circle)) {
         result.setCircle(true);
-      } else if (element.equals(CDXMLOvalType_Shaded)) {
+      } else if (element.equals(CDXMLConstants.CDXMLOvalType_Shaded)) {
         result.setShaded(true);
-      } else if (element.equals(CDXMLOvalType_Filled)) {
+      } else if (element.equals(CDXMLConstants.CDXMLOvalType_Filled)) {
         result.setFilled(true);
-      } else if (element.equals(CDXMLOvalType_Dashed)) {
+      } else if (element.equals(CDXMLConstants.CDXMLOvalType_Dashed)) {
         result.setDashed(true);
-      } else if (element.equals(CDXMLOvalType_Bold)) {
+      } else if (element.equals(CDXMLConstants.CDXMLOvalType_Bold)) {
         result.setBold(true);
-      } else if (element.equals(CDXMLOvalType_Shadowed)) {
+      } else if (element.equals(CDXMLConstants.CDXMLOvalType_Shadowed)) {
         result.setShadowed(true);
       } else {
         throw new IOException("Oval type \"" + element + "\" not recognized");
@@ -376,125 +433,126 @@ public class CDXMLUtils {
   }
 
   public static String convertOrbitalTypeToString(CDOrbitalType value) throws IOException {
-    return convertEnumToString(value, CDXMLOrbitalType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLOrbitalType);
   }
 
   public static CDOrbitalType convertStringToOrbitalType(String value) throws IOException {
-    return (CDOrbitalType) convertStringToEnum(value, CDXMLOrbitalType);
+    return (CDOrbitalType) convertStringToEnum(value, CDXMLConstants.CDXMLOrbitalType);
   }
 
   public static String convertSymbolTypeToString(CDSymbolType value) throws IOException {
-    return convertEnumToString(value, CDXMLSymbolType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSymbolType);
   }
 
   public static CDSymbolType convertStringToSymbolType(String value) throws IOException {
-    return (CDSymbolType) convertStringToEnum(value, CDXMLSymbolType);
+    return (CDSymbolType) convertStringToEnum(value, CDXMLConstants.CDXMLSymbolType);
   }
 
   public static String convertBracketUsageToString(CDBracketUsage value) throws IOException {
-    return convertEnumToString(value, CDXMLBracketUsage);
+    return convertEnumToString(value, CDXMLConstants.CDXMLBracketUsage);
   }
 
   public static CDBracketUsage convertStringToBracketUsage(String value) throws IOException {
-    return (CDBracketUsage) convertStringToEnum(value, CDXMLBracketUsage);
+    return (CDBracketUsage) convertStringToEnum(value, CDXMLConstants.CDXMLBracketUsage);
   }
 
   public static String convertPolymerRepeatPatternToString(CDPolymerRepeatPattern value)
       throws IOException {
-    return convertEnumToString(value, CDXMLPolymerRepeatPattern);
+    return convertEnumToString(value, CDXMLConstants.CDXMLPolymerRepeatPattern);
   }
 
   public static CDPolymerRepeatPattern convertStringToPolymerRepeatPattern(String value)
       throws IOException {
-    return (CDPolymerRepeatPattern) convertStringToEnum(value, CDXMLPolymerRepeatPattern);
+    return (CDPolymerRepeatPattern)
+        convertStringToEnum(value, CDXMLConstants.CDXMLPolymerRepeatPattern);
   }
 
   public static String convertPolymerFlipTypeToString(CDPolymerFlipType value) throws IOException {
-    return convertEnumToString(value, CDXMLPolymerFlipType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLPolymerFlipType);
   }
 
   public static CDPolymerFlipType convertStringToPolymerFlipType(String value) throws IOException {
-    return (CDPolymerFlipType) convertStringToEnum(value, CDXMLPolymerFlipType);
+    return (CDPolymerFlipType) convertStringToEnum(value, CDXMLConstants.CDXMLPolymerFlipType);
   }
 
   public static String convertGeometricFeatureToString(CDGeometryType value) throws IOException {
-    return convertEnumToString(value, CDXMLGeometricFeature);
+    return convertEnumToString(value, CDXMLConstants.CDXMLGeometricFeature);
   }
 
   public static CDGeometryType convertStringToGeometricFeature(String value) throws IOException {
-    return (CDGeometryType) convertStringToEnum(value, CDXMLGeometricFeature);
+    return (CDGeometryType) convertStringToEnum(value, CDXMLConstants.CDXMLGeometricFeature);
   }
 
   public static String convertConstraintTypeToString(CDConstraintType value) throws IOException {
-    return convertEnumToString(value, CDXMLConstraintType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLConstraintType);
   }
 
   public static CDConstraintType convertStringToConstraintType(String value) throws IOException {
-    return (CDConstraintType) convertStringToEnum(value, CDXMLConstraintType);
+    return (CDConstraintType) convertStringToEnum(value, CDXMLConstants.CDXMLConstraintType);
   }
 
   public static String convertSpectrumXTypeToString(CDSpectrumXType value) throws IOException {
-    return convertEnumToString(value, CDXMLSpectrumXType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSpectrumXType);
   }
 
   public static CDSpectrumXType convertStringToSpectrumXType(String value) throws IOException {
-    return (CDSpectrumXType) convertStringToEnum(value, CDXMLSpectrumXType);
+    return (CDSpectrumXType) convertStringToEnum(value, CDXMLConstants.CDXMLSpectrumXType);
   }
 
   public static String convertSpectrumYTypeToString(CDSpectrumYType value) throws IOException {
-    return convertEnumToString(value, CDXMLSpectrumYType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSpectrumYType);
   }
 
   public static CDSpectrumYType convertStringToSpectrumYType(String value) throws IOException {
-    return (CDSpectrumYType) convertStringToEnum(value, CDXMLSpectrumYType);
+    return (CDSpectrumYType) convertStringToEnum(value, CDXMLConstants.CDXMLSpectrumYType);
   }
 
   public static String convertSpectrumClassToString(CDSpectrumClass value) throws IOException {
-    return convertEnumToString(value, CDXMLSpectrumClass);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSpectrumClass);
   }
 
   public static CDSpectrumClass convertStringToSpectrumClass(String value) throws IOException {
-    return (CDSpectrumClass) convertStringToEnum(value, CDXMLSpectrumClass);
+    return (CDSpectrumClass) convertStringToEnum(value, CDXMLConstants.CDXMLSpectrumClass);
   }
 
   public static String convertObjectTagTypeToString(CDObjectTagType value) throws IOException {
-    return convertEnumToString(value, CDXMLObjectTagType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLObjectTagType);
   }
 
   public static CDObjectTagType convertStringToObjectTagType(String value) throws IOException {
-    return (CDObjectTagType) convertStringToEnum(value, CDXMLObjectTagType);
+    return (CDObjectTagType) convertStringToEnum(value, CDXMLConstants.CDXMLObjectTagType);
   }
 
   public static String convertPositioningTypeToString(CDPositioningType value) throws IOException {
-    return convertEnumToString(value, CDXMLPositioningType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLPositioningType);
   }
 
   public static CDPositioningType convertStringToPositioningType(String value) throws IOException {
-    return (CDPositioningType) convertStringToEnum(value, CDXMLPositioningType);
+    return (CDPositioningType) convertStringToEnum(value, CDXMLConstants.CDXMLPositioningType);
   }
 
   public static String convertSideTypeToString(CDSideType value) throws IOException {
-    return convertEnumToString(value, CDXMLSideType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSideType);
   }
 
   public static CDSideType convertStringToSideType(String value) throws IOException {
-    return (CDSideType) convertStringToEnum(value, CDXMLSideType);
+    return (CDSideType) convertStringToEnum(value, CDXMLConstants.CDXMLSideType);
   }
 
   public static String convertSequenceTypeToString(CDSequenceType value) throws IOException {
-    return convertEnumToString(value, CDXMLSequenceType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLSequenceType);
   }
 
   public static CDSequenceType convertStringToSequenceType(String value) throws IOException {
-    return (CDSequenceType) convertStringToEnum(value, CDXMLSequenceType);
+    return (CDSequenceType) convertStringToEnum(value, CDXMLConstants.CDXMLSequenceType);
   }
 
   public static String convertCharSetToString(CDCharSet value) throws IOException {
-    return convertEnumToString(value, CDXMLCharSet);
+    return convertEnumToString(value, CDXMLConstants.CDXMLCharSet);
   }
 
   public static CDCharSet convertStringToCharSet(String value) throws IOException {
-    return (CDCharSet) convertStringToEnum(value, CDXMLCharSet);
+    return (CDCharSet) convertStringToEnum(value, CDXMLConstants.CDXMLCharSet);
   }
 
   private static String convertEnumToString(Enum<?> value, Object[][] table) throws IOException {
@@ -714,7 +772,7 @@ public class CDXMLUtils {
       try {
         list.addElement(Integer.parseInt(element));
       } catch (NumberFormatException e) {
-        logger.warn("Skipping non-integer element in CDElementList: \"" + element + "\"", e);
+        LOGGER.warn("Skipping non-integer element in CDElementList: \"{}\"", element, e);
       }
     }
     return list;
@@ -759,7 +817,7 @@ public class CDXMLUtils {
     try {
       return dateFormat.parse(value);
     } catch (ParseException e) {
-      logger.warn("Cannot convert date " + value, e);
+      LOGGER.warn("Cannot convert date {}", value, e);
       return null;
     }
   }
@@ -836,13 +894,15 @@ public class CDXMLUtils {
   public static String convertObjectRefMapToString(
       Map<?, ?> values, Map<Object, Integer> references) {
     StringBuilder sb = new StringBuilder();
-    for (Object key : values.keySet()) {
+    for (Map.Entry<?, ?> entry : values.entrySet()) {
       if (sb.length() > 0) {
         sb.append(" ");
       }
-      sb.append(references.get(key) != null ? references.get(key) : "0");
+      Integer keyRef = references.get(entry.getKey());
+      sb.append(keyRef != null ? keyRef : "0");
       sb.append(" ");
-      sb.append(references.get(values.get(key)) != null ? references.get(values.get(key)) : "0");
+      Integer valueRef = references.get(entry.getValue());
+      sb.append(valueRef != null ? valueRef : "0");
     }
     return sb.toString();
   }
@@ -865,34 +925,34 @@ public class CDXMLUtils {
   }
 
   public static String convertArrowheadTypeToString(CDArrowHeadType value) throws IOException {
-    return convertEnumToString(value, CDXMLArrowheadType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLArrowheadType);
   }
 
   public static CDArrowHeadType convertStringToArrowheadType(String value) throws IOException {
-    return (CDArrowHeadType) convertStringToEnum(value, CDXMLArrowheadType);
+    return (CDArrowHeadType) convertStringToEnum(value, CDXMLConstants.CDXMLArrowheadType);
   }
 
   public static String convertArrowheadToString(CDArrowHeadPositionType value) throws IOException {
-    return convertEnumToString(value, CDXMLArrowhead);
+    return convertEnumToString(value, CDXMLConstants.CDXMLArrowhead);
   }
 
   public static CDArrowHeadPositionType convertStringToArrowhead(String value) throws IOException {
-    return (CDArrowHeadPositionType) convertStringToEnum(value, CDXMLArrowhead);
+    return (CDArrowHeadPositionType) convertStringToEnum(value, CDXMLConstants.CDXMLArrowhead);
   }
 
   public static String convertFillTypeToString(CDFillType value) throws IOException {
-    return convertEnumToString(value, CDXMLFillType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLFillType);
   }
 
   public static CDFillType convertStringToFillType(String value) throws IOException {
-    return (CDFillType) convertStringToEnum(value, CDXMLFillType);
+    return (CDFillType) convertStringToEnum(value, CDXMLConstants.CDXMLFillType);
   }
 
   public static String convertNoGoTypeToString(CDNoGoType value) throws IOException {
-    return convertEnumToString(value, CDXMLNoGoType);
+    return convertEnumToString(value, CDXMLConstants.CDXMLNoGoType);
   }
 
   public static CDNoGoType convertStringToNoGoType(String value) throws IOException {
-    return (CDNoGoType) convertStringToEnum(value, CDXMLNoGoType);
+    return (CDNoGoType) convertStringToEnum(value, CDXMLConstants.CDXMLNoGoType);
   }
 }

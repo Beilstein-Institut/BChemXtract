@@ -22,7 +22,11 @@
 package org.beilstein.chemxtract.model;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 /** A substance with structure and Inchi that could be extracted from a CDX file. */
@@ -54,8 +58,11 @@ public class BCXSubstance implements Serializable {
   /**
    * The atom container being constructed or processed by this converter. Holds the chemical
    * structure representation including atoms, bonds, and associated properties.
+   *
+   * <p>CDK atom containers are not serializable, so this field is marked {@code transient}; it is
+   * {@code null} after deserialization and must be regenerated if needed.
    */
-  private IAtomContainer atomContainer;
+  private transient IAtomContainer atomContainer;
 
   /** The MDL V3000 format string representation of the chemical structure. */
   private String mdlv3000;

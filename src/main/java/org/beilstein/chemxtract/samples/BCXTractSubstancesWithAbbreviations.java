@@ -56,11 +56,11 @@ public class BCXTractSubstancesWithAbbreviations {
   }
 
   public void extract(String filename) throws Exception {
-    // load input CDX file
-    InputStream in = new FileInputStream(filename);
-
-    // parse CDX into in-memory model
-    CDDocument document = CDXReader.readDocument(in);
+    // load input CDX file and parse into in-memory model
+    CDDocument document;
+    try (InputStream in = new FileInputStream(filename)) {
+      document = CDXReader.readDocument(in);
+    }
 
     // extract substances from CDX document
     BCXSubstanceInfo info = new BCXSubstanceInfo();
@@ -72,7 +72,6 @@ public class BCXTractSubstancesWithAbbreviations {
     int i = 0;
     for (BCXSubstance bcxSubstance : bcxSubstances) {
       String outputfile = bcxSubstance.getInchiKey() + "-abbreviations.png";
-      FileOutputStream fos = new FileOutputStream(outputfile);
 
       // use smiles without coordinates, auto layout
       IAtomContainer container = sp.parseSmiles(bcxSubstance.getSmiles());
@@ -81,9 +80,8 @@ public class BCXTractSubstancesWithAbbreviations {
       Map<String, String> abbreviations = bcxSubstance.getAbbreviations();
       Abbreviations abb = new Abbreviations();
       if (abbreviations != null && !abbreviations.isEmpty()) {
-        for (String abbSmiles : abbreviations.keySet()) {
-          String abbLabel = abbreviations.get(abbSmiles);
-          abb.add(abbSmiles + " " + abbLabel);
+        for (Map.Entry<String, String> entry : abbreviations.entrySet()) {
+          abb.add(entry.getKey() + " " + entry.getValue());
         }
         abb.apply(container);
       }
@@ -99,9 +97,9 @@ public class BCXTractSubstancesWithAbbreviations {
               .withBackgroundColor(Color.WHITE)
               .withMolTitle();
       Depiction d = dg.depict(container);
-      d.writeTo(Depiction.PNG_FMT, fos);
-      fos.flush();
-      fos.close();
+      try (FileOutputStream fos = new FileOutputStream(outputfile)) {
+        d.writeTo(Depiction.PNG_FMT, fos);
+      }
       i++;
     }
 

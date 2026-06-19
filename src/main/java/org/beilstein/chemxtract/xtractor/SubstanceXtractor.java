@@ -23,15 +23,23 @@ package org.beilstein.chemxtract.xtractor;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.model.BCXSubstanceOccurrence;
+import org.beilstein.chemxtract.utils.AttachmentHandler;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
@@ -39,12 +47,16 @@ import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.io.MDLV3000Writer;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for extracting chemical substances from a {@link CDDocument}.
@@ -56,7 +68,7 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 public class SubstanceXtractor {
 
   private final IChemObjectBuilder builder;
-  private static final Log logger = LogFactory.getLog(SubstanceXtractor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SubstanceXtractor.class);
 
   /**
    * Constructs a {@code SubstanceXtractor} using a custom CDK {@link IChemObjectBuilder}.
@@ -101,7 +113,7 @@ public class SubstanceXtractor {
         try {
           substances.addAll(xtractSubstances(fragment, page, markushHandler));
         } catch (IOException | CDKException e) {
-          logger.error("Could not extract structures from fragment.");
+          LOGGER.error("Could not extract structures from fragment.", e);
         }
       }
     }
@@ -172,8 +184,11 @@ public class SubstanceXtractor {
   protected BCXSubstance xtractSubstance(CDFragment fragment, CDPage page)
       throws CDKException, IOException {
     List<BCXSubstance> substances = xtractSubstances(fragment, page, null);
-    if (!substances.isEmpty()) return substances.get(0);
-    else return null;
+    if (!substances.isEmpty()) {
+      return substances.get(0);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -198,81 +213,100 @@ public class SubstanceXtractor {
 
     // validate fragment
     if (!fragment.isValid()) {
-      logger.info("Fragment validation failed: The fragment has one or zero atoms.");
+      LOGGER.info("Fragment validation failed: The fragment has one or zero atoms.");
       return substances;
     }
 
     SgroupHandler.addMultipleGroupBrackets(fragment, page);
+    // Materialise multicenter (haptic) bonds in place before conversion.
+    AttachmentHandler.resolveMultiAttachments(fragment);
+
+    // A position-variation scaffold may legitimately retain unresolved R-groups across its
+    // enumerated isomers, so those substances are emitted even when InChI cannot represent them.
+    boolean variablePosition = AttachmentHandler.hasVariableAttachment(fragment);
 
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
-    IAtomContainer atomContainer = null;
-    try {
-      atomContainer = fragmentConverter.convert(fragment);
-    } catch (IllegalArgumentException e) {
-      logger.error(e.getMessage());
-      return substances;
-    }
-
-    //    MarkushHandler markushHandler = new MarkushHandler(page, this.builder);
-
-    try {
-      if (markushHandler != null
-          && fragment.hasRGroup()
-          && !markushHandler.getResidueLabels().isEmpty()) {
-        List<IAtomContainer> atomContainers = markushHandler.replaceRGroups(atomContainer);
-        for (IAtomContainer container : atomContainers) {
-          BCXSubstance substance = createAndFillBCXSubstance(container);
-          Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
-          // add occurrence
-          if (boundsOptional.isPresent()) {
-            CDRectangle bounds = boundsOptional.get();
-            BCXSubstanceOccurrence occurrence =
-                new BCXSubstanceOccurrence(
-                    bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
-            substance.addOccurrence(occurrence);
-          }
-          addAbbreviations(substance, fragment);
-          substances.add(substance);
-        }
-        return substances;
+    // Position-variation nodes expand to one fragment per candidate atom; structures without a
+    // variable attachment yield the original fragment unchanged.
+    for (CDFragment variant : AttachmentHandler.expandVariableAttachments(fragment)) {
+      IAtomContainer atomContainer;
+      try {
+        atomContainer = fragmentConverter.convert(variant);
+      } catch (IllegalArgumentException e) {
+        LOGGER.error("Fragment conversion failed", e);
+        continue;
       }
-    } catch (IOException | CloneNotSupportedException e) {
-      logger.error(e.getMessage());
+
+      boolean expandedRGroups = false;
+      if (markushHandler != null
+          && variant.hasRGroup()
+          && !markushHandler.getResidueLabels().isEmpty()) {
+        try {
+          for (IAtomContainer container : markushHandler.replaceRGroups(atomContainer)) {
+            substances.add(buildSubstance(container, fragment, variablePosition));
+          }
+          expandedRGroups = true;
+        } catch (IOException | CloneNotSupportedException e) {
+          LOGGER.error("R-group replacement failed", e);
+        }
+      }
+      if (!expandedRGroups) {
+        substances.add(buildSubstance(atomContainer, fragment, variablePosition));
+      }
     }
-    BCXSubstance substance = createAndFillBCXSubstance(atomContainer);
+    return substances;
+  }
+
+  /**
+   * Creates a {@link BCXSubstance} from the given atom container and enriches it with the
+   * fragment's document occurrence and abbreviations.
+   *
+   * @param atomContainer the CDK atom container for the substance
+   * @param fragment the source fragment providing occurrence bounds and abbreviations
+   * @param tolerateMissingInchi when {@code true}, a substance whose unresolved pseudo-atoms
+   *     prevent InChI generation is still produced (carrying SMILES and molecular formula)
+   * @return the populated {@link BCXSubstance}
+   * @throws IOException if abbreviation resolution fails
+   * @throws CDKException if InChI generation or nested fragment conversion fails
+   */
+  private BCXSubstance buildSubstance(
+      IAtomContainer atomContainer, CDFragment fragment, boolean tolerateMissingInchi)
+      throws IOException, CDKException {
+    BCXSubstance substance = createAndFillBCXSubstance(atomContainer, tolerateMissingInchi);
     Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
-    // add occurrence
     if (boundsOptional.isPresent()) {
       CDRectangle bounds = boundsOptional.get();
-      BCXSubstanceOccurrence occurrence =
+      substance.addOccurrence(
           new BCXSubstanceOccurrence(
-              bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight());
-      substance.addOccurrence(occurrence);
+              bounds.getTop(), bounds.getLeft(), bounds.getBottom(), bounds.getRight()));
     }
     addAbbreviations(substance, fragment);
-    substances.add(substance);
-    return substances;
+    return substance;
   }
 
   /**
    * Creates and populates a {@link BCXSubstance} from the given {@link IAtomContainer}.
    *
    * @param atomContainer the CDK atom container
+   * @param tolerateMissingInchi when {@code true}, an InChI failure caused by unresolved
+   *     pseudo-atoms is logged and skipped rather than propagated
    * @return a {@link BCXSubstance}
-   * @throws CDKException if InChI generation fails
+   * @throws CDKException if InChI generation fails for a structure without pseudo-atoms, or SMILES
+   *     generation fails
    */
-  private BCXSubstance createAndFillBCXSubstance(IAtomContainer atomContainer) throws CDKException {
+  private BCXSubstance createAndFillBCXSubstance(
+      IAtomContainer atomContainer, boolean tolerateMissingInchi) throws CDKException {
     // create and fill BCXSubtances
     BCXSubstance substance = new BCXSubstance();
     // add AtomContainer
     substance.setAtomContainer(atomContainer);
     // add MDLV3000 mol file as string
     final StringWriter sw = new StringWriter();
-    try (final MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
+    try (MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
       mdlw.write(atomContainer);
       substance.setMdlv3000(sw.toString());
     } catch (IOException e) {
-      logger.error("Could not generate MDL V3000 mol file;");
+      LOGGER.error("Could not generate MDL V3000 mol file;");
     }
     // set SMILES
     String smiles;
@@ -284,17 +318,26 @@ public class SubstanceXtractor {
     if (smiles == null) {
       // Fallback to canonical SMILES
       smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Canonical);
-      logger.error("Generated canonical SMILES instead of absolute.");
+      LOGGER.error("Generated canonical SMILES instead of absolute.");
     }
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
-    // set InChI, InChIKey and AuxInfo
+    // set InChI, InChIKey and AuxInfo. A structure containing unresolved pseudo-atoms (e.g. an
+    // R-group whose attachment position varies) cannot be represented in InChI, but is still a
+    // valid extraction carrying SMILES and a molecular formula; other InChI failures remain fatal.
     if (atomContainer.getAtomCount() <= 500) {
-      InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
-      substance.setInchi(gen.getInchi());
-      substance.setInchiKey(gen.getInchiKey());
-      if (gen.getAuxInfo().length() < 4000) {
-        substance.setAuxInfo(gen.getAuxInfo());
+      try {
+        InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
+        substance.setInchi(gen.getInchi());
+        substance.setInchiKey(gen.getInchiKey());
+        if (gen.getAuxInfo().length() < 4000) {
+          substance.setAuxInfo(gen.getAuxInfo());
+        }
+      } catch (CDKException e) {
+        if (!(tolerateMissingInchi && containsPseudoAtom(atomContainer))) {
+          throw e;
+        }
+        LOGGER.warn("InChI generation skipped for substance with unresolved pseudo-atoms", e);
       }
     }
     // set molecular formula
@@ -302,6 +345,22 @@ public class SubstanceXtractor {
         MolecularFormulaManipulator.getMolecularFormula(atomContainer);
     substance.setMolecularFormula(MolecularFormulaManipulator.getString(molecularFormula));
     return substance;
+  }
+
+  /**
+   * Indicates whether the atom container holds any pseudo-atom (e.g. an unresolved R-group or
+   * abbreviation), which InChI cannot represent.
+   *
+   * @param atomContainer the atom container to inspect
+   * @return {@code true} if at least one atom is an {@link IPseudoAtom}
+   */
+  private static boolean containsPseudoAtom(IAtomContainer atomContainer) {
+    for (IAtom atom : atomContainer.atoms()) {
+      if (atom instanceof IPseudoAtom) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -318,7 +377,7 @@ public class SubstanceXtractor {
     for (String abbreviation : fragmentConverter.getAbbreviations(fragment)) {
       String smiles = SmilesAbbreviations.get(abbreviation);
       if (smiles == null) {
-        logger.info("No SMILES found for: " + abbreviation);
+        LOGGER.info("No SMILES found for: {}", abbreviation);
         continue;
       }
       substance.addAbbreviation(smiles, abbreviation);
@@ -332,7 +391,7 @@ public class SubstanceXtractor {
       try {
         nestedAc = fragmentConverter.convert(nested, true);
       } catch (CDKException e) {
-        logger.error("Nested fragment could not be converted: " + nickname);
+        LOGGER.error("Nested fragment could not be converted: {}", nickname);
         continue;
       }
       substance.addAbbreviation(ChemicalUtils.createAbsoluteSmiles(nestedAc), nickname);

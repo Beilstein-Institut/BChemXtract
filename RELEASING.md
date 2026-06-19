@@ -69,7 +69,6 @@ level (or via an environment named `maven-central` for the publish job).
 | `CENTRAL_USERNAME`      | Central Portal user-token name | central.sonatype.com → View Account → Generate User Token |
 | `CENTRAL_PASSWORD`      | Central Portal user-token value | (same flow) |
 | `RELEASE_BCHEMXTRACT`   | PAT used by release-please to open PRs | Fine-grained PAT with `contents:write` + `pull-requests:write` on this repo |
-| `NVD_API_KEY` *(optional)* | Speeds up OWASP Dependency-Check | https://nvd.nist.gov/developers/request-an-api-key |
 
 ### Current release signing key
 

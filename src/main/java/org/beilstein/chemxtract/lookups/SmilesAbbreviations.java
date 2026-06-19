@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.lookups;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -70,7 +71,9 @@ public class SmilesAbbreviations {
    * @throws IOException if the abbreviation file cannot be loaded
    */
   private static SmilesAbbreviations getInstance() throws IOException {
-    if (instance == null) instance = new SmilesAbbreviations();
+    if (instance == null) {
+      instance = new SmilesAbbreviations();
+    }
     return instance;
   }
 
@@ -82,7 +85,7 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static String get(String key) throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup.get(key.toLowerCase());
+    return getInstance().smilesLookup.get(key.toLowerCase());
   }
 
   /**
@@ -93,16 +96,16 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static boolean contains(String key) throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup.containsKey(key.toLowerCase());
+    return getInstance().smilesLookup.containsKey(key.toLowerCase());
   }
 
   /**
-   * Return complete Abbreviation SMILES lookup map
+   * Return complete Abbreviation SMILES lookup map.
    *
-   * @return the lookup table
+   * @return an unmodifiable view of the lookup table
    * @throws IOException if the lookup table cannot be initialized
    */
   public static Map<String, String> getSmilesLookup() throws IOException {
-    return SmilesAbbreviations.getInstance().smilesLookup;
+    return Collections.unmodifiableMap(getInstance().smilesLookup);
   }
 }

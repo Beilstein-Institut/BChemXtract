@@ -28,7 +28,15 @@ import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
@@ -112,7 +120,7 @@ public class XMLObject {
   /**
    * Returns the tree depth.
    *
-   * @return
+   * @return the depth of this object's subtree, counting this node as depth 1
    */
   public int getDepth() {
     if (getObjects().isEmpty()) {
@@ -672,7 +680,7 @@ public class XMLObject {
     handler.endPrefixMapping("");
     handler.endDocument();
 
-    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(out);
+    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(out, StandardCharsets.US_ASCII);
     outputStreamWriter.write(new String(writer.toCharArray()));
     outputStreamWriter.flush();
     outputStreamWriter.close();

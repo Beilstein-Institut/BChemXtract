@@ -35,7 +35,6 @@ updates:
           - "org.apache.maven.plugins:*"
           - "com.diffplug.spotless:*"
           - "com.github.spotbugs:*"
-          - "org.owasp:dependency-check-maven"
           - "org.jacoco:jacoco-maven-plugin"
           - "org.sonatype.central:central-publishing-maven-plugin"
 

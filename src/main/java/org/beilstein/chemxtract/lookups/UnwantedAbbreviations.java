@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/** Singleton lookup of abbreviation tokens that should be ignored during extraction. */
 public class UnwantedAbbreviations {
 
   private static UnwantedAbbreviations instance;
@@ -52,17 +53,19 @@ public class UnwantedAbbreviations {
    * @throws IOException if the unwanted words file cannot be loaded
    */
   private static UnwantedAbbreviations getInstance() throws IOException {
-    if (instance == null) instance = new UnwantedAbbreviations();
+    if (instance == null) {
+      instance = new UnwantedAbbreviations();
+    }
     return instance;
   }
 
   /**
    * Loads the unwanted word list from the {@code UnwantedAbbreviations.txt} resource file.
    *
-   * <p>Each non-blank line in the file is added to a set, which is then made unmodifiable for safe
-   * concurrent access.
+   * <p>Each non-blank line in the file is added to a set. The returned set is exposed only through
+   * an unmodifiable view in {@link #getUnwantedAbbreviations()}.
    *
-   * @return an unmodifiable set of unwanted words
+   * @return the set of unwanted words
    * @throws IOException if the resource cannot be found or read
    */
   private static Set<String> loadUnwantedAbbreviations() throws IOException {
@@ -81,7 +84,7 @@ public class UnwantedAbbreviations {
         }
       }
     }
-    return Collections.unmodifiableSet(words);
+    return words;
   }
 
   /**
@@ -91,7 +94,7 @@ public class UnwantedAbbreviations {
    * @throws IOException if the word list cannot be loaded
    */
   public static Set<String> getUnwantedAbbreviations() throws IOException {
-    return UnwantedAbbreviations.getInstance().words;
+    return Collections.unmodifiableSet(getInstance().words);
   }
 
   /**
@@ -102,6 +105,6 @@ public class UnwantedAbbreviations {
    * @throws IOException if the word list cannot be initialized or loaded
    */
   public static boolean contains(String word) throws IOException {
-    return UnwantedAbbreviations.getInstance().words.contains(word);
+    return getInstance().words.contains(word);
   }
 }

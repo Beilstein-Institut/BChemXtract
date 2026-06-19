@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Enhanced stereochemistry grouping types defined by the ChemDraw CDX specification. */
 public enum CDEnhancedStereoType {
   Unspecified,
   None,

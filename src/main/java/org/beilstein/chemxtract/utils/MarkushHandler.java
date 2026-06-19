@@ -22,18 +22,28 @@
 package org.beilstein.chemxtract.utils;
 
 import java.io.IOException;
-import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for handling Markush structures and replacing R-groups in molecules.
@@ -58,7 +68,7 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  */
 public class MarkushHandler {
 
-  private static final Log logger = LogFactory.getLog(MarkushHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MarkushHandler.class);
   private final Map<String, List<String>> residueLabels;
   private final SmilesParser smilesParser;
 
@@ -230,8 +240,12 @@ public class MarkushHandler {
     List<IBond> bondsToRemove = new ArrayList<>();
     List<IAtom> atomsToRemove = new ArrayList<>();
     for (IAtom atom : atomContainer.atoms()) {
-      if (!(atom instanceof IPseudoAtom pseudoAtom)) continue;
-      if (!residueKey.equals(pseudoAtom.getLabel())) continue;
+      if (!(atom instanceof IPseudoAtom pseudoAtom)) {
+        continue;
+      }
+      if (!residueKey.equals(pseudoAtom.getLabel())) {
+        continue;
+      }
       IAtomContainer extendedClone = extendedStructure.clone();
       if (extendedClone.getAtomCount() == 1) {
         replaceSingleAtom(atomContainer, pseudoAtom, extendedClone.getAtom(0), atomsToRemove);
@@ -263,9 +277,15 @@ public class MarkushHandler {
     Set<IAtom> atomsToRemove = new HashSet<>();
 
     for (IAtom atom : atomContainer.atoms()) {
-      if (!(atom instanceof IPseudoAtom pseudoAtom)) continue;
-      if (!residueKey.equals(pseudoAtom.getLabel())) continue;
-      if (!visitedAtoms.add(pseudoAtom)) continue; // already processed
+      if (!(atom instanceof IPseudoAtom pseudoAtom)) {
+        continue;
+      }
+      if (!residueKey.equals(pseudoAtom.getLabel())) {
+        continue;
+      }
+      if (!visitedAtoms.add(pseudoAtom)) {
+        continue; // already processed
+      }
       IAtomContainer extendedClone = extendedStructure.clone();
 
       List<IAtom> pseudos = new ArrayList<>();
@@ -382,7 +402,7 @@ public class MarkushHandler {
       }
     }
     if (connectionPoints.size() != 1) {
-      logger.error("More than one or none connection point found.");
+      LOGGER.error("More than one or none connection point found.");
       return;
     }
     IAtom connectionPoint = connectionPoints.get(0);
@@ -401,7 +421,7 @@ public class MarkushHandler {
     try {
       newBond = bondOrigin.clone();
     } catch (CloneNotSupportedException e) {
-      logger.error("Bond could not be cloned.");
+      LOGGER.error("Bond could not be cloned.");
       return;
     }
     newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});

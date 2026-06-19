@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Arrowhead rendering styles defined by the ChemDraw CDX specification. */
 public enum CDArrowHeadType {
   Solid,
   Hollow,

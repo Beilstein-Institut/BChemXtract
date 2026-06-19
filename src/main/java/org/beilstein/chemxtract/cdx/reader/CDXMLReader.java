@@ -21,24 +21,64 @@
  */
 package org.beilstein.chemxtract.cdx.reader;
 
-import static org.beilstein.chemxtract.cdx.reader.CDXMLConstants.*;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.beilstein.chemxtract.cdx.*;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.CDAltGroup;
+import org.beilstein.chemxtract.cdx.CDArrow;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBond;
+import org.beilstein.chemxtract.cdx.CDBorder;
+import org.beilstein.chemxtract.cdx.CDBracket;
+import org.beilstein.chemxtract.cdx.CDBracketAttachment;
+import org.beilstein.chemxtract.cdx.CDChemicalProperty;
+import org.beilstein.chemxtract.cdx.CDColoredMolecularArea;
+import org.beilstein.chemxtract.cdx.CDConstraint;
+import org.beilstein.chemxtract.cdx.CDCrossReference;
+import org.beilstein.chemxtract.cdx.CDCrossingBond;
+import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDGeometry;
+import org.beilstein.chemxtract.cdx.CDGraphic;
+import org.beilstein.chemxtract.cdx.CDGroup;
+import org.beilstein.chemxtract.cdx.CDObject;
+import org.beilstein.chemxtract.cdx.CDObjectTag;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDPicture;
+import org.beilstein.chemxtract.cdx.CDReactionScheme;
+import org.beilstein.chemxtract.cdx.CDReactionStep;
+import org.beilstein.chemxtract.cdx.CDSequence;
+import org.beilstein.chemxtract.cdx.CDSpectrum;
+import org.beilstein.chemxtract.cdx.CDSpline;
+import org.beilstein.chemxtract.cdx.CDSplitter;
+import org.beilstein.chemxtract.cdx.CDTLCLane;
+import org.beilstein.chemxtract.cdx.CDTLCPlate;
+import org.beilstein.chemxtract.cdx.CDTLCSpot;
+import org.beilstein.chemxtract.cdx.CDTable;
+import org.beilstein.chemxtract.cdx.CDTemplateGrid;
+import org.beilstein.chemxtract.cdx.CDText;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomSubstituentType;
+import org.beilstein.chemxtract.cdx.datatypes.CDColor;
+import org.beilstein.chemxtract.cdx.datatypes.CDFont;
+import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
+import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.io.XMLEntityCatalog;
 import org.beilstein.chemxtract.io.XMLObject;
 import org.beilstein.chemxtract.io.XMLUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Reader for ChemDraw CDXML files. */
 public class CDXMLReader {
-  private static final Log logger = LogFactory.getLog(CDXMLReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDXMLReader.class);
 
   private RefManager refManager = new RefManager();
   private Map<Integer, CDColor> colors = new HashMap<>();
@@ -58,8 +98,8 @@ public class CDXMLReader {
   public static CDDocument readDocument(InputStream in) throws IOException {
 
     XMLEntityCatalog catalog = new XMLEntityCatalog();
-    catalog.addSystemId(DTD, "org/beilstein/chemxtract/cdx/reader/cdxml.dtd");
-    catalog.addSystemId(DTD2, "org/beilstein/chemxtract/cdx/reader/cdxml.dtd");
+    catalog.addSystemId(CDXMLConstants.DTD, "org/beilstein/chemxtract/cdx/reader/cdxml.dtd");
+    catalog.addSystemId(CDXMLConstants.DTD2, "org/beilstein/chemxtract/cdx/reader/cdxml.dtd");
 
     XMLObject root = XMLUtils.parse(in, catalog, false);
 
@@ -76,16 +116,16 @@ public class CDXMLReader {
 
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Page)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Page)) {
         document.addPage(createPageObject(object));
-      } else if (name.equals(CDXMLObj_TemplateGrid)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TemplateGrid)) {
         document.setTemplateGrid(createTemplateGridObject(object));
-      } else if (name.equals(CDXMLObj_ColorTable)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ColorTable)) {
         createColorTableObject(object);
         // Color 2 & 3 are the standard foreground and background color
         document.getSettings().setColor(colors.get(3));
         document.getSettings().setBackgroundColor(colors.get(2));
-      } else if (name.equals(CDXMLObj_FontTable)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_FontTable)) {
         createFontTableObject(object);
       } else {
         handleMissingObject(object);
@@ -100,7 +140,7 @@ public class CDXMLReader {
     colors.put(index++, CDColor.WHITE);
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Color)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Color)) {
         colors.put(index++, createColorObject(object));
       } else {
         handleMissingObject(object);
@@ -112,11 +152,11 @@ public class CDXMLReader {
     CDColor color = new CDColor();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Red)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Red)) {
         color.setRed(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Green)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Green)) {
         color.setGreen(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Blue)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Blue)) {
         color.setBlue(root.getAttributeAsFloat(name));
       } else {
         handleMissingAttribute(root, name);
@@ -128,7 +168,7 @@ public class CDXMLReader {
   private void createFontTableObject(XMLObject root) throws IOException {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Font)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Font)) {
         createFontObject(object);
       } else {
         handleMissingObject(object);
@@ -141,11 +181,11 @@ public class CDXMLReader {
     int id = -1;
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
         id = root.getAttributeAsInt(name);
-      } else if (name.equals(CDXMLProp_Font_Name)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Font_Name)) {
         font.setName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CharSet)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CharSet)) {
         font.setCharSet(CDXMLUtils.convertStringToCharSet(root.getAttribute(name)));
       } else {
         handleMissingAttribute(root, name);
@@ -162,123 +202,123 @@ public class CDXMLReader {
     CDDocument document = (CDDocument) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_CreationUserName)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CreationUserName)) {
         document.setCreationUserName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CreationDate)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CreationDate)) {
         document.setCreationDate(CDXMLUtils.convertStringToDate(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_CreationProgram)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CreationProgram)) {
         document.setCreationProgram(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_ModificationUserName)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ModificationUserName)) {
         document.setModificationUserName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_ModificationDate)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ModificationDate)) {
         document.setModificationDate(CDXMLUtils.convertStringToDate(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ModificationProgram)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ModificationProgram)) {
         document.setModificationProgram(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Name)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Name)) {
         document.setName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Comment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Comment)) {
         document.setComment(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         document.setBoundingBox(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_ShowQuery)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowQuery)) {
         document.getSettings().setShowAtomQuery(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowStereo)) {
         document.getSettings().setShowAtomStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowEnhancedStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowEnhancedStereo)) {
         document.getSettings().setShowAtomEnhancedStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowAtomNumber)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowAtomNumber)) {
         document.getSettings().setShowAtomNumber(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Bond_ShowQuery)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowQuery)) {
         document.getSettings().setShowBondQuery(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Bond_ShowStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowStereo)) {
         document.getSettings().setShowBondStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Bond_ShowRxn)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowRxn)) {
         document.getSettings().setShowBondReaction(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_LabelLineHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelLineHeight)) {
         document
             .getSettings()
             .setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_CaptionLineHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionLineHeight)) {
         document
             .getSettings()
             .setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_InterpretChemically)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_InterpretChemically)) {
         document.getSettings().setInterpretChemically(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_MacPrintInfo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MacPrintInfo)) {
         document.setMacPrintInfo(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_WinPrintInfo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_WinPrintInfo)) {
         document.setWinPrintInfo(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_PrintMargins)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PrintMargins)) {
         document.setPrintMargins(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ChainAngle)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChainAngle)) {
         document.getSettings().setChainAngle(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BondSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondSpacing)) {
         document.getSettings().setBondSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BondSpacingAbs)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondSpacingAbs)) {
         document.getSettings().setBondSpacingAbs(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BondLength)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondLength)) {
         document.getSettings().setBondLength(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         document.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         document.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_MarginWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MarginWidth)) {
         document.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         document.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionJustification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionJustification)) {
         document
             .getSettings()
             .setCaptionJustification(
                 CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_FractionalWidths)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_FractionalWidths)) {
         document.setFractionalWidths(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Magnification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Magnification)) {
         document.setMagnification(root.getAttributeAsFloat(name) / 10f);
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         document.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFont)) {
         document.getSettings().setCaptionFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         document.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleSize)) {
         document.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         document
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFace)) {
         document
             .getSettings()
             .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleColor)) {
         document.getSettings().setLabelColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_CaptionStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleColor)) {
         document.getSettings().setCaptionColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_LabelJustification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelJustification)) {
         document
             .getSettings()
             .setLabelJustification(
                 CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_FixInplaceExtent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_FixInplaceExtent)) {
         document.setFixInPlaceExtent(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_FixInplaceGap)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_FixInplaceGap)) {
         document.setFixInPlaceGap(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_CartridgeData)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CartridgeData)) {
         document.setCartridgeData(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Window_IsZoomed)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Window_IsZoomed)) {
         document.setWindowIsZoomed(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Window_Position)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Window_Position)) {
         document.setWindowPosition(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Window_Size)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Window_Size)) {
         document.setWindowSize(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ShowTerminalCarbonLabels)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShowTerminalCarbonLabels)) {
         document.getSettings().setShowTerminalCarbonLabels(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ShowNonTerminalCarbonLabels)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShowNonTerminalCarbonLabels)) {
         document.getSettings().setShowNonTerminalCarbonLabels(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_HideImplicitHydrogens)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HideImplicitHydrogens)) {
         document.getSettings().setHideImplicitHydrogens(root.getAttributeAsBoolean(name));
       } else {
         handleMissingAttribute(root, name);
@@ -296,47 +336,47 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Group)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Group)) {
         page.addGroup(createGroupObject(object));
-      } else if (name.equals(CDXMLObj_Fragment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Fragment)) {
         page.addFragment(createFragmentObject(object));
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         page.addText(createTextObject(object));
-      } else if (name.equals(CDXMLObj_Graphic)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Graphic)) {
         page.addGraphic(createGraphicObject(object));
-      } else if (name.equals(CDXMLObj_Arrow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Arrow)) {
         page.addArrow(createArrowObject(object));
-      } else if (name.equals(CDXMLObj_BracketedGroup)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_BracketedGroup)) {
         page.addBracketedGroup(createBracketedGroupObject(object));
-      } else if (name.equals(CDXMLObj_Curve)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Curve)) {
         page.addCurve(createSplineObject(object));
-      } else if (name.equals(CDXMLObj_EmbeddedObject)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_EmbeddedObject)) {
         page.addEmbeddedObject(createEmbeddedObjectObject(object));
-      } else if (name.equals(CDXMLObj_Table)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Table)) {
         page.addTable(createTableObject(object));
-      } else if (name.equals(CDXMLObj_NamedAlternativeGroup)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_NamedAlternativeGroup)) {
         page.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
-      } else if (name.equals(CDXMLObj_ReactionScheme)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ReactionScheme)) {
         page.addReactionScheme(createReactionSchemeObject(object));
-      } else if (name.equals(CDXMLObj_ReactionStep)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ReactionStep)) {
         page.addReactionStep(createReactionStepObject(object));
-      } else if (name.equals(CDXMLObj_Spectrum)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Spectrum)) {
         page.addSpectrum(createSpectrumObject(object));
-      } else if (name.equals(CDXMLObj_Sequence)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Sequence)) {
         page.addSequence(createSequenceObject(object));
-      } else if (name.equals(CDXMLObj_CrossReference)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_CrossReference)) {
         page.addCrossReference(createCrossReferenceObject(object));
-      } else if (name.equals(CDXMLObj_Border)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Border)) {
         page.addBorder(createBorderObject(object));
-      } else if (name.equals(CDXMLObj_Geometry)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Geometry)) {
         page.addGeometry(createGeometryObject(object));
-      } else if (name.equals(CDXMLObj_Constraint)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Constraint)) {
         page.addConstraint(createConstraintObject(object));
-      } else if (name.equals(CDXMLObj_TLCPlate)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCPlate)) {
         page.addTLCPlate(createTLCPlateObject(object));
-      } else if (name.equals(CDXMLObj_Splitter)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Splitter)) {
         page.addSplitter(createSplitterObject(object));
-      } else if (name.equals(CDXMLObj_ChemicalProperty)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ChemicalProperty)) {
         page.addChemicalProperty(createChemicalPropertyObject(object));
       } else {
 
@@ -353,40 +393,40 @@ public class CDXMLReader {
     CDPage page = (CDPage) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         page.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         page.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_WidthPages)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_WidthPages)) {
         page.setWidthPages(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_HeightPages)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HeightPages)) {
         page.setHeightPages(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_DrawingSpaceType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_DrawingSpaceType)) {
         page.setDrawingSpaceType(
             CDXMLUtils.convertStringToDrawingSpaceType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Width)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Width)) {
         page.setWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Height)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Height)) {
         page.setHeight(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_PageOverlap)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PageOverlap)) {
         page.setPageOverlap(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Header)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Header)) {
         page.setHeader(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_HeaderPosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HeaderPosition)) {
         page.setHeaderPosition(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Footer)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Footer)) {
         page.setFooter(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_FooterPosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_FooterPosition)) {
         page.setFooterPosition(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_PrintTrimMarks)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PrintTrimMarks)) {
         page.setPrintTrimMarks(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_SplitterPositions)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_PageDefinition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_SplitterPositions)) {
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PageDefinition)) {
         page.setPageDefinition(CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BoundsInParent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundsInParent)) {
         page.setBoundsInParent(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
       } else {
 
@@ -405,19 +445,19 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Node)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Node)) {
         fragment.addAtom(createNodeObject(object));
-      } else if (name.equals(CDXMLObj_Bond)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Bond)) {
         fragment.addBond(createBondObject(object));
-      } else if (name.equals(CDXMLObj_Graphic)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Graphic)) {
         fragment.addGraphic(createGraphicObject(object));
-      } else if (name.equals(CDXMLObj_Curve)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Curve)) {
         fragment.addCurve(createSplineObject(object));
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         fragment.addObjectTag(createObjectTagObject(object));
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         fragment.addText(createTextObject(object));
-      } else if (name.equals(CDXMLObj_ColoredMolecularArea)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ColoredMolecularArea)) {
         fragment.addColoredMolecularArea(createColoredMolecularArea(object));
       } else {
 
@@ -434,25 +474,25 @@ public class CDXMLReader {
     CDFragment fragment = (CDFragment) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         fragment.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Mole_Racemic)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Mole_Racemic)) {
         fragment.setRacemic(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Mole_Absolute)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Mole_Absolute)) {
         fragment.setAbsolute(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Mole_Relative)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Mole_Relative)) {
         fragment.setRelative(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Mole_Formula)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Mole_Formula)) {
         fragment.setFormula(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Mole_Weight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Mole_Weight)) {
         fragment.setWeight(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_Frag_ConnectionOrder)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Frag_ConnectionOrder)) {
         fragment.setConnectionOrder(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_Frag_SequenceType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Frag_SequenceType)) {
         fragment.setSequenceType(CDXMLUtils.convertStringToSequenceType(root.getAttribute(name)));
       } else {
 
@@ -471,15 +511,15 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Fragment)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Fragment)) {
         node.addFragment(createFragmentObject(object));
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         if (node.getText() != null) {
           throw new IOException("Unexpected object");
         }
         node.setText(createTextObject(object));
 
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         node.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -494,129 +534,129 @@ public class CDXMLReader {
     CDAtom node = (CDAtom) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         node.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         node.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         node.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         node.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_2DPosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_2DPosition)) {
         node.setPosition2D(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_3DPosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_3DPosition)) {
         node.setPosition3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         node.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         node.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_HighlightColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HighlightColor)) {
         node.getSettings().setHighlightColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_Node_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Node_Type)) {
         node.setNodeType(CDXMLUtils.convertStringToNodeType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Node_LabelDisplay)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Node_LabelDisplay)) {
         node.setLabelDisplay(CDXMLUtils.convertStringToLabelDisplay(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Node_Element)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Node_Element)) {
         node.setElementNumber(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_ElementList)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ElementList)) {
         node.setElementList(CDXMLUtils.convertStringToElementList(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_Formula)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Formula)) {
         node.setFormula(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_Isotope)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Isotope)) {
         node.setIsotope(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_Charge)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Charge)) {
         node.setCharge(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_Radical)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Radical)) {
         node.setRadical(CDXMLUtils.convertStringToRadical(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_RestrictFreeSites)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictFreeSites)) {
         node.setSubstituentCount(root.getAttributeAsInt(name));
         node.setSubstituentType(CDAtomSubstituentType.FreeSites);
-      } else if (name.equals(CDXMLProp_Atom_RestrictImplicitHydrogens)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictImplicitHydrogens)) {
         node.setImplicitHydrogensAllowed(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_RestrictRingBondCount)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictRingBondCount)) {
         node.setRingBondCount(CDXMLUtils.convertStringToRingBondCount(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_RestrictUnsaturatedBonds)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictUnsaturatedBonds)) {
         node.setUnsaturatedBonds(CDXMLUtils.convertStringToUnsaturation(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_RestrictRxnChange)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictRxnChange)) {
         node.setRestrictReactionChange(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_RestrictRxnStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictRxnStereo)) {
         node.setReactionStereo(CDXMLUtils.convertStringToReactionStereo(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_AbnormalValence)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_AbnormalValence)) {
         node.setAbnormalValenceAllowed(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_NumHydrogens)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_NumHydrogens)) {
         node.setNumImplicitHydrogens(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_HDot)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_HDot)) {
         node.setHDot(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_HDash)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_HDash)) {
         node.setHDash(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_Geometry)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Geometry)) {
         node.setAtomGeometry(CDXMLUtils.convertStringToAtomGeometry(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_BondOrdering)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_BondOrdering)) {
         node.setBondOrdering(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), CDBond.class, refManager));
-      } else if (name.equals(CDXMLProp_Node_Attachments)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Node_Attachments)) {
         node.setAttachedAtoms(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_Atom_GenericNickname)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_GenericNickname)) {
         node.setLabelText(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Atom_AltGroupID)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_AltGroupID)) {
         node.setAltGroup(
             CDXMLUtils.convertStringToObjectRef(
                 root.getAttribute(name), CDAltGroup.class, refManager));
-      } else if (name.equals(CDXMLProp_Atom_RestrictSubstituentsUpTo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictSubstituentsUpTo)) {
         node.setSubstituentCount(root.getAttributeAsInt(name));
         node.setSubstituentType(CDAtomSubstituentType.SubstituentsUpTo);
-      } else if (name.equals(CDXMLProp_Atom_RestrictSubstituentsExactly)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_RestrictSubstituentsExactly)) {
         node.setSubstituentCount(root.getAttributeAsInt(name));
         node.setSubstituentType(CDAtomSubstituentType.SubstituentsExactly);
-      } else if (name.equals(CDXMLProp_Atom_CIPStereochemistry)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_CIPStereochemistry)) {
         node.setStereochemistry(CDXMLUtils.convertStringToAtomCIPType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_Translation)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_Translation)) {
         node.setTranslation(CDXMLUtils.convertStringToTranslation(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_AtomNumber)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_AtomNumber)) {
         node.setAtomNumber(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowQuery)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowQuery)) {
         node.getSettings().setShowAtomQuery(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowStereo)) {
         node.getSettings().setShowAtomStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowEnhancedStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowEnhancedStereo)) {
         node.getSettings().setShowAtomEnhancedStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_ShowAtomNumber)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ShowAtomNumber)) {
         node.getSettings().setShowAtomNumber(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Atom_LinkCountLow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_LinkCountLow)) {
         node.setLinkCountLow(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_LinkCountHigh)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_LinkCountHigh)) {
         node.setLinkCountHigh(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Atom_IsotopicAbundance)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_IsotopicAbundance)) {
         node.setIsotopicAbundance(CDXMLUtils.convertStringToAbundance(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_ExternalConnectionType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_ExternalConnectionType)) {
         node.setAttachmentPointType(
             CDXMLUtils.convertStringToExternalConnectionType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Atom_GenericList)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Atom_GenericList)) {
         node.setGenericList(CDXMLUtils.getAttributeAsGenericList(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         node.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         node.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         node.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         node.getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_MarginWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MarginWidth)) {
         node.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_ShowTerminalCarbonLabels)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShowTerminalCarbonLabels)) {
         node.getSettings().setShowTerminalCarbonLabels(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ShowNonTerminalCarbonLabels)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShowNonTerminalCarbonLabels)) {
         node.getSettings().setShowNonTerminalCarbonLabels(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_HideImplicitHydrogens)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HideImplicitHydrogens)) {
         node.getSettings().setHideImplicitHydrogens(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_NeedsClean)) {
-        // do nothing
+      } else if (name.equals(CDXMLConstants.CDXMLProp_NeedsClean)) {
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -633,7 +673,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         bond.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -648,83 +688,83 @@ public class CDXMLReader {
     CDBond bond = (CDBond) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         bond.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         bond.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         bond.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         bond.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         bond.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         bond.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_HighlightColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HighlightColor)) {
         bond.getSettings().setHighlightColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_Bond_Order)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_Order)) {
         bond.setBondOrder(CDXMLUtils.convertStringToBondOrder(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_Display)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_Display)) {
         bond.setBondDisplay(CDXMLUtils.convertStringToBondDisplay(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_Display2)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_Display2)) {
         bond.setBondDisplay2(CDXMLUtils.convertStringToBondDisplay(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_DoublePosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_DoublePosition)) {
         bond.setBondDoublePosition(
             CDXMLUtils.convertStringToBondDoublePosition(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_Begin)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_Begin)) {
         bond.setBegin(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_Bond_End)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_End)) {
         bond.setEnd(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_Bond_RestrictTopology)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_RestrictTopology)) {
         bond.setTopology(CDXMLUtils.convertStringToBondTopology(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_RestrictRxnParticipation)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_RestrictRxnParticipation)) {
         bond.setReactionParticipation(
             CDXMLUtils.convertStringToBondReactionParticipation(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_BeginAttach)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_BeginAttach)) {
         bond.setBeginAttach(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Bond_EndAttach)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_EndAttach)) {
         bond.setEndAttach(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Bond_CIPStereochemistry)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_CIPStereochemistry)) {
         bond.setStereochemistry(CDXMLUtils.convertStringToBondCIPType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bond_BondOrdering)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_BondOrdering)) {
         bond.setBondCircularOrdering(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), CDBond.class, refManager));
-      } else if (name.equals(CDXMLProp_Bond_ShowQuery)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowQuery)) {
         bond.getSettings().setShowBondQuery(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Bond_ShowStereo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowStereo)) {
         bond.getSettings().setShowBondStereo(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Bond_CrossingBonds)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_CrossingBonds)) {
         bond.setCrossingBonds(
             new HashSet<CDBond>(
                 CDXMLUtils.convertStringToObjectRefList(
                     root.getAttribute(name), CDBond.class, refManager)));
-      } else if (name.equals(CDXMLProp_Bond_ShowRxn)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowRxn)) {
         bond.getSettings().setShowBondReaction(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BondSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondSpacing)) {
         bond.getSettings().setBondSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BondLength)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondLength)) {
         bond.getSettings().setBondLength(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         bond.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         bond.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_MarginWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MarginWidth)) {
         bond.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         bond.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         bond.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         bond.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         bond.getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_BondSpacingAbs)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondSpacingAbs)) {
         bond.getSettings().setBondSpacingAbs(root.getAttributeAsFloat(name));
       } else {
 
@@ -753,15 +793,15 @@ public class CDXMLReader {
     CDTemplateGrid templateGrid = (CDTemplateGrid) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_2DExtent)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_2DExtent)) {
         templateGrid.setExtent(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Template_PaneHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Template_PaneHeight)) {
         templateGrid.setPaneHeight(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Template_NumRows)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Template_NumRows)) {
         templateGrid.setNumRows(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Template_NumColumns)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Template_NumColumns)) {
         templateGrid.setNumColumns(root.getAttributeAsInt(name));
       } else {
 
@@ -780,27 +820,27 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Group)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Group)) {
         group.addGroup(createGroupObject(object));
-      } else if (name.equals(CDXMLObj_Fragment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Fragment)) {
         group.addFragment(createFragmentObject(object));
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         group.addCaption(createTextObject(object));
-      } else if (name.equals(CDXMLObj_Graphic)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Graphic)) {
         group.addGraphic(createGraphicObject(object));
-      } else if (name.equals(CDXMLObj_Arrow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Arrow)) {
         group.addArrow(createArrowObject(object));
-      } else if (name.equals(CDXMLObj_Curve)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Curve)) {
         group.addCurve(createSplineObject(object));
-      } else if (name.equals(CDXMLObj_NamedAlternativeGroup)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_NamedAlternativeGroup)) {
         group.addNamedAlternativeGroup(createNamedAlternativeGroupObject(object));
-      } else if (name.equals(CDXMLObj_ReactionStep)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ReactionStep)) {
         group.addReactionStep(createReactionStepObject(object));
-      } else if (name.equals(CDXMLObj_Spectrum)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Spectrum)) {
         group.addSpectrum(createSpectrumObject(object));
-      } else if (name.equals(CDXMLObj_EmbeddedObject)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_EmbeddedObject)) {
         group.addEmbeddedObject(createEmbeddedObjectObject(object));
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         group.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -815,11 +855,11 @@ public class CDXMLReader {
     CDGroup group = (CDGroup) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         group.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Group_Integral)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Group_Integral)) {
         group.setIntegral(root.getAttributeAsBoolean(name));
       } else {
 
@@ -838,9 +878,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         text.addObjectTag(createObjectTagObject(object));
-      } else if (name.equals(CDXMLObj_String)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_String)) {
         CDStyledString string = text.getText();
         if (string == null) {
           string = new CDStyledString();
@@ -860,67 +900,67 @@ public class CDXMLReader {
     CDText text = (CDText) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         text.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         text.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         text.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         text.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_2DPosition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_2DPosition)) {
         text.setPosition2D(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         text.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_RotationAngle)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_RotationAngle)) {
         text.setAngle(root.getAttributeAsLong(name) / 65536.0f);
-      } else if (name.equals(CDXMLProp_Justification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Justification)) {
         text.setJustification(CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LineHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineHeight)) {
         text.setLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_WordWrapWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_WordWrapWidth)) {
         text.setWrapWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineStarts)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineStarts)) {
         text.setLineStarts(CDXMLUtils.convertStringToIntList(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LabelAlignment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelAlignment)) {
         text.setLabelAlignment(CDXMLUtils.convertStringToLabelDisplay(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LabelLineHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelLineHeight)) {
         text.getSettings()
             .setLabelLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_CaptionLineHeight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionLineHeight)) {
         text.getSettings()
             .setCaptionLineHeight(CDXMLUtils.convertStringToLineHeight(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_InterpretChemically)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_InterpretChemically)) {
         text.getSettings().setInterpretChemically(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_CaptionJustification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionJustification)) {
         text.getSettings()
             .setCaptionJustification(
                 CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         text.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFont)) {
         text.getSettings().setCaptionFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         text.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleSize)) {
         text.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         text.getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFace)) {
         text.getSettings()
             .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleColor)) {
         text.getSettings().setLabelColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_CaptionStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleColor)) {
         text.getSettings().setCaptionColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_LabelJustification)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelJustification)) {
         text.getSettings()
             .setLabelJustification(
                 CDXMLUtils.convertStringToTextJustification(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         text.setColor(readColorAttribute(root, name));
       } else {
 
@@ -928,11 +968,11 @@ public class CDXMLReader {
       }
     }
 
-    if (root.hasAttribute(CDXMLProp_Justification)) {
+    if (root.hasAttribute(CDXMLConstants.CDXMLProp_Justification)) {
       text.getSettings()
           .setLabelJustification(
               CDXMLUtils.convertStringToTextJustification(
-                  root.getAttribute(CDXMLProp_Justification)));
+                  root.getAttribute(CDXMLConstants.CDXMLProp_Justification)));
     }
 
     populateChildren(root);
@@ -946,9 +986,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         graphic.addObjectTag(createObjectTagObject(object));
-      } else if (name.equals(CDXMLObj_Represent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Represent)) {
         createRepresent(object, graphic.getRepresents());
       } else {
 
@@ -963,87 +1003,87 @@ public class CDXMLReader {
     CDGraphic graphic = (CDGraphic) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_SupercededBy)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_SupercededBy)) {
         graphic.setSupersededBy(
             CDXMLUtils.convertStringToObjectRef(
                 root.getAttribute(name), CDObject.class, refManager));
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         graphic.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         graphic.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         graphic.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         graphic.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         graphic.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Head3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Head3D)) {
         graphic.setHead3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Tail3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Tail3D)) {
         graphic.setTail3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Center3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Center3D)) {
         graphic.setCenter3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         graphic.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         graphic.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         graphic.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         graphic.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         graphic.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFont)) {
         graphic.getSettings().setCaptionFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleSize)) {
         graphic.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFace)) {
         graphic
             .getSettings()
             .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_Graphic_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Graphic_Type)) {
         graphic.setGraphicType(CDXMLUtils.convertStringToGraphicType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Line_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Line_Type)) {
         graphic.setLineType(CDXMLUtils.convertStringToLineType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Arrow_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Arrow_Type)) {
         graphic.setArrowType(CDXMLUtils.convertStringToArrowType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Rectangle_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Rectangle_Type)) {
         graphic.setRectangleType(CDXMLUtils.convertStringToRectangleType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Oval_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Oval_Type)) {
         graphic.setOvalType(CDXMLUtils.convertStringToOvalType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Orbital_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Orbital_Type)) {
         graphic.setOrbitalType(CDXMLUtils.convertStringToOrbitalType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Bracket_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_Type)) {
         graphic.setBracketType(CDXMLUtils.convertStringToBracketType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Symbol_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Symbol_Type)) {
         graphic.setSymbolType(CDXMLUtils.convertStringToSymbolType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Arrow_HeadSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Arrow_HeadSize)) {
         graphic.setArrowHeadSize(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_Arc_AngularSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Arc_AngularSize)) {
         graphic.setArcAngularSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Bracket_LipSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_LipSize)) {
         graphic.setBracketLipSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Bracket_Usage)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_Usage)) {
         graphic.setBracketUsage(CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Polymer_RepeatPattern)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Polymer_RepeatPattern)) {
         graphic.setPolymerRepeatPattern(
             CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Polymer_FlipType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Polymer_FlipType)) {
         graphic.setPolymerFlipType(
             CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_MajorAxisEnd3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MajorAxisEnd3D)) {
         graphic.setMajorAxisEnd3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_MinorAxisEnd3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MinorAxisEnd3D)) {
         graphic.setMinorAxisEnd3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Curve_FillType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_FillType)) {
         graphic.setFillType(CDXMLUtils.convertStringToFillType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ShadowSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShadowSize)) {
         graphic.setShadowSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CornerRadius)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CornerRadius)) {
         graphic.setCornerRadius(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_FadePercent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_FadePercent)) {
         graphic.setFadePercent(root.getAttributeAsInt(name));
       } else {
 
@@ -1067,9 +1107,9 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
 
-      if (name.equals(CDXMLProp_BackgroundColor)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         area.setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BasisObjects)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BasisObjects)) {
         area.setBasisObjects(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), CDBond.class, refManager));
@@ -1088,7 +1128,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         arrow.addObjectTag(createObjectTagObject(object));
       } else {
         handleMissingObject(object);
@@ -1102,76 +1142,76 @@ public class CDXMLReader {
     CDArrow graphic = (CDArrow) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         graphic.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         graphic.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         graphic.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         graphic.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         graphic.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Head3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Head3D)) {
         graphic.setHead3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Tail3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Tail3D)) {
         graphic.setTail3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Center3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Center3D)) {
         graphic.setCenter3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         graphic.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         graphic.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         graphic.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         graphic.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         graphic.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFont)) {
         graphic.getSettings().setCaptionFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_CaptionStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleSize)) {
         graphic.getSettings().setCaptionSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_CaptionStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CaptionStyleFace)) {
         graphic
             .getSettings()
             .setCaptionFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_Line_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Line_Type)) {
         graphic.setLineType(CDXMLUtils.convertStringToLineType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Curve_FillType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_FillType)) {
         graphic.setFillType(CDXMLUtils.convertStringToFillType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Arrow_HeadSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Arrow_HeadSize)) {
         graphic.setHeadSize(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_Arc_AngularSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Arc_AngularSize)) {
         graphic.setAngularSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_ArrowHeadWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadWidth)) {
         graphic.setHeadWidth(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_ArrowHeadCenterSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadCenterSize)) {
         graphic.setHeadCenterSize(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_ArrowEquilibriumRatio)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowEquilibriumRatio)) {
         graphic.setEquilibriumRatio(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_MajorAxisEnd3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MajorAxisEnd3D)) {
         graphic.setMajorAxisEnd3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_MinorAxisEnd3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MinorAxisEnd3D)) {
         graphic.setMinorAxisEnd3D(CDXMLUtils.convertStringToPoint3D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Dipole)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Dipole)) {
         graphic.setDipole(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ArrowHeadType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadType)) {
         graphic.setArrowHeadType(CDXMLUtils.convertStringToArrowheadType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ArrowHeadHead)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadHead)) {
         graphic.setArrowHeadPositionStart(
             CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ArrowHeadTail)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadTail)) {
         graphic.setArrowHeadPositionTail(
             CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ArrowShaftSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowShaftSpacing)) {
         graphic.setShaftSpacing(root.getAttributeAsFloat(name) / 100f);
-      } else if (name.equals(CDXMLProp_NoGo)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_NoGo)) {
         graphic.setNoGoType(CDXMLUtils.convertStringToNoGoType(root.getAttribute(name)));
       } else if (name.equals("FadePercent")) {
-        // empty
+        LOGGER.debug("CDXML attribute '{}' not mapped", name);
       } else {
         handleMissingAttribute(root, name);
       }
@@ -1188,9 +1228,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_BracketedGroup)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_BracketedGroup)) {
         bracketedGroup.addBracket(createBracketedGroupObject(object));
-      } else if (name.equals(CDXMLObj_BracketAttachment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_BracketAttachment)) {
         bracketedGroup.addBracketAttachment(createBracketAttachmentObject(object));
       } else {
 
@@ -1205,26 +1245,26 @@ public class CDXMLReader {
     CDBracket bracketedGroup = (CDBracket) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Bracket_Usage)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_Usage)) {
         bracketedGroup.setBracketUsage(
             CDXMLUtils.convertStringToBracketUsage(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Polymer_RepeatPattern)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Polymer_RepeatPattern)) {
         bracketedGroup.setPolymerRepeatPattern(
             CDXMLUtils.convertStringToPolymerRepeatPattern(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Polymer_FlipType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Polymer_FlipType)) {
         bracketedGroup.setPolymerFlipType(
             CDXMLUtils.convertStringToPolymerFlipType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BracketedObjects)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BracketedObjects)) {
         bracketedGroup.setBracketedObjects(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_Bracket_RepeatCount)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_RepeatCount)) {
         bracketedGroup.setRepeatCount(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_Bracket_ComponentOrder)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_ComponentOrder)) {
         bracketedGroup.setComponentOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Bracket_SRULabel)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_SRULabel)) {
         bracketedGroup.setSRULabel(root.getAttribute(name));
       } else {
 
@@ -1243,7 +1283,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_CrossingBond)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_CrossingBond)) {
         bracketAttachment.addCrossingBond(createCrossingBondObject(object));
       } else {
 
@@ -1258,9 +1298,9 @@ public class CDXMLReader {
     CDBracketAttachment bracketAttachment = (CDBracketAttachment) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Bracket_GraphicID)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_GraphicID)) {
         bracketAttachment.setGraphic(
             CDXMLUtils.convertStringToObjectRef(
                 root.getAttribute(name), CDGraphic.class, refManager));
@@ -1291,12 +1331,12 @@ public class CDXMLReader {
     CDCrossingBond crossingBond = (CDCrossingBond) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Bracket_BondID)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_BondID)) {
         crossingBond.setBond(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDBond.class, refManager));
-      } else if (name.equals(CDXMLProp_Bracket_InnerAtomID)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Bracket_InnerAtomID)) {
         crossingBond.setInnerAtom(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), CDAtom.class, refManager));
       } else {
@@ -1326,11 +1366,11 @@ public class CDXMLReader {
     CDSplitter splitter = (CDSplitter) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_2DPosition)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_2DPosition)) {
         splitter.setPosition2D(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_PageDefinition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PageDefinition)) {
         splitter.setPageDefinition(
             CDXMLUtils.convertStringToPageDefinition(root.getAttribute(name)));
       } else {
@@ -1350,9 +1390,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         plate.addObjectTag(createObjectTagObject(object));
-      } else if (name.equals(CDXMLObj_TLCLane)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCLane)) {
         plate.addLane(createTLCLaneObject(object));
       } else {
 
@@ -1367,53 +1407,53 @@ public class CDXMLReader {
     CDTLCPlate plate = (CDTLCPlate) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         plate.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         plate.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         plate.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_TopLeft)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TopLeft)) {
         plate.setTopLeft(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_TopRight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TopRight)) {
         plate.setTopRight(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BottomRight)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BottomRight)) {
         plate.setBottomRight(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BottomLeft)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BottomLeft)) {
         plate.setBottomLeft(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         plate.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         plate.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         plate.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         plate.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_MarginWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MarginWidth)) {
         plate.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         plate.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         plate.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         plate
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_TLC_OriginFraction)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_OriginFraction)) {
         plate.setOriginFraction(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_TLC_SolventFrontFraction)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_SolventFrontFraction)) {
         plate.setSolventFrontFraction(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_TLC_ShowOrigin)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_ShowOrigin)) {
         plate.setShowOrigin(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_TLC_ShowSolventFront)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_ShowSolventFront)) {
         plate.setShowSolventFront(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_TLC_ShowBorders)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_ShowBorders)) {
         plate.setShowBorders(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Transparent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Transparent)) {
         plate.setTransparent(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ShowSideTicks)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ShowSideTicks)) {
         plate.setShowSideTicks(root.getAttributeAsBoolean(name));
       } else {
         handleMissingAttribute(root, name);
@@ -1431,9 +1471,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         lane.addObjectTag(createObjectTagObject(object));
-      } else if (name.equals(CDXMLObj_TLCSpot)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCSpot)) {
         lane.addSpot(createTLCSpotObject(object));
       } else {
 
@@ -1448,9 +1488,9 @@ public class CDXMLReader {
     CDTLCLane lane = (CDTLCLane) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Visible)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         lane.setVisible(root.getAttributeAsBoolean(name));
       } else {
 
@@ -1469,7 +1509,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         spot.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -1484,23 +1524,23 @@ public class CDXMLReader {
     CDTLCSpot spot = (CDTLCSpot) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Visible)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         spot.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Width)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Width)) {
         spot.setWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Height)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Height)) {
         spot.setHeight(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Curve_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_Type)) {
         spot.setCurveType(CDXUtils.convertIntToSplineType(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_TLC_Rf)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_Rf)) {
         spot.setRf(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_TLC_Tail)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_Tail)) {
         spot.setTail(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_TLC_ShowRf)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TLC_ShowRf)) {
         spot.setShowRf(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         spot.setColor(readColorAttribute(root, name));
       } else {
 
@@ -1519,7 +1559,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         constraint.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -1534,42 +1574,42 @@ public class CDXMLReader {
     CDConstraint constraint = (CDConstraint) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Name)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Name)) {
         constraint.setName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         constraint.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BondLength)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondLength)) {
         constraint.getSettings().setBondLength(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         constraint.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         constraint.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         constraint.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         constraint.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         constraint
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleColor)) {
         constraint.getSettings().setLabelColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BasisObjects)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BasisObjects)) {
         constraint.setBasisObjects(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ConstraintType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ConstraintType)) {
         constraint.setConstraintType(
             CDXMLUtils.convertStringToConstraintType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ConstraintMin)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ConstraintMin)) {
         constraint.setMinRange(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_ConstraintMax)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ConstraintMax)) {
         constraint.setMaxRange(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_IgnoreUnconnectedAtoms)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreUnconnectedAtoms)) {
         constraint.setIgnoreUnconnectedAtoms(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_DihedralIsChiral)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_DihedralIsChiral)) {
         constraint.setDihedralIsChiral(root.getAttributeAsBoolean(name));
       } else {
 
@@ -1588,7 +1628,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         geometry.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -1603,36 +1643,36 @@ public class CDXMLReader {
     CDGeometry geometry = (CDGeometry) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Name)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Name)) {
         geometry.setName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         geometry.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BondLength)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BondLength)) {
         geometry.getSettings().setBondLength(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         geometry.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         geometry.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name))); // deprecated
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         geometry.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         geometry
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleColor)) {
         geometry.getSettings().setLabelColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_GeometricFeature)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_GeometricFeature)) {
         geometry.setGeometricType(
             CDXMLUtils.convertStringToGeometricFeature(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_RelationValue)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_RelationValue)) {
         geometry.setRelationValue(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_BasisObjects)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BasisObjects)) {
         geometry.setBasisObjects(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_PointIsDirected)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PointIsDirected)) {
         geometry.setPointIsDirected(root.getAttributeAsBoolean(name));
       } else {
 
@@ -1661,15 +1701,15 @@ public class CDXMLReader {
     CDBorder border = (CDBorder) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         border.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         border.setWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_Side)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Side)) {
         border.setSide(CDXMLUtils.convertStringToSideType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Line_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Line_Type)) {
         border.setLineType(CDXMLUtils.convertStringToLineType(root.getAttribute(name)));
       } else {
 
@@ -1698,15 +1738,15 @@ public class CDXMLReader {
     CDCrossReference crossReference = (CDCrossReference) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_CrossReference_Container)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CrossReference_Container)) {
         crossReference.setContainer(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CrossReference_Document)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CrossReference_Document)) {
         crossReference.setDocument(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CrossReference_Identifier)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CrossReference_Identifier)) {
         crossReference.setIdentifier(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CrossReference_Sequence)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CrossReference_Sequence)) {
         crossReference.setSequence(root.getAttribute(name));
       } else {
 
@@ -1735,9 +1775,9 @@ public class CDXMLReader {
     CDSequence sequence = (CDSequence) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Sequence_Identifier)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Sequence_Identifier)) {
         sequence.setIdentifier(root.getAttribute(name));
       } else {
 
@@ -1756,7 +1796,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         spectrum.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -1771,51 +1811,51 @@ public class CDXMLReader {
     CDSpectrum spectrum = (CDSpectrum) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         spectrum.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         spectrum.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         spectrum.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         spectrum.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         spectrum.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         spectrum.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         spectrum.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         spectrum.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         spectrum.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         spectrum.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         spectrum.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         spectrum
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_Spectrum_XSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_XSpacing)) {
         spectrum.setXSpacing(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_Spectrum_XLow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_XLow)) {
         spectrum.setXLow(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_Spectrum_XType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_XType)) {
         spectrum.setXType(CDXMLUtils.convertStringToSpectrumXType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Spectrum_YType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_YType)) {
         spectrum.setYType(CDXMLUtils.convertStringToSpectrumYType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Spectrum_XAxisLabel)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_XAxisLabel)) {
         spectrum.setXAxisLabel(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Spectrum_YAxisLabel)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_YAxisLabel)) {
         spectrum.setYAxisLabel(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Spectrum_Class)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_Class)) {
         spectrum.setSpectrumClass(CDXMLUtils.convertStringToSpectrumClass(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Spectrum_YLow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_YLow)) {
         spectrum.setYLow(root.getAttributeAsDouble(name));
-      } else if (name.equals(CDXMLProp_Spectrum_YScale)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Spectrum_YScale)) {
         spectrum.setYLow(root.getAttributeAsDouble(name));
       } else {
 
@@ -1831,7 +1871,7 @@ public class CDXMLReader {
           try {
             values.add(Double.parseDouble(part));
           } catch (NumberFormatException e) {
-            logger.warn("Skipping non-numeric spectrum data point \"" + part + "\"", e);
+            LOGGER.warn("Skipping non-numeric spectrum data point \"{}\"", part, e);
           }
         }
       }
@@ -1864,41 +1904,41 @@ public class CDXMLReader {
     CDReactionStep reactionStep = (CDReactionStep) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Atom_Map)) {
         reactionStep.setAtomMap(
             CDXMLUtils.convertStringtoObjectRefMap(
                 root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Reactants)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Reactants)) {
         reactionStep.setReactants(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Products)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Products)) {
         reactionStep.setProducts(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Plusses)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Plusses)) {
         reactionStep.setPlusses(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Arrows)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Arrows)) {
         reactionStep.setArrows(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_ObjectsAboveArrow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_ObjectsAboveArrow)) {
         reactionStep.setObjectsAboveArrow(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_ObjectsBelowArrow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_ObjectsBelowArrow)) {
         reactionStep.setObjectsBelowArrow(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map_Manual)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Atom_Map_Manual)) {
         reactionStep.setAtomMapManual(
             CDXMLUtils.convertStringtoObjectRefMap(
                 root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
-      } else if (name.equals(CDXMLProp_ReactionStep_Atom_Map_Auto)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ReactionStep_Atom_Map_Auto)) {
         reactionStep.setAtomMapAuto(
             CDXMLUtils.convertStringtoObjectRefMap(
                 root.getAttribute(name), CDAtom.class, CDAtom.class, refManager));
@@ -1919,7 +1959,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ReactionStep)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ReactionStep)) {
         reactionScheme.addStep(createReactionStepObject(object));
       } else {
 
@@ -1934,8 +1974,8 @@ public class CDXMLReader {
 
     for (String name : root.getAttributes().keySet()) {
 
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
       } else {
 
         handleMissingAttribute(root, name);
@@ -1953,13 +1993,13 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Group)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Group)) {
         namedAlternativeGroup.addGroup(createGroupObject(object));
-      } else if (name.equals(CDXMLObj_Fragment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Fragment)) {
         namedAlternativeGroup.addFragment(createFragmentObject(object));
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         namedAlternativeGroup.addCaption(createTextObject(object));
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         namedAlternativeGroup.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -1974,30 +2014,30 @@ public class CDXMLReader {
     CDAltGroup namedAlternativeGroup = (CDAltGroup) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         namedAlternativeGroup.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         namedAlternativeGroup.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         namedAlternativeGroup.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         namedAlternativeGroup.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         namedAlternativeGroup.setBounds(
             CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         namedAlternativeGroup.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         namedAlternativeGroup.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_NamedAlternativeGroup_TextFrame)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_NamedAlternativeGroup_TextFrame)) {
         namedAlternativeGroup.setTextFrame(
             CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_NamedAlternativeGroup_GroupFrame)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_NamedAlternativeGroup_GroupFrame)) {
         namedAlternativeGroup.setGroupFrame(
             CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_NamedAlternativeGroup_Valence)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_NamedAlternativeGroup_Valence)) {
         namedAlternativeGroup.setValence(root.getAttributeAsInt(name));
       } else {
 
@@ -2016,9 +2056,9 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Page)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Page)) {
         table.addPage(createPageObject(object));
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         table.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -2033,29 +2073,29 @@ public class CDXMLReader {
     CDTable table = (CDTable) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         table.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         table.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         table.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         table.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         table.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BoldWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoldWidth)) {
         table.getSettings().setBoldWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         table.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_MarginWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MarginWidth)) {
         table.getSettings().setMarginWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFont)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFont)) {
         table.getSettings().setLabelFont(fonts.get(root.getAttributeAsInt(name)));
-      } else if (name.equals(CDXMLProp_LabelStyleSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleSize)) {
         table.getSettings().setLabelSize(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_LabelStyleFace)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LabelStyleFace)) {
         table
             .getSettings()
             .setLabelFace(CDXUtils.convertIntToFontFace(root.getAttributeAsInt(name)));
@@ -2076,7 +2116,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         embeddedObject.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -2098,55 +2138,55 @@ public class CDXMLReader {
     int uncompressedWindowsMetafileSize = 0;
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         embeddedObject.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         embeddedObject.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_RotationAngle)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_RotationAngle)) {
         embeddedObject.setRotationAngle(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         embeddedObject.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         embeddedObject.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_Picture_Edition)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Picture_Edition)) {
         embeddedObject.setPictureEdition(
             CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Picture_EditionAlias)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Picture_EditionAlias)) {
         embeddedObject.setPictureEditionAlias(
             CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_MacPICT)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_MacPICT)) {
         embeddedObject.setMacPICT(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_WindowsMetafile)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_WindowsMetafile)) {
         embeddedObject.setWindowsMetafile(
             CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_OLEObject)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_OLEObject)) {
         embeddedObject.setOleObject(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_EnhancedMetafile)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_EnhancedMetafile)) {
         embeddedObject.setEnhancedMetafile(
             CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_CompressedWindowsMetafile)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CompressedWindowsMetafile)) {
         compressedWindowsMetafile = Base64.getMimeDecoder().decode(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CompressedOLEObject)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CompressedOLEObject)) {
         compressedOLEObject = Base64.getMimeDecoder().decode(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_CompressedEnhancedMetafile)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_CompressedEnhancedMetafile)) {
         compressedEnhancedMetafile = Base64.getMimeDecoder().decode(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_UncompressedWindowsMetafileSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_UncompressedWindowsMetafileSize)) {
         uncompressedWindowsMetafileSize = root.getAttributeAsInt(name);
-      } else if (name.equals(CDXMLProp_UncompressedOLEObjectSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_UncompressedOLEObjectSize)) {
         uncompressedOLEObjectSize = root.getAttributeAsInt(name);
-      } else if (name.equals(CDXMLProp_UncompressedEnhancedMetafileSize)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_UncompressedEnhancedMetafileSize)) {
         uncompressedEnhancedMetafileSize = root.getAttributeAsInt(name);
-      } else if (name.equals(CDXMLProp_GIF)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_GIF)) {
         embeddedObject.setGif(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_TIFF)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_TIFF)) {
         embeddedObject.setTiff(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_PNG)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PNG)) {
         embeddedObject.setPng(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_JPEG)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_JPEG)) {
         embeddedObject.setJpeg(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_BMP)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BMP)) {
         embeddedObject.setBmp(CDXMLUtils.convertStringToByteArray(root.getAttribute(name)));
       } else {
 
@@ -2163,7 +2203,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setEnhancedMetafile(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2176,7 +2216,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setOleObject(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2189,7 +2229,7 @@ public class CDXMLReader {
         decompresser.end();
         embeddedObject.setWindowsMetafile(result);
       } catch (DataFormatException e) {
-        logger.error("Cannot uncompress data", e);
+        LOGGER.error("Cannot uncompress data", e);
       }
     }
 
@@ -2219,7 +2259,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_ObjectTag)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         curve.addObjectTag(createObjectTagObject(object));
       } else {
 
@@ -2234,48 +2274,48 @@ public class CDXMLReader {
     CDSpline spline = (CDSpline) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_ZOrder)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ZOrder)) {
         spline.setZOrder(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_IgnoreWarnings)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_IgnoreWarnings)) {
         spline.setIgnoreWarnings(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ChemicalWarning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalWarning)) {
         spline.setChemicalWarning(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_Visible)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         spline.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_BoundingBox)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BoundingBox)) {
         spline.setBounds(CDXMLUtils.convertStringToRectangle(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ForegroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ForegroundColor)) {
         spline.setColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_BackgroundColor)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BackgroundColor)) {
         spline.getSettings().setBackgroundColor(readColorAttribute(root, name));
-      } else if (name.equals(CDXMLProp_Curve_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_Type)) {
         CDSplineType curveType = CDXUtils.convertIntToSplineType(root.getAttributeAsInt(name));
         spline.setFillType(curveType.getFillType());
         spline.setLineType(curveType.getLineType());
         spline.setClosed(curveType.isClosed());
-      } else if (name.equals(CDXMLProp_Curve_Points)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_Points)) {
         spline.setPoints2D(CDXMLUtils.convertStringToPoint2DArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Curve_Points3D)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_Points3D)) {
         spline.setPoints3D(CDXMLUtils.convertStringToPoint3DArray(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_LineWidth)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_LineWidth)) {
         spline.getSettings().setLineWidth(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_HashSpacing)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_HashSpacing)) {
         spline.getSettings().setHashSpacing(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_ArrowHeadType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadType)) {
         spline.setArrowHeadType(CDXMLUtils.convertStringToArrowheadType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ArrowHeadHead)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadHead)) {
         spline.setArrowHeadPositionAtStart(
             CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ArrowHeadTail)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ArrowHeadTail)) {
         spline.setArrowHeadPositionAtEnd(
             CDXMLUtils.convertStringToArrowhead(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Closed)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Closed)) {
         spline.setClosed(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Curve_FillType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Curve_FillType)) {
         spline.setFillType(CDXMLUtils.convertStringToFillType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_Line_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Line_Type)) {
         spline.setLineType(CDXMLUtils.convertStringToLineType(root.getAttribute(name)));
       } else {
 
@@ -2283,9 +2323,10 @@ public class CDXMLReader {
       }
     }
 
-    if (root.hasAttribute(CDXMLProp_Curve_Type)) {
+    if (root.hasAttribute(CDXMLConstants.CDXMLProp_Curve_Type)) {
       CDSplineType curveType =
-          CDXUtils.convertIntToSplineType(root.getAttributeAsInt(CDXMLProp_Curve_Type));
+          CDXUtils.convertIntToSplineType(
+              root.getAttributeAsInt(CDXMLConstants.CDXMLProp_Curve_Type));
       spline.setFillType(curveType.getFillType());
       spline.setLineType(curveType.getLineType());
       spline.setClosed(curveType.isClosed());
@@ -2302,7 +2343,7 @@ public class CDXMLReader {
     // read content
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Text)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         objectTag.addText(createTextObject(object));
       } else {
 
@@ -2318,27 +2359,27 @@ public class CDXMLReader {
 
     // read first type of property
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_ObjectTag_Type)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_ObjectTag_Type)) {
         objectTag.setObjectTagType(
             CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
       }
     }
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_Visible)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Visible)) {
         objectTag.setVisible(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_Name)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Name)) {
         objectTag.setName(root.getAttribute(name));
-      } else if (name.equals(CDXMLProp_ObjectTag_Type)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ObjectTag_Type)) {
         objectTag.setObjectTagType(
             CDXMLUtils.convertStringToObjectTagType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_ObjectTag_Tracking)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ObjectTag_Tracking)) {
         objectTag.setTracking(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ObjectTag_Persistent)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ObjectTag_Persistent)) {
         objectTag.setPersistent(root.getAttributeAsBoolean(name));
-      } else if (name.equals(CDXMLProp_ObjectTag_Value)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ObjectTag_Value)) {
         switch (objectTag.getObjectTagType()) {
           case Long:
             objectTag.setValue(root.getAttributeAsLong(name));
@@ -2356,12 +2397,12 @@ public class CDXMLReader {
           default:
             throw new IOException();
         }
-      } else if (name.equals(CDXMLProp_Positioning)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_Positioning)) {
         objectTag.setPositioningType(
             CDXMLUtils.convertStringToPositioningType(root.getAttribute(name)));
-      } else if (name.equals(CDXMLProp_PositioningAngle)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PositioningAngle)) {
         objectTag.setPositioningAngle(root.getAttributeAsFloat(name));
-      } else if (name.equals(CDXMLProp_PositioningOffset)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_PositioningOffset)) {
         objectTag.setPositioningOffset(CDXMLUtils.convertStringToPoint2D(root.getAttribute(name)));
       } else {
 
@@ -2390,18 +2431,18 @@ public class CDXMLReader {
     CDChemicalProperty chemicalProperty = (CDChemicalProperty) root.getInstance();
 
     for (String name : root.getAttributes().keySet()) {
-      if (name.equals(CDXMLProp_Id)) {
-        // ignore
-      } else if (name.equals(CDXMLProp_BasisObjects)) {
+      if (name.equals(CDXMLConstants.CDXMLProp_Id)) {
+        LOGGER.debug("CDXML attribute '{}' intentionally not mapped", name);
+      } else if (name.equals(CDXMLConstants.CDXMLProp_BasisObjects)) {
         chemicalProperty.setBasisObjects(
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ChemicalPropertyType)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalPropertyType)) {
         chemicalProperty.setType(root.getAttributeAsInt(name));
-      } else if (name.equals(CDXMLProp_ChemicalPropertyDisplayID)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalPropertyDisplayID)) {
         chemicalProperty.setDisplay(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), Object.class, refManager));
-      } else if (name.equals(CDXMLProp_ChemicalPropertyIsActive)) {
+      } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalPropertyIsActive)) {
         chemicalProperty.setActive(root.getAttributeAsBoolean(name));
       } else {
 
@@ -2415,77 +2456,81 @@ public class CDXMLReader {
   private void populateChildren(XMLObject root) throws IOException {
     for (XMLObject object : root.getObjects()) {
       String name = object.getName();
-      if (name.equals(CDXMLObj_Document)) {
+      if (name.equals(CDXMLConstants.CDXMLObj_Document)) {
         populateDocumentObject(object);
-      } else if (name.equals(CDXMLObj_ColorTable)) {
-        // nothing
-      } else if (name.equals(CDXMLObj_FontTable)) {
-        // nothing
-      } else if (name.equals(CDXMLObj_Page)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ColorTable)) {
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
+      } else if (name.equals(CDXMLConstants.CDXMLObj_FontTable)) {
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Page)) {
         populatePageObject(object);
-      } else if (name.equals(CDXMLObj_Group)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Group)) {
         populateGroupObject(object);
-      } else if (name.equals(CDXMLObj_Fragment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Fragment)) {
         populateFragmentObject(object);
-      } else if (name.equals(CDXMLObj_Node)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Node)) {
         populateNodeObject(object);
-      } else if (name.equals(CDXMLObj_Bond)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Bond)) {
         populateBondObject(object);
-      } else if (name.equals(CDXMLObj_Text)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Text)) {
         populateTextObject(object);
-      } else if (name.equals(CDXMLObj_String)) {
-        // nothing
-      } else if (name.equals(CDXMLObj_Graphic)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_String)) {
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Graphic)) {
         populateGraphicObject(object);
-      } else if (name.equals(CDXMLObj_Arrow)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Arrow)) {
         populateArrowObject(object);
-      } else if (name.equals(CDXMLObj_Represent)) {
-        // nothing
-      } else if (name.equals(CDXMLObj_Curve)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Represent)) {
+        LOGGER.debug(
+            "CDXML element '{}' already processed during document creation, skipping", name);
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Curve)) {
         populateSplineObject(object);
-      } else if (name.equals(CDXMLObj_EmbeddedObject)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_EmbeddedObject)) {
         populateEmbeddedObjectObject(object);
-      } else if (name.equals(CDXMLObj_NamedAlternativeGroup)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_NamedAlternativeGroup)) {
         populateNamedAlternativeGroupObject(object);
-      } else if (name.equals(CDXMLObj_TemplateGrid)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TemplateGrid)) {
         populateTemplateGridObject(object);
-      } else if (name.equals(CDXMLObj_ReactionScheme)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ReactionScheme)) {
         populateReactionSchemeObject(object);
-      } else if (name.equals(CDXMLObj_ReactionStep)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ReactionStep)) {
         populateReactionStepObject(object);
-      } else if (name.equals(CDXMLObj_Spectrum)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Spectrum)) {
         populateSpectrumObject(object);
-      } else if (name.equals(CDXMLObj_ObjectTag)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ObjectTag)) {
         populateObjectTagObject(object);
-      } else if (name.equals(CDXMLObj_Sequence)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Sequence)) {
         populateSequenceObject(object);
-      } else if (name.equals(CDXMLObj_CrossReference)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_CrossReference)) {
         populateCrossReferenceObject(object);
-      } else if (name.equals(CDXMLObj_Splitter)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Splitter)) {
         populateSplitterObject(object);
-      } else if (name.equals(CDXMLObj_Table)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Table)) {
         populateTableObject(object);
-      } else if (name.equals(CDXMLObj_BracketedGroup)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_BracketedGroup)) {
         populateBracketedGroupObject(object);
-      } else if (name.equals(CDXMLObj_BracketAttachment)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_BracketAttachment)) {
         populateBracketAttachmentObject(object);
-      } else if (name.equals(CDXMLObj_CrossingBond)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_CrossingBond)) {
         populateCrossingBondObject(object);
-      } else if (name.equals(CDXMLObj_Border)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Border)) {
         populateBorderObject(object);
-      } else if (name.equals(CDXMLObj_Geometry)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Geometry)) {
         populateGeometryObject(object);
-      } else if (name.equals(CDXMLObj_Constraint)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_Constraint)) {
         populateConstraintObject(object);
-      } else if (name.equals(CDXMLObj_TLCPlate)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCPlate)) {
         populateTLCPlateObject(object);
-      } else if (name.equals(CDXMLObj_TLCLane)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCLane)) {
         populateTLCLaneObject(object);
-      } else if (name.equals(CDXMLObj_TLCSpot)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_TLCSpot)) {
         populateTLCSpotObject(object);
-      } else if (name.equals(CDXMLObj_ChemicalProperty)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ChemicalProperty)) {
         populateChemicalPropertyObject(object);
-      } else if (name.equals(CDXMLObj_ColoredMolecularArea)) {
+      } else if (name.equals(CDXMLConstants.CDXMLObj_ColoredMolecularArea)) {
         populateColoredMolecularArea(object);
       } else {
         handleMissingObject(object);
@@ -2495,18 +2540,19 @@ public class CDXMLReader {
 
   private CDStyledString createStyledString(XMLObject object) throws IOException {
     CDFont font =
-        object.hasAttribute(CDXMLProp_Font)
-            ? fonts.get(object.getAttributeAsInt(CDXMLProp_Font))
+        object.hasAttribute(CDXMLConstants.CDXMLProp_Font)
+            ? fonts.get(object.getAttributeAsInt(CDXMLConstants.CDXMLProp_Font))
             : null;
     float size =
-        object.hasAttribute(CDXMLProp_FontSize)
-            ? object.getAttributeAsFloat(CDXMLProp_FontSize)
+        object.hasAttribute(CDXMLConstants.CDXMLProp_FontSize)
+            ? object.getAttributeAsFloat(CDXMLConstants.CDXMLProp_FontSize)
             : 0;
     CDFontFace fontType =
-        object.hasAttribute(CDXMLProp_FontFace)
-            ? CDXUtils.convertIntToFontFace(object.getAttributeAsInt(CDXMLProp_FontFace))
+        object.hasAttribute(CDXMLConstants.CDXMLProp_FontFace)
+            ? CDXUtils.convertIntToFontFace(
+                object.getAttributeAsInt(CDXMLConstants.CDXMLProp_FontFace))
             : new CDFontFace();
-    CDColor color = readColorAttribute(object, CDXMLProp_ForegroundColor);
+    CDColor color = readColorAttribute(object, CDXMLConstants.CDXMLProp_ForegroundColor);
 
     CDStyledString string = new CDStyledString();
     string.addChunk(
@@ -2516,10 +2562,10 @@ public class CDXMLReader {
 
   private void createRepresent(XMLObject object, Map<String, Object> represents)
       throws IOException {
-    String name = object.getAttribute(CDXMLProp_Attribute);
+    String name = object.getAttribute(CDXMLConstants.CDXMLProp_Attribute);
     Object value =
         CDXMLUtils.convertStringToObjectRef(
-            object.getAttribute(CDXMLProp_Object), Object.class, refManager);
+            object.getAttribute(CDXMLConstants.CDXMLProp_Object), Object.class, refManager);
     if (value == null) {
       throw new IOException("Found null object as repesent value");
     }
@@ -2531,7 +2577,7 @@ public class CDXMLReader {
       if (colors.containsKey(object.getAttributeAsInt(name))) {
         return colors.get(object.getAttributeAsInt(name));
       }
-      logger.warn("Could not resolve color index to color: " + object.getAttributeAsInt(name));
+      LOGGER.warn("Could not resolve color index to color: {}", object.getAttributeAsInt(name));
     }
     return null;
   }
@@ -2539,21 +2585,21 @@ public class CDXMLReader {
   private void handleReference(XMLObject root, Object reference) throws IOException {
     root.setInstance(reference);
 
-    if (root.hasAttribute(CDXMLProp_Id)) {
-      int id = root.getAttributeAsInt(CDXMLProp_Id);
+    if (root.hasAttribute(CDXMLConstants.CDXMLProp_Id)) {
+      int id = root.getAttributeAsInt(CDXMLConstants.CDXMLProp_Id);
       refManager.putObjectRef(id, reference);
     }
   }
 
   private void handleCreation(XMLObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("create " + object.getName() + " object at " + object.getLocation());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("create {} object at {}", object.getName(), object.getLocation());
     }
   }
 
   private void handlePopulation(XMLObject object) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("populate " + object.getName() + " object at " + object.getLocation());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("populate {} object at {}", object.getName(), object.getLocation());
     }
   }
 
@@ -2561,7 +2607,7 @@ public class CDXMLReader {
     String message =
         "Encountered unexpected element \'" + object.getName() + "\' at " + object.getLocation();
 
-    logger.warn(message);
+    LOGGER.warn(message);
     if (object.getName().equals("annotation")) {
       return;
     }
@@ -2583,6 +2629,6 @@ public class CDXMLReader {
     if (RIGID) {
       throw new IOException(message);
     }
-    logger.warn(message);
+    LOGGER.warn(message);
   }
 }

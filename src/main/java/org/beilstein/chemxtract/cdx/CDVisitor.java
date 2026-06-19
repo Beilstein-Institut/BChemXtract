@@ -23,6 +23,8 @@ package org.beilstein.chemxtract.cdx;
 
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDFont;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to build the "Visitor" pattern for {@link CDObject}s. For creating specific
@@ -36,19 +38,17 @@ import org.beilstein.chemxtract.cdx.datatypes.CDFont;
  */
 public class CDVisitor {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(CDVisitor.class);
+
   /**
    * Default callback invoked from every unoverridden {@code visitXxx} method. The base
-   * implementation does nothing; subclasses may override it to handle the otherwise-unhandled
-   * cases.
+   * implementation only emits a TRACE-level log of the visited object; subclasses may override it
+   * to handle the otherwise-unhandled cases.
    *
    * @param object the visited object
    */
   protected void visitDefault(Object object) {
-    // Read the argument so the parameter is not flagged as unused; the base implementation is
-    // otherwise a no-op. Subclasses may override to handle every unhandled visit.
-    if (object == null) {
-      return;
-    }
+    LOGGER.trace("Unhandled visit: {}", object);
   }
 
   public void visitDocument(CDDocument document) {

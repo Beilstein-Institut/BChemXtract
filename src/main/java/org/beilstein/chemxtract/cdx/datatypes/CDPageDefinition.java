@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+/** Page layout definitions for a document page, as defined by the ChemDraw CDX specification. */
 public enum CDPageDefinition {
   Undefined,
   Center,

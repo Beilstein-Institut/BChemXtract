@@ -24,7 +24,23 @@ package org.beilstein.chemxtract.cdx;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomSubstituentType;
+import org.beilstein.chemxtract.cdx.datatypes.CDElementList;
+import org.beilstein.chemxtract.cdx.datatypes.CDEnhancedStereoType;
+import org.beilstein.chemxtract.cdx.datatypes.CDExternalConnectionType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGenericList;
+import org.beilstein.chemxtract.cdx.datatypes.CDIsotopicAbundance;
+import org.beilstein.chemxtract.cdx.datatypes.CDLabelDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
+import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cdx.datatypes.CDReactionStereo;
+import org.beilstein.chemxtract.cdx.datatypes.CDRingBondCount;
+import org.beilstein.chemxtract.cdx.datatypes.CDTranslation;
+import org.beilstein.chemxtract.cdx.datatypes.CDUnsaturation;
 
 /** Basic part of a substance, usually denoting a single atom. */
 public class CDAtom extends CDObject {

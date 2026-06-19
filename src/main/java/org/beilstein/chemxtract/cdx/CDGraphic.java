@@ -23,7 +23,19 @@ package org.beilstein.chemxtract.cdx;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.beilstein.chemxtract.cdx.datatypes.*;
+import org.beilstein.chemxtract.cdx.datatypes.CDArrowType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketType;
+import org.beilstein.chemxtract.cdx.datatypes.CDBracketUsage;
+import org.beilstein.chemxtract.cdx.datatypes.CDFillType;
+import org.beilstein.chemxtract.cdx.datatypes.CDGraphicType;
+import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOrbitalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDOvalType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerFlipType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPolymerRepeatPattern;
+import org.beilstein.chemxtract.cdx.datatypes.CDRectangleType;
+import org.beilstein.chemxtract.cdx.datatypes.CDSymbolType;
 
 /**
  * This object represents a graphical object without chemical meaning, like a line, spline, circle

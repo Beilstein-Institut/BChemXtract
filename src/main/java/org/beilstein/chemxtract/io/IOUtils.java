@@ -21,16 +21,22 @@
  */
 package org.beilstein.chemxtract.io;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This class holds various helper methods for the IO package. */
 public class IOUtils {
-  private static final Log logger = LogFactory.getLog(IOUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(IOUtils.class);
 
   private static final int BUFFER_SIZE = 4096;
 
@@ -118,7 +124,7 @@ public class IOUtils {
       try {
         closable.close();
       } catch (IOException e) {
-        logger.debug("Unable to close stream", e);
+        LOGGER.debug("Unable to close stream", e);
       }
     }
   }
