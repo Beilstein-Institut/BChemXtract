@@ -262,10 +262,10 @@
 
 	<profiles>
 		<!--
-			Quality profile: runs Checkstyle, PMD, SpotBugs, OWASP Dependency-Check.
-			Activate with `mvn -Pquality verify`. All four gates FAIL the build on
-			violations (CVSS >= 7 for dependency CVEs). Kept off the default
-			lifecycle so day-to-day developer builds stay fast.
+			Quality profile: runs Checkstyle, PMD and SpotBugs. Activate with
+			`mvn -Pquality verify`. All gates FAIL the build on violations. Kept
+			off the default lifecycle so day-to-day developer builds stay fast.
+			Dependency CVE scanning is handled in CI by Trivy (security.yml).
 		-->
 		<profile>
 			<id>quality</id>
@@ -339,30 +339,6 @@
 						<executions>
 							<execution>
 								<id>spotbugs-check</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>check</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.owasp</groupId>
-						<artifactId>dependency-check-maven</artifactId>
-						<version>12.2.2</version>
-						<configuration>
-							<failBuildOnCVSS>7</failBuildOnCVSS>
-							<formats>
-								<format>HTML</format>
-								<format>SARIF</format>
-							</formats>
-							<skipTestScope>true</skipTestScope>
-							<nvdValidForHours>24</nvdValidForHours>
-						</configuration>
-						<executions>
-							<execution>
-								<id>dependency-check</id>
 								<phase>verify</phase>
 								<goals>
 									<goal>check</goal>

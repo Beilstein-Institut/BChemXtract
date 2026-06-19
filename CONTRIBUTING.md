@@ -28,7 +28,7 @@ You need **JDK 17** (or 21) and **Maven 3.9+**.
    ```
    Optional but encouraged:
    ```bash
-   mvn -B -Pquality verify   # adds Checkstyle, PMD, SpotBugs, OWASP Dependency-Check
+   mvn -B -Pquality verify   # adds Checkstyle, PMD, SpotBugs
    ```
 5. **Open a PR** against `main`. The PR template will guide you.
 
@@ -71,7 +71,7 @@ Every PR runs the following checks:
 |----------|--------------|
 | `lint.yml` | Spotless, Checkstyle, PMD, SpotBugs, actionlint |
 | `test.yml` | `mvn -B verify` on JDK 17 + 21, JaCoCo coverage to Codecov |
-| `security.yml` | Gitleaks (secret scan), Trivy (CVE scan), OWASP Dependency-Check |
+| `security.yml` | Gitleaks (secret scan), Trivy (CVE scan) |
 | `codeql.yml` | GitHub CodeQL static analysis for Java |
 | `release-please.yml` | Maintains the open release PR (no-op on contributor PRs) |
 
