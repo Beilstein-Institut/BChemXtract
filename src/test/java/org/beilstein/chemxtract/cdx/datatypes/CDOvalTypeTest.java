@@ -135,7 +135,7 @@ public class CDOvalTypeTest {
   @ParameterizedTest(name = "differs on {0}")
   @MethodSource("flags")
   public void equalsAndHashCodeAreSensitiveToEachFlag(
-      String name, Consumer<CDOvalType> setter, Predicate<CDOvalType> getter) {
+      String name, Consumer<CDOvalType> setter) {
     CDOvalType a = new CDOvalType();
     CDOvalType b = new CDOvalType();
     setter.accept(b);
