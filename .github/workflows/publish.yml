@@ -30,7 +30,7 @@ jobs:
     environment: maven-central
     steps:
       - name: Checkout release ref
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
