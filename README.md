@@ -61,7 +61,7 @@ cite.
 - 🅰️ **Markush support** — abbreviations and generic structures
 - 🛡️ **Hard safety limits** — refuses to process pathologically large inputs
 - 🖼️ **Depiction** — renders extracted structures as PNG via CDK
-- 🧰 **Battle-tested CI** — lint, multi-JDK tests, JaCoCo coverage, Gitleaks, Trivy, OWASP Dependency-Check, CodeQL
+- 🧰 **Battle-tested CI** — lint, multi-JDK tests, JaCoCo coverage, Gitleaks, Trivy, CodeQL
 
 ## 🚀 Quick Start
 
@@ -156,7 +156,7 @@ Two artifacts land in `target/`:
 | `bchemxtract-X.Y.Z.jar` | Slim jar — bundle with your own application |
 | `bchemxtract-X.Y.Z-jar-with-dependencies.jar` | Fat jar — run standalone |
 
-For the full quality sweep (Checkstyle, PMD, SpotBugs, OWASP Dependency-Check):
+For the full quality sweep (Checkstyle, PMD, SpotBugs):
 
 ```bash
 mvn -B -Pquality verify
@@ -168,7 +168,7 @@ mvn -B -Pquality verify
 |---|---|---|
 | [`lint.yml`](.github/workflows/lint.yml) | PR + push to `main` | Spotless · Checkstyle · PMD · SpotBugs · actionlint |
 | [`test.yml`](.github/workflows/test.yml) | PR + push to `main` | `mvn verify` on JDK 17 + 21, JaCoCo → Codecov |
-| [`security.yml`](.github/workflows/security.yml) | PR + push + weekly | Gitleaks · Trivy · OWASP Dependency-Check |
+| [`security.yml`](.github/workflows/security.yml) | PR + push + weekly | Gitleaks · Trivy |
 | [`codeql.yml`](.github/workflows/codeql.yml) | PR + push + weekly | GitHub CodeQL Java SAST |
 | [`release-please.yml`](.github/workflows/release-please.yml) | push to `main` | Drafts release PRs from Conventional Commits |
 | [`publish.yml`](.github/workflows/publish.yml) | GitHub Release published | GPG-signs and deploys to Maven Central |
