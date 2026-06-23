@@ -135,7 +135,7 @@ public class CDRectangleTypeTest {
   @ParameterizedTest(name = "differs on {0}")
   @MethodSource("flags")
   public void equalsAndHashCodeAreSensitiveToEachFlag(
-      String name, Consumer<CDRectangleType> setter, Predicate<CDRectangleType> getter) {
+      String name, Consumer<CDRectangleType> setter) {
     CDRectangleType a = new CDRectangleType();
     CDRectangleType b = new CDRectangleType();
     setter.accept(b);
