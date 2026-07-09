@@ -41,6 +41,7 @@ import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.model.BCXSubstanceOccurrence;
 import org.beilstein.chemxtract.utils.AttachmentHandler;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
+import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
@@ -310,7 +311,7 @@ public class SubstanceXtractor {
     }
     // set SMILES
     String smiles;
-    if (atomContainer.getAtomCount() > 500) {
+    if (atomContainer.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
       smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Isomeric);
     } else {
       smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
@@ -325,7 +326,7 @@ public class SubstanceXtractor {
     // set InChI, InChIKey and AuxInfo. A structure containing unresolved pseudo-atoms (e.g. an
     // R-group whose attachment position varies) cannot be represented in InChI, but is still a
     // valid extraction carrying SMILES and a molecular formula; other InChI failures remain fatal.
-    if (atomContainer.getAtomCount() <= 500) {
+    if (atomContainer.getAtomCount() <= Definitions.MAX_ATOM_COUNT) {
       try {
         InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
         substance.setInchi(gen.getInchi());

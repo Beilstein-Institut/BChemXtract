@@ -42,6 +42,13 @@ public class Definitions {
   public static final String AGENT_ABBREVIATION_PATH =
       "/org/beilstein/chemxtract/lookups/agents_abbreviations.smi";
   public static final int AGENTS_SIZE = 400;
+
+  /**
+   * Upper bound on atom count for expensive per-structure operations (InChI generation and 2D
+   * coordinate layout). Larger structures fall back to cheaper handling.
+   */
+  public static final int MAX_ATOM_COUNT = 500;
+
   // Regular expression for splitting:
   // \s includes all whitespace (spaces, tabs, line feeds, etc.)
   // \n ensures we explicitly catch line feeds (optional since \s includes it)
