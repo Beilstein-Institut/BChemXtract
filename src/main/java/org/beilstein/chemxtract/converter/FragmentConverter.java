@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.converter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +35,7 @@ import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.utils.StereoHandler;
 import org.beilstein.chemxtract.visitor.AtomVisitor;
@@ -164,8 +166,10 @@ public class FragmentConverter {
       }
     }
     // create IAtomContainer from the structural (non-coordination) skeleton
+    Set<IAtom> abbreviationAtoms = new HashSet<>();
     IAtomContainer atomContainer =
-        createAtomContainer(atoms.toArray(IAtom[]::new), structuralBonds.toArray(IBond[]::new));
+        createAtomContainer(
+            atoms.toArray(IAtom[]::new), structuralBonds.toArray(IBond[]::new), abbreviationAtoms);
     // check for radicals
     setRadicals(atomContainer, atomConverter.getAtomMap());
     // add implicit hydrogens (ligands are still free of their coordinating metal here)
@@ -176,6 +180,12 @@ public class FragmentConverter {
     addCoordinationBonds(atomContainer, coordinationBonds);
     // check for tetrahedral stereo
     StereoHandler.setStereo(atomContainer, bondConverter.getBondMap(), atomConverter.getAtomMap());
+    // generate coordinates for expanded-abbreviation atoms (after stereo perception)
+    try {
+      AbbreviationLayout.layoutExpandedAbbreviations(atomContainer, abbreviationAtoms);
+    } catch (CDKException | RuntimeException e) {
+      LOGGER.warn("Abbreviation layout failed; keeping collapsed coordinates.", e);
+    }
     return atomContainer;
   }
 
@@ -248,9 +258,11 @@ public class FragmentConverter {
    *
    * @param atoms array of {@link IAtom}
    * @param bonds array of {@link IBond}
+   * @param abbreviationAtomsOut collector for atoms produced by abbreviation resubstitution
    * @return the assembled {@link IAtomContainer}
    */
-  private IAtomContainer createAtomContainer(IAtom[] atoms, IBond[] bonds) {
+  private IAtomContainer createAtomContainer(
+      IAtom[] atoms, IBond[] bonds, Set<IAtom> abbreviationAtomsOut) {
     IAtomContainer atomContainer = builder.newAtomContainer();
     atomContainer.setAtoms(atoms);
 
@@ -258,16 +270,14 @@ public class FragmentConverter {
     for (IBond bond : bonds) {
       IAtom a0 = bond.getAtom(0);
       IAtom a1 = bond.getAtom(1); // always exists for a valid bond
-
       int idx0 = atomContainer.indexOf(a0);
       int idx1 = atomContainer.indexOf(a1);
-
       if (idx0 >= 0 && idx1 >= 0 && !atomContainer.contains(bond)) {
         atomContainer.addBond(bond);
       }
     }
 
-    resubstituteAbbreviation(atomContainer);
+    abbreviationAtomsOut.addAll(resubstituteAbbreviation(atomContainer));
     return atomContainer;
   }
 
@@ -278,10 +288,12 @@ public class FragmentConverter {
    * <p>
    *
    * @param atomContainer the container in which abbreviations are replaced
+   * @return the set of atoms added to {@code atomContainer} by this resubstitution
    */
-  private void resubstituteAbbreviation(IAtomContainer atomContainer) {
+  private Set<IAtom> resubstituteAbbreviation(IAtomContainer atomContainer) {
     List<IBond> bondsToRemove = new ArrayList<>();
     List<IAtom> atomsToRemove = new ArrayList<>();
+    Set<IAtom> addedAtoms = new HashSet<>();
 
     for (IAtom atom : atomContainer.atoms()) {
       if (!(atom instanceof IPseudoAtom pseudoAtom)) {
@@ -314,14 +326,16 @@ public class FragmentConverter {
       }
 
       if (expandedStructure.getAtomCount() == 1) {
-        replaceSingleAtom(atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove);
+        replaceSingleAtom(
+            atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove, addedAtoms);
       } else {
         replaceMultiAtom(
-            atomContainer, pseudoAtom, expandedStructure, bondsToRemove, atomsToRemove);
+            atomContainer, pseudoAtom, expandedStructure, bondsToRemove, atomsToRemove, addedAtoms);
       }
     }
     bondsToRemove.forEach(atomContainer::removeBond);
     atomsToRemove.forEach(atomContainer::removeAtom);
+    return addedAtoms;
   }
 
   /**
@@ -332,10 +346,16 @@ public class FragmentConverter {
    * @param pseudoAtom abbreviation/R atom (IAtom) to be replaced
    * @param newAtom IAtom to replace the rAtom
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
+   * @param addedAtoms collector for atoms added to the IAtomContainer
    */
   private void replaceSingleAtom(
-      IAtomContainer atomContainer, IAtom pseudoAtom, IAtom newAtom, List<IAtom> atomsToRemove) {
+      IAtomContainer atomContainer,
+      IAtom pseudoAtom,
+      IAtom newAtom,
+      List<IAtom> atomsToRemove,
+      Set<IAtom> addedAtoms) {
     atomContainer.addAtom(newAtom);
+    addedAtoms.add(newAtom);
 
     List<IBond> connectedBonds = new ArrayList<>();
     pseudoAtom.bonds().forEach(connectedBonds::add);
@@ -356,13 +376,15 @@ public class FragmentConverter {
    * @param expandedStructure IAtomContainer of the structure parsed from the abbreviation SMILES
    * @param bondsToRemove list of bonds that will be removed from the IAtomContainer
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
+   * @param addedAtoms collector for atoms added to the IAtomContainer
    */
   private void replaceMultiAtom(
       IAtomContainer atomContainer,
       IAtom pseudoAtom,
       IAtomContainer expandedStructure,
       List<IBond> bondsToRemove,
-      List<IAtom> atomsToRemove) {
+      List<IAtom> atomsToRemove,
+      Set<IAtom> addedAtoms) {
     List<IAtom> connectionPoints = new ArrayList<>();
     for (IAtom atom : expandedStructure.atoms()) {
       if (atom instanceof IPseudoAtom) {
@@ -392,6 +414,11 @@ public class FragmentConverter {
 
     atomContainer.add(expandedStructure);
     atomContainer.addBond(newBond);
+    for (IAtom expandedAtom : expandedStructure.atoms()) {
+      if (expandedAtom != connectionPoint) {
+        addedAtoms.add(expandedAtom);
+      }
+    }
 
     bondsToRemove.add(bondOrigin);
     bondsToRemove.add(bondInsideAbbr);

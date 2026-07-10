@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
 import javax.vecmath.Point2d;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.junit.jupiter.api.Test;
@@ -70,12 +71,13 @@ class AbbreviationLayoutTest {
   @Test
   void collapsedAtomsGetDistinctCoordinates() throws Exception {
     IAtomContainer mol = collapsedMolecule();
+    Set<IAtom> free = Set.of(mol.getAtom(2), mol.getAtom(3), mol.getAtom(4));
     Point2d c1Before = new Point2d(mol.getAtom(0).getPoint2d());
     Point2d c2Before = new Point2d(mol.getAtom(1).getPoint2d());
 
-    AbbreviationLayout.layoutExpandedAbbreviations(mol);
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, free);
 
-    assertFalse(ChemicalUtils.hasDuplicateCoordinates(mol), "collapsed atoms should be spread out");
+    assertFalse(ChemicalUtils.hasDuplicateCoordinates(mol), "expanded atoms should be spread out");
     for (IAtom atom : mol.atoms()) {
       assertNotNull(atom.getPoint2d(), "every atom must have a 2D coordinate");
     }
@@ -86,30 +88,31 @@ class AbbreviationLayoutTest {
   }
 
   @Test
-  void moleculeWithoutDuplicatesIsUntouched() throws Exception {
+  void emptyFreeSetIsNoOp() throws Exception {
     IAtomContainer mol = BUILDER.newAtomContainer();
     mol.addAtom(carbon(0, 0));
-    mol.addAtom(carbon(1, 0));
+    mol.addAtom(carbon(0, 0)); // duplicate coords present, but nothing is declared free
     mol.addBond(0, 1, IBond.Order.SINGLE);
     Point2d a0 = new Point2d(mol.getAtom(0).getPoint2d());
     Point2d a1 = new Point2d(mol.getAtom(1).getPoint2d());
 
-    AbbreviationLayout.layoutExpandedAbbreviations(mol);
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, Set.of());
 
     assertTrue(a0.equals(mol.getAtom(0).getPoint2d()), "coordinates must be unchanged");
     assertTrue(a1.equals(mol.getAtom(1).getPoint2d()), "coordinates must be unchanged");
   }
 
   @Test
-  void allAtomsCollapsedFallsBackToFullLayout() throws Exception {
+  void allAtomsFreeFallsBackToFullLayout() throws Exception {
     IAtomContainer mol = BUILDER.newAtomContainer();
     mol.addAtom(carbon(0, 0));
     mol.addAtom(carbon(0, 0));
     mol.addAtom(carbon(0, 0));
     mol.addBond(0, 1, IBond.Order.SINGLE);
     mol.addBond(1, 2, IBond.Order.SINGLE);
+    Set<IAtom> free = Set.of(mol.getAtom(0), mol.getAtom(1), mol.getAtom(2));
 
-    AbbreviationLayout.layoutExpandedAbbreviations(mol);
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, free);
 
     assertFalse(ChemicalUtils.hasDuplicateCoordinates(mol), "full layout should spread atoms");
     for (IAtom atom : mol.atoms()) {
@@ -123,8 +126,9 @@ class AbbreviationLayoutTest {
     for (int i = 0; i < 502; i++) {
       mol.addAtom(carbon(0, 0)); // all identical -> duplicates present
     }
+    Set<IAtom> free = Set.of(mol.getAtom(500), mol.getAtom(501));
 
-    AbbreviationLayout.layoutExpandedAbbreviations(mol);
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, free);
 
     assertTrue(
         ChemicalUtils.hasDuplicateCoordinates(mol),
@@ -135,8 +139,9 @@ class AbbreviationLayoutTest {
   void newBondsRoughlyMatchScaffoldBondLength() throws Exception {
     // Scaffold bond c1-c2 spans distance 1.0; laid-out bonds should be near that.
     IAtomContainer mol = collapsedMolecule();
+    Set<IAtom> free = Set.of(mol.getAtom(2), mol.getAtom(3), mol.getAtom(4));
 
-    AbbreviationLayout.layoutExpandedAbbreviations(mol);
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, free);
 
     double sum = 0.0;
     int count = 0;

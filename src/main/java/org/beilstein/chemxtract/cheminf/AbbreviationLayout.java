@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.vecmath.Point2d;
-import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -49,6 +48,10 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Must be invoked only after stereochemistry has been perceived, because the collapsed
  * coordinate is what gives scaffold stereocentres a valid wedge direction during perception.
+ *
+ * <p>Only the atoms explicitly passed in are laid out; the caller is responsible for supplying
+ * exactly the atoms produced by abbreviation resubstitution so unrelated collapsed-coordinate
+ * structures (e.g. ChemDraw "Multiple Group" sgroups) are never touched.
  */
 public final class AbbreviationLayout {
 
@@ -60,23 +63,25 @@ public final class AbbreviationLayout {
   }
 
   /**
-   * Spreads out atoms that share a coordinate (collapsed expanded abbreviations) using partial 2D
-   * layout, keeping validly-positioned scaffold atoms fixed. No-op when the container has no
-   * duplicate coordinates or exceeds {@link Definitions#MAX_ATOM_COUNT}.
+   * Spreads out the given expanded-abbreviation atoms (all collapsed onto their connection point by
+   * {@code FragmentConverter.resubstituteAbbreviation}) using CDK partial 2D layout, keeping every
+   * other validly-positioned scaffold atom fixed so the original ChemDraw layout is preserved.
+   * No-op when {@code freeAtoms} is empty or the container exceeds {@link
+   * Definitions#MAX_ATOM_COUNT}.
+   *
+   * <p>Must be invoked only after stereochemistry has been perceived: the collapsed coordinate is
+   * what gives scaffold stereocentres a valid wedge direction during perception.
    *
    * @param container the atom container to lay out; modified in place
+   * @param freeAtoms the atoms produced by abbreviation resubstitution (the atoms to place)
    * @throws CDKException if coordinate generation fails
    */
-  public static void layoutExpandedAbbreviations(IAtomContainer container) throws CDKException {
-    if (container == null || !ChemicalUtils.hasDuplicateCoordinates(container)) {
+  public static void layoutExpandedAbbreviations(IAtomContainer container, Set<IAtom> freeAtoms)
+      throws CDKException {
+    if (container == null || freeAtoms == null || freeAtoms.isEmpty()) {
       return;
     }
     if (container.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
-      return;
-    }
-
-    Set<IAtom> freeAtoms = findCollapsedAtoms(container);
-    if (freeAtoms.isEmpty()) {
       return;
     }
 
@@ -96,6 +101,14 @@ public final class AbbreviationLayout {
 
     double targetBondLength = averageFixedBondLength(container, fixedAtoms);
 
+    // Snapshot the collapsed coordinates so they can be restored verbatim if layout fails
+    // partway through: a failed attempt must leave the container exactly as it was, never in an
+    // intermediate (nulled-out) state that would silently change downstream chemistry.
+    Map<IAtom, Point2d> originalPoints = new HashMap<>();
+    for (IAtom atom : freeAtoms) {
+      originalPoints.put(atom, atom.getPoint2d());
+    }
+
     // Clear collapsed coordinates so the generator treats them as unplaced.
     for (IAtom atom : freeAtoms) {
       atom.setPoint2d(null);
@@ -109,15 +122,22 @@ public final class AbbreviationLayout {
       }
     }
 
-    // CDK 2.12's StructureDiagramGenerator.setBondLength(double) always throws
-    // UnsupportedOperationException (bond length is fixed internally at 1.5; rescaling is meant
-    // to happen post-layout via GeometryUtil.scaleMolecule). That whole-molecule helper would also
-    // shift the fixed scaffold atoms, so instead we rescale only the newly-placed atoms afterwards,
-    // anchored on their attachment point(s) into the fixed scaffold.
-    sdg.setMolecule(container, false, fixedAtoms, fixedBonds);
-    sdg.generateCoordinates();
-    rescaleFreeAtoms(container, freeAtoms, fixedAtoms, targetBondLength);
-    LOGGER.debug("Laid out {} collapsed abbreviation atom(s).", freeAtoms.size());
+    try {
+      // CDK 2.12's StructureDiagramGenerator.setBondLength(double) always throws
+      // UnsupportedOperationException (bond length is fixed internally at 1.5; rescaling is meant
+      // to happen post-layout via GeometryUtil.scaleMolecule). That whole-molecule helper would
+      // also shift the fixed scaffold atoms, so instead we rescale only the newly-placed atoms
+      // afterwards, anchored on their attachment point(s) into the fixed scaffold.
+      sdg.setMolecule(container, false, fixedAtoms, fixedBonds);
+      sdg.generateCoordinates();
+      rescaleFreeAtoms(container, freeAtoms, fixedAtoms, targetBondLength);
+      LOGGER.debug("Laid out {} expanded abbreviation atom(s).", freeAtoms.size());
+    } catch (CDKException | RuntimeException e) {
+      for (Map.Entry<IAtom, Point2d> entry : originalPoints.entrySet()) {
+        entry.getKey().setPoint2d(entry.getValue());
+      }
+      throw e;
+    }
   }
 
   /**
@@ -206,29 +226,6 @@ public final class AbbreviationLayout {
       }
     }
     return count == 0 ? new Point2d(0.0, 0.0) : new Point2d(sumX / count, sumY / count);
-  }
-
-  /**
-   * Returns the atoms that sit on a 2D coordinate shared by more than one atom (the collapsed
-   * expanded-abbreviation atoms).
-   */
-  private static Set<IAtom> findCollapsedAtoms(IAtomContainer container) {
-    Map<String, List<IAtom>> byPoint = new HashMap<>();
-    for (IAtom atom : container.atoms()) {
-      Point2d p = atom.getPoint2d();
-      if (p == null) {
-        continue;
-      }
-      String key = String.format("%.4f,%.4f", p.x, p.y);
-      byPoint.computeIfAbsent(key, k -> new ArrayList<>()).add(atom);
-    }
-    Set<IAtom> collapsed = new HashSet<>();
-    for (List<IAtom> group : byPoint.values()) {
-      if (group.size() > 1) {
-        collapsed.addAll(group);
-      }
-    }
-    return collapsed;
   }
 
   /** Average bond length over bonds whose endpoints are both fixed (both carry coordinates). */
