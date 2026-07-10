@@ -326,8 +326,7 @@ public class FragmentConverter {
       }
 
       if (expandedStructure.getAtomCount() == 1) {
-        replaceSingleAtom(
-            atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove, addedAtoms);
+        replaceSingleAtom(atomContainer, pseudoAtom, expandedStructure.getAtom(0), atomsToRemove);
       } else {
         replaceMultiAtom(
             atomContainer, pseudoAtom, expandedStructure, bondsToRemove, atomsToRemove, addedAtoms);
@@ -346,16 +345,10 @@ public class FragmentConverter {
    * @param pseudoAtom abbreviation/R atom (IAtom) to be replaced
    * @param newAtom IAtom to replace the rAtom
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
-   * @param addedAtoms collector for atoms added to the IAtomContainer
    */
   private void replaceSingleAtom(
-      IAtomContainer atomContainer,
-      IAtom pseudoAtom,
-      IAtom newAtom,
-      List<IAtom> atomsToRemove,
-      Set<IAtom> addedAtoms) {
+      IAtomContainer atomContainer, IAtom pseudoAtom, IAtom newAtom, List<IAtom> atomsToRemove) {
     atomContainer.addAtom(newAtom);
-    addedAtoms.add(newAtom);
 
     List<IBond> connectedBonds = new ArrayList<>();
     pseudoAtom.bonds().forEach(connectedBonds::add);
