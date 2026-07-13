@@ -2,6 +2,25 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.2.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.3...v1.2.0) (2026-07-13)
+
+
+### Features
+
+* add partial 2D layout for expanded abbreviations ([3da7fef](https://github.com/Beilstein-Institut/BChemXtract/commit/3da7fef7ebb479ccfa0635a4f3a51e6495a1bae6))
+* **ci:** make Checkstyle, PMD, SpotBugs and OWASP gates blocking ([7fef2bd](https://github.com/Beilstein-Institut/BChemXtract/commit/7fef2bdd04ec3f28ff11d63526005a2ae03454b8))
+* handle multi-center and variable attachment points ([faa288c](https://github.com/Beilstein-Institut/BChemXtract/commit/faa288c6dc7b72d6713f9a5a0e1a60bb8ca305e5))
+* handle multi-center and variable attachment points ([827cf4b](https://github.com/Beilstein-Institut/BChemXtract/commit/827cf4bed3cce1cc9559d984b1e278e9eaf0136d))
+* lay out expanded abbreviation coordinates ([9a68eaf](https://github.com/Beilstein-Institut/BChemXtract/commit/9a68eaf0a2392347564d2b1d9ee7c51c7825d75c))
+* lay out expanded abbreviation coordinates during conversion ([c435dfe](https://github.com/Beilstein-Institut/BChemXtract/commit/c435dfeffb9b7fa3aad242bc40e566262c7106b5))
+* **logging:** depend only on slf4j-api; make Log4j backend optional ([ea05991](https://github.com/Beilstein-Institut/BChemXtract/commit/ea05991cff2653c92e1a5d9ec9026295d33d054f))
+
+
+### Bug Fixes
+
+* **logging:** use log4j-slf4j2-impl so SLF4J 2 finds a provider ([821f821](https://github.com/Beilstein-Institut/BChemXtract/commit/821f8217846210c642b943220cbd708ec6913d6e))
+* resolve SpotBugs findings - encodings, resource leaks, map iteration, static exposure ([40530a0](https://github.com/Beilstein-Institut/BChemXtract/commit/40530a0b295b0bf2232b011183c5c8e213e39bd6))
+
 ## [1.1.3](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.2...v1.1.3) (2026-06-03)
 
 
