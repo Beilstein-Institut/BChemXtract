@@ -655,10 +655,10 @@ public class MarkushHandler {
     // Picking
     // the nearest block *that defines the label* handles both, and only disambiguates when a label
     // genuinely has competing definitions.
-    for (String label : residueLabels.keySet()) {
+    for (Map.Entry<String, List<String>> entry : residueLabels.entrySet()) {
+      String label = entry.getKey();
       RGroupDefinitionBlock nearest = nearestBlockDefining(label, scaffoldBounds);
-      List<String> values =
-          nearest != null ? nearest.definitions().get(label) : residueLabels.get(label);
+      List<String> values = nearest != null ? nearest.definitions().get(label) : entry.getValue();
       scoped.put(label, new ArrayList<>(values));
     }
     structuralDefinitions.forEach((label, values) -> scoped.put(label, new ArrayList<>(values)));
