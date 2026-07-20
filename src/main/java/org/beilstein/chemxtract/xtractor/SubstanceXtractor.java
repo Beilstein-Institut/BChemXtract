@@ -25,15 +25,19 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import org.beilstein.chemxtract.cdx.CDAltGroup;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.model.BCXSubstance;
@@ -44,6 +48,7 @@ import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
+import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
@@ -107,6 +112,7 @@ public class SubstanceXtractor {
       MarkushHandler markushHandler = null;
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder);
+        markushHandler.addResidueDefinitions(resolveAltGroupDefinitions(page));
       }
 
       substanceInfo.setNoFragments(fragments.size());
@@ -130,6 +136,60 @@ public class SubstanceXtractor {
    */
   public List<BCXSubstance> xtract(CDDocument document, BCXSubstanceInfo substanceInfo) {
     return this.xtract(document, substanceInfo, false);
+  }
+
+  /**
+   * Resolves R-group definitions from ChemDraw {@code NamedAlternativeGroup}s on the page. Each
+   * alternative fragment is converted to a substituent SMILES so it can feed the same replacement
+   * machinery used for text-defined residues.
+   *
+   * @param page the page to scan for alternative groups
+   * @return map of R-group label to the SMILES of each alternative substituent
+   */
+  private Map<String, List<String>> resolveAltGroupDefinitions(CDPage page) {
+    Map<String, List<String>> definitions = new LinkedHashMap<>();
+    for (CDAltGroup altGroup : new AltGroupVisitor(page).getAltGroups()) {
+      String label = altGroupLabel(altGroup);
+      if (label == null) {
+        continue;
+      }
+      List<String> alternatives = new ArrayList<>();
+      for (CDFragment alternative : altGroup.getFragments()) {
+        try {
+          IAtomContainer container = new FragmentConverter(this.builder).convert(alternative);
+          String smiles = ChemicalUtils.createSmiles(container, SmiFlavor.Canonical);
+          if (smiles != null && !smiles.isEmpty()) {
+            alternatives.add(smiles);
+          }
+        } catch (CDKException | IllegalArgumentException e) {
+          LOGGER.error("Could not convert alternative group fragment for label {}.", label, e);
+        }
+      }
+      if (!alternatives.isEmpty()) {
+        definitions.put(label, alternatives);
+      }
+    }
+    return definitions;
+  }
+
+  /**
+   * Derives the R-group label of an alternative group from its caption (e.g. {@code "R1"}).
+   *
+   * @param altGroup the alternative group
+   * @return the label, or {@code null} if no caption yields a recognisable R-group identifier
+   */
+  private String altGroupLabel(CDAltGroup altGroup) {
+    for (CDText caption : altGroup.getCaptions()) {
+      if (caption.getText() == null || caption.getText().getText() == null) {
+        continue;
+      }
+      Matcher matcher =
+          Definitions.RGROUP_LABEL_PATTERN.matcher(caption.getText().getText().trim());
+      if (matcher.find()) {
+        return matcher.group(1);
+      }
+    }
+    return null;
   }
 
   /**
@@ -243,7 +303,8 @@ public class SubstanceXtractor {
           && variant.hasRGroup()
           && !markushHandler.getResidueLabels().isEmpty()) {
         try {
-          for (IAtomContainer container : markushHandler.replaceRGroups(atomContainer)) {
+          for (IAtomContainer container :
+              markushHandler.replaceRGroups(atomContainer, fragment.getBounds())) {
             substances.add(buildSubstance(container, fragment, variablePosition));
           }
           expandedRGroups = true;

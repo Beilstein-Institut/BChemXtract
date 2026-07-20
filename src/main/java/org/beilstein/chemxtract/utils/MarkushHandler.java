@@ -23,14 +23,20 @@ package org.beilstein.chemxtract.utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
+import org.beilstein.chemxtract.visitor.CorrelatedGroup;
+import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
@@ -70,6 +76,8 @@ public class MarkushHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MarkushHandler.class);
   private final Map<String, List<String>> residueLabels;
+  private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
+  private final List<RGroupDefinitionBlock> blocks;
   private final SmilesParser smilesParser;
 
   /**
@@ -81,12 +89,13 @@ public class MarkushHandler {
   public MarkushHandler(CDPage page, IChemObjectBuilder builder) {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
+    blocks = textVisitor.getBlocks();
     smilesParser = new SmilesParser(builder);
   }
 
   /**
    * Generates all possible {@link IAtomContainer} structures by replacing R-groups in the given
-   * atom container with their substituents.
+   * atom container with their substituents, using the page-wide union of definitions.
    *
    * @param atomContainer molecule containing pseudo-atoms (R-groups)
    * @return list of all substituted atom containers
@@ -96,18 +105,175 @@ public class MarkushHandler {
    */
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
       throws CloneNotSupportedException, IOException, CDKException {
+    return replaceRGroups(atomContainer, residueLabels);
+  }
 
-    Map<String, List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, residueLabels);
+  /**
+   * Generates all possible structures for a scaffold, resolving its R-groups from the definition
+   * block nearest to the scaffold. This prevents definitions of one scaffold from leaking into
+   * another when several scaffolds on the same page reuse the same R-group labels.
+   *
+   * @param atomContainer molecule containing pseudo-atoms (R-groups)
+   * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
+   * @return list of all substituted atom containers
+   * @throws CloneNotSupportedException if atom container cloning fails
+   * @throws IOException if reading SMILES definitions fails
+   * @throws InvalidSmilesException if a SMILES string is invalid
+   */
+  public List<IAtomContainer> replaceRGroups(
+      IAtomContainer atomContainer, CDRectangle scaffoldBounds)
+      throws CloneNotSupportedException, IOException, CDKException {
+    Set<String> present = presentResidueLabels(atomContainer);
+    List<Map<String, String>> combinations = residueCombinationsNear(present, scaffoldBounds);
+    if (combinations.isEmpty()) {
+      // No scoped definitions apply to this scaffold; defer to the page-wide union.
+      return replaceRGroups(atomContainer, residueLabels);
+    }
+    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations);
+    // Scoping is a refinement: if it narrowed the definitions down to something that produced no
+    // structures, fall back to the page-wide union so scoping never does worse than no scoping.
+    if (scoped.isEmpty()) {
+      return replaceRGroups(atomContainer, residueLabels);
+    }
+    return scoped;
+  }
+
+  /** Labels of the pseudo-atoms present in the container (candidate R-groups to resolve). */
+  private Set<String> presentResidueLabels(IAtomContainer atomContainer) {
+    Set<String> present = new HashSet<>();
+    for (IAtom atom : atomContainer.atoms()) {
+      if (atom instanceof IPseudoAtom pseudo && pseudo.getLabel() != null) {
+        present.add(pseudo.getLabel());
+      }
+    }
+    return present;
+  }
+
+  /**
+   * Builds the substituent combinations for a scaffold, honouring correlated (positional-table)
+   * groups: their labels vary together as fixed row-tuples, while remaining labels vary
+   * independently (cartesian). Definitions are scoped to the blocks nearest the scaffold.
+   *
+   * @param present labels of the pseudo-atoms in the scaffold
+   * @param scaffoldBounds bounding box of the scaffold, for nearest-block scoping
+   * @return the list of label-to-substituent assignments; empty if no definition applies
+   */
+  private List<Map<String, String>> residueCombinationsNear(
+      Set<String> present, CDRectangle scaffoldBounds) {
+    List<Map<String, String>> combinations = new ArrayList<>();
+    combinations.add(new LinkedHashMap<>());
+
+    // Correlated groups first: for each distinct label set, pick the nearest block's group and
+    // expand the running combinations by its explicit row-tuples.
+    Set<String> claimed = new HashSet<>();
+    for (CorrelatedGroup group : nearestCorrelatedGroups(present, scaffoldBounds)) {
+      List<Map<String, String>> expanded = new ArrayList<>();
+      for (Map<String, String> base : combinations) {
+        for (Map<String, String> tuple : group.tuples()) {
+          Map<String, String> merged = new LinkedHashMap<>(base);
+          merged.putAll(tuple);
+          expanded.add(merged);
+        }
+      }
+      combinations = expanded;
+      claimed.addAll(group.labels());
+    }
+
+    // Independent labels: cartesian expansion, scoped per-label to the nearest defining block.
+    Map<String, List<String>> scopedIndependent = residueLabelsNear(scaffoldBounds);
+    for (String label : present) {
+      if (claimed.contains(label)) {
+        continue;
+      }
+      List<String> values = scopedIndependent.get(label);
+      if (values == null || values.isEmpty()) {
+        continue;
+      }
+      List<Map<String, String>> expanded = new ArrayList<>();
+      for (Map<String, String> base : combinations) {
+        for (String value : values) {
+          Map<String, String> merged = new LinkedHashMap<>(base);
+          merged.put(label, value);
+          expanded.add(merged);
+        }
+      }
+      combinations = expanded;
+    }
+
+    // A single empty assignment means nothing was applicable.
+    if (combinations.size() == 1 && combinations.get(0).isEmpty()) {
+      return List.of();
+    }
+    return combinations;
+  }
+
+  /**
+   * Selects the correlated groups that apply to the scaffold: those whose labels are all present,
+   * choosing, per distinct label set, the group whose source block is nearest to the scaffold.
+   *
+   * @param present labels present in the scaffold
+   * @param scaffoldBounds bounding box of the scaffold
+   * @return the chosen correlated groups
+   */
+  private List<CorrelatedGroup> nearestCorrelatedGroups(
+      Set<String> present, CDRectangle scaffoldBounds) {
+    Map<List<String>, CorrelatedGroup> chosen = new LinkedHashMap<>();
+    Map<List<String>, Double> bestDistance = new HashMap<>();
+    for (RGroupDefinitionBlock block : blocks) {
+      for (CorrelatedGroup group : block.correlatedGroups()) {
+        if (!present.containsAll(group.labels())) {
+          continue;
+        }
+        double distance = blockDistance(scaffoldBounds, block.bounds());
+        Double current = bestDistance.get(group.labels());
+        if (current == null || distance < current) {
+          bestDistance.put(group.labels(), distance);
+          chosen.put(group.labels(), group);
+        }
+      }
+    }
+    return new ArrayList<>(chosen.values());
+  }
+
+  /** Distance from a scaffold to a block, treating a block with no bounds as maximally far. */
+  private static double blockDistance(CDRectangle scaffoldBounds, CDRectangle blockBounds) {
+    if (scaffoldBounds == null || blockBounds == null) {
+      return Double.MAX_VALUE;
+    }
+    return rectangleDistance(scaffoldBounds, blockBounds);
+  }
+
+  private List<IAtomContainer> replaceRGroups(
+      IAtomContainer atomContainer, Map<String, List<String>> definitions)
+      throws CloneNotSupportedException, IOException, CDKException {
+
+    Map<String, List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, definitions);
 
     if (relevantRGroups.isEmpty()) {
       return List.of(atomContainer);
     }
+    return applyCombinations(atomContainer, generateCombinations(relevantRGroups));
+  }
 
-    List<Map<String, String>> combinations = generateCombinations(relevantRGroups);
+  /**
+   * Applies each label-to-substituent combination to a fresh clone of the container, laying out the
+   * grafted atoms. Clones for which no substituent could be applied are dropped.
+   *
+   * @param atomContainer the scaffold to substitute
+   * @param combinations the assignments to apply, one resulting structure each
+   * @return the substituted structures
+   */
+  private List<IAtomContainer> applyCombinations(
+      IAtomContainer atomContainer, List<Map<String, String>> combinations)
+      throws CloneNotSupportedException, IOException, CDKException {
     List<IAtomContainer> results = new ArrayList<>(combinations.size());
 
     for (Map<String, String> combination : combinations) {
       IAtomContainer clone = atomContainer.clone();
+      // Snapshot the pre-substitution atoms so the grafted (coordinate-less) atoms can be
+      // distinguished from the retained scaffold afterwards.
+      Set<IAtom> scaffoldAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
+      clone.atoms().forEach(scaffoldAtoms::add);
       boolean substituted = false;
 
       for (Map.Entry<String, String> entry : combination.entrySet()) {
@@ -118,10 +284,36 @@ public class MarkushHandler {
         }
       }
       if (substituted) {
+        layoutGraftedAtoms(clone, scaffoldAtoms);
         results.add(clone);
       }
     }
     return results;
+  }
+
+  /**
+   * Gives 2D coordinates to the atoms grafted in during substitution (parsed from SMILES, they
+   * carry none) via partial layout, keeping the original scaffold coordinates fixed. Best-effort:
+   * on failure the structure is kept with whatever coordinates it had.
+   *
+   * @param container the substituted structure
+   * @param scaffoldAtoms the atoms that existed before substitution (everything else is grafted)
+   */
+  private void layoutGraftedAtoms(IAtomContainer container, Set<IAtom> scaffoldAtoms) {
+    Set<IAtom> graftedAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (IAtom atom : container.atoms()) {
+      if (!scaffoldAtoms.contains(atom)) {
+        graftedAtoms.add(atom);
+      }
+    }
+    if (graftedAtoms.isEmpty()) {
+      return;
+    }
+    try {
+      AbbreviationLayout.layoutExpandedAbbreviations(container, graftedAtoms);
+    } catch (CDKException | RuntimeException e) {
+      LOGGER.warn("R-group layout failed; keeping partial coordinates.", e);
+    }
   }
 
   /**
@@ -433,6 +625,84 @@ public class MarkushHandler {
     bondsToRemove.add(bondInsideAbbr);
     atomsToRemove.add(pseudoAtom);
     atomsToRemove.add(connectionPoint);
+  }
+
+  /**
+   * Adds structural residue definitions (e.g. resolved from ChemDraw {@code
+   * NamedAlternativeGroup}s) to the ones parsed from text. Structural definitions take precedence
+   * over any text definition for the same label, since they are unambiguous.
+   *
+   * @param definitions map of R-group labels to their substituent SMILES
+   */
+  public void addResidueDefinitions(Map<String, List<String>> definitions) {
+    definitions.forEach(residueLabels::put);
+    definitions.forEach(structuralDefinitions::put);
+  }
+
+  /**
+   * Resolves the R-group definitions applicable to a scaffold at the given position: the text
+   * definition block nearest to the scaffold (falling back to the page-wide union when the scaffold
+   * has no position or no text block exists), overlaid with any structural (alternative-group)
+   * definitions, which are unambiguous.
+   *
+   * @param scaffoldBounds bounding box of the scaffold
+   * @return the scoped map of R-group labels to substituents
+   */
+  public Map<String, List<String>> residueLabelsNear(CDRectangle scaffoldBounds) {
+    Map<String, List<String>> scoped = new LinkedHashMap<>();
+    // Resolve each label independently: definitions for different scaffolds may share a legend
+    // (one block per label) or sit beside each scaffold (a label defined in several blocks).
+    // Picking
+    // the nearest block *that defines the label* handles both, and only disambiguates when a label
+    // genuinely has competing definitions.
+    for (Map.Entry<String, List<String>> entry : residueLabels.entrySet()) {
+      String label = entry.getKey();
+      RGroupDefinitionBlock nearest = nearestBlockDefining(label, scaffoldBounds);
+      List<String> values = nearest != null ? nearest.definitions().get(label) : entry.getValue();
+      scoped.put(label, new ArrayList<>(values));
+    }
+    structuralDefinitions.forEach((label, values) -> scoped.put(label, new ArrayList<>(values)));
+    return scoped;
+  }
+
+  /**
+   * Finds the definition block that defines the given label whose source text is closest to the
+   * scaffold's bounding box.
+   *
+   * @param label the R-group label to resolve
+   * @param scaffoldBounds bounding box of the scaffold
+   * @return the nearest block defining the label, or {@code null} if none has a usable position
+   */
+  private RGroupDefinitionBlock nearestBlockDefining(String label, CDRectangle scaffoldBounds) {
+    if (scaffoldBounds == null) {
+      return null;
+    }
+    RGroupDefinitionBlock best = null;
+    double bestDistance = Double.MAX_VALUE;
+    for (RGroupDefinitionBlock block : blocks) {
+      if (block.bounds() == null || !block.definitions().containsKey(label)) {
+        continue;
+      }
+      double distance = rectangleDistance(scaffoldBounds, block.bounds());
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = block;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Returns the gap between two rectangles (0 if they overlap).
+   *
+   * @param a first rectangle
+   * @param b second rectangle
+   * @return the Euclidean gap between the rectangles
+   */
+  private static double rectangleDistance(CDRectangle a, CDRectangle b) {
+    double dx = Math.max(0, Math.max(a.getLeft() - b.getRight(), b.getLeft() - a.getRight()));
+    double dy = Math.max(0, Math.max(a.getTop() - b.getBottom(), b.getTop() - a.getBottom()));
+    return Math.hypot(dx, dy);
   }
 
   /**

@@ -36,6 +36,14 @@ public class Definitions {
   public static final Pattern RGROUP_LABEL_PATTERN = Pattern.compile(RGROUP_LABEL_STRING);
   public static final String RGROUP_STRING = "\\b((?:R|X|Y|Ar|E|L)\\d*)\\b\\s*=\\s*(.+)";
   public static final Pattern RGROUP_PATTERN = Pattern.compile(RGROUP_STRING);
+
+  /**
+   * Matches a single {@code label =} assignment head (without its right-hand side). Used to locate
+   * every definition in a text node that may hold several, e.g. {@code "R1 = H; R2 = F"}.
+   */
+  public static final String RGROUP_ASSIGN_STRING = "\\b((?:R|X|Y|Ar|E|L)\\d*)\\b\\s*=";
+
+  public static final Pattern RGROUP_ASSIGN_PATTERN = Pattern.compile(RGROUP_ASSIGN_STRING);
   public static final String ABBREVIATION_PATH =
       "/org/beilstein/chemxtract/lookups/abbreviations.smi";
   public static final int ABBREVIATION_SIZE = 400;
