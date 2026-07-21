@@ -28,13 +28,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.*;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
+import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.junit.jupiter.api.Test;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 public class IntegrationTest {
@@ -228,6 +233,43 @@ public class IntegrationTest {
       assertEquals(expectedInChIs[i], subs.get(i).getInchi());
       assertEquals(expectedInChIKeys[i], subs.get(i).getInchiKey());
       assertEquals(expectedSmiles[i], subs.get(i).getSmiles());
+    }
+  }
+
+  @Test
+  public void mdlV3000TetrahedralStereoRoundTripTest() throws IOException, CDKException {
+    // Regression guard for the MDL V3000 wedge-bond fix (SubstanceXtractor.withWedgeBonds).
+    // CDK's MDLV3000Reader ignores the atom parity (CFG) field for structures with 2D coordinates
+    // and re-perceives tetrahedral stereo from wedge/hash bonds only. When the stereo comes from
+    // perception rather than drawn wedges the extractor's container carries ITetrahedralChirality
+    // elements but no wedge bonds, so without wedge assignment the round-tripped mol file drops its
+    // stereo layer (…-UHFFFAOYSA-…) even though getInchiKey() and getSmiles() retain it. These
+    // sugar fixtures reproduce exactly that loss; each expected key carries a real stereo layer.
+    record Fixture(String path, String expectedKey) {}
+    Fixture[] fixtures = {
+      new Fixture("sugars/bond_down_SRRSR.cdx", "WQZGKKKJIJFFOK-UKFBFLRUSA-N"),
+      new Fixture("sugars/bond_up_SRSSR.cdx", "WQZGKKKJIJFFOK-DVKNGEFBSA-N"),
+    };
+    for (Fixture fixture : fixtures) {
+      InputStream in =
+          IntegrationTest.class.getResourceAsStream("/integrationTests/" + fixture.path());
+      assertNotNull(in, fixture.path());
+      CDDocument document = CDXReader.readDocument(in);
+      assertNotNull(document, fixture.path());
+
+      SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+      List<BCXSubstance> subs = xtractor.xtract(document, new BCXSubstanceInfo(), false);
+      assertFalse(subs.isEmpty(), fixture.path());
+
+      BCXSubstance sub = subs.get(0);
+      assertEquals(fixture.expectedKey(), sub.getInchiKey(), fixture.path() + ": direct InChIKey");
+      MDLV3000Reader reader = new MDLV3000Reader(new StringReader(sub.getMdlv3000()));
+      IAtomContainer molFileAc = reader.readMolecule(SilentChemObjectBuilder.getInstance());
+      String molFileKey = ChemicalUtils.getInChI(molFileAc).getInchiKey();
+      assertEquals(
+          fixture.expectedKey(),
+          molFileKey,
+          fixture.path() + ": MDL V3000 round-trip must preserve stereo");
     }
   }
 

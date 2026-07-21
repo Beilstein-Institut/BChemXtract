@@ -54,6 +54,7 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.io.MDLV3000Writer;
+import org.openscience.cdk.layout.StructureDiagramGenerator;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 import org.slf4j.Logger;
@@ -304,7 +305,7 @@ public class SubstanceXtractor {
     // add MDLV3000 mol file as string
     final StringWriter sw = new StringWriter();
     try (MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
-      mdlw.write(atomContainer);
+      mdlw.write(withWedgeBonds(atomContainer));
       substance.setMdlv3000(sw.toString());
     } catch (IOException e) {
       LOGGER.error("Could not generate MDL V3000 mol file;");
@@ -346,6 +347,38 @@ public class SubstanceXtractor {
         MolecularFormulaManipulator.getMolecularFormula(atomContainer);
     substance.setMolecularFormula(MolecularFormulaManipulator.getString(molecularFormula));
     return substance;
+  }
+
+  /**
+   * Returns a copy of {@code atomContainer} with up/down wedge bonds assigned from its stereo
+   * elements, for writing the MDL V3000 mol file.
+   *
+   * <p>CDK's {@code MDLV3000Reader} deliberately ignores the atom parity ({@code CFG}) field for
+   * structures that carry 2D coordinates and instead re-perceives tetrahedral stereochemistry from
+   * wedge/hash bonds. The extractor's containers hold {@link
+   * org.openscience.cdk.interfaces.ITetrahedralChirality} elements but no wedge bonds, so {@code
+   * MDLV3000Writer} emits stereo only as atom {@code CFG} — which the reader discards, losing the
+   * stereo on round-trip. {@link StructureDiagramGenerator#generateWedges} assigns the wedge bonds
+   * from the stereo elements without altering the existing layout, making the mol file round-trip
+   * (and interoperate with other toolkits) correctly.
+   *
+   * <p>Wedges are assigned on a clone so the shared container used for SMILES/InChI generation and
+   * exposed via {@link BCXSubstance#getAtomContainer()} is not mutated. If cloning or wedge
+   * assignment fails the original container is returned, preserving the previous behaviour.
+   *
+   * @param atomContainer the container to derive the mol-file structure from
+   * @return a wedge-annotated copy, or the original container if wedge assignment is not possible
+   */
+  private static IAtomContainer withWedgeBonds(IAtomContainer atomContainer) {
+    try {
+      IAtomContainer copy = atomContainer.clone();
+      new StructureDiagramGenerator().generateWedges(copy);
+      return copy;
+    } catch (CloneNotSupportedException | RuntimeException e) {
+      LOGGER.warn(
+          "Could not assign wedge bonds for MDL V3000 mol file; writing without wedges.", e);
+      return atomContainer;
+    }
   }
 
   /**
