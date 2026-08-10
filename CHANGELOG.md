@@ -2,6 +2,20 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.3.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.2.0...v1.3.0) (2026-08-10)
+
+
+### Features
+
+* improve Markush R-group extraction ([f611d6a](https://github.com/Beilstein-Institut/BChemXtract/commit/f611d6a411579f46c6b035714dc2ad8be802afff))
+* improve Markush R-group extraction ([419327a](https://github.com/Beilstein-Institut/BChemXtract/commit/419327a07e7bf838dd8d935692b019ece4364efe))
+
+
+### Bug Fixes
+
+* preserve tetrahedral stereo in MDL V3000 output ([276d37d](https://github.com/Beilstein-Institut/BChemXtract/commit/276d37df080a10828b43124f662b0c0d49389ab5))
+* preserve tetrahedral stereo in MDL V3000 output ([e68d0f2](https://github.com/Beilstein-Institut/BChemXtract/commit/e68d0f2bb47b5bacf1ba7b075afed6f4d87bcfe8))
+
 ## [1.2.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.1.3...v1.2.0) (2026-07-13)
 
 
