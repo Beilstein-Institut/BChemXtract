@@ -100,6 +100,29 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void stripsYieldPercentages() {
+    // Reaction yields ("; 84%") are annotations, not substituents.
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("3b: R = H; 84%\r3c: R = Me; 74%")).getRgroups();
+    assertEquals(List.of("H", "Me"), r.get("R"), "yields must not leak into substituents");
+  }
+
+  @Test
+  public void yieldAnnotationsDoNotBreakTupleTable() {
+    // Each row carries a trailing "; NN%" yield; the (R1,R2) pairing must still be recognised.
+    RGroupDefinitionBlock block =
+        new TextVisitor(pageWithTexts("2s: R1 = CN, R2 = H; 61%\r2t: R1 = CN, R2 = Br; 47%"))
+            .getBlocks()
+            .get(0);
+    assertTrue(block.definitions().isEmpty(), "yield-annotated rows are still a correlated table");
+    assertEquals(1, block.correlatedGroups().size());
+    CorrelatedGroup group = block.correlatedGroups().get(0);
+    assertEquals(List.of("R1", "R2"), group.labels());
+    assertEquals(
+        List.of(Map.of("R1", "CN", "R2", "H"), Map.of("R1", "CN", "R2", "Br")), group.tuples());
+  }
+
+  @Test
   public void positionalTableParsedAsCorrelatedGroup() {
     TextVisitor visitor =
         new TextVisitor(pageWithTexts("R1 = R2 = H\rR1 = F, R2 = H\rR1 = H, R2 = F"));

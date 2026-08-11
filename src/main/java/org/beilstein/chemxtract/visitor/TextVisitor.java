@@ -238,8 +238,9 @@ public class TextVisitor extends CDVisitor {
         if (!part.isEmpty()) {
           part = part.split("\\s+")[0];
         }
-        // Drop leftover scheme-item numbers (e.g. "5:") that are not substituents.
-        if (!part.isEmpty() && !part.matches("\\d+:?")) {
+        // Drop leftover scheme-item numbers ("5:") and reaction yields ("84%") that are not
+        // substituents.
+        if (!part.isEmpty() && !part.matches("\\d+[:%]?")) {
           abbreviations.add(part);
         }
       }
