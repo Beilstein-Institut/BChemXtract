@@ -23,11 +23,13 @@ package org.beilstein.chemxtract.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
 /**
  * Utility class for resolving multi-center and variable attachment nodes within a {@link
@@ -47,11 +49,133 @@ import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
  *       attaches to one of several candidate atoms. These are expanded into one fragment per
  *       candidate atom.
  * </ul>
+ *
+ * <p>ChemDraw also encodes position variation without a dedicated node: the substituent is drawn in
+ * its own fragment and its bond simply <em>crosses</em> the scaffold bond it may attach to (see
+ * {@link CDBond#getCrossingBonds()}). {@link #normalizeVariableAttachmentBonds(List)} rewrites that
+ * bond-level encoding into the {@link CDNodeType#VariableAttachment} node encoding above, so a
+ * single downstream expansion path handles both.
  */
 public final class AttachmentHandler {
 
   private AttachmentHandler() {
     // private constructor to hide implicit public one
+  }
+
+  /**
+   * Rewrites bond-encoded position-variation attachments across the given fragments into the {@link
+   * CDNodeType#VariableAttachment} node encoding.
+   *
+   * <p>ChemDraw may draw a position-variation substituent in its own fragment, connecting it with a
+   * bond that <em>crosses</em> the scaffold bond it attaches to rather than terminating on an atom
+   * (see {@link CDBond#getCrossingBonds()}). Such a substituent is otherwise a disconnected
+   * fragment and its attachment is lost. For each crossing bond whose free end (the endpoint
+   * nearest, and only bonded within, the crossed bond) floats onto a scaffold bond in another
+   * fragment, this method: marks that free end as a {@link CDNodeType#VariableAttachment} node
+   * whose candidate atoms are the endpoints of the crossed bond(s), merges the substituent fragment
+   * into the scaffold fragment, and drops the now-empty substituent fragment from the returned
+   * list.
+   *
+   * <p>The reciprocal crossing reference carried by the scaffold bond, and re-encountering the same
+   * relationship after a merge, are both ignored (the scaffold endpoint is not a degree-one free
+   * end, and the candidates then live in the fragment being inspected).
+   *
+   * @param fragments the fragments collected from a page; mutated in place
+   * @return the fragments to extract, with substituent fragments folded into their scaffolds
+   */
+  public static List<CDFragment> normalizeVariableAttachmentBonds(List<CDFragment> fragments) {
+    List<CDFragment> merged = new ArrayList<>();
+    for (CDFragment sub : fragments) {
+      for (CDBond bond : new ArrayList<>(sub.getBonds())) {
+        Set<CDBond> crossed = bond.getCrossingBonds();
+        if (crossed == null || crossed.isEmpty()) {
+          continue;
+        }
+        List<CDAtom> candidates = new ArrayList<>();
+        for (CDBond c : crossed) {
+          addDistinct(candidates, c.getBegin());
+          addDistinct(candidates, c.getEnd());
+        }
+        if (candidates.isEmpty()) {
+          continue;
+        }
+        CDAtom attach = nearestEndpoint(bond, candidates);
+        // Only the substituent side has a free (degree-one) end floating onto the crossed bond; the
+        // reciprocal reference on the scaffold bond lands on a ring/chain atom and is skipped.
+        if (incidentBonds(sub, attach).size() != 1) {
+          continue;
+        }
+        CDFragment scaffold = fragmentContaining(fragments, candidates);
+        if (scaffold == null || scaffold == sub) {
+          continue;
+        }
+        attach.setNodeType(CDNodeType.VariableAttachment);
+        attach.setAttachedAtoms(candidates);
+        scaffold.addAllAtoms(sub.getAtoms());
+        sub.getBonds().forEach(scaffold::addBond);
+        merged.add(sub);
+      }
+    }
+    if (merged.isEmpty()) {
+      return fragments;
+    }
+    List<CDFragment> result = new ArrayList<>(fragments);
+    result.removeAll(merged);
+    return result;
+  }
+
+  private static void addDistinct(List<CDAtom> atoms, CDAtom atom) {
+    if (atom != null && atoms.stream().noneMatch(a -> a == atom)) {
+      atoms.add(atom);
+    }
+  }
+
+  /** Returns the endpoint of {@code bond} closest to the centroid of the candidate atoms. */
+  private static CDAtom nearestEndpoint(CDBond bond, List<CDAtom> candidates) {
+    CDPoint2D centroid = centroid(candidates);
+    if (centroid == null) {
+      return bond.getBegin();
+    }
+    return distance(bond.getBegin(), centroid) <= distance(bond.getEnd(), centroid)
+        ? bond.getBegin()
+        : bond.getEnd();
+  }
+
+  private static CDPoint2D centroid(List<CDAtom> atoms) {
+    float sumX = 0f;
+    float sumY = 0f;
+    int count = 0;
+    for (CDAtom atom : atoms) {
+      CDPoint2D p = atom.getPosition2D();
+      if (p != null) {
+        sumX += p.getX();
+        sumY += p.getY();
+        count++;
+      }
+    }
+    return count == 0 ? null : new CDPoint2D(sumX / count, sumY / count);
+  }
+
+  private static double distance(CDAtom atom, CDPoint2D point) {
+    CDPoint2D p = atom.getPosition2D();
+    if (p == null) {
+      return Double.MAX_VALUE;
+    }
+    double dx = p.getX() - point.getX();
+    double dy = p.getY() - point.getY();
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /** Returns the fragment that contains any of the given atoms (by identity), or {@code null}. */
+  private static CDFragment fragmentContaining(List<CDFragment> fragments, List<CDAtom> atoms) {
+    for (CDFragment fragment : fragments) {
+      for (CDAtom atom : atoms) {
+        if (fragment.getAtoms().stream().anyMatch(a -> a == atom)) {
+          return fragment;
+        }
+      }
+    }
+    return null;
   }
 
   /**

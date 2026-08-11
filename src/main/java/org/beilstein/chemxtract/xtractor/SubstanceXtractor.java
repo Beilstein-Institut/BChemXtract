@@ -109,7 +109,10 @@ public class SubstanceXtractor {
     for (CDPage page : document.getPages()) {
 
       FragmentVisitor fragmentVisitor = new FragmentVisitor(page);
-      List<CDFragment> fragments = fragmentVisitor.getFragments();
+      // Fold bond-encoded position-variation substituents into their scaffold fragments so the
+      // variable-attachment expansion below sees them.
+      List<CDFragment> fragments =
+          AttachmentHandler.normalizeVariableAttachmentBonds(fragmentVisitor.getFragments());
       MarkushHandler markushHandler = null;
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder);
