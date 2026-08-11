@@ -39,6 +39,7 @@ import org.beilstein.chemxtract.visitor.CorrelatedGroup;
 import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -318,15 +319,23 @@ public class MarkushHandler {
 
   /**
    * Resolves a substituent definition to a SMILES string, looking up abbreviations if the
-   * definition matches a known alias.
+   * definition matches a known alias, and bracketing bare element symbols that fall outside the
+   * SMILES organic subset (e.g. {@code Se}, {@code Te}) so they parse.
    *
    * @param definition a SMILES string or a known abbreviation
    * @return the resolved SMILES string
    */
   private String resolveSmiles(String definition) throws IOException {
-    return SmilesAbbreviations.contains(definition)
-        ? SmilesAbbreviations.get(definition)
-        : definition;
+    if (SmilesAbbreviations.contains(definition)) {
+      return SmilesAbbreviations.get(definition);
+    }
+    // A bare element symbol outside the SMILES organic subset (Se, Te, Si, ...) is not valid SMILES
+    // on its own; wrap it in brackets so it parses as that atom.
+    if (!ChemicalUtils.isValidSmiles(definition)
+        && Elements.ofString(definition) != Elements.Unknown) {
+      return "[" + definition + "]";
+    }
+    return definition;
   }
 
   /**
