@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
@@ -159,6 +160,44 @@ public class MarkushHandlerTest {
     List<IAtomContainer> results = handler.replaceRGroups(scaffold, rect(0, 0, 40, 40));
 
     assertEquals(3, results.size(), "one structure per table row, no (F,F) corner");
+  }
+
+  /**
+   * A positional table written on a single line — "10 X = PhCONMe, Y = N; 11 X = PhCONH, Y = C" —
+   * enumerates its row-tuples (not the cartesian product), and both the composite substituent (X)
+   * and the ring-atom variation (Y) resolve fully so no pseudo-atom is left behind.
+   */
+  @Test
+  public void sameLineCorrelatedTableResolvesRowTuplesNotCartesian()
+      throws IOException, CloneNotSupportedException, CDKException {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(0, 0, 50, 50), "10 X = PhCONMe, Y = N; 11 X = PhCONH, Y = C"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+    IAtomContainer scaffold = builder.newAtomContainer();
+    IAtom c0 = builder.newInstance(IAtom.class, "C");
+    c0.setPoint2d(new Point2d(0.0, 0.0));
+    IPseudoAtom x = builder.newInstance(IPseudoAtom.class, "X");
+    x.setLabel("X");
+    x.setPoint2d(new Point2d(1.5, 0.0));
+    IPseudoAtom y = builder.newInstance(IPseudoAtom.class, "Y");
+    y.setLabel("Y");
+    y.setPoint2d(new Point2d(-1.5, 0.0));
+    scaffold.addAtom(c0);
+    scaffold.addAtom(x);
+    scaffold.addAtom(y);
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+    scaffold.addBond(0, 2, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold, rect(0, 0, 40, 40));
+
+    assertEquals(2, results.size(), "two table rows, not the 2x2 cartesian");
+    for (IAtomContainer product : results) {
+      for (IAtom atom : product.atoms()) {
+        assertFalse(atom instanceof IPseudoAtom, "every X/Y must be resolved to real atoms");
+      }
+    }
   }
 
   /**

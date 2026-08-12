@@ -145,6 +145,31 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void multipleTuplesOnOneLineParsedAsCorrelatedGroup() {
+    // A positional table whose rows sit on ONE physical line, each row prefixed by a compound
+    // number and separated by ';': "10 X = .., Y = ..; 11 X = .., Y = ..; ...". Repeated X/Y heads
+    // mark the row boundaries.
+    RGroupDefinitionBlock block =
+        new TextVisitor(
+                pageWithTexts("10 X = PhCONMe, Y = N; 11 X = PhCONH, Y = C; 12 X = PhCOO, Y = N"))
+            .getBlocks()
+            .get(0);
+
+    assertTrue(block.definitions().isEmpty(), "X/Y must be a correlated table, not independent");
+    assertEquals(1, block.correlatedGroups().size());
+
+    CorrelatedGroup group = block.correlatedGroups().get(0);
+    assertEquals(List.of("X", "Y"), group.labels());
+    assertEquals(
+        List.of(
+            Map.of("X", "PhCONMe", "Y", "N"),
+            Map.of("X", "PhCONH", "Y", "C"),
+            Map.of("X", "PhCOO", "Y", "N")),
+        group.tuples(),
+        "each ';'-separated row is its own tuple, in order");
+  }
+
+  @Test
   public void independentListNotTreatedAsCorrelated() {
     RGroupDefinitionBlock block = new TextVisitor(pageWithTexts("R = H, CH3")).getBlocks().get(0);
     assertTrue(block.correlatedGroups().isEmpty(), "a single-label list is not a table");

@@ -85,6 +85,9 @@ public class TextVisitor extends CDVisitor {
   private record ParsedDefinitions(
       Map<String, List<String>> independent, List<CorrelatedGroup> correlatedGroups) {}
 
+  /** One {@code label = values} assignment, kept in source order (repeats preserved). */
+  private record Assignment(String label, List<String> values) {}
+
   /**
    * Adds substituents to the list for a label, creating the list if needed and skipping duplicates.
    *
@@ -104,41 +107,75 @@ public class TextVisitor extends CDVisitor {
 
   /**
    * Parses one text node into independent per-label definitions and correlated (positional-table)
-   * groups. Each line (rows are separated by carriage returns / newlines) is parsed on its own: a
-   * line that assigns two or more labels each a single value is a correlated tuple (a table row);
-   * anything else contributes to the independent per-label lists.
+   * groups. Assignments are read in source order and partitioned into row-tuples: a label that
+   * repeats starts a new tuple, so several rows sharing one physical line — e.g. {@code "10 X = a,
+   * Y = b; 11 X = c, Y = d"} — are recognised as distinct tuples of the same table. A row that
+   * resolves to two or more labels, each with a single value, is a correlated tuple; anything else
+   * (single-label lists, multi-valued labels) contributes to the independent per-label lists.
    *
    * @param input the raw text of a node
    * @return the parsed definitions
    */
-  // TODO needs to be extended for better recognition
   private ParsedDefinitions extractDefinitions(String input) {
     Map<String, List<String>> independent = new LinkedHashMap<>();
     // Correlated rows keyed by their (sorted) label set, so rows of the same table accumulate.
     Map<List<String>, List<Map<String, String>>> tables = new LinkedHashMap<>();
 
     for (String row : toLogicalRows(input)) {
-      Map<String, List<String>> assignments = parseRow(row);
+      List<Assignment> assignments = parseAssignments(row);
       if (assignments.isEmpty()) {
         continue;
       }
-      boolean tupleRow =
-          assignments.size() >= 2
-              && assignments.values().stream().allMatch(values -> values.size() == 1);
-      if (tupleRow) {
-        List<String> key = new ArrayList<>(assignments.keySet());
-        key.sort(null);
-        Map<String, String> tuple = new LinkedHashMap<>();
-        assignments.forEach((label, values) -> tuple.put(label, values.get(0)));
-        tables.computeIfAbsent(key, k -> new ArrayList<>()).add(tuple);
+
+      List<Map<String, List<String>>> tuples = partitionIntoTuples(assignments);
+      boolean allSingleValued =
+          tuples.stream().allMatch(t -> t.values().stream().allMatch(v -> v.size() == 1));
+      boolean correlated =
+          allSingleValued
+              && (tuples.size() >= 2 || (tuples.size() == 1 && tuples.get(0).size() >= 2));
+
+      if (correlated) {
+        for (Map<String, List<String>> tuple : tuples) {
+          List<String> key = new ArrayList<>(tuple.keySet());
+          key.sort(null);
+          Map<String, String> row2 = new LinkedHashMap<>();
+          tuple.forEach((label, values) -> row2.put(label, values.get(0)));
+          tables.computeIfAbsent(key, k -> new ArrayList<>()).add(row2);
+        }
       } else {
-        assignments.forEach((label, values) -> mergeSubstituents(independent, label, values));
+        for (Assignment assignment : assignments) {
+          mergeSubstituents(independent, assignment.label(), assignment.values());
+        }
       }
     }
 
     List<CorrelatedGroup> groups = new ArrayList<>();
     tables.forEach((labels, tuples) -> groups.add(new CorrelatedGroup(labels, tuples)));
     return new ParsedDefinitions(independent, groups);
+  }
+
+  /**
+   * Splits an ordered assignment list into row-tuples, starting a new tuple whenever a label is
+   * seen that the current tuple already holds. This turns a repeated {@code label = ...} pattern
+   * (multiple table rows glued onto one line) into the individual rows.
+   *
+   * @param assignments the assignments of one logical row, in source order
+   * @return the tuples, each mapping its labels to their (possibly multi-)value lists
+   */
+  private List<Map<String, List<String>>> partitionIntoTuples(List<Assignment> assignments) {
+    List<Map<String, List<String>>> tuples = new ArrayList<>();
+    Map<String, List<String>> current = new LinkedHashMap<>();
+    for (Assignment assignment : assignments) {
+      if (current.containsKey(assignment.label())) {
+        tuples.add(current);
+        current = new LinkedHashMap<>();
+      }
+      current.put(assignment.label(), assignment.values());
+    }
+    if (!current.isEmpty()) {
+      tuples.add(current);
+    }
+    return tuples;
   }
 
   /**
@@ -168,15 +205,16 @@ public class TextVisitor extends CDVisitor {
   }
 
   /**
-   * Parses a single line into its {@code label = values} assignments, in order. Handles multiple
-   * assignments per line ("R1 = F, R2 = H"), chained equality ("R1 = R2 = H"), and comma/semicolon
-   * value lists.
+   * Parses a single line into its {@code label = values} assignments, in source order, preserving
+   * repeated labels (so several table rows on one line survive as separate assignments). Handles
+   * multiple assignments per line ("R1 = F, R2 = H"), chained equality ("R1 = R2 = H"), and
+   * comma/semicolon value lists.
    *
    * @param row a single line of definition text
-   * @return ordered map of label to its parsed substituent values
+   * @return the assignments, in order, one entry per {@code label =} head
    */
-  private Map<String, List<String>> parseRow(String row) {
-    Map<String, List<String>> result = new LinkedHashMap<>();
+  private List<Assignment> parseAssignments(String row) {
+    List<Assignment> result = new ArrayList<>();
 
     // Locate every "label =" head, then treat the text up to the next head (or end of line) as its
     // right-hand side so one assignment cannot swallow the next.
@@ -202,9 +240,9 @@ public class TextVisitor extends CDVisitor {
         chainedLabels.add(identifiers.get(i));
         continue;
       }
-      mergeSubstituents(result, identifiers.get(i), abbreviations);
+      result.add(new Assignment(identifiers.get(i), abbreviations));
       for (String chained : chainedLabels) {
-        mergeSubstituents(result, chained, abbreviations);
+        result.add(new Assignment(chained, abbreviations));
       }
       chainedLabels.clear();
     }
