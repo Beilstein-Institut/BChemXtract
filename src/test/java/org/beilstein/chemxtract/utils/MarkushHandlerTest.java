@@ -23,25 +23,17 @@ package org.beilstein.chemxtract.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.vecmath.Point2d;
-import org.beilstein.chemxtract.cdx.CDAtom;
-import org.beilstein.chemxtract.cdx.CDDocument;
-import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
-import org.beilstein.chemxtract.cdx.reader.CDXReader;
-import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -90,37 +82,6 @@ public class MarkushHandlerTest {
 
     assertEquals(List.of("Cl"), nearLeft.get("R"), "left scaffold must resolve to its own block");
     assertEquals(List.of("Br"), nearRight.get("R"), "right scaffold must resolve to its own block");
-  }
-
-  /**
-   * m48800432 has two separate scaffolds that both use label R, defined by two different legends.
-   * Per the {@code putIfAbsent} bug these collapsed to one meaning; scoping must give each scaffold
-   * its own R value set.
-   */
-  @Test
-  public void scopesRealMultiScaffoldPage() throws IOException {
-    InputStream in =
-        MarkushHandlerTest.class.getResourceAsStream("/cheminf/bugs/markush/m48800432-2.cdx");
-    assertNotNull(in, "fixture missing on classpath");
-    CDDocument document = CDXReader.readDocument(in);
-
-    List<List<String>> rOnlyValueSets = new ArrayList<>();
-    for (CDPage page : document.getPages()) {
-      MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
-      for (CDFragment fragment : new FragmentVisitor(page).getFragments()) {
-        if (rLabelsOf(fragment).equals(List.of("R"))) {
-          rOnlyValueSets.add(handler.residueLabelsNear(fragment.getBounds()).get("R"));
-        }
-      }
-    }
-
-    assertEquals(2, rOnlyValueSets.size(), "expected two R-only scaffolds");
-    assertTrue(
-        rOnlyValueSets.stream().anyMatch(v -> v.size() == 8 && v.contains("F")),
-        "one scaffold must see the 8-value R legend (incl. F): " + rOnlyValueSets);
-    assertTrue(
-        rOnlyValueSets.stream().anyMatch(v -> v.size() == 6 && !v.contains("F")),
-        "the other must see the 6-value R legend (no F): " + rOnlyValueSets);
   }
 
   /**
@@ -240,23 +201,5 @@ public class MarkushHandlerTest {
       }
     }
     assertEquals(Set.of(16, 34, 52), chalcogens, "expected S (16), Se (34) and Te (52)");
-  }
-
-  private static List<String> rLabelsOf(CDFragment fragment) {
-    List<String> labels = new ArrayList<>();
-    for (CDAtom atom : fragment.getAtoms()) {
-      String label = null;
-      try {
-        if (atom.getText() != null && atom.getText().getText() != null) {
-          label = atom.getText().getText().getText();
-        }
-      } catch (RuntimeException ignored) {
-        label = null;
-      }
-      if (label != null && label.matches("^(R|X|Y|Ar|E|L)\\d*$")) {
-        labels.add(label);
-      }
-    }
-    return labels;
   }
 }

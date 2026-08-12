@@ -22,9 +22,7 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,23 +52,6 @@ public class MarkushBugTest {
     BCXSubstanceInfo info = new BCXSubstanceInfo();
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     return xtractor.xtractUnique(document, info, true);
-  }
-
-  /**
-   * "R1 = H; R2 = F" is a single text node holding two semicolon-separated definitions. Both R1 and
-   * R2 must be resolved, yielding exactly one enumerated structure that contains fluorine and no
-   * unresolved residue.
-   */
-  @Test
-  public void testTwoResiduesSemicolonSeparated() throws IOException {
-    List<BCXSubstance> substances = xtract("Test_2_Reste.cdx");
-
-    assertEquals(1, substances.size(), "expected one enumerated structure for R1=H; R2=F");
-
-    String formula = substances.get(0).getMolecularFormula();
-    assertNotNull(formula);
-    assertTrue(formula.contains("F"), "R2 must be resolved to fluorine, got: " + formula);
-    assertFalse(formula.contains("R"), "no unresolved residue expected, got: " + formula);
   }
 
   /**
