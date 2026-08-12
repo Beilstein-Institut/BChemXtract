@@ -177,6 +177,24 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void recognisesPrimedLabelAsDistinctFromUnprimed() {
+    // "R = Troc, R' = DTBS" defines two distinct residues; R' must not be swallowed as a value of
+    // R.
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("R = Troc, R' = DTBS")).getRgroups();
+    assertEquals(List.of("Troc"), r.get("R"), "R must not absorb R' or DTBS");
+    assertEquals(List.of("DTBS"), r.get("R'"), "R' must be its own label");
+  }
+
+  @Test
+  public void resolvesChainedEqualityAcrossPrimedLabel() {
+    // "R = R' = Ac" means both R and R' are Ac.
+    Map<String, List<String>> r = new TextVisitor(pageWithTexts("R = R' = Ac")).getRgroups();
+    assertEquals(List.of("Ac"), r.get("R"), "R must inherit the chained value");
+    assertEquals(List.of("Ac"), r.get("R'"), "R' must be resolved, not treated as R's value");
+  }
+
+  @Test
   public void resolvesChainedEqualityToAllLabels() {
     // "R1 = R2 = H" means both R1 and R2 are H.
     Map<String, List<String>> r = new TextVisitor(pageWithTexts("R1 = R2 = H")).getRgroups();

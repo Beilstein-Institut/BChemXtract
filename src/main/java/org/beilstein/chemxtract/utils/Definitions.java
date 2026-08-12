@@ -32,16 +32,23 @@ public class Definitions {
     // hide implicit public constructor
   }
 
-  public static final String RGROUP_LABEL_STRING = "^((?:R|X|Y|Ar|E|L)\\d*)\\b";
+  // An R-group label is a known base (R, X, Y, Ar, E, L), an optional index, and an optional prime
+  // (ASCII ' or the Unicode right-single-quote/prime), so R and R' are distinct labels. The
+  // trailing
+  // negative lookahead replaces \b — a prime is a non-word char, so \b would not sit after it — and
+  // still prevents matching a prefix of a longer token (e.g. "R" inside "Region").
+  private static final String RGROUP_LABEL_CORE = "(?:R|X|Y|Ar|E|L)\\d*['’′]?(?![A-Za-z0-9])";
+
+  public static final String RGROUP_LABEL_STRING = "^(" + RGROUP_LABEL_CORE + ")";
   public static final Pattern RGROUP_LABEL_PATTERN = Pattern.compile(RGROUP_LABEL_STRING);
-  public static final String RGROUP_STRING = "\\b((?:R|X|Y|Ar|E|L)\\d*)\\b\\s*=\\s*(.+)";
+  public static final String RGROUP_STRING = "\\b(" + RGROUP_LABEL_CORE + ")\\s*=\\s*(.+)";
   public static final Pattern RGROUP_PATTERN = Pattern.compile(RGROUP_STRING);
 
   /**
    * Matches a single {@code label =} assignment head (without its right-hand side). Used to locate
    * every definition in a text node that may hold several, e.g. {@code "R1 = H; R2 = F"}.
    */
-  public static final String RGROUP_ASSIGN_STRING = "\\b((?:R|X|Y|Ar|E|L)\\d*)\\b\\s*=";
+  public static final String RGROUP_ASSIGN_STRING = "\\b(" + RGROUP_LABEL_CORE + ")\\s*=";
 
   public static final Pattern RGROUP_ASSIGN_PATTERN = Pattern.compile(RGROUP_ASSIGN_STRING);
   public static final String ABBREVIATION_PATH =
