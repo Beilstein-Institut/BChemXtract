@@ -34,3 +34,9 @@ replay_pid*
 /.planning/
 /CLAUDE.md
 /.claude/
+/src/main/java/org/beilstein/chemxtract/samples/BCXTractPerformance.java
+/scripts/
+/BChemXtract-vs-OpenBabel-performance.pdf
+
+# Superpowers design docs (local-only, like .planning)
+/docs/superpowers/
