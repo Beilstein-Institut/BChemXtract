@@ -271,6 +271,13 @@ public class TextVisitor extends CDVisitor {
     if (abbreviations.isEmpty()) {
       for (String rawPart : rhs.split("\\s*[,;]\\s*")) {
         String part = rawPart.trim();
+        // A leaked reaction condition of the form "label = value" (e.g. a temperature
+        // "T = 250 °C" or "t = 30 min") is not a substituent. Its label is one the assignment
+        // parser does not recognise as an R-group, so it arrives glued onto a value list; drop the
+        // whole part rather than keeping its label token as a bogus substituent.
+        if (part.matches("[^=\\s]+\\s*=.*")) {
+          continue;
+        }
         // A substituent/abbreviation is a single token; drop any trailing annotation glued on with
         // whitespace, e.g. "H Keq 1" -> "H".
         if (!part.isEmpty()) {
