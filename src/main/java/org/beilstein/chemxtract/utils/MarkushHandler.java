@@ -276,15 +276,25 @@ public class MarkushHandler {
       Set<IAtom> scaffoldAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
       clone.atoms().forEach(scaffoldAtoms::add);
       boolean substituted = false;
+      boolean allResolved = true;
 
       for (Map.Entry<String, String> entry : combination.entrySet()) {
         String smiles = resolveSmiles(entry.getValue());
-        if (ChemicalUtils.isValidSmiles(smiles)) {
-          replaceRGroup(clone, entry.getKey(), smiles);
-          substituted = true;
+        if (!ChemicalUtils.isValidSmiles(smiles)) {
+          // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
+          // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
+          // so the whole combination is dropped rather than substituting only some of its labels.
+          LOGGER.warn(
+              "Unresolved R-group label {}=\"{}\"; dropping this substituent combination.",
+              entry.getKey(),
+              entry.getValue());
+          allResolved = false;
+          break;
         }
+        replaceRGroup(clone, entry.getKey(), smiles);
+        substituted = true;
       }
-      if (substituted) {
+      if (substituted && allResolved) {
         layoutGraftedAtoms(clone, scaffoldAtoms);
         results.add(clone);
       }
