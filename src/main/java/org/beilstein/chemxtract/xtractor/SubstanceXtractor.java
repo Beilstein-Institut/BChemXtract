@@ -309,7 +309,7 @@ public class SubstanceXtractor {
         try {
           for (IAtomContainer container :
               markushHandler.replaceRGroups(atomContainer, fragment.getBounds())) {
-            substances.add(buildSubstance(container, fragment, variablePosition));
+            addIfBuilt(substances, container, fragment, variablePosition);
           }
           expandedRGroups = true;
         } catch (IOException | CloneNotSupportedException e) {
@@ -317,7 +317,7 @@ public class SubstanceXtractor {
         }
       }
       if (!expandedRGroups) {
-        substances.add(buildSubstance(atomContainer, fragment, variablePosition));
+        addIfBuilt(substances, atomContainer, fragment, variablePosition);
       }
     }
     return substances;
@@ -335,9 +335,29 @@ public class SubstanceXtractor {
    * @throws IOException if abbreviation resolution fails
    * @throws CDKException if InChI generation or nested fragment conversion fails
    */
+  private void addIfBuilt(
+      List<BCXSubstance> substances,
+      IAtomContainer atomContainer,
+      CDFragment fragment,
+      boolean tolerateMissingInchi)
+      throws IOException, CDKException {
+    BCXSubstance substance = buildSubstance(atomContainer, fragment, tolerateMissingInchi);
+    if (substance != null) {
+      substances.add(substance);
+    }
+  }
+
   private BCXSubstance buildSubstance(
       IAtomContainer atomContainer, CDFragment fragment, boolean tolerateMissingInchi)
       throws IOException, CDKException {
+    // A structure that still carries a pseudo-atom is an unresolved R-group or a generic
+    // placeholder (e.g. "Ar", "alkyl") with no definition on the page. Unless this is a
+    // position-variation scaffold (which legitimately keeps pseudo-atoms), it cannot be resolved to
+    // a concrete substance, so it is skipped quietly instead of failing InChI generation.
+    if (!tolerateMissingInchi && containsPseudoAtom(atomContainer)) {
+      LOGGER.warn("Skipping structure with unresolved pseudo-atom and no applicable definition.");
+      return null;
+    }
     BCXSubstance substance = createAndFillBCXSubstance(atomContainer, tolerateMissingInchi);
     Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
     if (boundsOptional.isPresent()) {
