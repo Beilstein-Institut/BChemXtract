@@ -21,9 +21,7 @@
  */
 package org.beilstein.chemxtract.cheminf;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -100,12 +98,19 @@ public final class AbbreviationLayout {
     }
 
     double targetBondLength = averageFixedBondLength(container, fixedAtoms);
+    // The generator lays out at a fixed internal bond length (DEFAULT_BOND_LENGTH); ChemDraw
+    // scaffolds usually sit at a very different scale. Laying out in the scaffold's scale makes the
+    // generator place grafted atoms far too small, so the scaffold is first scaled into the
+    // generator's native scale, then the whole structure is scaled back afterwards. The scaffold
+    // ends up at its exact original coordinates (scaled down then up by the inverse), while the
+    // grafted atoms inherit the matching scale.
+    double toNative = targetBondLength > 0.0 ? DEFAULT_BOND_LENGTH / targetBondLength : 1.0;
+    Point2d pivot = centroid(fixedAtoms);
 
-    // Snapshot the collapsed coordinates so they can be restored verbatim if layout fails
-    // partway through: a failed attempt must leave the container exactly as it was, never in an
-    // intermediate (nulled-out) state that would silently change downstream chemistry.
+    // Snapshot every coordinate so a failed or partial layout leaves the container exactly as it
+    // was, never in an intermediate (nulled-out or half-scaled) state.
     Map<IAtom, Point2d> originalPoints = new HashMap<>();
-    for (IAtom atom : freeAtoms) {
+    for (IAtom atom : container.atoms()) {
       originalPoints.put(atom, atom.getPoint2d());
     }
 
@@ -114,6 +119,8 @@ public final class AbbreviationLayout {
       atom.setPoint2d(null);
       atom.setPoint3d(null);
     }
+    // Move the fixed scaffold into the generator's native bond-length scale.
+    scaleAbout(fixedAtoms, pivot, toNative);
 
     Set<IBond> fixedBonds = new HashSet<>();
     for (IBond bond : container.bonds()) {
@@ -123,14 +130,17 @@ public final class AbbreviationLayout {
     }
 
     try {
-      // CDK 2.12's StructureDiagramGenerator.setBondLength(double) always throws
-      // UnsupportedOperationException (bond length is fixed internally at 1.5; rescaling is meant
-      // to happen post-layout via GeometryUtil.scaleMolecule). That whole-molecule helper would
-      // also shift the fixed scaffold atoms, so instead we rescale only the newly-placed atoms
-      // afterwards, anchored on their attachment point(s) into the fixed scaffold.
       sdg.setMolecule(container, false, fixedAtoms, fixedBonds);
       sdg.generateCoordinates();
-      rescaleFreeAtoms(container, freeAtoms, fixedAtoms, targetBondLength);
+      // Map the whole structure back to the scaffold's original scale: the fixed atoms return to
+      // their exact starting positions, the newly placed atoms come along at the matching size.
+      List<IAtom> placed = new ArrayList<>();
+      for (IAtom atom : container.atoms()) {
+        if (atom.getPoint2d() != null) {
+          placed.add(atom);
+        }
+      }
+      scaleAbout(placed, pivot, 1.0 / toNative);
       LOGGER.debug("Laid out {} expanded abbreviation atom(s).", freeAtoms.size());
     } catch (CDKException | RuntimeException e) {
       for (Map.Entry<IAtom, Point2d> entry : originalPoints.entrySet()) {
@@ -140,76 +150,16 @@ public final class AbbreviationLayout {
     }
   }
 
-  /**
-   * Scales each connected group of newly-placed atoms so its bond lengths approximate {@code
-   * targetBondLength}, anchored on the fixed scaffold atom(s) it attaches to. Because this is a
-   * uniform scaling about a fixed centre, every pairwise distance within a group scales by the same
-   * factor, so the anchor atom itself never moves.
-   */
-  private static void rescaleFreeAtoms(
-      IAtomContainer container,
-      Set<IAtom> freeAtoms,
-      Set<IAtom> fixedAtoms,
-      double targetBondLength) {
-    double generatedBondLength = averageBondLengthTouching(container, freeAtoms);
-    if (generatedBondLength <= 0.0) {
-      return;
-    }
-    double factor = targetBondLength / generatedBondLength;
-
-    Set<IAtom> visited = new HashSet<>();
-    for (IAtom start : freeAtoms) {
-      if (!visited.add(start)) {
+  /** Uniformly scales the given atoms about {@code pivot} by {@code factor} (pivot stays fixed). */
+  private static void scaleAbout(Iterable<IAtom> atoms, Point2d pivot, double factor) {
+    for (IAtom atom : atoms) {
+      Point2d p = atom.getPoint2d();
+      if (p == null) {
         continue;
       }
-      List<IAtom> component = new ArrayList<>();
-      Set<IAtom> anchors = new HashSet<>();
-      Deque<IAtom> queue = new ArrayDeque<>();
-      queue.add(start);
-      component.add(start);
-      while (!queue.isEmpty()) {
-        IAtom current = queue.poll();
-        for (IBond bond : container.getConnectedBondsList(current)) {
-          IAtom other = bond.getOther(current);
-          if (fixedAtoms.contains(other)) {
-            anchors.add(other);
-          } else if (freeAtoms.contains(other) && visited.add(other)) {
-            component.add(other);
-            queue.add(other);
-          }
-        }
-      }
-      if (anchors.isEmpty()) {
-        continue;
-      }
-      Point2d anchor = centroid(anchors);
-      for (IAtom atom : component) {
-        Point2d p = atom.getPoint2d();
-        if (p == null) {
-          continue;
-        }
-        atom.setPoint2d(
-            new Point2d(
-                anchor.x + (p.x - anchor.x) * factor, anchor.y + (p.y - anchor.y) * factor));
-      }
+      atom.setPoint2d(
+          new Point2d(pivot.x + (p.x - pivot.x) * factor, pivot.y + (p.y - pivot.y) * factor));
     }
-  }
-
-  /** Average length of bonds that touch at least one free (newly-placed) atom. */
-  private static double averageBondLengthTouching(IAtomContainer container, Set<IAtom> freeAtoms) {
-    double sum = 0.0;
-    int count = 0;
-    for (IBond bond : container.bonds()) {
-      IAtom a = bond.getBegin();
-      IAtom b = bond.getEnd();
-      if ((freeAtoms.contains(a) || freeAtoms.contains(b))
-          && a.getPoint2d() != null
-          && b.getPoint2d() != null) {
-        sum += a.getPoint2d().distance(b.getPoint2d());
-        count++;
-      }
-    }
-    return count == 0 ? 0.0 : sum / count;
   }
 
   /** Centroid of the 2D coordinates of the given atoms. */
