@@ -263,3 +263,8 @@ CH3 C
 4-ClPh  C1C=C(*)C=CC=1Cl
 4-BrPh C1C=C(*)C=CC=1Br
 OMe-Ph  COc1ccc(*)cc1
+# amide / ester substituents attached via their heteroatom ([*] = attachment)
+PhCONMe	[*]N(C)C(=O)C1=CC=CC=C1
+PhCONH	[*]NC(=O)C1=CC=CC=C1
+PhCOO	[*]OC(=O)C1=CC=CC=C1
+NHMe	[*]NC

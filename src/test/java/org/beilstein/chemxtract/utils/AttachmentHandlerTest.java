@@ -23,11 +23,13 @@ package org.beilstein.chemxtract.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link AttachmentHandler} covering the multi-center and variable node logic. */
@@ -36,6 +38,12 @@ public class AttachmentHandlerTest {
   private static CDAtom element() {
     CDAtom atom = new CDAtom();
     atom.setNodeType(CDNodeType.Element);
+    return atom;
+  }
+
+  private static CDAtom element(float x, float y) {
+    CDAtom atom = element();
+    atom.setPosition2D(new CDPoint2D(x, y));
     return atom;
   }
 
@@ -214,6 +222,69 @@ public class AttachmentHandlerTest {
     // substituents reconnected.
     assertThat(variants).hasSize(4);
     assertThat(variants).allSatisfy(variant -> assertThat(variant.getBonds()).hasSize(2));
+  }
+
+  @Test
+  public void normalizeConvertsCrossingBondIntoVariableAttachmentAndMergesFragments() {
+    // Scaffold: a two-atom "ring" edge c1-c2, each further bonded so both have degree >= 2.
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, bond(c1, x), bond(c2, y))));
+
+    // Substituent fragment: attachment point sits near the crossed-bond midpoint (0,5); the
+    // substituent is drawn farther away. The position-variation bond crosses the scaffold edge.
+    CDAtom attach = element(-3f, 5f);
+    CDAtom substituent = element(5f, 5f);
+    CDBond varBond = bond(attach, substituent);
+    varBond.setCrossingBonds(new java.util.HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new java.util.HashSet<>(List.of(varBond)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(attach, substituent));
+    sub.setBonds(new ArrayList<>(List.of(varBond)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    // The substituent fragment is folded into the scaffold and dropped from the list.
+    assertThat(result).containsExactly(scaffold);
+    assertThat(scaffold.getAtoms()).contains(attach, substituent);
+    assertThat(attach.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(attach.getAttachedAtoms()).containsExactlyInAnyOrder(c1, c2);
+
+    // The normalized scaffold now enumerates through the existing variable-attachment machinery.
+    List<CDFragment> variants = AttachmentHandler.expandVariableAttachments(scaffold);
+    assertThat(variants).hasSize(2);
+    for (CDFragment variant : variants) {
+      assertThat(variant.getAtoms()).doesNotContain(attach);
+      assertThat(other(substituentBond(variant, substituent), substituent)).isIn(c1, c2);
+    }
+  }
+
+  @Test
+  public void normalizeLeavesFragmentsWithoutCrossingBondsUntouched() {
+    CDAtom a = element(0f, 0f);
+    CDAtom b = element(0f, 10f);
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(List.of(a, b));
+    fragment.setBonds(new ArrayList<>(List.of(bond(a, b))));
+
+    List<CDFragment> fragments = new ArrayList<>(List.of(fragment));
+    List<CDFragment> result = AttachmentHandler.normalizeVariableAttachmentBonds(fragments);
+
+    assertThat(result).containsExactly(fragment);
+    assertThat(a.getNodeType()).isEqualTo(CDNodeType.Element);
+  }
+
+  private static CDBond substituentBond(CDFragment fragment, CDAtom substituent) {
+    return fragment.getBonds().stream()
+        .filter(b -> substituent.equals(b.getBegin()) || substituent.equals(b.getEnd()))
+        .findFirst()
+        .orElseThrow();
   }
 
   @Test

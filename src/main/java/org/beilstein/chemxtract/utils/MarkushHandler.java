@@ -39,6 +39,7 @@ import org.beilstein.chemxtract.visitor.CorrelatedGroup;
 import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -89,8 +90,118 @@ public class MarkushHandler {
   public MarkushHandler(CDPage page, IChemObjectBuilder builder) {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
-    blocks = textVisitor.getBlocks();
+    blocks = mergeColumnBlocks(textVisitor.getBlocks());
     smilesParser = new SmilesParser(builder);
+  }
+
+  /**
+   * Merges definition blocks that form one legend column drawn as several stacked single-line text
+   * nodes. ChemDraw authors often list a label's substituents one per line, each its own text
+   * object; without merging, nearest-block scoping would pick a single line and enumerate only one
+   * substituent per scaffold. Blocks are merged when they define the same label set, overlap
+   * horizontally, and sit within about a line-height of one another vertically. Two legends in
+   * different columns (no horizontal overlap) or far apart (different scaffolds) stay separate.
+   *
+   * @param blocks the per-text-node blocks from {@link TextVisitor}
+   * @return the blocks with same-column, same-label runs merged into one block each
+   */
+  private static List<RGroupDefinitionBlock> mergeColumnBlocks(List<RGroupDefinitionBlock> blocks) {
+    List<RGroupDefinitionBlock> result = new ArrayList<>();
+    boolean[] merged = new boolean[blocks.size()];
+    for (int i = 0; i < blocks.size(); i++) {
+      if (merged[i]) {
+        continue;
+      }
+      RGroupDefinitionBlock base = blocks.get(i);
+      // Only column-merge positioned, single-legend (independent) blocks; correlated tables and
+      // unpositioned blocks are left untouched.
+      if (base.bounds() == null || base.definitions().isEmpty()) {
+        result.add(base);
+        merged[i] = true;
+        continue;
+      }
+      List<RGroupDefinitionBlock> cluster = new ArrayList<>();
+      cluster.add(base);
+      merged[i] = true;
+      boolean grew = true;
+      while (grew) {
+        grew = false;
+        for (int j = i + 1; j < blocks.size(); j++) {
+          if (merged[j]) {
+            continue;
+          }
+          RGroupDefinitionBlock candidate = blocks.get(j);
+          if (candidate.bounds() == null
+              || candidate.definitions().isEmpty()
+              || !candidate.definitions().keySet().equals(base.definitions().keySet())) {
+            continue;
+          }
+          if (cluster.stream().anyMatch(member -> sameColumnAdjacent(member, candidate))) {
+            cluster.add(candidate);
+            merged[j] = true;
+            grew = true;
+          }
+        }
+      }
+      result.add(cluster.size() == 1 ? base : mergeCluster(cluster));
+    }
+    return result;
+  }
+
+  /**
+   * Whether two blocks are stacked lines of the same column: horizontally overlapping and within
+   * roughly one line-height vertically.
+   */
+  private static boolean sameColumnAdjacent(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    CDRectangle ra = a.bounds();
+    CDRectangle rb = b.bounds();
+    double horizontalOverlap =
+        Math.min(ra.getRight(), rb.getRight()) - Math.max(ra.getLeft(), rb.getLeft());
+    if (horizontalOverlap <= 0) {
+      return false; // different columns
+    }
+    double verticalGap =
+        Math.max(0, Math.max(ra.getTop() - rb.getBottom(), rb.getTop() - ra.getBottom()));
+    double lineHeight = Math.max(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
+    return verticalGap <= lineHeight * 1.5;
+  }
+
+  /**
+   * Combines a cluster of same-column blocks into one, unioning per-label values (order-preserving,
+   * de-duplicated) and taking the bounding box of the sources.
+   */
+  private static RGroupDefinitionBlock mergeCluster(List<RGroupDefinitionBlock> cluster) {
+    Map<String, List<String>> definitions = new LinkedHashMap<>();
+    List<CorrelatedGroup> correlated = new ArrayList<>();
+    float top = Float.MAX_VALUE;
+    float left = Float.MAX_VALUE;
+    float bottom = -Float.MAX_VALUE;
+    float right = -Float.MAX_VALUE;
+    for (RGroupDefinitionBlock block : cluster) {
+      CDRectangle b = block.bounds();
+      top = Math.min(top, b.getTop());
+      left = Math.min(left, b.getLeft());
+      bottom = Math.max(bottom, b.getBottom());
+      right = Math.max(right, b.getRight());
+      block
+          .definitions()
+          .forEach(
+              (label, values) -> {
+                List<String> list = definitions.computeIfAbsent(label, key -> new ArrayList<>());
+                for (String value : values) {
+                  if (!list.contains(value)) {
+                    list.add(value);
+                  }
+                }
+              });
+      correlated.addAll(block.correlatedGroups());
+    }
+    CDRectangle bounds = new CDRectangle();
+    bounds.setTop(top);
+    bounds.setLeft(left);
+    bounds.setBottom(bottom);
+    bounds.setRight(right);
+    return new RGroupDefinitionBlock(bounds, definitions, correlated);
   }
 
   /**
@@ -275,15 +386,25 @@ public class MarkushHandler {
       Set<IAtom> scaffoldAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
       clone.atoms().forEach(scaffoldAtoms::add);
       boolean substituted = false;
+      boolean allResolved = true;
 
       for (Map.Entry<String, String> entry : combination.entrySet()) {
         String smiles = resolveSmiles(entry.getValue());
-        if (ChemicalUtils.isValidSmiles(smiles)) {
-          replaceRGroup(clone, entry.getKey(), smiles);
-          substituted = true;
+        if (!ChemicalUtils.isValidSmiles(smiles)) {
+          // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
+          // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
+          // so the whole combination is dropped rather than substituting only some of its labels.
+          LOGGER.warn(
+              "Unresolved R-group label {}=\"{}\"; dropping this substituent combination.",
+              entry.getKey(),
+              entry.getValue());
+          allResolved = false;
+          break;
         }
+        replaceRGroup(clone, entry.getKey(), smiles);
+        substituted = true;
       }
-      if (substituted) {
+      if (substituted && allResolved) {
         layoutGraftedAtoms(clone, scaffoldAtoms);
         results.add(clone);
       }
@@ -318,15 +439,23 @@ public class MarkushHandler {
 
   /**
    * Resolves a substituent definition to a SMILES string, looking up abbreviations if the
-   * definition matches a known alias.
+   * definition matches a known alias, and bracketing bare element symbols that fall outside the
+   * SMILES organic subset (e.g. {@code Se}, {@code Te}) so they parse.
    *
    * @param definition a SMILES string or a known abbreviation
    * @return the resolved SMILES string
    */
   private String resolveSmiles(String definition) throws IOException {
-    return SmilesAbbreviations.contains(definition)
-        ? SmilesAbbreviations.get(definition)
-        : definition;
+    if (SmilesAbbreviations.contains(definition)) {
+      return SmilesAbbreviations.get(definition);
+    }
+    // A bare element symbol outside the SMILES organic subset (Se, Te, Si, ...) is not valid SMILES
+    // on its own; wrap it in brackets so it parses as that atom.
+    if (!ChemicalUtils.isValidSmiles(definition)
+        && Elements.ofString(definition) != Elements.Unknown) {
+      return "[" + definition + "]";
+    }
+    return definition;
   }
 
   /**

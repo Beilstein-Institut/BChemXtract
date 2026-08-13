@@ -100,6 +100,29 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void stripsYieldPercentages() {
+    // Reaction yields ("; 84%") are annotations, not substituents.
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("3b: R = H; 84%\r3c: R = Me; 74%")).getRgroups();
+    assertEquals(List.of("H", "Me"), r.get("R"), "yields must not leak into substituents");
+  }
+
+  @Test
+  public void yieldAnnotationsDoNotBreakTupleTable() {
+    // Each row carries a trailing "; NN%" yield; the (R1,R2) pairing must still be recognised.
+    RGroupDefinitionBlock block =
+        new TextVisitor(pageWithTexts("2s: R1 = CN, R2 = H; 61%\r2t: R1 = CN, R2 = Br; 47%"))
+            .getBlocks()
+            .get(0);
+    assertTrue(block.definitions().isEmpty(), "yield-annotated rows are still a correlated table");
+    assertEquals(1, block.correlatedGroups().size());
+    CorrelatedGroup group = block.correlatedGroups().get(0);
+    assertEquals(List.of("R1", "R2"), group.labels());
+    assertEquals(
+        List.of(Map.of("R1", "CN", "R2", "H"), Map.of("R1", "CN", "R2", "Br")), group.tuples());
+  }
+
+  @Test
   public void positionalTableParsedAsCorrelatedGroup() {
     TextVisitor visitor =
         new TextVisitor(pageWithTexts("R1 = R2 = H\rR1 = F, R2 = H\rR1 = H, R2 = F"));
@@ -122,10 +145,53 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void multipleTuplesOnOneLineParsedAsCorrelatedGroup() {
+    // A positional table whose rows sit on ONE physical line, each row prefixed by a compound
+    // number and separated by ';': "10 X = .., Y = ..; 11 X = .., Y = ..; ...". Repeated X/Y heads
+    // mark the row boundaries.
+    RGroupDefinitionBlock block =
+        new TextVisitor(
+                pageWithTexts("10 X = PhCONMe, Y = N; 11 X = PhCONH, Y = C; 12 X = PhCOO, Y = N"))
+            .getBlocks()
+            .get(0);
+
+    assertTrue(block.definitions().isEmpty(), "X/Y must be a correlated table, not independent");
+    assertEquals(1, block.correlatedGroups().size());
+
+    CorrelatedGroup group = block.correlatedGroups().get(0);
+    assertEquals(List.of("X", "Y"), group.labels());
+    assertEquals(
+        List.of(
+            Map.of("X", "PhCONMe", "Y", "N"),
+            Map.of("X", "PhCONH", "Y", "C"),
+            Map.of("X", "PhCOO", "Y", "N")),
+        group.tuples(),
+        "each ';'-separated row is its own tuple, in order");
+  }
+
+  @Test
   public void independentListNotTreatedAsCorrelated() {
     RGroupDefinitionBlock block = new TextVisitor(pageWithTexts("R = H, CH3")).getBlocks().get(0);
     assertTrue(block.correlatedGroups().isEmpty(), "a single-label list is not a table");
     assertEquals(List.of("H", "CH3"), block.definitions().get("R"));
+  }
+
+  @Test
+  public void recognisesPrimedLabelAsDistinctFromUnprimed() {
+    // "R = Troc, R' = DTBS" defines two distinct residues; R' must not be swallowed as a value of
+    // R.
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("R = Troc, R' = DTBS")).getRgroups();
+    assertEquals(List.of("Troc"), r.get("R"), "R must not absorb R' or DTBS");
+    assertEquals(List.of("DTBS"), r.get("R'"), "R' must be its own label");
+  }
+
+  @Test
+  public void resolvesChainedEqualityAcrossPrimedLabel() {
+    // "R = R' = Ac" means both R and R' are Ac.
+    Map<String, List<String>> r = new TextVisitor(pageWithTexts("R = R' = Ac")).getRgroups();
+    assertEquals(List.of("Ac"), r.get("R"), "R must inherit the chained value");
+    assertEquals(List.of("Ac"), r.get("R'"), "R' must be resolved, not treated as R's value");
   }
 
   @Test
