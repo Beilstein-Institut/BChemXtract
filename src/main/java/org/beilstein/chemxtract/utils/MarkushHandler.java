@@ -116,11 +116,14 @@ public class MarkushHandler {
    * nodes. ChemDraw authors often list a label's substituents one per line, each its own text
    * object; without merging, nearest-block scoping would pick a single line and enumerate only one
    * substituent per scaffold. Blocks are merged when they define the same label set, overlap
-   * horizontally, and sit within about a line-height of one another vertically. Two legends in
-   * different columns (no horizontal overlap) or far apart (different scaffolds) stay separate.
+   * horizontally, and sit within about a line-height of one another vertically.
+   *
+   * <p>The same legend may also be laid out as two side-by-side columns, which {@link
+   * #sideBySideLegend} folds together as well. Legends that sit far apart (one per scaffold) stay
+   * separate, so nearest-block scoping keeps disambiguating those.
    *
    * @param blocks the per-text-node blocks from {@link TextVisitor}
-   * @return the blocks with same-column, same-label runs merged into one block each
+   * @return the blocks with same-label runs of one legend merged into one block each
    */
   private static List<RGroupDefinitionBlock> mergeColumnBlocks(List<RGroupDefinitionBlock> blocks) {
     List<RGroupDefinitionBlock> result = new ArrayList<>();
@@ -153,7 +156,11 @@ public class MarkushHandler {
               || !candidate.definitions().keySet().equals(base.definitions().keySet())) {
             continue;
           }
-          if (cluster.stream().anyMatch(member -> sameColumnAdjacent(member, candidate))) {
+          if (cluster.stream()
+              .anyMatch(
+                  member ->
+                      sameColumnAdjacent(member, candidate)
+                          || sideBySideLegend(member, candidate))) {
             cluster.add(candidate);
             merged[j] = true;
             grew = true;
@@ -181,6 +188,37 @@ public class MarkushHandler {
         Math.max(0, Math.max(ra.getTop() - rb.getBottom(), rb.getTop() - ra.getBottom()));
     double lineHeight = Math.max(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
     return verticalGap <= lineHeight * 1.5;
+  }
+
+  /**
+   * Whether two blocks are the two columns of one legend: no horizontal overlap, spanning
+   * essentially the same rows, and separated by a gutter narrow relative to the columns themselves.
+   * A substrate scope listing 11 substituents as two adjacent columns is one legend for the
+   * scaffold, not two competing definitions of the same label.
+   *
+   * <p>Correlated tables are excluded: their row-tuples would have to be paired across the columns
+   * rather than unioned, which this merge does not do.
+   */
+  private static boolean sideBySideLegend(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    if (!a.correlatedGroups().isEmpty() || !b.correlatedGroups().isEmpty()) {
+      return false;
+    }
+    CDRectangle ra = a.bounds();
+    CDRectangle rb = b.bounds();
+    double horizontalGap =
+        Math.max(0, Math.max(ra.getLeft() - rb.getRight(), rb.getLeft() - ra.getRight()));
+    if (horizontalGap <= 0) {
+      return false; // overlapping columns are the stacked-lines case above
+    }
+    double verticalOverlap =
+        Math.min(ra.getBottom(), rb.getBottom()) - Math.max(ra.getTop(), rb.getTop());
+    double minHeight = Math.min(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
+    double minWidth = Math.min(ra.getRight() - ra.getLeft(), rb.getRight() - rb.getLeft());
+    // ponytail: geometric heuristic — a gutter under half a column wide plus near-total row
+    // overlap.
+    // Two scaffolds whose legends happen to sit this close would merge wrongly; the fix then is
+    // scaffold-aware association, not a tighter threshold.
+    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= minWidth * 0.5;
   }
 
   /**
