@@ -76,6 +76,9 @@ public class BCXSubstance implements Serializable {
    */
   private Map<String, String> abbreviations = new HashMap<String, String>();
 
+  /** True if this substance was enumerated from a Markush structure by R-group replacement. */
+  private boolean isMarkush = false;
+
   public BCXSubstance() {
     super();
   }
@@ -163,6 +166,14 @@ public class BCXSubstance implements Serializable {
 
   public void addAbbreviation(String smiles, String label) {
     this.abbreviations.put(smiles, label);
+  }
+
+  public boolean isMarkush() {
+    return isMarkush;
+  }
+
+  public void setMarkush(boolean isMarkush) {
+    this.isMarkush = isMarkush;
   }
 
   public String getMdlv3000() {
