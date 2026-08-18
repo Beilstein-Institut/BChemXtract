@@ -2,6 +2,30 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.3.1...v1.4.0) (2026-08-18)
+
+
+### Features
+
+* flag substances originating from Markush R-group expansion ([bba5513](https://github.com/Beilstein-Institut/BChemXtract/commit/bba55136357e7a20e5ce68e79e6175538deb7b99))
+* flag substances originating from Markush R-group expansion ([09dd0e1](https://github.com/Beilstein-Institut/BChemXtract/commit/09dd0e107c9be0856de5f16935ef294ea33fb576))
+* positional aryl substituents, legend column merging, and a LIMITATIONS doc ([5f8efa8](https://github.com/Beilstein-Institut/BChemXtract/commit/5f8efa8dba7ff27323723f0ae389424e7efaadb2))
+* read ortho/meta/para prefixes as ring positions in R-group legends ([c7d6714](https://github.com/Beilstein-Institut/BChemXtract/commit/c7d6714668184123956e9487bfcab3ca722c267d))
+* resolve positional aryl-substituent notation in R-group legends ([eae3d60](https://github.com/Beilstein-Institut/BChemXtract/commit/eae3d60ba7aa485c0cd2719b0f422048b2a00547))
+
+
+### Bug Fixes
+
+* keep scaffold when R-group expansion yields no structures ([7198a0d](https://github.com/Beilstein-Institut/BChemXtract/commit/7198a0d14db322340520798bbd34aca7aa2e5755))
+* keep the R label when a position-variation stub is drawn from the residue end ([73699fc](https://github.com/Beilstein-Institut/BChemXtract/commit/73699fcf8f9bb09a30c57e46c7267920c590aa45))
+* merge side-by-side legend columns into one R-group list ([d924b36](https://github.com/Beilstein-Institut/BChemXtract/commit/d924b368051d5f91515099d6d972b7efc84493b2))
+
+
+### Documentation
+
+* add LIMITATIONS.md ([185423f](https://github.com/Beilstein-Institut/BChemXtract/commit/185423f98b395a177b80e4b5335c13e39192b711))
+* record the o/m/p prefixes and the residue-end stub fix in LIMITATIONS.md ([a080527](https://github.com/Beilstein-Institut/BChemXtract/commit/a080527abff99f0926110f9c12e1256eb0a71567))
+
 ## [1.3.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.3.0...v1.3.1) (2026-08-13)
 
 
