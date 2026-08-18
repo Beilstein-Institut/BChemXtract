@@ -117,14 +117,25 @@ and combinatorial. Known gaps:
   external-connection-point `*` is dropped).
 - Common shorthands such as `Me` are absent from the SMILES lookup tables
   and are not valid SMILES, so `R = Me` alone does not resolve.
-- Positional aryl-substituent notation — `<position>-<group>`, e.g.
-  `R = 3-OMe, 4-CF3` — **is resolved** (`MarkushHandler`): the position
-  index is mapped to the ring atom that many bonds from the ring's
+- Positional aryl-substituent notation — `<position>-<group>`, written
+  either with a number (`R = 3-OMe, 4-CF3`) or with an ortho/meta/para
+  prefix (`R = o-Cl, m-F, p-OMe`) — **is resolved** (`MarkushHandler`): the
+  position index is mapped to the ring atom that many bonds from the ring's
   attachment (ipso) atom, the residue is moved there, and the group is
-  grafted. It therefore also reaches positions the drawn (possibly
-  position-variation) attachment never covered. Remaining edges:
+  grafted. `o`/`m`/`p` are read as positions 2/3/4. It therefore also
+  reaches positions the drawn (possibly position-variation) attachment never
+  covered. Remaining edges:
   - the abbreviation lookup is tried **first**, so names that merely look
-    positional (`2-py`, `4-ClPh`, `4-MeO-Ph`) keep their dictionary meaning;
+    positional (`2-py`, `4-ClPh`, `4-MeO-Ph`, `p-Tol`) keep their dictionary
+    meaning;
+  - the substituent half must itself resolve, which is what a value like
+    `p-Cl-Ph-` or `o-Cl-Ph-` fails: there the prefix belongs to a
+    substituted-aryl *name* standing in for the whole residue, and no
+    positional reading applies. Such values are dropped, not misplaced;
+  - the group is resolved **before** the ring is inspected, so a dictionary
+    gap in the substituent half masks a working positional path: `4-CH3`
+    resolves while `2-Me`, `4-OCH3`, `4-t-Bu` and `4-CO2CH3` do not, for the
+    same reason `R = Me` alone does not (see above);
   - a ring with no unique ipso atom (several exocyclic substituents) is
     rejected rather than guessed at, and the value is dropped;
   - where both directions round the ring reach the named position, the atom
@@ -132,7 +143,16 @@ and combinatorial. Known gaps:
     the ipso atom, a heuristic otherwise;
   - a drawn position-variation attachment still expands to one scaffold per
     candidate atom, so a positional value yields duplicate (identical)
-    structures. `xtractUnique` collapses them; plain `xtract` does not.
+    structures. `xtractUnique` collapses them; plain `xtract` does not;
+  - a page that also carries a generic scheme where the same label stands for
+    a whole group (`R–C(=O)NH–Ar`, residue on no ring) logs one dropped
+    combination per positional value there. Those warnings are expected: the
+    value still resolves on the scaffold its legend describes.
+- Bond-encoded position variation (`AttachmentHandler`) is normalised from
+  either drawing direction: when the residue label itself is the stub end
+  sitting on the crossed bond, the *other* end becomes the synthetic junction,
+  so the R identity survives the expansion. Before that, such drawings lost
+  the label and silently grafted a methyl instead.
 - Two-column legends **are** merged (`MarkushHandler.sideBySideLegend`): a
   substrate scope split into two adjacent text columns is recognised as one
   list when the columns span the same rows and the gutter is narrow relative
