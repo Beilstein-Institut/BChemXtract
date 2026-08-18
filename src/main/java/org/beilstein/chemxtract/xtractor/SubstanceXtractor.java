@@ -307,11 +307,13 @@ public class SubstanceXtractor {
           && variant.hasRGroup()
           && !markushHandler.getResidueLabels().isEmpty()) {
         try {
+          // Expansion counts as done only if it actually yielded a substance: an empty result, or
+          // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
+          // to emitting the unexpanded scaffold below.
           for (IAtomContainer container :
               markushHandler.replaceRGroups(atomContainer, fragment.getBounds())) {
-            addIfBuilt(substances, container, fragment, variablePosition, true);
+            expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
           }
-          expandedRGroups = true;
         } catch (IOException | CloneNotSupportedException e) {
           LOGGER.error("R-group replacement failed", e);
         }
@@ -332,11 +334,11 @@ public class SubstanceXtractor {
    * @param tolerateMissingInchi when {@code true}, a substance whose unresolved pseudo-atoms
    *     prevent InChI generation is still produced (carrying SMILES and molecular formula)
    * @param isMarkush when {@code true}, the substance results from Markush R-group replacement
-   * @return the populated {@link BCXSubstance}
+   * @return {@code true} if a substance was built and added, {@code false} if it was skipped
    * @throws IOException if abbreviation resolution fails
    * @throws CDKException if InChI generation or nested fragment conversion fails
    */
-  private void addIfBuilt(
+  private boolean addIfBuilt(
       List<BCXSubstance> substances,
       IAtomContainer atomContainer,
       CDFragment fragment,
@@ -344,10 +346,12 @@ public class SubstanceXtractor {
       boolean isMarkush)
       throws IOException, CDKException {
     BCXSubstance substance = buildSubstance(atomContainer, fragment, tolerateMissingInchi);
-    if (substance != null) {
-      substance.setMarkush(isMarkush);
-      substances.add(substance);
+    if (substance == null) {
+      return false;
     }
+    substance.setMarkush(isMarkush);
+    substances.add(substance);
+    return true;
   }
 
   private BCXSubstance buildSubstance(

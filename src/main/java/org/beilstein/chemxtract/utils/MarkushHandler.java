@@ -22,15 +22,21 @@
 package org.beilstein.chemxtract.utils;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.vecmath.Point2d;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
@@ -42,11 +48,13 @@ import org.openscience.cdk.Bond;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.slf4j.Logger;
@@ -76,6 +84,17 @@ import org.slf4j.LoggerFactory;
 public class MarkushHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MarkushHandler.class);
+
+  /**
+   * A substituent written as {@code <position>-<group>}, e.g. {@code 3-OMe} or {@code p-Cl}: the
+   * group sits on the named ring position, counted from the ring's attachment atom. The position is
+   * either a number or one of the ortho/meta/para prefixes, which chemists use interchangeably with
+   * 2/3/4. Only tried after the plain abbreviation lookup fails, because many abbreviations
+   * legitimately start the same way ({@code 2-py}, {@code 4-ClPh}, {@code p-Tol}) and there the
+   * prefix belongs to the substituent's own name.
+   */
+  private static final Pattern POSITIONAL_SUBSTITUENT = Pattern.compile("(\\d{1,2}|[omp])-(.+)");
+
   private final Map<String, List<String>> residueLabels;
   private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
   private final List<RGroupDefinitionBlock> blocks;
@@ -99,11 +118,14 @@ public class MarkushHandler {
    * nodes. ChemDraw authors often list a label's substituents one per line, each its own text
    * object; without merging, nearest-block scoping would pick a single line and enumerate only one
    * substituent per scaffold. Blocks are merged when they define the same label set, overlap
-   * horizontally, and sit within about a line-height of one another vertically. Two legends in
-   * different columns (no horizontal overlap) or far apart (different scaffolds) stay separate.
+   * horizontally, and sit within about a line-height of one another vertically.
+   *
+   * <p>The same legend may also be laid out as two side-by-side columns, which {@link
+   * #sideBySideLegend} folds together as well. Legends that sit far apart (one per scaffold) stay
+   * separate, so nearest-block scoping keeps disambiguating those.
    *
    * @param blocks the per-text-node blocks from {@link TextVisitor}
-   * @return the blocks with same-column, same-label runs merged into one block each
+   * @return the blocks with same-label runs of one legend merged into one block each
    */
   private static List<RGroupDefinitionBlock> mergeColumnBlocks(List<RGroupDefinitionBlock> blocks) {
     List<RGroupDefinitionBlock> result = new ArrayList<>();
@@ -136,7 +158,11 @@ public class MarkushHandler {
               || !candidate.definitions().keySet().equals(base.definitions().keySet())) {
             continue;
           }
-          if (cluster.stream().anyMatch(member -> sameColumnAdjacent(member, candidate))) {
+          if (cluster.stream()
+              .anyMatch(
+                  member ->
+                      sameColumnAdjacent(member, candidate)
+                          || sideBySideLegend(member, candidate))) {
             cluster.add(candidate);
             merged[j] = true;
             grew = true;
@@ -164,6 +190,37 @@ public class MarkushHandler {
         Math.max(0, Math.max(ra.getTop() - rb.getBottom(), rb.getTop() - ra.getBottom()));
     double lineHeight = Math.max(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
     return verticalGap <= lineHeight * 1.5;
+  }
+
+  /**
+   * Whether two blocks are the two columns of one legend: no horizontal overlap, spanning
+   * essentially the same rows, and separated by a gutter narrow relative to the columns themselves.
+   * A substrate scope listing 11 substituents as two adjacent columns is one legend for the
+   * scaffold, not two competing definitions of the same label.
+   *
+   * <p>Correlated tables are excluded: their row-tuples would have to be paired across the columns
+   * rather than unioned, which this merge does not do.
+   */
+  private static boolean sideBySideLegend(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    if (!a.correlatedGroups().isEmpty() || !b.correlatedGroups().isEmpty()) {
+      return false;
+    }
+    CDRectangle ra = a.bounds();
+    CDRectangle rb = b.bounds();
+    double horizontalGap =
+        Math.max(0, Math.max(ra.getLeft() - rb.getRight(), rb.getLeft() - ra.getRight()));
+    if (horizontalGap <= 0) {
+      return false; // overlapping columns are the stacked-lines case above
+    }
+    double verticalOverlap =
+        Math.min(ra.getBottom(), rb.getBottom()) - Math.max(ra.getTop(), rb.getTop());
+    double minHeight = Math.min(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
+    double minWidth = Math.min(ra.getRight() - ra.getLeft(), rb.getRight() - rb.getLeft());
+    // ponytail: geometric heuristic — a gutter under half a column wide plus near-total row
+    // overlap.
+    // Two scaffolds whose legends happen to sit this close would merge wrongly; the fix then is
+    // scaffold-aware association, not a tighter threshold.
+    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= minWidth * 0.5;
   }
 
   /**
@@ -390,7 +447,12 @@ public class MarkushHandler {
 
       for (Map.Entry<String, String> entry : combination.entrySet()) {
         String smiles = resolveSmiles(entry.getValue());
-        if (!ChemicalUtils.isValidSmiles(smiles)) {
+        if (ChemicalUtils.isValidSmiles(smiles)) {
+          replaceRGroup(clone, entry.getKey(), smiles);
+          substituted = true;
+        } else if (replacePositionalRGroup(clone, entry.getKey(), entry.getValue())) {
+          substituted = true;
+        } else {
           // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
           // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
           // so the whole combination is dropped rather than substituting only some of its labels.
@@ -401,8 +463,6 @@ public class MarkushHandler {
           allResolved = false;
           break;
         }
-        replaceRGroup(clone, entry.getKey(), smiles);
-        substituted = true;
       }
       if (substituted && allResolved) {
         layoutGraftedAtoms(clone, scaffoldAtoms);
@@ -456,6 +516,247 @@ public class MarkushHandler {
       return "[" + definition + "]";
     }
     return definition;
+  }
+
+  /**
+   * Applies a substituent given in positional notation, {@code <position>-<group>} (e.g. {@code
+   * 3-OMe}, {@code 4-Br}). The position counts round the ring from its attachment (ipso) atom, so
+   * the substituent belongs on that ring atom regardless of where the R-group itself was drawn —
+   * ChemDraw authors routinely draw one R (often as a position-variation attachment) and let the
+   * legend state the position. The residue is therefore moved onto the named ring atom and then
+   * substituted through the ordinary replacement path.
+   *
+   * @param container the structure to modify
+   * @param label the R-group label to substitute
+   * @param value the raw legend value
+   * @return {@code true} if the value was positional notation and could be applied; {@code false}
+   *     if it is not positional notation, its group does not resolve, or the ring position cannot
+   *     be determined — in all of which cases the container is left untouched
+   */
+  private boolean replacePositionalRGroup(IAtomContainer container, String label, String value)
+      throws CDKException, CloneNotSupportedException, IOException {
+    Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
+    if (!matcher.matches()) {
+      return false;
+    }
+    String smiles = resolveSmiles(matcher.group(2));
+    if (!ChemicalUtils.isValidSmiles(smiles)) {
+      return false;
+    }
+    if (!moveResiduesToRingPosition(container, label, ringPosition(matcher.group(1)))) {
+      return false;
+    }
+    replaceRGroup(container, label, smiles);
+    return true;
+  }
+
+  /**
+   * The 1-based ring position a positional token names: {@code o}/{@code m}/{@code p} are the
+   * ortho/meta/para positions 2/3/4, any other token is the number itself.
+   *
+   * <p>{@link #POSITIONAL_SUBSTITUENT} already restricts the token to one or two digits or a single
+   * {@code o}/{@code m}/{@code p}, so the parse cannot currently fail. It is guarded anyway: the
+   * guarantee lives in a pattern far from here, and an unreadable token must drop the one legend
+   * value rather than abort the whole document — {@code NumberFormatException} is unchecked and
+   * {@code SubstanceXtractor} catches only {@code IOException} and {@code
+   * CloneNotSupportedException} around R-group expansion. {@code -1} is a position no ring has, so
+   * the existing range check in {@link #ringAtomAtDistance} rejects it and the value is skipped.
+   *
+   * @param token the position part of a {@code <position>-<group>} value
+   * @return the ring position counted from the attachment (ipso) atom, or {@code -1} if unreadable
+   */
+  private static int ringPosition(String token) {
+    return switch (token) {
+      case "o" -> 2;
+      case "m" -> 3;
+      case "p" -> 4;
+      default -> {
+        try {
+          yield Integer.parseInt(token);
+        } catch (NumberFormatException e) {
+          yield -1;
+        }
+      }
+    };
+  }
+
+  /**
+   * Moves every residue carrying the given label onto the ring atom named by the position index.
+   *
+   * @param container the structure to modify
+   * @param label the R-group label
+   * @param position the 1-based ring position, counted from the ring's attachment atom
+   * @return {@code true} if every such residue now sits on the named position
+   */
+  private static boolean moveResiduesToRingPosition(
+      IAtomContainer container, String label, int position) {
+    List<IAtom> residues = new ArrayList<>();
+    for (IAtom atom : container.atoms()) {
+      if (atom instanceof IPseudoAtom pseudo && label.equals(pseudo.getLabel())) {
+        residues.add(atom);
+      }
+    }
+    if (residues.isEmpty()) {
+      return false;
+    }
+    IRingSet rings = Cycles.mcb(container).toRingSet();
+    for (IAtom residue : residues) {
+      if (!moveResidueToRingPosition(container, rings, residue, position)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Re-bonds a single residue to the ring atom at the given position, correcting the implicit
+   * hydrogen count of the atom it left and the one it arrived at.
+   *
+   * @param container the structure to modify
+   * @param rings the ring set of the container
+   * @param residue the residue (pseudo-atom) to move
+   * @param position the 1-based ring position, counted from the ring's attachment atom
+   * @return {@code true} if the residue sits on the named position afterwards
+   */
+  private static boolean moveResidueToRingPosition(
+      IAtomContainer container, IRingSet rings, IAtom residue, int position) {
+    Iterator<IBond> bonds = residue.bonds().iterator();
+    if (!bonds.hasNext()) {
+      return false;
+    }
+    IBond bond = bonds.next();
+    IAtom anchor = bond.getOther(residue);
+    IAtomContainer ring = smallestRingContaining(rings, anchor);
+    if (ring == null) {
+      return false;
+    }
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    if (ipso == null) {
+      return false;
+    }
+    IAtom target = ringAtomAtDistance(ring, ipso, position - 1, residue);
+    if (target == null) {
+      return false;
+    }
+    if (target == anchor) {
+      return true;
+    }
+    container.removeBond(bond);
+    container.addBond(new Bond(target, residue, bond.getOrder()));
+    shiftImplicitHydrogens(anchor, 1);
+    shiftImplicitHydrogens(target, -1);
+    return true;
+  }
+
+  /** The smallest ring containing the atom, or {@code null} if it lies in none. */
+  private static IAtomContainer smallestRingContaining(IRingSet rings, IAtom atom) {
+    IAtomContainer smallest = null;
+    for (IAtomContainer ring : rings.atomContainers()) {
+      if (ring.contains(atom)
+          && (smallest == null || ring.getAtomCount() < smallest.getAtomCount())) {
+        smallest = ring;
+      }
+    }
+    return smallest;
+  }
+
+  /**
+   * The ring's attachment (ipso) atom: the one ring atom bonded to a real atom outside the ring.
+   * Residues are ignored, since they are what the position index is about to place. Position
+   * numbers are only meaningful relative to a single attachment, so a ring with none, or with
+   * several, is rejected rather than guessed at.
+   *
+   * @param container the structure the ring belongs to
+   * @param ring the ring to inspect
+   * @return the ipso atom, or {@code null} if it is not unique
+   */
+  private static IAtom soleAttachmentAtom(IAtomContainer container, IAtomContainer ring) {
+    IAtom ipso = null;
+    for (IAtom atom : ring.atoms()) {
+      for (IBond bond : container.getConnectedBondsList(atom)) {
+        IAtom other = bond.getOther(atom);
+        if (ring.contains(other) || other instanceof IPseudoAtom) {
+          continue;
+        }
+        if (ipso != null && ipso != atom) {
+          return null;
+        }
+        ipso = atom;
+      }
+    }
+    return ipso;
+  }
+
+  /**
+   * The ring atom a given number of bonds from the ipso atom. Both directions round the ring are
+   * walked; when they reach different atoms (positions 2/6, 3/5, ... of a six-ring) the one nearer
+   * the drawn residue is taken — for a ring that is symmetric about the ipso atom the two are the
+   * same structure anyway, and otherwise the drawing states which side is meant.
+   *
+   * @param ring the ring to walk
+   * @param ipso the ring's attachment atom, position 1
+   * @param distance the number of bonds to walk, i.e. position - 1
+   * @param residue the residue being placed, used to break the direction tie
+   * @return the ring atom at that position, or {@code null} if the position does not exist
+   */
+  private static IAtom ringAtomAtDistance(
+      IAtomContainer ring, IAtom ipso, int distance, IAtom residue) {
+    if (distance <= 0 || distance > ring.getAtomCount() / 2) {
+      return null;
+    }
+    Map<IAtom, Integer> distances = new IdentityHashMap<>();
+    distances.put(ipso, 0);
+    Deque<IAtom> queue = new ArrayDeque<>();
+    queue.add(ipso);
+    List<IAtom> reached = new ArrayList<>();
+    while (!queue.isEmpty()) {
+      IAtom current = queue.poll();
+      int next = distances.get(current) + 1;
+      for (IAtom neighbour : ring.getConnectedAtomsList(current)) {
+        if (distances.containsKey(neighbour)) {
+          continue;
+        }
+        distances.put(neighbour, next);
+        if (next == distance) {
+          reached.add(neighbour);
+        } else {
+          queue.add(neighbour);
+        }
+      }
+    }
+    return nearestTo(reached, residue.getPoint2d());
+  }
+
+  /** The atom of the list closest to the given point; the first one when there is no point. */
+  private static IAtom nearestTo(List<IAtom> atoms, Point2d reference) {
+    if (atoms.isEmpty()) {
+      return null;
+    }
+    if (atoms.size() == 1 || reference == null) {
+      return atoms.get(0);
+    }
+    IAtom nearest = atoms.get(0);
+    double bestDistance = Double.MAX_VALUE;
+    for (IAtom atom : atoms) {
+      Point2d point = atom.getPoint2d();
+      if (point == null) {
+        continue;
+      }
+      double distance = point.distance(reference);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        nearest = atom;
+      }
+    }
+    return nearest;
+  }
+
+  /** Adjusts an atom's implicit hydrogen count as it gains or loses a substituent. */
+  private static void shiftImplicitHydrogens(IAtom atom, int delta) {
+    Integer count = atom.getImplicitHydrogenCount();
+    if (count != null) {
+      atom.setImplicitHydrogenCount(Math.max(0, count + delta));
+    }
   }
 
   /**

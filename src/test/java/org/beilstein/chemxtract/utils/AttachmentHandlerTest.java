@@ -28,8 +28,10 @@ import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link AttachmentHandler} covering the multi-center and variable node logic. */
@@ -278,6 +280,57 @@ public class AttachmentHandlerTest {
 
     assertThat(result).containsExactly(fragment);
     assertThat(a.getNodeType()).isEqualTo(CDNodeType.Element);
+  }
+
+  /**
+   * The same crossing-bond stub drawn the other way round: the residue label, not a plain atom, is
+   * the endpoint sitting on the crossed bond. The junction that expansion deletes must then be the
+   * plain end, so the R node survives and can still be substituted from the legend.
+   */
+  @Test
+  public void normalizeKeepsResidueLabelWhenItSitsOnTheCrossedBond() {
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, bond(c1, x), bond(c2, y))));
+
+    CDAtom residue = residue(-3f, 5f);
+    CDAtom plain = element(5f, 5f);
+    CDBond varBond = bond(residue, plain);
+    varBond.setCrossingBonds(new java.util.HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new java.util.HashSet<>(List.of(varBond)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(residue, plain));
+    sub.setBonds(new ArrayList<>(List.of(varBond)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(plain.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(residue.getNodeType()).isEqualTo(CDNodeType.GenericNickname);
+    assertThat(plain.getAttachedAtoms()).containsExactlyInAnyOrder(c1, c2);
+
+    List<CDFragment> variants = AttachmentHandler.expandVariableAttachments(scaffold);
+    assertThat(variants).hasSize(2);
+    for (CDFragment variant : variants) {
+      assertThat(variant.getAtoms()).contains(residue).doesNotContain(plain);
+      assertThat(other(substituentBond(variant, residue), residue)).isIn(c1, c2);
+    }
+  }
+
+  private static CDAtom residue(float x, float y) {
+    CDStyledString styled = new CDStyledString();
+    styled.addChunk(new CDStyledString.CDXChunk(null, 10f, null, null, "R"));
+    CDText text = new CDText();
+    text.setText(styled);
+    CDAtom atom = new CDAtom();
+    atom.setNodeType(CDNodeType.GenericNickname);
+    atom.setPosition2D(new CDPoint2D(x, y));
+    atom.setText(text);
+    return atom;
   }
 
   private static CDBond substituentBond(CDFragment fragment, CDAtom substituent) {

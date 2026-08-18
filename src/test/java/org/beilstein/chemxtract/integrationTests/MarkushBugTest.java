@@ -67,4 +67,47 @@ public class MarkushBugTest {
         substances.stream().map(BCXSubstance::getMolecularFormula).collect(Collectors.toSet());
     assertEquals(Set.of("C7H8", "C6H5Cl"), formulas, "expected toluene and chlorobenzene");
   }
+
+  /**
+   * Substituents written as {@code <position>-<group>} must be grafted onto the ring atom that the
+   * position index names, counted from the ring's attachment (ipso) atom — not onto wherever the
+   * R-group happens to be drawn. The fixture draws a position-variation R across the C3–C4 bond of
+   * a benzamide's phenyl ring and defines {@code R = H, 2-Cl, 3-Cl, 4-Br}, so the ortho value has
+   * to reach an atom the drawn attachment never covers.
+   */
+  @Test
+  public void testPositionalArylSubstituentsResolved() throws IOException {
+    List<BCXSubstance> substances = xtract("positional_aryl_R_benzamide.cdxml");
+
+    Set<String> inchiKeys =
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    assertEquals(
+        Set.of(
+            "KXDAEFPNCMNJSK-UHFFFAOYSA-N", // benzamide (R = H)
+            "RBGDLYUEXLWQBZ-UHFFFAOYSA-N", // 2-chlorobenzamide
+            "MJTGQALMWUUPQM-UHFFFAOYSA-N", // 3-chlorobenzamide
+            "ZRWNRAJCPNLYAK-UHFFFAOYSA-N"), // 4-bromobenzamide
+        inchiKeys,
+        "each n-Group value must land on ring position n");
+  }
+
+  /**
+   * The ortho/meta/para prefixes are the same statement as 2/3/4: the same fixture with {@code R =
+   * H, o-Cl, m-Cl, p-Br} must enumerate to the same four benzamides as its numeric twin.
+   */
+  @Test
+  public void testOrthoMetaParaSubstituentsResolved() throws IOException {
+    List<BCXSubstance> substances = xtract("positional_aryl_R_benzamide_omp.cdxml");
+
+    Set<String> inchiKeys =
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    assertEquals(
+        Set.of(
+            "KXDAEFPNCMNJSK-UHFFFAOYSA-N", // benzamide (R = H)
+            "RBGDLYUEXLWQBZ-UHFFFAOYSA-N", // 2-chlorobenzamide (o-Cl)
+            "MJTGQALMWUUPQM-UHFFFAOYSA-N", // 3-chlorobenzamide (m-Cl)
+            "ZRWNRAJCPNLYAK-UHFFFAOYSA-N"), // 4-bromobenzamide (p-Br)
+        inchiKeys,
+        "o-/m-/p- must name ring positions 2/3/4");
+  }
 }

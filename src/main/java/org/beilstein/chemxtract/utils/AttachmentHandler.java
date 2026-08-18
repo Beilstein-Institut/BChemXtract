@@ -99,7 +99,7 @@ public final class AttachmentHandler {
         if (candidates.isEmpty()) {
           continue;
         }
-        CDAtom attach = nearestEndpoint(bond, candidates);
+        CDAtom attach = junctionEnd(bond, candidates);
         // Only the substituent side has a free (degree-one) end floating onto the crossed bond; the
         // reciprocal reference on the scaffold bond lands on a ring/chain atom and is skipped.
         if (incidentBonds(sub, attach).size() != 1) {
@@ -128,6 +128,35 @@ public final class AttachmentHandler {
     if (atom != null && atoms.stream().noneMatch(a -> a == atom)) {
       atoms.add(atom);
     }
+  }
+
+  /**
+   * Picks the stub endpoint to turn into the synthetic variable-attachment junction: the one
+   * nearest the crossed bond, except when that endpoint is a residue (R-group) node and the other
+   * is not. The junction is deleted during expansion and its neighbour is bonded to the chosen
+   * candidate atom, so making the residue the junction would discard the very label the legend
+   * defines — authors draw the stub from either end, and both spellings have to survive.
+   *
+   * @param bond the position-variation bond crossing the scaffold
+   * @param candidates the endpoints of the crossed bond(s)
+   * @return the endpoint to mark as the variable attachment
+   */
+  private static CDAtom junctionEnd(CDBond bond, List<CDAtom> candidates) {
+    CDAtom nearest = nearestEndpoint(bond, candidates);
+    CDAtom other = nearest == bond.getBegin() ? bond.getEnd() : bond.getBegin();
+    if (other != null && isResidue(nearest) && !isResidue(other)) {
+      return other;
+    }
+    return nearest;
+  }
+
+  /** Whether the atom's label is an R-group label ({@code R}, {@code R1}, {@code Ar}, …). */
+  private static boolean isResidue(CDAtom atom) {
+    if (atom.getText() == null || atom.getText().getText() == null) {
+      return false;
+    }
+    String label = atom.getText().getText().getText();
+    return label != null && Definitions.RGROUP_LABEL_PATTERN.matcher(label).find();
   }
 
   /** Returns the endpoint of {@code bond} closest to the centroid of the candidate atoms. */

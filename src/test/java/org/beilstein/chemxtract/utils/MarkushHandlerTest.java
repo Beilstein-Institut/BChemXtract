@@ -241,4 +241,42 @@ public class MarkushHandlerTest {
     }
     assertEquals(Set.of(16, 34, 52), chalcogens, "expected S (16), Se (34) and Te (52)");
   }
+
+  /**
+   * A substrate-scope legend split into two adjacent columns is one list for the scaffold. Geometry
+   * mirrors {@code volumeTest/markush/mantis11158/20-14-i2}: two blocks spanning the same rows, a
+   * gutter narrow relative to the columns, 6 + 5 values.
+   */
+  @Test
+  public void sideBySideLegendColumnsMergeIntoOneList() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(149.5f, 117.6f, 247.1f, 174.0f), "R = H, 2-Me, 3-OMe"));
+    page.addText(textAt(rect(274.7f, 118.3f, 375.0f, 170.8f), "R = 3-Cl, 4-Br"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    // Scaffold sits above the left column; both columns must still reach it.
+    Map<String, List<String>> scoped = handler.residueLabelsNear(rect(70f, 59f, 133f, 100f));
+
+    assertEquals(
+        List.of("H", "2-Me", "3-OMe", "3-Cl", "4-Br"),
+        scoped.get("R"),
+        "both legend columns must reach the scaffold, left column first");
+  }
+
+  /**
+   * The column merge must not swallow the case nearest-block scoping exists for: two scaffolds far
+   * apart, each with its own definition of the same label, stay separate.
+   */
+  @Test
+  public void farApartLegendsAreNotColumnMerged() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(0, 0, 50, 50), "R = Cl"));
+    page.addText(textAt(rect(200, 0, 250, 50), "R = Br"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    assertEquals(List.of("Cl"), handler.residueLabelsNear(rect(0, 0, 40, 40)).get("R"));
+    assertEquals(List.of("Br"), handler.residueLabelsNear(rect(210, 0, 240, 40)).get("R"));
+  }
 }
