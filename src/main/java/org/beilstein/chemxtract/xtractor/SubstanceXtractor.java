@@ -312,14 +312,14 @@ public class SubstanceXtractor {
           // to emitting the unexpanded scaffold below.
           for (IAtomContainer container :
               markushHandler.replaceRGroups(atomContainer, fragment.getBounds())) {
-            expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition);
+            expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
           }
         } catch (IOException | CloneNotSupportedException e) {
           LOGGER.error("R-group replacement failed", e);
         }
       }
       if (!expandedRGroups) {
-        addIfBuilt(substances, atomContainer, fragment, variablePosition);
+        addIfBuilt(substances, atomContainer, fragment, variablePosition, false);
       }
     }
     return substances;
@@ -333,6 +333,7 @@ public class SubstanceXtractor {
    * @param fragment the source fragment providing occurrence bounds and abbreviations
    * @param tolerateMissingInchi when {@code true}, a substance whose unresolved pseudo-atoms
    *     prevent InChI generation is still produced (carrying SMILES and molecular formula)
+   * @param isMarkush when {@code true}, the substance results from Markush R-group replacement
    * @return {@code true} if a substance was built and added, {@code false} if it was skipped
    * @throws IOException if abbreviation resolution fails
    * @throws CDKException if InChI generation or nested fragment conversion fails
@@ -341,12 +342,14 @@ public class SubstanceXtractor {
       List<BCXSubstance> substances,
       IAtomContainer atomContainer,
       CDFragment fragment,
-      boolean tolerateMissingInchi)
+      boolean tolerateMissingInchi,
+      boolean isMarkush)
       throws IOException, CDKException {
     BCXSubstance substance = buildSubstance(atomContainer, fragment, tolerateMissingInchi);
     if (substance == null) {
       return false;
     }
+    substance.setMarkush(isMarkush);
     substances.add(substance);
     return true;
   }

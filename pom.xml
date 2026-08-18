@@ -5,7 +5,7 @@
 	<artifactId>bchemxtract</artifactId>
 	<packaging>jar</packaging>
 	<name>BChemXtract</name>
-	<version>1.3.1-SNAPSHOT</version>
+	<version>1.3.1</version>
 	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
 	<description>A pure-Java extractor of ChemDraw structures.</description>
 
@@ -151,17 +151,17 @@
 					<dependency>
 						<groupId>org.junit.platform</groupId>
 						<artifactId>junit-platform-launcher</artifactId>
-						<version>6.1.2</version>
+						<version>6.1.3</version>
 					</dependency>
 					<dependency>
 						<groupId>org.junit.platform</groupId>
 						<artifactId>junit-platform-engine</artifactId>
-						<version>6.1.2</version>
+						<version>6.1.3</version>
 					</dependency>
 					<dependency>
 						<groupId>org.junit.platform</groupId>
 						<artifactId>junit-platform-commons</artifactId>
-						<version>6.1.2</version>
+						<version>6.1.3</version>
 					</dependency>
 					<!-- Run Jupiter tests via the JUnit Platform provider -->
 					<dependency>
@@ -279,7 +279,7 @@
 							<dependency>
 								<groupId>com.puppycrawl.tools</groupId>
 								<artifactId>checkstyle</artifactId>
-								<version>13.9.0</version>
+								<version>13.10.0</version>
 							</dependency>
 						</dependencies>
 						<configuration>
@@ -409,7 +409,7 @@
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
-				<version>6.1.2</version>
+				<version>6.1.3</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

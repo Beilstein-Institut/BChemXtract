@@ -2,6 +2,22 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.3.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.3.0...v1.3.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* drop and log partially-resolved R-group combinations ([2d60703](https://github.com/Beilstein-Institut/BChemXtract/commit/2d60703d16a902772c21f226bf9cd3b12fb32438))
+* drop leaked reaction-condition annotations from R-group legends ([aa994ad](https://github.com/Beilstein-Institut/BChemXtract/commit/aa994add23d8169d892c6bfeb5baf12b7ef7a2b2))
+* lay out grafted R-group atoms in the generator's native scale ([1b1ed6a](https://github.com/Beilstein-Institut/BChemXtract/commit/1b1ed6aa4bc73b7fe890030f8ccacb66c977c733))
+* Markush R-group extraction fixes (batch) ([95d81b9](https://github.com/Beilstein-Institut/BChemXtract/commit/95d81b9386b85664359a7af8f00b85f63c84048b))
+* merge column legends and skip unresolved-placeholder structures ([49edee7](https://github.com/Beilstein-Institut/BChemXtract/commit/49edee7fe31a3182a3b2fe7bceb8bb0357199ed8))
+* recognise primed R-group labels (R') as distinct from R ([dd14b87](https://github.com/Beilstein-Institut/BChemXtract/commit/dd14b87979ddc84064cc4a1874e92e1902b2e282))
+* register bond-encoded (CrossingBonds) variable attachments ([b9277cc](https://github.com/Beilstein-Institut/BChemXtract/commit/b9277cc5418474230ee937aee68d4aafd7827fef))
+* resolve bare non-organic-subset element R-groups (Se, Te) ([3ca6eed](https://github.com/Beilstein-Institut/BChemXtract/commit/3ca6eedbd439a38cf1b32c6a33d92fa0f81cfc81))
+* resolve single-line correlated X/Y Markush tables ([dce27aa](https://github.com/Beilstein-Institut/BChemXtract/commit/dce27aab47b4fd5da1b843860fdd1b954cca166c))
+* strip reaction-yield annotations from R-group definitions ([ecc39e0](https://github.com/Beilstein-Institut/BChemXtract/commit/ecc39e0786a606a7b5c9b226792b8cd02fdebf37))
+
 ## [1.3.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.2.0...v1.3.0) (2026-08-10)
 
 
