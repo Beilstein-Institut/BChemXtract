@@ -90,4 +90,24 @@ public class MarkushBugTest {
         inchiKeys,
         "each n-Group value must land on ring position n");
   }
+
+  /**
+   * The ortho/meta/para prefixes are the same statement as 2/3/4: the same fixture with {@code R =
+   * H, o-Cl, m-Cl, p-Br} must enumerate to the same four benzamides as its numeric twin.
+   */
+  @Test
+  public void testOrthoMetaParaSubstituentsResolved() throws IOException {
+    List<BCXSubstance> substances = xtract("positional_aryl_R_benzamide_omp.cdxml");
+
+    Set<String> inchiKeys =
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    assertEquals(
+        Set.of(
+            "KXDAEFPNCMNJSK-UHFFFAOYSA-N", // benzamide (R = H)
+            "RBGDLYUEXLWQBZ-UHFFFAOYSA-N", // 2-chlorobenzamide (o-Cl)
+            "MJTGQALMWUUPQM-UHFFFAOYSA-N", // 3-chlorobenzamide (m-Cl)
+            "ZRWNRAJCPNLYAK-UHFFFAOYSA-N"), // 4-bromobenzamide (p-Br)
+        inchiKeys,
+        "o-/m-/p- must name ring positions 2/3/4");
+  }
 }
