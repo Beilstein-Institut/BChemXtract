@@ -244,7 +244,7 @@ public class MarkushHandler {
           .definitions()
           .forEach(
               (label, values) -> {
-                List<String> list = definitions.computeIfAbsent(label, key -> new ArrayList<>());
+                List<String> list = definitions.computeIfAbsent(label, _ -> new ArrayList<>());
                 for (String value : values) {
                   if (!list.contains(value)) {
                     list.add(value);
@@ -369,7 +369,7 @@ public class MarkushHandler {
     }
 
     // A single empty assignment means nothing was applicable.
-    if (combinations.size() == 1 && combinations.get(0).isEmpty()) {
+    if (combinations.size() == 1 && combinations.getFirst().isEmpty()) {
       return List.of();
     }
     return combinations;
@@ -573,7 +573,7 @@ public class MarkushHandler {
       default -> {
         try {
           yield Integer.parseInt(token);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
           yield -1;
         }
       }
@@ -733,9 +733,9 @@ public class MarkushHandler {
       return null;
     }
     if (atoms.size() == 1 || reference == null) {
-      return atoms.get(0);
+      return atoms.getFirst();
     }
-    IAtom nearest = atoms.get(0);
+    IAtom nearest = atoms.getFirst();
     double bestDistance = Double.MAX_VALUE;
     for (IAtom atom : atoms) {
       Point2d point = atom.getPoint2d();
@@ -1027,7 +1027,7 @@ public class MarkushHandler {
       LOGGER.error("More than one or none connection point found.");
       return;
     }
-    IAtom connectionPoint = connectionPoints.get(0);
+    IAtom connectionPoint = connectionPoints.getFirst();
     // Find bond between pseudoAtom and its origin
     IBond bondOrigin = null;
     if (!pseudoAtom.bonds().iterator().hasNext()) {
@@ -1042,7 +1042,7 @@ public class MarkushHandler {
     IBond newBond;
     try {
       newBond = bondOrigin.clone();
-    } catch (CloneNotSupportedException e) {
+    } catch (CloneNotSupportedException _) {
       LOGGER.error("Bond could not be cloned.");
       return;
     }

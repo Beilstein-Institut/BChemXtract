@@ -46,5 +46,5 @@ public enum CDSpectrumYType {
    * Axis is unscaled -- essentially, the absolute values have no meaning and only relative values
    * matter.
    */
-  ArbitraryUnits;
+  ArbitraryUnits
 }

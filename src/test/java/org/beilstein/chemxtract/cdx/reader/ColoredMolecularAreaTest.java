@@ -49,9 +49,9 @@ public class ColoredMolecularAreaTest {
 
     CDDocument document = CDXMLReader.readDocument(in);
     assertNotNull(document);
-    CDPage page = document.getPages().get(0);
+    CDPage page = document.getPages().getFirst();
     assertNotNull(page);
-    CDFragment frag = page.getFragments().get(0);
+    CDFragment frag = page.getFragments().getFirst();
     assertNotNull(frag);
     List<CDColoredMolecularArea> areas = frag.getColoredMolecularAreas();
     assertEquals(4, areas.size());
@@ -64,9 +64,9 @@ public class ColoredMolecularAreaTest {
     ByteArrayInputStream bais = new ByteArrayInputStream(buf);
     document = CDXMLReader.readDocument(bais);
     assertNotNull(document);
-    page = document.getPages().get(0);
+    page = document.getPages().getFirst();
     assertNotNull(page);
-    frag = page.getFragments().get(0);
+    frag = page.getFragments().getFirst();
     assertNotNull(frag);
     areas = frag.getColoredMolecularAreas();
     assertEquals(4, areas.size());

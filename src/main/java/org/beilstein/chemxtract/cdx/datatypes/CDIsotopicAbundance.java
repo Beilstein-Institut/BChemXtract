@@ -46,5 +46,5 @@ public enum CDIsotopicAbundance {
    * Node has a non-natural abundance of the specified isotope (may be either enriched or
    * deficient). Not valid when the node also has a specific isotopy.
    */
-  Nonnatural;
+  Nonnatural
 }

@@ -33,5 +33,5 @@ public enum CDGeometryType {
   PlaneFromPoints,
   PlaneFromPointLine,
   CentroidFromPoints,
-  NormalFromPointPlane;
+  NormalFromPointPlane
 }

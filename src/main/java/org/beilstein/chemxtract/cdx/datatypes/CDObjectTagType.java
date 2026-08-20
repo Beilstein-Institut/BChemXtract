@@ -28,5 +28,5 @@ public enum CDObjectTagType {
 
   Double,
   Long,
-  String;
+  String
 }

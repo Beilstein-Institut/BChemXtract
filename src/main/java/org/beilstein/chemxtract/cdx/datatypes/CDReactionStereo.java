@@ -32,5 +32,5 @@ public enum CDReactionStereo {
   /** Absolute stereochemistry does not change during the reaction. */
   Inversion,
   /** Absolute stereochemistry is retained during the reaction. */
-  Retention;
+  Retention
 }

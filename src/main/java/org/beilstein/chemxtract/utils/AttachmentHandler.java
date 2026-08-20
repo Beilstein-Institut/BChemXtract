@@ -300,7 +300,7 @@ public final class AttachmentHandler {
       if (candidates == null || candidates.isEmpty() || incident.isEmpty()) {
         continue;
       }
-      CDBond substituentBond = incident.get(0);
+      CDBond substituentBond = incident.getFirst();
       CDAtom substituent =
           substituentBond.getBegin().equals(node)
               ? substituentBond.getEnd()
@@ -379,7 +379,7 @@ public final class AttachmentHandler {
     for (CDAtom candidate : points.get(index).candidates()) {
       current.add(candidate);
       cartesianProduct(points, index + 1, current, result);
-      current.remove(current.size() - 1);
+      current.removeLast();
     }
   }
 

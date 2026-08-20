@@ -35,5 +35,5 @@ public enum CDExternalConnectionType {
   /** The attachment point is indicated by a wavy line perpendicular to the end of a bond */
   Wavy,
   // TODO: javadoc
-  Residue;
+  Residue
 }

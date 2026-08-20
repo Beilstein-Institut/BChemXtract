@@ -1853,7 +1853,7 @@ public class CDXUtils {
     while (s.lastIndexOf(c) > -1) {
       int i = s.lastIndexOf(c);
       s = s.substring(0, i);
-      result.add(0, i + 1);
+      result.addFirst(i + 1);
     }
     return result;
   }

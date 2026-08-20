@@ -65,5 +65,5 @@ public enum CDBracketUsage {
   /** (unused) */
   Unused1,
   /** (unused) */
-  Unused2;
+  Unused2
 }

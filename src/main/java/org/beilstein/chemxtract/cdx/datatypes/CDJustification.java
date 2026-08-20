@@ -41,5 +41,5 @@ public enum CDJustification {
    * Text is positioned at creation-type in the alignment that best avoids any associated objects,
    * but that alignment is fixed from that point onward
    */
-  BestInitial;
+  BestInitial
 }

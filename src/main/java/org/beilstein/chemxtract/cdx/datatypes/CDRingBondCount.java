@@ -41,5 +41,5 @@ public enum CDRingBondCount {
   /** Exactly 3 ring bonds. */
   Fusion,
   /** 4 or more ring bonds. */
-  SpiroOrHigher;
+  SpiroOrHigher
 }

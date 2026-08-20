@@ -164,7 +164,7 @@ public class IntegrationTest {
     assertFalse(subs.isEmpty());
     String expectedSmiles =
         "CC1=CC[C@H]2[C@@](C)(CC[C@@]3([H])C(C)(C)CCC[C@@]32C)[C@]1([H])CC(=O)O";
-    assertEquals(expectedSmiles, subs.get(0).getSmiles());
+    assertEquals(expectedSmiles, subs.getFirst().getSmiles());
   }
 
   @Test
@@ -183,9 +183,9 @@ public class IntegrationTest {
     List<BCXSubstance> subs = xtractor.xtract(document, new BCXSubstanceInfo(), false);
 
     assertFalse(subs.isEmpty());
-    assertEquals(expectedInChI, subs.get(0).getInchi());
-    assertEquals(expectedInChIKey, subs.get(0).getInchiKey());
-    assertEquals(expectedSmiles, subs.get(0).getSmiles());
+    assertEquals(expectedInChI, subs.getFirst().getInchi());
+    assertEquals(expectedInChIKey, subs.getFirst().getInchiKey());
+    assertEquals(expectedSmiles, subs.getFirst().getSmiles());
   }
 
   @Test
@@ -261,7 +261,7 @@ public class IntegrationTest {
       List<BCXSubstance> subs = xtractor.xtract(document, new BCXSubstanceInfo(), false);
       assertFalse(subs.isEmpty(), fixture.path());
 
-      BCXSubstance sub = subs.get(0);
+      BCXSubstance sub = subs.getFirst();
       assertEquals(fixture.expectedKey(), sub.getInchiKey(), fixture.path() + ": direct InChIKey");
       MDLV3000Reader reader = new MDLV3000Reader(new StringReader(sub.getMdlv3000()));
       IAtomContainer molFileAc = reader.readMolecule(SilentChemObjectBuilder.getInstance());
@@ -307,7 +307,7 @@ public class IntegrationTest {
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
 
-    assertEquals("JYVGPYJRTSEMTB-APCUNRMYSA-N", substances.get(0).getInchiKey());
+    assertEquals("JYVGPYJRTSEMTB-APCUNRMYSA-N", substances.getFirst().getInchiKey());
     assertEquals("USIHOLUAXUVUHQ-MPUZOFBHSA-N", substances.get(2).getInchiKey());
     assertEquals("OQRGNZAPLDELGL-JGEXHRIQSA-N", substances.get(3).getInchiKey());
     assertEquals("QLYBVIQMCILRJU-SGZWNVLDSA-N", substances.get(4).getInchiKey());
@@ -325,7 +325,7 @@ public class IntegrationTest {
 
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals("WQZGKKKJIJFFOK-DVKNGEFBSA-N", substances.get(0).getInchiKey());
+    assertEquals("WQZGKKKJIJFFOK-DVKNGEFBSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -339,7 +339,7 @@ public class IntegrationTest {
 
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals("WQZGKKKJIJFFOK-UKFBFLRUSA-N", substances.get(0).getInchiKey());
+    assertEquals("WQZGKKKJIJFFOK-UKFBFLRUSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -353,7 +353,7 @@ public class IntegrationTest {
 
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals("WQZGKKKJIJFFOK-UKFBFLRUSA-N", substances.get(0).getInchiKey());
+    assertEquals("WQZGKKKJIJFFOK-UKFBFLRUSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -369,8 +369,8 @@ public class IntegrationTest {
 
     assertEquals(
         "InChI=1S/C14H13F3NO/c15-14(16,17)9-4-3-7-13(19)18-10-8-11-5-1-2-6-12(11)18/h1-2,4-6,8,10H,3,7,9H2",
-        substances.get(0).getInchi());
-    assertEquals("ZVLDKIFKRXLFQV-UHFFFAOYSA-N", substances.get(0).getInchiKey());
+        substances.getFirst().getInchi());
+    assertEquals("ZVLDKIFKRXLFQV-UHFFFAOYSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -412,8 +412,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals("InChI=1S/C8H18/c1-3-5-7-8-6-4-2/h3-8H2,1-2H3", substances.get(0).getInchi());
-    assertEquals("TVMXDCGIABBOFY-UHFFFAOYSA-N", substances.get(0).getInchiKey());
+    assertEquals("InChI=1S/C8H18/c1-3-5-7-8-6-4-2/h3-8H2,1-2H3", substances.getFirst().getInchi());
+    assertEquals("TVMXDCGIABBOFY-UHFFFAOYSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -426,8 +426,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals(substances.get(0).getInchi(), substances.get(1).getInchi());
-    assertEquals(substances.get(0).getInchiKey(), substances.get(1).getInchiKey());
+    assertEquals(substances.getFirst().getInchi(), substances.get(1).getInchi());
+    assertEquals(substances.getFirst().getInchiKey(), substances.get(1).getInchiKey());
   }
 
   @Test
@@ -440,8 +440,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals(substances.get(0).getInchi(), substances.get(1).getInchi());
-    assertEquals(substances.get(0).getInchiKey(), substances.get(1).getInchiKey());
+    assertEquals(substances.getFirst().getInchi(), substances.get(1).getInchi());
+    assertEquals(substances.getFirst().getInchiKey(), substances.get(1).getInchiKey());
   }
 
   @Test
@@ -454,8 +454,9 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals("InChI=1S/5C8H8/c5*1-2-8-6-4-3-5-7-8/h5*2-7H,1H2", substances.get(0).getInchi());
-    assertEquals("IQNATEYHNUCOMB-UHFFFAOYSA-N", substances.get(0).getInchiKey());
+    assertEquals(
+        "InChI=1S/5C8H8/c5*1-2-8-6-4-3-5-7-8/h5*2-7H,1H2", substances.getFirst().getInchi());
+    assertEquals("IQNATEYHNUCOMB-UHFFFAOYSA-N", substances.getFirst().getInchiKey());
   }
 
   @Test
@@ -468,8 +469,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals(substances.get(0).getInchi(), substances.get(1).getInchi());
-    assertEquals(substances.get(0).getInchiKey(), substances.get(1).getInchiKey());
+    assertEquals(substances.getFirst().getInchi(), substances.get(1).getInchi());
+    assertEquals(substances.getFirst().getInchiKey(), substances.get(1).getInchiKey());
   }
 
   @Test
@@ -482,8 +483,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals(substances.get(0).getInchi(), substances.get(1).getInchi());
-    assertEquals(substances.get(0).getInchiKey(), substances.get(1).getInchiKey());
+    assertEquals(substances.getFirst().getInchi(), substances.get(1).getInchi());
+    assertEquals(substances.getFirst().getInchiKey(), substances.get(1).getInchiKey());
   }
 
   @Test
@@ -496,8 +497,8 @@ public class IntegrationTest {
     assertNotNull(document);
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
-    assertEquals(substances.get(0).getInchi(), substances.get(1).getInchi());
-    assertEquals(substances.get(0).getInchiKey(), substances.get(1).getInchiKey());
+    assertEquals(substances.getFirst().getInchi(), substances.get(1).getInchi());
+    assertEquals(substances.getFirst().getInchiKey(), substances.get(1).getInchiKey());
   }
 
   @Test

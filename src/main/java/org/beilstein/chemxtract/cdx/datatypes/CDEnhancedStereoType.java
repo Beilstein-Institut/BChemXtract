@@ -27,5 +27,5 @@ public enum CDEnhancedStereoType {
   None,
   Absolute,
   Or,
-  And;
+  And
 }

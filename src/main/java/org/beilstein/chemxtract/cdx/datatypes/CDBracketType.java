@@ -37,5 +37,5 @@ public enum CDBracketType {
   /** Curly */
   Curly,
   /** Round */
-  Round;
+  Round
 }

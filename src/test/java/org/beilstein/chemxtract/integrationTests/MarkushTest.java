@@ -51,7 +51,7 @@ public class MarkushTest {
     SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
     for (BCXSubstance substance : substances) {
-      System.out.println("extracted: " + substance.getMolecularFormula());
+      IO.println("extracted: " + substance.getMolecularFormula());
     }
   }
 

@@ -27,5 +27,5 @@ public enum CDSequenceType {
   Peptide1,
   Peptide3,
   DNA,
-  RNA;
+  RNA
 }

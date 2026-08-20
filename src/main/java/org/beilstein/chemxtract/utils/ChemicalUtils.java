@@ -185,7 +185,7 @@ public class ChemicalUtils {
     try {
       try {
         smiles = smilesGen.create(atomContainer);
-      } catch (CDKException exception) {
+      } catch (CDKException _) {
         IAtomContainer clone = atomContainer.clone();
         Kekulization.kekulize(clone);
         smiles = smilesGen.create(clone);
@@ -236,7 +236,7 @@ public class ChemicalUtils {
       SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
       parser.parseSmiles(smiles);
       return true;
-    } catch (Exception e) {
+    } catch (Exception _) {
       return false;
     }
   }

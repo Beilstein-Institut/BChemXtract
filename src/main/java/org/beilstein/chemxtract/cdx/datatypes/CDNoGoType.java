@@ -28,5 +28,5 @@ public enum CDNoGoType {
   Unspecified,
   None,
   Cross,
-  Hash;
+  Hash
 }

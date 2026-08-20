@@ -113,10 +113,10 @@ public class TextVisitorTest {
     RGroupDefinitionBlock block =
         new TextVisitor(pageWithTexts("2s: R1 = CN, R2 = H; 61%\r2t: R1 = CN, R2 = Br; 47%"))
             .getBlocks()
-            .get(0);
+            .getFirst();
     assertTrue(block.definitions().isEmpty(), "yield-annotated rows are still a correlated table");
     assertEquals(1, block.correlatedGroups().size());
-    CorrelatedGroup group = block.correlatedGroups().get(0);
+    CorrelatedGroup group = block.correlatedGroups().getFirst();
     assertEquals(List.of("R1", "R2"), group.labels());
     assertEquals(
         List.of(Map.of("R1", "CN", "R2", "H"), Map.of("R1", "CN", "R2", "Br")), group.tuples());
@@ -129,12 +129,12 @@ public class TextVisitorTest {
     List<RGroupDefinitionBlock> blocks = visitor.getBlocks();
     assertEquals(1, blocks.size());
 
-    RGroupDefinitionBlock block = blocks.get(0);
+    RGroupDefinitionBlock block = blocks.getFirst();
     assertEquals(
         List.of(), List.copyOf(block.definitions().keySet()), "R1/R2 must not be independent");
     assertEquals(1, block.correlatedGroups().size());
 
-    CorrelatedGroup group = block.correlatedGroups().get(0);
+    CorrelatedGroup group = block.correlatedGroups().getFirst();
     assertEquals(List.of("R1", "R2"), group.labels());
     assertEquals(3, group.tuples().size(), "exactly the three table rows");
     assertTrue(group.tuples().contains(Map.of("R1", "H", "R2", "H")));
@@ -153,12 +153,12 @@ public class TextVisitorTest {
         new TextVisitor(
                 pageWithTexts("10 X = PhCONMe, Y = N; 11 X = PhCONH, Y = C; 12 X = PhCOO, Y = N"))
             .getBlocks()
-            .get(0);
+            .getFirst();
 
     assertTrue(block.definitions().isEmpty(), "X/Y must be a correlated table, not independent");
     assertEquals(1, block.correlatedGroups().size());
 
-    CorrelatedGroup group = block.correlatedGroups().get(0);
+    CorrelatedGroup group = block.correlatedGroups().getFirst();
     assertEquals(List.of("X", "Y"), group.labels());
     assertEquals(
         List.of(
@@ -171,7 +171,8 @@ public class TextVisitorTest {
 
   @Test
   public void independentListNotTreatedAsCorrelated() {
-    RGroupDefinitionBlock block = new TextVisitor(pageWithTexts("R = H, CH3")).getBlocks().get(0);
+    RGroupDefinitionBlock block =
+        new TextVisitor(pageWithTexts("R = H, CH3")).getBlocks().getFirst();
     assertTrue(block.correlatedGroups().isEmpty(), "a single-label list is not a table");
     assertEquals(List.of("H", "CH3"), block.definitions().get("R"));
   }

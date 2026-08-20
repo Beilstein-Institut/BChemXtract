@@ -115,7 +115,7 @@ public class MarkushHandlerTest {
     List<IAtomContainer> results = handler.replaceRGroups(scaffold);
 
     assertEquals(1, results.size());
-    IAtomContainer product = results.get(0);
+    IAtomContainer product = results.getFirst();
     assertEquals(4, product.getAtomCount(), "two scaffold carbons plus grafted ethyl (2 C)");
     for (IAtom atom : product.atoms()) {
       assertNotNull(atom.getPoint2d(), "every atom must have 2D coordinates after grafting");
