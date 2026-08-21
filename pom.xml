@@ -48,7 +48,6 @@
 	<properties>
 		<cdk.version>2.12</cdk.version>
 		<java.version>25</java.version>
-		<maven.compiler.target>25</maven.compiler.target>
 		<source.encoding>UTF-8</source.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
