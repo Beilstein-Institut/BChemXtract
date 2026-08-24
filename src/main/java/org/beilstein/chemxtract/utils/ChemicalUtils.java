@@ -210,11 +210,28 @@ public class ChemicalUtils {
    * @return The nearest residue atom to the given residueAtom.
    */
   public static IAtom findNearestResidueAtom(IAtom residueAtom, IAtomContainer atomContainer) {
+    return findNearestResidueAtom(residueAtom, atomContainer, null);
+  }
+
+  /**
+   * Finds the nearest residue atom to the given residueAtom within the provided AtomContainer,
+   * optionally restricted to residues carrying a given label.
+   *
+   * @param residueAtom reference residue atom
+   * @param atomContainer AtomContainer in which to search for the nearest residue atom.
+   * @param label when not {@code null}, only pseudo-atoms with this label are considered; a caller
+   *     pairing up two halves of one R-group must not pick up an unrelated residue
+   * @return The nearest residue atom to the given residueAtom.
+   */
+  public static IAtom findNearestResidueAtom(
+      IAtom residueAtom, IAtomContainer atomContainer, String label) {
     IAtom nearestResidueAtom = null;
     int dist = Integer.MAX_VALUE;
     ShortestPaths path = new ShortestPaths(atomContainer, residueAtom);
     for (IAtom atom : atomContainer.atoms()) {
-      if (atom instanceof IPseudoAtom && atom != residueAtom) {
+      if (atom instanceof IPseudoAtom pseudoAtom
+          && atom != residueAtom
+          && (label == null || label.equals(pseudoAtom.getLabel()))) {
         int pathDist = path.distanceTo(atom);
         if (pathDist < dist) {
           dist = pathDist;

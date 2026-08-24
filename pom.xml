@@ -5,7 +5,7 @@
 	<artifactId>bchemxtract</artifactId>
 	<packaging>jar</packaging>
 	<name>BChemXtract</name>
-	<version>1.4.0</version>
+	<version>1.4.1</version>
 	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
 	<description>A pure-Java extractor of ChemDraw structures.</description>
 
@@ -50,6 +50,7 @@
 		<java.version>25</java.version>
 		<source.encoding>UTF-8</source.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<bchemlookup.abbreviations.url>https://raw.githubusercontent.com/Beilstein-Institut/BChemLookup/main/abbreviations.smi</bchemlookup.abbreviations.url>
 	</properties>
 
 
@@ -128,6 +129,37 @@
 				<configuration>
 					<encoding>${source.encoding}</encoding>
 				</configuration>
+			</plugin>
+
+			<!-- abbreviations.smi is curated upstream in Beilstein-Institut/BChemLookup.
+			     On every build we fetch the current list and prepend it to the
+			     checked-in copy, which therefore serves two purposes: offline/CI
+			     fallback when the download fails (ignoreerrors), and home for
+			     entries not (yet) upstream. SMILESLookupReader uses putIfAbsent on
+			     the lowercased key, so on a duplicate key upstream wins. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>fetch-upstream-abbreviations</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<mkdir dir="${project.build.directory}/bchemlookup"/>
+								<get src="${bchemlookup.abbreviations.url}" dest="${project.build.directory}/bchemlookup/abbreviations.smi" usetimestamp="true" ignoreerrors="true" verbose="false"/>
+								<concat destfile="${project.build.outputDirectory}/org/beilstein/chemxtract/lookups/abbreviations.smi" encoding="UTF-8" outputencoding="UTF-8" fixlastline="true">
+									<fileset file="${project.build.directory}/bchemlookup/abbreviations.smi"/>
+									<fileset file="${project.basedir}/src/main/resources/org/beilstein/chemxtract/lookups/abbreviations.smi"/>
+								</concat>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>

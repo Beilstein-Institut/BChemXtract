@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -37,6 +38,8 @@ import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -278,5 +281,223 @@ public class MarkushHandlerTest {
 
     assertEquals(List.of("Cl"), handler.residueLabelsNear(rect(0, 0, 40, 40)).get("R"));
     assertEquals(List.of("Br"), handler.residueLabelsNear(rect(210, 0, 240, 40)).get("R"));
+  }
+
+  /** Scaffold atom with 2D coordinates at the given x, on the y = 0 axis. */
+  private static IAtom carbonAt(double x) {
+    IAtom atom = SilentChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
+    atom.setPoint2d(new Point2d(x, 0.0));
+    return atom;
+  }
+
+  /** Pseudo-atom (R-group placeholder) with 2D coordinates at the given x. */
+  private static IPseudoAtom residueAt(String label, double x) {
+    IPseudoAtom atom = SilentChemObjectBuilder.getInstance().newInstance(IPseudoAtom.class, label);
+    atom.setLabel(label);
+    atom.setPoint2d(new Point2d(x, 0.0));
+    return atom;
+  }
+
+  /** Handler with structural definitions only, so substituent SMILES bypass legend parsing. */
+  private static MarkushHandler handlerWith(Map<String, List<String>> definitions) {
+    MarkushHandler handler =
+        new MarkushHandler(new CDPage(), SilentChemObjectBuilder.getInstance());
+    handler.addResidueDefinitions(definitions);
+    return handler;
+  }
+
+  private static void assertNoPseudoAtoms(IAtomContainer product) {
+    for (IAtom atom : product.atoms()) {
+      assertFalse(atom instanceof IPseudoAtom, "no pseudo-atom may survive substitution");
+    }
+  }
+
+  /**
+   * A residue drawn as a chain link carries two bonds, and a two-attachment substituent must keep
+   * both: wiring only the first bond leaves the molecule cut in two.
+   */
+  @Test
+  public void bivalentResidueInChainKeepsBothConnections()
+      throws IOException, CloneNotSupportedException, CDKException {
+    // Scaffold: C0-X-C1, X bivalent.
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    scaffold.addAtom(carbonAt(0.0));
+    scaffold.addAtom(residueAt("X", 1.5));
+    scaffold.addAtom(carbonAt(3.0));
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+    scaffold.addBond(1, 2, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("X", List.of("[*]C[*]"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(3, product.getAtomCount(), "two scaffold carbons plus the bridging carbon");
+    assertEquals(2, product.getBondCount(), "both original bonds must be re-made");
+    assertEquals(
+        1,
+        ConnectivityChecker.partitionIntoMolecules(product).getAtomContainerCount(),
+        "the chain must stay in one piece");
+    assertNoPseudoAtoms(product);
+  }
+
+  /**
+   * A residue drawn as a ring member must not open the ring: both of its bonds are attachment
+   * points for the two-attachment substituent.
+   */
+  @Test
+  public void bivalentResidueInRingKeepsRingClosed()
+      throws IOException, CloneNotSupportedException, CDKException {
+    // Scaffold: five carbons plus X closing a six-membered ring.
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    for (int i = 0; i < 5; i++) {
+      scaffold.addAtom(carbonAt(i * 1.5));
+    }
+    scaffold.addAtom(residueAt("X", 7.5));
+    for (int i = 0; i < 5; i++) {
+      scaffold.addBond(i, i + 1, IBond.Order.SINGLE);
+    }
+    scaffold.addBond(5, 0, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("X", List.of("[*]C[*]"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(6, product.getAtomCount());
+    assertEquals(6, product.getBondCount(), "ring bond count is preserved");
+    assertEquals(1, Cycles.mcb(product).numberOfCycles(), "the ring must stay closed");
+    assertNoPseudoAtoms(product);
+  }
+
+  /**
+   * The layout a two-attachment substituent was written for: two monovalent residues of the same
+   * label, bridged by one substituent. Regression guard for the bivalent fix.
+   */
+  @Test
+  public void twoMonovalentResiduesAreBridgedByOneSubstituent()
+      throws IOException, CloneNotSupportedException, CDKException {
+    // Scaffold: X-C0-C1-C2-X, both X monovalent, bridged into a four-membered ring.
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    scaffold.addAtom(carbonAt(0.0));
+    scaffold.addAtom(carbonAt(1.5));
+    scaffold.addAtom(carbonAt(3.0));
+    scaffold.addAtom(residueAt("X", -1.5));
+    scaffold.addAtom(residueAt("X", 4.5));
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+    scaffold.addBond(1, 2, IBond.Order.SINGLE);
+    scaffold.addBond(0, 3, IBond.Order.SINGLE);
+    scaffold.addBond(2, 4, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("X", List.of("[*]C[*]"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(4, product.getAtomCount(), "three scaffold carbons plus the bridge");
+    assertEquals(4, product.getBondCount());
+    assertEquals(1, Cycles.mcb(product).numberOfCycles(), "the bridge closes one ring");
+    assertNoPseudoAtoms(product);
+  }
+
+  /**
+   * A bivalent residue must not steal an unrelated R-group as its second attachment point: doing so
+   * consumed the foreign residue and dropped its substituent entirely.
+   */
+  @Test
+  public void bivalentResidueDoesNotConsumeForeignLabel()
+      throws IOException, CloneNotSupportedException, CDKException {
+    // Scaffold: C0-X-C1-R1, X bivalent, R1 a separate monovalent residue.
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    scaffold.addAtom(carbonAt(0.0));
+    scaffold.addAtom(residueAt("X", 1.5));
+    scaffold.addAtom(carbonAt(3.0));
+    scaffold.addAtom(residueAt("R1", 4.5));
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+    scaffold.addBond(1, 2, IBond.Order.SINGLE);
+    scaffold.addBond(2, 3, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("X", List.of("[*]C[*]"), "R1", List.of("Cl"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(4, product.getAtomCount(), "three carbons plus the chlorine");
+    assertEquals(3, product.getBondCount());
+    assertEquals(
+        1,
+        ConnectivityChecker.partitionIntoMolecules(product).getAtomContainerCount(),
+        "R1 must still be attached, not consumed as X's second attachment point");
+    boolean hasChlorine = false;
+    for (IAtom atom : product.atoms()) {
+      Integer z = atom.getAtomicNumber();
+      if (z != null && z == 17) {
+        hasChlorine = true;
+      }
+    }
+    assertTrue(hasChlorine, "the foreign residue's own substituent must survive");
+    assertNoPseudoAtoms(product);
+  }
+
+  /**
+   * When the residue's valence and the substituent's connection points disagree, the R-group is
+   * left unsubstituted rather than grafted with a dropped bond — SubstanceXtractor then skips the
+   * structure instead of emitting a mis-connected one.
+   */
+  @Test
+  public void attachmentCountMismatchLeavesResidueUnsubstituted()
+      throws IOException, CloneNotSupportedException, CDKException {
+    // Scaffold: X bonded to three carbons, substituent offers only two connection points.
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    scaffold.addAtom(residueAt("X", 0.0));
+    scaffold.addAtom(carbonAt(1.5));
+    scaffold.addAtom(carbonAt(3.0));
+    scaffold.addAtom(carbonAt(4.5));
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+    scaffold.addBond(0, 2, IBond.Order.SINGLE);
+    scaffold.addBond(0, 3, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("X", List.of("[*]C[*]"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(4, product.getAtomCount(), "nothing may be grafted");
+    assertEquals(3, product.getBondCount(), "no bond may be lost");
+    long pseudoAtoms = 0;
+    for (IAtom atom : product.atoms()) {
+      if (atom instanceof IPseudoAtom) {
+        pseudoAtoms++;
+      }
+    }
+    assertEquals(1, pseudoAtoms, "the unresolvable residue stays in place");
+  }
+
+  /**
+   * A single-atom definition on a bivalent residue (X = O in a ring) goes through the
+   * single-attachment path, which rewires every bond of the residue. Guards the common case that
+   * already worked.
+   */
+  @Test
+  public void singleAtomDefinitionOnBivalentResidueKeepsRingClosed()
+      throws IOException, CloneNotSupportedException, CDKException {
+    IAtomContainer scaffold = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    for (int i = 0; i < 5; i++) {
+      scaffold.addAtom(carbonAt(i * 1.5));
+    }
+    scaffold.addAtom(residueAt("X", 7.5));
+    for (int i = 0; i < 5; i++) {
+      scaffold.addBond(i, i + 1, IBond.Order.SINGLE);
+    }
+    scaffold.addBond(5, 0, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results = handlerWith(Map.of("X", List.of("O"))).replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(6, product.getAtomCount());
+    assertEquals(6, product.getBondCount());
+    assertEquals(1, Cycles.mcb(product).numberOfCycles(), "the oxygen closes the ring");
+    assertNoPseudoAtoms(product);
   }
 }
