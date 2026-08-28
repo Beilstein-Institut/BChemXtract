@@ -113,7 +113,7 @@ public class XMLEntityCatalog implements EntityResolver {
       } catch (RuntimeException e) {
         try {
           in.close();
-        } catch (IOException _) {
+        } catch (IOException ignored) {
           // best-effort close on the error path
         }
         throw e;
