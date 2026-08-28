@@ -68,5 +68,5 @@ public enum CDBondOrder {
   /** Double or armoatic bond for substructure queries */
   DoubleOrAromatic,
   /** Any bond for substructure queries */
-  Any;
+  Any
 }

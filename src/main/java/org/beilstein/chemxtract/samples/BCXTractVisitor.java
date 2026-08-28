@@ -35,7 +35,7 @@ public class BCXTractVisitor extends CDVisitor {
 
   private int visitedAtoms;
 
-  public static void main(String[] args) throws Exception {
+  void main(String[] args) throws Exception {
     if (args.length != 1) {
       System.err.println("Input CDX file must be given as argument.");
       System.exit(1);
@@ -56,21 +56,20 @@ public class BCXTractVisitor extends CDVisitor {
 
     // send this visitor to first page object
     if (pages != null && pages.size() > 0) {
-      CDPage page = pages.get(0);
+      CDPage page = pages.getFirst();
       page.accept(this);
-      System.out.println("\nVisited " + visitedAtoms + " atoms in total.");
+      IO.println("\nVisited " + visitedAtoms + " atoms in total.");
     } else {
-      System.out.println("Nothing to do.");
+      IO.println("Nothing to do.");
     }
   }
 
   @Override
   public void visitAtom(CDAtom atom) {
-    System.out.println("\nAtom\n=======================");
-    System.out.println(" Element#: " + atom.getElementNumber());
-    System.out.println(" Charge  : " + atom.getCharge());
-    System.out.println(
-        " Text    : " + (atom.getText() == null ? "" : atom.getText().getText().getText()));
+    IO.println("\nAtom\n=======================");
+    IO.println(" Element#: " + atom.getElementNumber());
+    IO.println(" Charge  : " + atom.getCharge());
+    IO.println(" Text    : " + (atom.getText() == null ? "" : atom.getText().getText().getText()));
     visitedAtoms++;
   }
 }

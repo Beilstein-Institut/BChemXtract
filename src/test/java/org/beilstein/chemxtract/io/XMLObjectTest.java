@@ -100,7 +100,7 @@ public class XMLObjectTest {
     try {
       obj.getTextsAsInt();
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     obj.setTexts(Arrays.asList("1", "2", "3"));
     assertThat(obj.getTextsAsInt()).isEqualTo(123);
@@ -136,7 +136,7 @@ public class XMLObjectTest {
     try {
       obj.getAttributeAsBoolean("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsInt("attname2")).isEqualTo(1);
     assertThat(obj.getAttributeAsInt("attname2", 12)).isEqualTo(1);
@@ -144,25 +144,25 @@ public class XMLObjectTest {
     try {
       obj.getAttributeAsInt("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsLong("attname2")).isEqualTo(1L);
     try {
       obj.getAttributeAsLong("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsFloat("attname4")).isEqualTo(3.14F);
     try {
       obj.getAttributeAsFloat("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsDouble("attname4")).isEqualTo(3.14D);
     try {
       obj.getAttributeAsDouble("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsStringList("attname6")).isEqualTo(Arrays.asList("a", "b", "c"));
     assertThat(obj.getAttributeAsStringList("attname61", ","))
@@ -171,7 +171,7 @@ public class XMLObjectTest {
     try {
       obj.getAttributeAsIntArray("attname1");
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     Map<String, Object> refs = new HashMap<String, Object>();
     refs.put("a", "Letter A");
@@ -184,7 +184,7 @@ public class XMLObjectTest {
     try {
       obj.getAttributeAsReference("attname4", String.class, refs);
       fail("No exception");
-    } catch (Exception e) {
+    } catch (Exception _) {
     }
     assertThat(obj.getAttributeAsReferenceList("attname6", String.class, refs))
         .isEqualTo(Arrays.asList("Letter A", "Letter B", "Letter C"));

@@ -651,7 +651,7 @@ public class CDXMLUtils {
     List<String> list = convertStringToStringList(value);
     CDRectangle rectangle = new CDRectangle();
     try {
-      rectangle.setLeft(Float.parseFloat(list.get(0)));
+      rectangle.setLeft(Float.parseFloat(list.getFirst()));
       rectangle.setTop(Float.parseFloat(list.get(1)));
       rectangle.setRight(Float.parseFloat(list.get(2)));
       rectangle.setBottom(Float.parseFloat(list.get(3)));
@@ -669,7 +669,7 @@ public class CDXMLUtils {
     List<String> list = convertStringToStringList(value);
     CDPoint2D point = new CDPoint2D();
     try {
-      point.setX(Float.parseFloat(list.get(0)));
+      point.setX(Float.parseFloat(list.getFirst()));
       point.setY(Float.parseFloat(list.get(1)));
     } catch (NumberFormatException e) {
       throw new IllegalArgumentException("Invalid 2D point value \"" + value + "\"", e);
@@ -712,7 +712,7 @@ public class CDXMLUtils {
     List<String> list = convertStringToStringList(value);
     CDPoint3D point = new CDPoint3D();
     try {
-      point.setX(Float.parseFloat(list.get(0)));
+      point.setX(Float.parseFloat(list.getFirst()));
       point.setY(Float.parseFloat(list.get(1)));
       point.setZ(Float.parseFloat(list.get(2)));
     } catch (NumberFormatException e) {
@@ -764,9 +764,9 @@ public class CDXMLUtils {
   public static CDElementList convertStringToElementList(String value) {
     List<String> stringList = convertStringToStringList(value);
     CDElementList list = new CDElementList();
-    if (!stringList.isEmpty() && stringList.get(0).equalsIgnoreCase("NOT")) {
+    if (!stringList.isEmpty() && stringList.getFirst().equalsIgnoreCase("NOT")) {
       list.setExclusive(true);
-      stringList.remove(0);
+      stringList.removeFirst();
     }
     for (String element : stringList) {
       try {
@@ -793,9 +793,9 @@ public class CDXMLUtils {
   public static CDGenericList getAttributeAsGenericList(String value) {
     List<String> stringList = convertStringToStringList(value);
     CDGenericList list = new CDGenericList();
-    if (!stringList.isEmpty() && stringList.get(0).equalsIgnoreCase("NOT")) {
+    if (!stringList.isEmpty() && stringList.getFirst().equalsIgnoreCase("NOT")) {
       list.setExclusive(true);
-      stringList.remove(0);
+      stringList.removeFirst();
     }
     list.addAllElements(stringList);
     return list;

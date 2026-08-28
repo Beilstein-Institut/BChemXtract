@@ -90,7 +90,7 @@ public class BondVisitorTest {
 
     BondVisitor visitor = new BondVisitor(fragment);
     assertEquals(1, visitor.getBonds().size());
-    assertSame(bond, visitor.getBonds().get(0));
+    assertSame(bond, visitor.getBonds().getFirst());
   }
 
   @Test

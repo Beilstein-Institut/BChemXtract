@@ -108,28 +108,28 @@ public class MultiAttachmentTest {
   public void ferroceneCdxBondsIronToBothRings() throws IOException {
     List<BCXSubstance> subs = xtractCdx("ferrocene.cdx");
     assertEquals(1, subs.size());
-    assertFerrocene(subs.get(0));
+    assertFerrocene(subs.getFirst());
   }
 
   @Test
   public void ferroceneCdxmlBondsIronToBothRings() throws IOException {
     List<BCXSubstance> subs = xtractCdxml("ferrocene.cdxml");
     assertEquals(1, subs.size());
-    assertFerrocene(subs.get(0));
+    assertFerrocene(subs.getFirst());
   }
 
   @Test
   public void zeiseSaltCdxBondsPlatinumToChloridesAndEthylene() throws IOException {
     List<BCXSubstance> subs = xtractCdx("zeise_salt.cdx");
     assertEquals(1, subs.size());
-    assertZeiseSalt(subs.get(0));
+    assertZeiseSalt(subs.getFirst());
   }
 
   @Test
   public void zeiseSaltCdxmlBondsPlatinumToChloridesAndEthylene() throws IOException {
     List<BCXSubstance> subs = xtractCdxml("zeise_salt.cdxml");
     assertEquals(1, subs.size());
-    assertZeiseSalt(subs.get(0));
+    assertZeiseSalt(subs.getFirst());
   }
 
   // The two regioisomers produced when the substituent attaches to either candidate ring atom.

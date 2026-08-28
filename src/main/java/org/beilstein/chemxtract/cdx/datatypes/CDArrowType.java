@@ -40,5 +40,5 @@ public enum CDArrowType {
   /** TODO find documentation */
   NoGo,
   /** TODO find documentation */
-  Dipole;
+  Dipole
 }

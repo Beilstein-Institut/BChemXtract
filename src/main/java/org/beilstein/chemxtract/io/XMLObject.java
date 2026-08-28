@@ -323,7 +323,7 @@ public class XMLObject {
 
     // order of visit is IMPORTANT
     while (!stack.isEmpty()) {
-      XMLObject object = stack.remove(0);
+      XMLObject object = stack.removeFirst();
       stack.addAll(0, object.getObjects());
 
       if (object != this && object.getName().equals(name)) {

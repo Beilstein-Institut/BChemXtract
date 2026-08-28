@@ -60,10 +60,10 @@ public class FragmentVisitorTest {
 
     List<CDPage> pages = document.getPages();
 
-    FragmentVisitor fragmentVisitor = new FragmentVisitor(pages.get(0));
+    FragmentVisitor fragmentVisitor = new FragmentVisitor(pages.getFirst());
 
-    System.out.println(fragmentVisitor.getFragments().size());
-    System.out.println(fragmentVisitor.getAllFragments().size());
+    IO.println(fragmentVisitor.getFragments().size());
+    IO.println(fragmentVisitor.getAllFragments().size());
   }
 
   @Test
@@ -114,7 +114,7 @@ public class FragmentVisitorTest {
   public void emptyPageTest() {
     CDPage emptyPage = mock(CDPage.class);
     // page.accept(visitor) does nothing
-    doAnswer(invocation -> null).when(emptyPage).accept(any(FragmentVisitor.class));
+    doAnswer(_ -> null).when(emptyPage).accept(any(FragmentVisitor.class));
 
     FragmentVisitor visitor = new FragmentVisitor(emptyPage);
 

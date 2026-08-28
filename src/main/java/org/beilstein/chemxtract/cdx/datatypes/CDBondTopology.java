@@ -30,5 +30,5 @@ public enum CDBondTopology {
   /** Bond must not be in a ring. */
   Chain,
   /** Bond may be in either a ring or a chain. */
-  RingOrChain;
+  RingOrChain
 }

@@ -47,7 +47,7 @@ import org.openscience.cdk.smiles.SmilesParser;
  */
 public class BCXTractSubstancesWithOriginalCoords {
 
-  public static void main(String[] args) throws Exception {
+  void main(String[] args) throws Exception {
     if (args.length != 1) {
       System.err.println("Input CDX file must be given as argument.");
       System.exit(1);
@@ -107,6 +107,6 @@ public class BCXTractSubstancesWithOriginalCoords {
       i++;
     }
 
-    System.out.println("\n\n" + i + " substances extracted to current working directory.");
+    IO.println("\n\n" + i + " substances extracted to current working directory.");
   }
 }

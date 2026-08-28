@@ -28,5 +28,5 @@ public enum CDPolymerFlipType {
   /** The orientation of the repeating unit does not change between adjacent units. */
   NoFlip,
   /** The orientation of the repeating unit does change between adjacent units. */
-  Flip;
+  Flip
 }

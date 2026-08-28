@@ -28,5 +28,5 @@ public enum CDPolymerRepeatPattern {
   /** One end of the repeating unit is connected to the same end of the adjacent repeating unit. */
   HeadToHead,
   /** A mixture of the above, or an unknown repeat pattern. */
-  EitherUnknown;
+  EitherUnknown
 }

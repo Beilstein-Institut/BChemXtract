@@ -109,7 +109,7 @@ public class AtomVisitor extends CDVisitor {
 
       // Collect internal fragment and its nickname
       if (!node.getFragments().isEmpty()) {
-        CDFragment frag = node.getFragments().get(0);
+        CDFragment frag = node.getFragments().getFirst();
         if (!isUnwantedAbbreviation(nickname)) {
           nicknames.putIfAbsent(nickname, frag);
         } else {

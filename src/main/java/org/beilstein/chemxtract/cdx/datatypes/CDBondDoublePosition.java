@@ -46,5 +46,5 @@ public enum CDBondDoublePosition {
    * Double bond is on the left (viewing from the "begin" atom to the "end" atom), and was
    * positioned manually by the user
    */
-  UserLeft;
+  UserLeft
 }

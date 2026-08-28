@@ -56,7 +56,7 @@ class AbbreviationLayoutIntegrationTest {
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo());
     assertFalse(substances.isEmpty(), "at least one substance must be extracted");
 
-    BCXSubstance first = substances.get(0);
+    BCXSubstance first = substances.getFirst();
 
     // Chemistry is unchanged by coordinate layout.
     assertEquals(BASELINE_INCHIKEY, first.getInchiKey(), "InChIKey must be unchanged");

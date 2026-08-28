@@ -120,7 +120,7 @@ public class AttachmentHandlerTest {
 
     assertThat(fragment.getAtoms()).containsExactly(a, b);
     assertThat(fragment.getBonds()).hasSize(1);
-    assertThat(fragment.getBonds().get(0).isCoordination()).isFalse();
+    assertThat(fragment.getBonds().getFirst().isCoordination()).isFalse();
   }
 
   @Test
@@ -142,7 +142,7 @@ public class AttachmentHandlerTest {
     assertThat(variants).hasSize(2);
     for (CDFragment variant : variants) {
       assertThat(variant.getBonds()).hasSize(1);
-      assertThat(other(variant.getBonds().get(0), substituent)).isIn(c1, c2);
+      assertThat(other(variant.getBonds().getFirst(), substituent)).isIn(c1, c2);
     }
   }
 
@@ -192,11 +192,11 @@ public class AttachmentHandlerTest {
     for (CDFragment variant : variants) {
       assertThat(variant.getAtoms()).doesNotContain(variableNode);
       assertThat(variant.getBonds()).hasSize(1);
-      CDBond newBond = variant.getBonds().get(0);
+      CDBond newBond = variant.getBonds().getFirst();
       assertThat(other(newBond, substituent)).isIn(c1, c2);
     }
-    assertThat(other(variants.get(0).getBonds().get(0), substituent))
-        .isNotEqualTo(other(variants.get(1).getBonds().get(0), substituent));
+    assertThat(other(variants.getFirst().getBonds().getFirst(), substituent))
+        .isNotEqualTo(other(variants.get(1).getBonds().getFirst(), substituent));
   }
 
   @Test

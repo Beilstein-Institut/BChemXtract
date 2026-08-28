@@ -62,20 +62,20 @@ public class CDXVisitorTest extends CDVisitor {
     List<CDPage> pages = document.getPages();
     assertThat(pages.size()).isEqualTo(1);
 
-    CDPage page = pages.get(0);
+    CDPage page = pages.getFirst();
     page.accept(this);
 
     assertThat(atomsWithWarnings.size()).isEqualTo(8);
     assertThat(bondsWithWarnings.size()).isEqualTo(17);
 
-    System.out.println("\n\nAtom Warnings:");
+    IO.println("\n\nAtom Warnings:");
     for (CDAtom a : atomsWithWarnings) {
-      System.out.println(a.getChemicalWarning());
+      IO.println(a.getChemicalWarning());
     }
 
-    System.out.println("\n\nBond Warnings:");
+    IO.println("\n\nBond Warnings:");
     for (CDBond b : bondsWithWarnings) {
-      System.out.println(b.getChemicalWarning());
+      IO.println(b.getChemicalWarning());
     }
   }
 

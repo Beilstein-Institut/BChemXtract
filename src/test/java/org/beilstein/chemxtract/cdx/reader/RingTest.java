@@ -53,13 +53,13 @@ public class RingTest {
 
     CDDocument document = CDXMLReader.readDocument(in);
     assertNotNull(document);
-    CDPage page = document.getPages().get(0);
+    CDPage page = document.getPages().getFirst();
     assertNotNull(page);
-    CDGroup group = page.getGroups().get(0);
+    CDGroup group = page.getGroups().getFirst();
     assertNotNull(group);
-    CDFragment frag = group.getFragments().get(0);
+    CDFragment frag = group.getFragments().getFirst();
     assertNotNull(frag);
-    CDSpline curve = frag.getCurves().get(0);
+    CDSpline curve = frag.getCurves().getFirst();
     assertNotNull(curve);
     assertTrue(curve.isClosed());
 
@@ -71,13 +71,13 @@ public class RingTest {
     ByteArrayInputStream bais = new ByteArrayInputStream(buf);
     document = CDXMLReader.readDocument(bais);
     assertNotNull(document);
-    page = document.getPages().get(0);
+    page = document.getPages().getFirst();
     assertNotNull(page);
-    group = page.getGroups().get(0);
+    group = page.getGroups().getFirst();
     assertNotNull(group);
-    frag = group.getFragments().get(0);
+    frag = group.getFragments().getFirst();
     assertNotNull(frag);
-    curve = frag.getCurves().get(0);
+    curve = frag.getCurves().getFirst();
     assertNotNull(curve);
     assertTrue(curve.isClosed());
   }
@@ -90,13 +90,13 @@ public class RingTest {
 
     CDDocument document = CDXReader.readDocument(in);
     assertNotNull(document);
-    CDPage page = document.getPages().get(0);
+    CDPage page = document.getPages().getFirst();
     assertNotNull(page);
-    CDGroup group = page.getGroups().get(0);
+    CDGroup group = page.getGroups().getFirst();
     assertNotNull(group);
-    CDFragment frag = group.getFragments().get(0);
+    CDFragment frag = group.getFragments().getFirst();
     assertNotNull(frag);
-    CDSpline curve = frag.getCurves().get(0);
+    CDSpline curve = frag.getCurves().getFirst();
     assertNotNull(curve);
     assertTrue(curve.isClosed());
 
@@ -108,13 +108,13 @@ public class RingTest {
     ByteArrayInputStream bais = new ByteArrayInputStream(buf);
     document = CDXMLReader.readDocument(bais);
     assertNotNull(document);
-    page = document.getPages().get(0);
+    page = document.getPages().getFirst();
     assertNotNull(page);
-    group = page.getGroups().get(0);
+    group = page.getGroups().getFirst();
     assertNotNull(group);
-    frag = group.getFragments().get(0);
+    frag = group.getFragments().getFirst();
     assertNotNull(frag);
-    curve = frag.getCurves().get(0);
+    curve = frag.getCurves().getFirst();
     assertNotNull(curve);
     assertTrue(curve.isClosed());
   }

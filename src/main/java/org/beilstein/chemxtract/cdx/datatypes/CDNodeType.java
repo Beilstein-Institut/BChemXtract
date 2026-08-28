@@ -74,5 +74,5 @@ public enum CDNodeType {
    * A node containing a single element or generic nickname, repeated some number of times in a
    * chain, as in [CH2]1-5 (which indicates an alkyl chain of at most 5 carbons).
    */
-  LinkNode;
+  LinkNode
 }

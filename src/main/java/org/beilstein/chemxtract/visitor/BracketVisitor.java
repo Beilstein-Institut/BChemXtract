@@ -59,7 +59,7 @@ public class BracketVisitor extends CDVisitor {
     if (CDBracketUsage.MultipleGroup.equals(bracket.getBracketUsage())
         && bracket.getBracketedObjects() != null
         && !bracket.getBracketedObjects().isEmpty()
-        && bracket.getBracketedObjects().get(0) instanceof CDAtom) {
+        && bracket.getBracketedObjects().getFirst() instanceof CDAtom) {
       multipleGroups.add(bracket);
     }
   }

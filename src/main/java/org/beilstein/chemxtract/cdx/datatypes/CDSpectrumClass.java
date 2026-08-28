@@ -42,5 +42,5 @@ public enum CDSpectrumClass {
   /** Fluorescence */
   Fluorescence,
   /** Atomic Absorption (not supported in ChemDraw) */
-  Atomic;
+  Atomic
 }

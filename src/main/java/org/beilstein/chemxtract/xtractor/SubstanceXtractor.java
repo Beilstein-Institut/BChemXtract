@@ -250,7 +250,7 @@ public class SubstanceXtractor {
       throws CDKException, IOException {
     List<BCXSubstance> substances = xtractSubstances(fragment, page, null);
     if (!substances.isEmpty()) {
-      return substances.get(0);
+      return substances.getFirst();
     } else {
       return null;
     }
@@ -398,7 +398,7 @@ public class SubstanceXtractor {
     try (MDLV3000Writer mdlw = new MDLV3000Writer(sw)) {
       mdlw.write(withWedgeBonds(atomContainer));
       substance.setMdlv3000(sw.toString());
-    } catch (IOException e) {
+    } catch (IOException _) {
       LOGGER.error("Could not generate MDL V3000 mol file;");
     }
     // set SMILES
@@ -515,7 +515,7 @@ public class SubstanceXtractor {
       IAtomContainer nestedAc;
       try {
         nestedAc = fragmentConverter.convert(nested, true);
-      } catch (CDKException e) {
+      } catch (CDKException _) {
         LOGGER.error("Nested fragment could not be converted: {}", nickname);
         continue;
       }

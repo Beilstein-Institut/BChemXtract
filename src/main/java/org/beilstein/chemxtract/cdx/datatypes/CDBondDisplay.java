@@ -61,5 +61,5 @@ public enum CDBondDisplay {
   Dot,
   /** Dashed-and-dotted bond */
   @Deprecated
-  DashDot;
+  DashDot
 }

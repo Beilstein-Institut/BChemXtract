@@ -70,5 +70,5 @@ public enum CDGraphicType {
    * two points stored within the {@link org.beilstein.chemxtract.cdx.CDGraphic#getBounds()}
    * represent the center of the symbol and a second point indicating the symbol's size.
    */
-  Symbol;
+  Symbol
 }

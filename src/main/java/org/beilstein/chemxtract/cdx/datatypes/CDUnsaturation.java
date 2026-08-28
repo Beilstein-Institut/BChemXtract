@@ -28,5 +28,5 @@ public enum CDUnsaturation {
   /** Node must not have any unsaturated bonds. */
   MustBeAbsent,
   /** Node must have at least one unsaturated bond. */
-  MustBePresent;
+  MustBePresent
 }

@@ -30,5 +30,5 @@ public enum CDRadical {
   /** Radical doublet (monoradical) */
   Doublet,
   /** Radical triplet (diradical) */
-  Triplet;
+  Triplet
 }

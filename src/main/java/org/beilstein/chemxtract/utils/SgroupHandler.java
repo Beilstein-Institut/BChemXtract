@@ -68,13 +68,13 @@ public class SgroupHandler {
               .map(CDAtom.class::cast)
               .toList();
 
-      if (!bracketAtoms.isEmpty() && !fragment.getAtoms().contains(bracketAtoms.get(0))) {
+      if (!bracketAtoms.isEmpty() && !fragment.getAtoms().contains(bracketAtoms.getFirst())) {
         continue;
       }
 
       // Handle single atom or multiple atom groups
       if (bracketAtoms.size() == 1) {
-        addAndConnectSingleMultipleGroupAtom(fragment, bracket, bracketAtoms.get(0));
+        addAndConnectSingleMultipleGroupAtom(fragment, bracket, bracketAtoms.getFirst());
       } else if (!bracketAtoms.isEmpty()) {
         addAndConnectMultipleGroupStructure(fragment, bracket, bracketAtoms);
       }
@@ -197,8 +197,10 @@ public class SgroupHandler {
   private static void reconnectInternalMultipleGroup(
       CDFragment fragment, CDBracket bracket, Map<CDAtom, CDAtom> atomMap) {
     // Identify the first and last bonds as connection points
-    CDBond firstBond = bracket.getBracketAttachments().get(0).getCrossingBonds().get(0).getBond();
-    CDBond lastBond = bracket.getBracketAttachments().get(1).getCrossingBonds().get(0).getBond();
+    CDBond firstBond =
+        bracket.getBracketAttachments().getFirst().getCrossingBonds().getFirst().getBond();
+    CDBond lastBond =
+        bracket.getBracketAttachments().get(1).getCrossingBonds().getFirst().getBond();
 
     // Determine the copied and original atoms involved in the last bond
     CDAtom firstCopyAtom =

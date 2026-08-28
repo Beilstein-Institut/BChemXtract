@@ -2200,7 +2200,7 @@ public class CDXMLReader {
         decompresser.setInput(compressedEnhancedMetafile, 0, compressedEnhancedMetafile.length);
         byte[] result = new byte[uncompressedEnhancedMetafileSize];
         decompresser.inflate(result);
-        decompresser.end();
+        decompresser.close();
         embeddedObject.setEnhancedMetafile(result);
       } catch (DataFormatException e) {
         LOGGER.error("Cannot uncompress data", e);
@@ -2213,7 +2213,7 @@ public class CDXMLReader {
         decompresser.setInput(compressedOLEObject, 0, compressedOLEObject.length);
         byte[] result = new byte[uncompressedOLEObjectSize];
         decompresser.inflate(result);
-        decompresser.end();
+        decompresser.close();
         embeddedObject.setOleObject(result);
       } catch (DataFormatException e) {
         LOGGER.error("Cannot uncompress data", e);
@@ -2226,7 +2226,7 @@ public class CDXMLReader {
         decompresser.setInput(compressedWindowsMetafile, 0, compressedWindowsMetafile.length);
         byte[] result = new byte[uncompressedWindowsMetafileSize];
         decompresser.inflate(result);
-        decompresser.end();
+        decompresser.close();
         embeddedObject.setWindowsMetafile(result);
       } catch (DataFormatException e) {
         LOGGER.error("Cannot uncompress data", e);

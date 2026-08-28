@@ -36,5 +36,5 @@ public enum CDSpectrumXType {
   /** Axis is in parts per million. Only for NMR spectra */
   PartsPerMillion,
   /** Axis is some other type */
-  Other;
+  Other
 }

@@ -43,5 +43,5 @@ public enum CDTranslation {
    * Generic nicknames may match other more-general generic nicknames, or may match specific atoms
    * or groups of atoms.
    */
-  Any;
+  Any
 }
