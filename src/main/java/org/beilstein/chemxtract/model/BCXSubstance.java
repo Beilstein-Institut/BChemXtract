@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +33,7 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 /** A substance with structure and Inchi that could be extracted from a CDX file. */
 public class BCXSubstance implements Serializable {
 
-  private static final long serialVersionUID = -7849256075801495625L;
+  @Serial private static final long serialVersionUID = -7849256075801495625L;
 
   /** Inchi */
   private String inchi;

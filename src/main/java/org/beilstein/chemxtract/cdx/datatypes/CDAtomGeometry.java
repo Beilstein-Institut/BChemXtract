@@ -61,5 +61,5 @@ public enum CDAtomGeometry {
   /** 9 ligands: unspecified */
   NineLigand,
   /** 10 ligands: unspecified */
-  TenLigand;
+  TenLigand
 }

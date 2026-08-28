@@ -244,7 +244,7 @@ public class MarkushHandler {
           .definitions()
           .forEach(
               (label, values) -> {
-                List<String> list = definitions.computeIfAbsent(label, key -> new ArrayList<>());
+                List<String> list = definitions.computeIfAbsent(label, _ -> new ArrayList<>());
                 for (String value : values) {
                   if (!list.contains(value)) {
                     list.add(value);
@@ -369,7 +369,7 @@ public class MarkushHandler {
     }
 
     // A single empty assignment means nothing was applicable.
-    if (combinations.size() == 1 && combinations.get(0).isEmpty()) {
+    if (combinations.size() == 1 && combinations.getFirst().isEmpty()) {
       return List.of();
     }
     return combinations;
@@ -573,7 +573,7 @@ public class MarkushHandler {
       default -> {
         try {
           yield Integer.parseInt(token);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
           yield -1;
         }
       }
@@ -733,9 +733,9 @@ public class MarkushHandler {
       return null;
     }
     if (atoms.size() == 1 || reference == null) {
-      return atoms.get(0);
+      return atoms.getFirst();
     }
-    IAtom nearest = atoms.get(0);
+    IAtom nearest = atoms.getFirst();
     double bestDistance = Double.MAX_VALUE;
     for (IAtom atom : atoms) {
       Point2d point = atom.getPoint2d();
@@ -912,10 +912,18 @@ public class MarkushHandler {
 
       List<IAtom> pseudos = new ArrayList<>();
       pseudos.add(pseudoAtom);
-      IAtom nearestOtherResidue = ChemicalUtils.findNearestResidueAtom(pseudoAtom, atomContainer);
-      if (nearestOtherResidue != null) {
-        visitedAtoms.add(nearestOtherResidue);
-        pseudos.add(nearestOtherResidue);
+      // A pseudo-atom that already carries two bonds *is* the bivalent position — a ring member or
+      // a chain link — and its own two bonds are the attachment points. Only a monovalent residue
+      // needs a partner to bridge to, and that partner must carry the same label: the nearest
+      // pseudo-atom of any label would swallow an unrelated R-group and silently drop its
+      // substituent.
+      if (atomContainer.getConnectedBondsCount(pseudoAtom) < 2) {
+        IAtom nearestOtherResidue =
+            ChemicalUtils.findNearestResidueAtom(pseudoAtom, atomContainer, residueKey);
+        if (nearestOtherResidue != null) {
+          visitedAtoms.add(nearestOtherResidue);
+          pseudos.add(nearestOtherResidue);
+        }
       }
 
       reconnectResidue(atomContainer, extendedClone, pseudos, bondsToRemove, atomsToRemove);
@@ -929,7 +937,10 @@ public class MarkushHandler {
   }
 
   /**
-   * Reconnects substituted residues to the original atom container.
+   * Reconnects substituted residues to the original atom container. Every bond of every replaced
+   * pseudo-atom is one attachment, so a single bivalent residue (a ring member or chain link)
+   * contributes both of its bonds while two monovalent residues contribute one each. Attachments
+   * are wired to the substituent's connection points in order.
    *
    * @param atomContainer original molecule
    * @param extendedStructure substituted structure
@@ -943,23 +954,39 @@ public class MarkushHandler {
       List<IAtom> pseudoAtoms,
       Set<IBond> bondsToRemove,
       Set<IAtom> atomsToRemove) {
-    atomContainer.add(extendedStructure);
-    List<IAtom> connectionPoints = new ArrayList<>();
+    record Attachment(IAtom residue, IBond bond) {}
 
+    List<IAtom> connectionPoints = new ArrayList<>();
     for (IAtom smilesAtom : extendedStructure.atoms()) {
       if (smilesAtom instanceof IPseudoAtom) {
         connectionPoints.add(smilesAtom);
       }
     }
-    for (int i = 0; i < pseudoAtoms.size(); i++) {
-      IAtom rAtom = pseudoAtoms.get(i);
-      IBond bondOrigin = rAtom.bonds().iterator().next();
+    List<Attachment> attachments = new ArrayList<>();
+    for (IAtom rAtom : pseudoAtoms) {
+      rAtom.bonds().forEach(bond -> attachments.add(new Attachment(rAtom, bond)));
+    }
+    if (attachments.size() != connectionPoints.size()) {
+      // Wiring only some of the attachments would drop a bond and silently open a ring or split
+      // the molecule. Leaving the pseudo-atom in place instead keeps the structure out of the
+      // output, since SubstanceXtractor skips structures with unresolved pseudo-atoms.
+      LOGGER.warn(
+          "Residue has {} attachment(s) but its substituent offers {} connection point(s);"
+              + " leaving the R-group unsubstituted.",
+          attachments.size(),
+          connectionPoints.size());
+      return;
+    }
+
+    atomContainer.add(extendedStructure);
+    for (int i = 0; i < attachments.size(); i++) {
+      IAtom rAtom = attachments.get(i).residue();
+      IBond bondOrigin = attachments.get(i).bond();
       IAtom atomOrigin = bondOrigin.getOther(rAtom);
       IAtom conPoint = connectionPoints.get(i);
       IBond bondAbbr = conPoint.bonds().iterator().next();
       IAtom atomAbbr = bondAbbr.getOther(conPoint);
-      IBond bond = new Bond(atomOrigin, atomAbbr, rAtom.bonds().iterator().next().getOrder());
-      atomContainer.addBond(bond);
+      atomContainer.addBond(new Bond(atomOrigin, atomAbbr, bondOrigin.getOrder()));
       bondsToRemove.add(bondOrigin);
       bondsToRemove.add(bondAbbr);
       atomsToRemove.add(rAtom);
@@ -1027,7 +1054,7 @@ public class MarkushHandler {
       LOGGER.error("More than one or none connection point found.");
       return;
     }
-    IAtom connectionPoint = connectionPoints.get(0);
+    IAtom connectionPoint = connectionPoints.getFirst();
     // Find bond between pseudoAtom and its origin
     IBond bondOrigin = null;
     if (!pseudoAtom.bonds().iterator().hasNext()) {
@@ -1042,7 +1069,7 @@ public class MarkushHandler {
     IBond newBond;
     try {
       newBond = bondOrigin.clone();
-    } catch (CloneNotSupportedException e) {
+    } catch (CloneNotSupportedException _) {
       LOGGER.error("Bond could not be cloned.");
       return;
     }

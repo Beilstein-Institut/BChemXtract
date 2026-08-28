@@ -185,7 +185,7 @@ public class IOUtils {
     while ((length = decompresser.inflate(buffer)) > 0) {
       baos.write(buffer, 0, length);
     }
-    decompresser.end();
+    decompresser.close();
     return baos.toByteArray();
   }
 }

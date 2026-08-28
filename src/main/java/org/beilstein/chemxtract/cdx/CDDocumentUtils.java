@@ -57,20 +57,24 @@ public class CDDocumentUtils {
     // breadth-first search
     while (!objects.isEmpty()) {
       CDObject object = objects.pop();
-      if (object instanceof CDPage page) {
-        objects.addAll(page.getBracketedGroups());
-        objects.addAll(page.getFragments());
-        objects.addAll(page.getGroups());
-        objects.addAll(page.getNamedAlternativeGroups());
-      } else if (object instanceof CDGroup group) {
-        objects.addAll(group.getFragments());
-        objects.addAll(group.getGroups());
-        objects.addAll(group.getNamedAlternativeGroups());
-      } else if (object instanceof CDAltGroup altgroup) {
-        objects.addAll(altgroup.getFragments());
-        objects.addAll(altgroup.getGroups());
-      } else if (object instanceof CDFragment fragment) {
-        fragments.add(fragment);
+      switch (object) {
+        case CDPage page -> {
+          objects.addAll(page.getBracketedGroups());
+          objects.addAll(page.getFragments());
+          objects.addAll(page.getGroups());
+          objects.addAll(page.getNamedAlternativeGroups());
+        }
+        case CDGroup group -> {
+          objects.addAll(group.getFragments());
+          objects.addAll(group.getGroups());
+          objects.addAll(group.getNamedAlternativeGroups());
+        }
+        case CDAltGroup altgroup -> {
+          objects.addAll(altgroup.getFragments());
+          objects.addAll(altgroup.getGroups());
+        }
+        case CDFragment fragment -> fragments.add(fragment);
+        case null, default -> {}
       }
     }
     return fragments;
@@ -117,13 +121,14 @@ public class CDDocumentUtils {
     // breadth-first search
     while (!objects.isEmpty()) {
       Object object = objects.pop();
-      if (object instanceof CDPage page) {
-        objects.addAll(page.getReactionSteps());
-        objects.addAll(page.getReactionSchemes());
-      } else if (object instanceof CDReactionScheme scheme) {
-        objects.addAll(scheme.getSteps());
-      } else if (object instanceof CDReactionStep step) {
-        reactionSteps.add(step);
+      switch (object) {
+        case CDPage page -> {
+          objects.addAll(page.getReactionSteps());
+          objects.addAll(page.getReactionSchemes());
+        }
+        case CDReactionScheme scheme -> objects.addAll(scheme.getSteps());
+        case CDReactionStep step -> reactionSteps.add(step);
+        case null, default -> {}
       }
     }
     return reactionSteps;
@@ -303,7 +308,7 @@ public class CDDocumentUtils {
     List<CDText> textFragments = new ArrayList<>();
     for (CDFragment fragment : fragments) {
       if (!isFragmentValid(fragment) && fragment.getAtoms().size() == 1) {
-        CDAtom atom = fragment.getAtoms().get(0);
+        CDAtom atom = fragment.getAtoms().getFirst();
         if (atom.getNodeType() != CDNodeType.Unspecified) {
           continue;
         }
@@ -487,13 +492,9 @@ public class CDDocumentUtils {
    *     or similar.
    */
   public static boolean hasNodeTypeChemicalKnowledge(CDNodeType type) {
-    switch (type) {
-      case Fragment, Nickname, GenericNickname -> {
-        return true;
-      }
-      default -> {
-        return false;
-      }
-    }
+    return switch (type) {
+      case Fragment, Nickname, GenericNickname -> true;
+      default -> false;
+    };
   }
 }

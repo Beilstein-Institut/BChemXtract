@@ -50,5 +50,5 @@ public enum CDSymbolType {
   /** Relative */
   Relative,
   /** TODO: find documentation */
-  LonePairBar;
+  LonePairBar
 }

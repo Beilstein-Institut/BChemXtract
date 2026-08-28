@@ -28,5 +28,5 @@ public enum CDConstraintType {
 
   Distance,
   Angle,
-  ExclusionSphere;
+  ExclusionSphere
 }

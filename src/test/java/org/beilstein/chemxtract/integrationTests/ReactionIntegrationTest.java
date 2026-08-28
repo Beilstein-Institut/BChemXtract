@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -285,7 +284,7 @@ public class ReactionIntegrationTest {
         return null;
       }
       assertNotNull(document);
-      return xtractor.xtract(document, new BCXReactionInfo()).get(0);
+      return xtractor.xtract(document, new BCXReactionInfo()).getFirst();
     }
   }
 
@@ -322,7 +321,7 @@ public class ReactionIntegrationTest {
     assertThat(resource)
         .describedAs(String.format("File %s not found in classpath!", filename))
         .isNotNull();
-    final Path path = Paths.get(resource.toURI());
+    final Path path = Path.of(resource.toURI());
     final List<String> lines = Files.readAllLines(path);
 
     for (final String line : lines) {

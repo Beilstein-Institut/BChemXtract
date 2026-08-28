@@ -44,5 +44,5 @@ public enum CDBondReactionParticipation {
    * The structure was partially mapped, but the reaction involvement of this bond was not
    * determined
    */
-  Unmapped;
+  Unmapped
 }

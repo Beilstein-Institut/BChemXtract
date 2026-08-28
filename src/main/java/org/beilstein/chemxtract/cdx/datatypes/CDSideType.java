@@ -32,5 +32,5 @@ public enum CDSideType {
   /** Bottom side */
   Bottom,
   /** Right side */
-  Right;
+  Right
 }

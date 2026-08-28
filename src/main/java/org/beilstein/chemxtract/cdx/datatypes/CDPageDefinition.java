@@ -33,5 +33,5 @@ public enum CDPageDefinition {
   Reaction2,
   MulticolumnTL4,
   MulticolumnNonTL4,
-  UserDefined;
+  UserDefined
 }

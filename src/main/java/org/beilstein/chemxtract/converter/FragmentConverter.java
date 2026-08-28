@@ -304,7 +304,7 @@ public class FragmentConverter {
       String smiles;
       try {
         smiles = SmilesAbbreviations.get(abbreviation);
-      } catch (IOException e) {
+      } catch (IOException _) {
         LOGGER.error("Could not lookup SMILES for: {}", abbreviation);
         continue;
       }
@@ -315,7 +315,7 @@ public class FragmentConverter {
       IAtomContainer expandedStructure;
       try {
         expandedStructure = smilesParser.parseSmiles(smiles);
-      } catch (InvalidSmilesException e) {
+      } catch (InvalidSmilesException _) {
         LOGGER.error("SMILES could not be parsed to AtomContainer: {}: {}", abbreviation, smiles);
         continue;
       }
@@ -388,7 +388,7 @@ public class FragmentConverter {
       LOGGER.error("Expected exactly one connection point for abbreviation.");
       return;
     }
-    IAtom connectionPoint = connectionPoints.get(0);
+    IAtom connectionPoint = connectionPoints.getFirst();
     // Find bond between pseudoAtom and its origin
     IBond bondOrigin = pseudoAtom.bonds().iterator().next();
     IAtom originAtom = bondOrigin.getOther(pseudoAtom);
@@ -399,7 +399,7 @@ public class FragmentConverter {
     IBond newBond;
     try {
       newBond = bondOrigin.clone();
-    } catch (CloneNotSupportedException e) {
+    } catch (CloneNotSupportedException _) {
       LOGGER.error("Bond could not be cloned.");
       return;
     }
@@ -527,19 +527,11 @@ public class FragmentConverter {
    * @return the spin multiplicity (1 = singlet, 2 = doublet, 3 = triplet)
    */
   private int convertRadical(CDRadical cdRadical) {
-    switch (cdRadical) {
-      case Singlet -> {
-        return 1;
-      }
-      case Doublet -> {
-        return 2;
-      }
-      case Triplet -> {
-        return 3;
-      }
-      default -> {
-        return 0;
-      }
-    }
+    return switch (cdRadical) {
+      case Singlet -> 1;
+      case Doublet -> 2;
+      case Triplet -> 3;
+      default -> 0;
+    };
   }
 }

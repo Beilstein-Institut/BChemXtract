@@ -2,6 +2,14 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.0...v1.4.1) (2026-08-21)
+
+
+### Bug Fixes
+
+* keep both attachments when substituting a bivalent Markush residue ([f14345e](https://github.com/Beilstein-Institut/BChemXtract/commit/f14345e804e261eff4eda53906e6ec7d3669488e))
+* keep both attachments when substituting a bivalent Markush residue ([27a0d11](https://github.com/Beilstein-Institut/BChemXtract/commit/27a0d1128570e51e65266aa1a41442556f9f13f0))
+
 ## [1.4.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.3.1...v1.4.0) (2026-08-18)
 
 

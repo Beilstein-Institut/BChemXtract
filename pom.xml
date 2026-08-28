@@ -5,7 +5,7 @@
 	<artifactId>bchemxtract</artifactId>
 	<packaging>jar</packaging>
 	<name>BChemXtract</name>
-	<version>1.4.1-SNAPSHOT</version>
+	<version>1.4.1</version>
 	<url>https://github.com/Beilstein-Institut/BChemXtract</url>
 	<description>A pure-Java extractor of ChemDraw structures.</description>
 
@@ -47,11 +47,10 @@
 
 	<properties>
 		<cdk.version>2.13</cdk.version>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
-		<java.version>17</java.version>
+		<java.version>25</java.version>
 		<source.encoding>UTF-8</source.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<bchemlookup.abbreviations.url>https://raw.githubusercontent.com/Beilstein-Institut/BChemLookup/main/abbreviations.smi</bchemlookup.abbreviations.url>
 	</properties>
 
 
@@ -132,6 +131,37 @@
 				</configuration>
 			</plugin>
 
+			<!-- abbreviations.smi is curated upstream in Beilstein-Institut/BChemLookup.
+			     On every build we fetch the current list and prepend it to the
+			     checked-in copy, which therefore serves two purposes: offline/CI
+			     fallback when the download fails (ignoreerrors), and home for
+			     entries not (yet) upstream. SMILESLookupReader uses putIfAbsent on
+			     the lowercased key, so on a duplicate key upstream wins. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>fetch-upstream-abbreviations</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<mkdir dir="${project.build.directory}/bchemlookup"/>
+								<get src="${bchemlookup.abbreviations.url}" dest="${project.build.directory}/bchemlookup/abbreviations.smi" usetimestamp="true" ignoreerrors="true" verbose="false"/>
+								<concat destfile="${project.build.outputDirectory}/org/beilstein/chemxtract/lookups/abbreviations.smi" encoding="UTF-8" outputencoding="UTF-8" fixlastline="true">
+									<fileset file="${project.build.directory}/bchemlookup/abbreviations.smi"/>
+									<fileset file="${project.basedir}/src/main/resources/org/beilstein/chemxtract/lookups/abbreviations.smi"/>
+								</concat>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -170,6 +200,9 @@
 						<version>3.5.6</version>
 					</dependency>
 				</dependencies>
+				<configuration>
+					<argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/jdk.internal.reflect=ALL-UNNAMED -Dnet.bytebuddy.experimental=true</argLine>
+				</configuration>
 			</plugin>
 
 			<plugin>
@@ -212,7 +245,7 @@
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
-				<version>3.9.0</version>
+				<version>3.10.0</version>
 				<configuration>
 					<java>
 						<googleJavaFormat/>
@@ -256,6 +289,26 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.openrewrite.maven</groupId>
+				<artifactId>rewrite-maven-plugin</artifactId>
+				<version>6.41.0</version>
+				<configuration>
+					<exportDatatables>true</exportDatatables>
+					<activeRecipes>
+						<recipe>org.openrewrite.java.migrate.UpgradeToJava25</recipe>
+					</activeRecipes>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.openrewrite.recipe</groupId>
+						<artifactId>rewrite-migrate-java</artifactId>
+						<version>3.36.0</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
 		</plugins>
 
 	</build>
@@ -279,7 +332,7 @@
 							<dependency>
 								<groupId>com.puppycrawl.tools</groupId>
 								<artifactId>checkstyle</artifactId>
-								<version>13.10.0</version>
+								<version>14.0.0</version>
 							</dependency>
 						</dependencies>
 						<configuration>
@@ -328,7 +381,7 @@
 					<plugin>
 						<groupId>com.github.spotbugs</groupId>
 						<artifactId>spotbugs-maven-plugin</artifactId>
-						<version>4.10.3.0</version>
+						<version>4.10.4.0</version>
 						<configuration>
 							<effort>Max</effort>
 							<threshold>Default</threshold>

@@ -66,5 +66,5 @@ public enum CDOrbitalType {
   /** filled d<sub>z<sup>2</sup></sub> orbital (opposite shading) */
   dz2MinusFilled,
   /** filled d<sub>xy</sub> orbital */
-  dxyFilled;
+  dxyFilled
 }

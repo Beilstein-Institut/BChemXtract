@@ -246,8 +246,8 @@ public class BondVisitor extends CDVisitor {
    */
   private CDFragment getNestedFragment(CDBond bond) {
     return !bond.getBegin().getFragments().isEmpty()
-        ? bond.getBegin().getFragments().get(0)
-        : bond.getEnd().getFragments().get(0);
+        ? bond.getBegin().getFragments().getFirst()
+        : bond.getEnd().getFragments().getFirst();
   }
 
   /**

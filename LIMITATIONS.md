@@ -40,6 +40,7 @@ behavior is consistent across the two file formats.
 | 6 | Security | XXE not explicitly disabled for untrusted CDXML input | Medium |
 | 7 | Configurability | Safety limits and reader strictness are hardcoded | Low-Medium |
 | 8 | Test coverage | No unit tests for several correctness-critical chemistry handlers | Medium |
+| 9 | Coordinates | Contracted-nickname atoms keep ChemDraw's hidden geometry, which can overlap the visible structure | Low |
 
 ## Details
 
@@ -187,6 +188,20 @@ classes — they are exercised only indirectly through integration tests:
 Additionally, JaCoCo has no minimum-coverage threshold, and the
 static-analysis and CVE gates are advisory (`failOnViolation=false`, CVE
 threshold set unreachably high), so quality can regress without a signal.
+
+### 9. Contracted nicknames can carry overlapping coordinates
+
+A contracted ChemDraw nickname (`Mes`, `Bn`, … shown as text, not as a
+dictionary abbreviation) stores its member atoms in the file with whatever
+geometry the template had. ChemDraw never draws them, so an orientation
+pointing back over the visible structure is harmless there — but BChemXtract
+expands the nickname and keeps those coordinates, so the group can land on
+top of the parent structure. Atoms then share coordinates in the depiction
+**and in the MDL V3000 output**; connectivity, formula, SMILES and InChI are
+unaffected. Seen in 3 of 62 nickname-bearing fragments in the `mantis11158`
+corpus (all in `20-2-i3.cdx`, where the mesityl ring's atoms fall onto the
+drawn N and O). This is inherited from the source file and is not corrected
+on read.
 
 ## Missing outright
 

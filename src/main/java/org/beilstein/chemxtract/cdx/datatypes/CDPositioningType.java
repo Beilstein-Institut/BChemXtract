@@ -26,5 +26,5 @@ public enum CDPositioningType {
   Auto,
   Angle,
   Offset,
-  Absolute;
+  Absolute
 }

@@ -169,7 +169,7 @@ public class ReactionConverter {
       // At the moment do not handle grouped reaction fragments
       IAtomContainer groupContainer = builder.newAtomContainer();
       if (CDDocumentUtils.getFragmentsOfGroup(group).size() == 1) {
-        CDFragment fragment = CDDocumentUtils.getFragmentsOfGroup(group).get(0);
+        CDFragment fragment = CDDocumentUtils.getFragmentsOfGroup(group).getFirst();
         if (fragmentsAtomContainerMap.containsKey(fragment)) {
           groupContainer.add(fragmentsAtomContainerMap.get(fragment).getAtomContainer());
         } else {
@@ -205,7 +205,7 @@ public class ReactionConverter {
 
     List<Object> arrows = reactionStep.getArrows();
 
-    if (arrows.get(0) instanceof CDGraphic graphic
+    if (arrows.getFirst() instanceof CDGraphic graphic
         && graphic.getSupersededBy() instanceof CDArrow arrow) {
       if (arrow.getArrowHeadPositionStart() == CDArrowHeadPositionType.HalfLeft
           && arrow.getArrowHeadPositionTail() == CDArrowHeadPositionType.HalfLeft) {
@@ -295,24 +295,24 @@ public class ReactionConverter {
     List<Object> agents = new ArrayList<>();
 
     for (Object object : objects) {
-      if (object instanceof CDFragment fragment) {
-        if (fragment.getAtoms().size() == 1
-            && fragment.getAtoms().get(0).getNodeType() == CDNodeType.Unspecified
-            && fragment.getAtoms().get(0).getText() != null) {
-          agents.add(fragment.getAtoms().get(0).getText().getText().getText());
-        } else {
-          agents.add(fragment);
+      switch (object) {
+        case CDFragment fragment -> {
+          if (fragment.getAtoms().size() == 1
+              && fragment.getAtoms().getFirst().getNodeType() == CDNodeType.Unspecified
+              && fragment.getAtoms().getFirst().getText() != null) {
+            agents.add(fragment.getAtoms().getFirst().getText().getText().getText());
+          } else {
+            agents.add(fragment);
+          }
         }
-      } else if (object instanceof String agentName) {
-        agents.add(agentName);
-      } else if (object instanceof CDText cdText) {
-        String text = cdText.getText().getText();
-        List<String> agentStrings = this.filterAndSplitAgentsString(text);
-        agents.addAll(agentStrings);
-      } else if (object instanceof CDGroup group) {
-        agents.add(group);
-      } else {
-        throw new CDKException("Unknown agent object type!");
+        case String agentName -> agents.add(agentName);
+        case CDText cdText -> {
+          String text = cdText.getText().getText();
+          List<String> agentStrings = this.filterAndSplitAgentsString(text);
+          agents.addAll(agentStrings);
+        }
+        case CDGroup group -> agents.add(group);
+        case null, default -> throw new CDKException("Unknown agent object type!");
       }
     }
     return agents;
@@ -368,7 +368,7 @@ public class ReactionConverter {
   private boolean isInLineWithArrow(Object component, List<Object> arrows) {
 
     if (!arrows.isEmpty()
-        && (arrows.get(0) instanceof CDGraphic arrow)
+        && (arrows.getFirst() instanceof CDGraphic arrow)
         && (component instanceof CDFragment fragment)) {
       return intersectsRectangle(
           arrow.getBounds().getMinX(), arrow.getBounds().getMinY(),

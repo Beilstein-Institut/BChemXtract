@@ -30,5 +30,5 @@ public enum CDArrowHeadPositionType {
   None,
   Full,
   HalfLeft,
-  HalfRight;
+  HalfRight
 }

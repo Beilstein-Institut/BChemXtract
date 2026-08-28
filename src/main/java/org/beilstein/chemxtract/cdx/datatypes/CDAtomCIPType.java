@@ -50,5 +50,5 @@ public enum CDAtomCIPType {
   /**
    * The node is asymmetric, but lacks a hash/wedge so absolute configuration cannot be determined
    */
-  Unspecified;
+  Unspecified
 }

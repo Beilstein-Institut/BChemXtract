@@ -42,5 +42,5 @@ public enum CDBondCIPType {
   /** Asymmetric: (E). */
   E,
   /** Asymmetric: (Z). */
-  Z;
+  Z
 }

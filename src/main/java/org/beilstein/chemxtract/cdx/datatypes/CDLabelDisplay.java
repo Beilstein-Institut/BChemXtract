@@ -36,5 +36,5 @@ public enum CDLabelDisplay {
   /** Label is stacked below */
   Below,
   /** Best initial alignment */
-  BestInitial;
+  BestInitial
 }

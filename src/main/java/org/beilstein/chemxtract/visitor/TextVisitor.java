@@ -97,7 +97,7 @@ public class TextVisitor extends CDVisitor {
    */
   private static void mergeSubstituents(
       Map<String, List<String>> target, String label, List<String> substituents) {
-    List<String> existing = target.computeIfAbsent(label, key -> new ArrayList<>());
+    List<String> existing = target.computeIfAbsent(label, _ -> new ArrayList<>());
     for (String substituent : substituents) {
       if (!existing.contains(substituent)) {
         existing.add(substituent);
@@ -132,15 +132,15 @@ public class TextVisitor extends CDVisitor {
           tuples.stream().allMatch(t -> t.values().stream().allMatch(v -> v.size() == 1));
       boolean correlated =
           allSingleValued
-              && (tuples.size() >= 2 || (tuples.size() == 1 && tuples.get(0).size() >= 2));
+              && (tuples.size() >= 2 || (tuples.size() == 1 && tuples.getFirst().size() >= 2));
 
       if (correlated) {
         for (Map<String, List<String>> tuple : tuples) {
           List<String> key = new ArrayList<>(tuple.keySet());
           key.sort(null);
           Map<String, String> row2 = new LinkedHashMap<>();
-          tuple.forEach((label, values) -> row2.put(label, values.get(0)));
-          tables.computeIfAbsent(key, k -> new ArrayList<>()).add(row2);
+          tuple.forEach((label, values) -> row2.put(label, values.getFirst()));
+          tables.computeIfAbsent(key, _ -> new ArrayList<>()).add(row2);
         }
       } else {
         for (Assignment assignment : assignments) {

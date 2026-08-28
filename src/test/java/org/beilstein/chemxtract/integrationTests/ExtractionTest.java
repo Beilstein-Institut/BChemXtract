@@ -74,7 +74,7 @@ public class ExtractionTest {
     assertThat(info.getNoSubstances()).isEqualTo(12);
 
     assertThat(substances.size()).isEqualTo(12);
-    BCXSubstance s0 = substances.get(0);
+    BCXSubstance s0 = substances.getFirst();
     BCXSubstance s1 = substances.get(1);
     assertThat(s0).isNotEqualTo(s1);
     assertThat(s0.toString()).isNotEqualTo(s1.toString());
@@ -109,14 +109,14 @@ public class ExtractionTest {
     assertThat(reactions)
         .hasSize(3); // needs to be decreased from 4 to 3 cause of reaction sanitizing and missing
     // abbreviation
-    BCXReaction r0 = reactions.get(0);
+    BCXReaction r0 = reactions.getFirst();
     BCXReaction r1 = reactions.get(1);
     assertThat(r0).isNotEqualTo(r1);
     assertThat(r0.toString()).isNotEqualTo(r1.toString());
     assertThat(r0.getProducts()).hasSize(1);
     assertThat(r1.getProducts()).hasSize(1);
-    BCXReactionComponent rc0 = r0.getProducts().get(0);
-    BCXReactionComponent rc1 = r1.getProducts().get(0);
+    BCXReactionComponent rc0 = r0.getProducts().getFirst();
+    BCXReactionComponent rc1 = r1.getProducts().getFirst();
     assertThat(rc0).isNotEqualTo(rc1);
     assertThat(rc0.toString()).isNotEqualTo(rc1.toString());
 
