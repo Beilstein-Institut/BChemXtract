@@ -57,6 +57,35 @@ That GitHub Release event triggers `publish.yml`.
 
 ---
 
+## 2a. Forcing a specific version (`Release-As`)
+
+release-please never looks at the `<version>` in `pom.xml` to decide the next
+release — it only tracks `.release-please-manifest.json` and computes the
+next version from Conventional Commit types merged to `main` since the last
+release (see the table in section 1). Manually editing `pom.xml` to some
+`X.Y.Z-SNAPSHOT` value (e.g. to "reserve" the next minor version) has **no
+effect** on what release-please will propose, and it will not open a
+`chore(main): release X.Y.Z` PR unless the manifest is behind and there is
+at least one releasable commit.
+
+If you need release-please to cut a specific version that its own semver
+calculation would not produce (e.g. jumping to the next minor release even
+though only `fix:`/`chore:` commits have landed), add a `Release-As:` footer
+to any commit on `main`:
+
+```
+chore: prepare for 1.5.0
+
+Release-As: 1.5.0
+```
+
+On its next run, release-please will use that version verbatim for the
+release PR (updating `pom.xml`, `CHANGELOG.md`, and
+`.release-please-manifest.json` accordingly) instead of computing one from
+commit types.
+
+---
+
 ## 3. Required GitHub Secrets
 
 Configured under **Settings → Secrets and variables → Actions** at the repo
