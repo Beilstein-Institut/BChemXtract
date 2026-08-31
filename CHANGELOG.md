@@ -2,6 +2,13 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.5.0](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.1...v1.5.0) (2026-08-31)
+
+
+### Documentation
+
+* document release-please Release-As override ([baa18a4](https://github.com/Beilstein-Institut/BChemXtract/commit/baa18a43abe1b24c37627272c3335db0a6b65129))
+
 ## [1.4.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.0...v1.4.1) (2026-08-21)
 
 
