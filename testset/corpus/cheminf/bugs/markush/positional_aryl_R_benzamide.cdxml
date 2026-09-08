@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE CDXML SYSTEM "https://static.chemistry.revvitycloud.com/cdxml/CDXML.dtd" >
+<CDXML
+ CreationProgram="hand-authored test fixture"
+ BondLength="14.40"
+ LabelFont="3"
+><colortable>
+<color r="1" g="1" b="1"/>
+<color r="0" g="0" b="0"/>
+</colortable><fonttable>
+<font id="3" charset="iso-8859-1" name="Arial"/>
+</fonttable><page
+ id="1"
+ BoundingBox="0 0 540 720"
+><fragment
+ id="10"
+><n id="11" p="114 120" Element="6" AS="N"/><n id="12" p="107 108" Element="6" AS="N"/><n
+ id="13" p="93 108" Element="6" AS="N"/><n id="14" p="86 120" Element="6" AS="N"/><n
+ id="15" p="93 132" Element="6" AS="N"/><n id="16" p="107 132" Element="6" AS="N"/><n
+ id="17" p="128 113" Element="6" AS="N"/><n
+ id="18"
+ p="128 99"
+ Element="8"
+ AS="N"
+><t p="124 103"><s font="3" size="10" color="0" face="96">O</s></t></n><n
+ id="19"
+ p="140 120"
+ Element="7"
+ NumHydrogens="2"
+ AS="N"
+><t p="136 124"><s font="3" size="10" color="0" face="96">NH2</s></t></n><b
+ id="21" B="11" E="12" Order="2" BS="N"/><b id="22" B="12" E="13" BS="N"/><b
+ id="23" B="13" E="14" Order="2" BS="N" CrossingBonds="43"/><b id="24" B="14" E="15" BS="N"/><b
+ id="25" B="15" E="16" Order="2" BS="N"/><b id="26" B="16" E="11" BS="N"/><b
+ id="27" B="11" E="17" BS="N"/><b id="28" B="17" E="18" Order="2" BS="N"/><b
+ id="29" B="17" E="19" BS="N"/></fragment><fragment
+ id="40"
+><n
+ id="41"
+ p="77 107"
+ NodeType="GenericNickname"
+ GenericNickname="R"
+ NumHydrogens="0"
+ AS="N"
+><t p="73 111"><s font="3" size="10" color="0" face="96">R</s></t></n><n
+ id="42" p="91 116" Element="6" AS="N"/><b
+ id="43" B="41" E="42" BS="N" CrossingBonds="23"/></fragment><t
+ p="80 160"
+><s font="3" size="10" color="0" face="96">R = H, 2-Cl, 3-Cl, 4-Br</s></t></page></CDXML>
