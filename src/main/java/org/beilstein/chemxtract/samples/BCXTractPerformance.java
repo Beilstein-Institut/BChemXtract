@@ -87,7 +87,7 @@ public class BCXTractPerformance {
     if (Files.isRegularFile(root)) {
       Path parent = root.getParent() != null ? root.getParent() : Paths.get(".");
       Result r = new BCXTractPerformance().extractOne(parent, root);
-      String status = r.failed() ? "error" : (r.substances == 0 ? "empty" : "ok");
+      String status = r.failed() ? "error" : r.substances == 0 ? "empty" : "ok";
       System.out.printf(
           "RESULT\t%d\t%d\t%d\t%d\t%s\t%s%n",
           r.millis,
@@ -122,7 +122,7 @@ public class BCXTractPerformance {
       results.add(extractOne(root, file));
     }
 
-    printReport(root, results);
+    printReport(results);
   }
 
   /**
@@ -130,12 +130,18 @@ public class BCXTractPerformance {
    * .cdxml}.
    */
   private static boolean isChemDrawFile(Path file) {
-    String name = file.getFileName().toString().toLowerCase(Locale.ROOT);
+    String name = fileName(file);
     return name.endsWith(".cdx") || name.endsWith(".cdxml");
   }
 
   private static boolean isCdxml(Path file) {
-    return file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".cdxml");
+    return fileName(file).endsWith(".cdxml");
+  }
+
+  /** Lower-cased file name, or {@code ""} for a root path, which has none. */
+  private static String fileName(Path file) {
+    Path name = file.getFileName();
+    return name == null ? "" : name.toString().toLowerCase(Locale.ROOT);
   }
 
   private Result extractOne(Path root, Path file) {
@@ -174,7 +180,7 @@ public class BCXTractPerformance {
     }
   }
 
-  private void printReport(Path root, List<Result> results) {
+  private void printReport(List<Result> results) {
     int total = results.size();
     long errors = results.stream().filter(Result::failed).count();
     long empty = results.stream().filter(r -> !r.failed() && r.substances == 0).count();
