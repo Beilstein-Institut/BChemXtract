@@ -30,6 +30,8 @@ import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for resolving multi-center and variable attachment nodes within a {@link
@@ -57,6 +59,16 @@ import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
  * single downstream expansion path handles both.
  */
 public final class AttachmentHandler {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentHandler.class);
+
+  /**
+   * Upper bound on the number of position-variation isomers enumerated for a single fragment. The
+   * candidate choices of all variable attachment nodes in a fragment multiply, so a drawing with a
+   * handful of nodes can span billions of combinations - a generic depiction rather than an
+   * enumerable set of substances. Such a fragment is skipped instead of exhausting the heap.
+   */
+  private static final long MAX_VARIANTS = 1000L;
 
   private AttachmentHandler() {
     // private constructor to hide implicit public one
@@ -280,7 +292,8 @@ public final class AttachmentHandler {
    *
    * @param fragment the fragment to expand
    * @return the list of expanded fragments; the singleton list {@code [fragment]} when no variable
-   *     attachment node is present
+   *     attachment node is present, and an empty list when the combinations exceed {@link
+   *     #MAX_VARIANTS}
    */
   public static List<CDFragment> expandVariableAttachments(CDFragment fragment) {
     List<CDAtom> variableNodes =
@@ -310,6 +323,18 @@ public final class AttachmentHandler {
 
     if (points.isEmpty()) {
       return List.of(fragment);
+    }
+
+    long combinations = 1L;
+    for (VariablePoint point : points) {
+      combinations *= point.candidates().size();
+      if (combinations > MAX_VARIANTS) {
+        LOGGER.warn(
+            "Skipping fragment: {} variable attachment nodes enumerate more than {} isomers.",
+            points.size(),
+            MAX_VARIANTS);
+        return List.of();
+      }
     }
 
     // Atoms and bonds that are common to every variant: everything except the variable nodes and

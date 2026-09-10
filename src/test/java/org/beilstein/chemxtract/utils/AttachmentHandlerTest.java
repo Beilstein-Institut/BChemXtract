@@ -227,6 +227,30 @@ public class AttachmentHandlerTest {
   }
 
   @Test
+  public void expandVariableAttachmentsSkipsFragmentsBeyondTheCombinationLimit() {
+    // 12 variable nodes with three candidates each multiply out to 531441 isomers - far past what
+    // a drawing can mean, and enough to exhaust the heap when enumerated.
+    CDFragment fragment = new CDFragment();
+    List<CDAtom> atoms = new ArrayList<>();
+    List<CDBond> bonds = new ArrayList<>();
+    for (int i = 0; i < 12; i++) {
+      CDAtom substituent = element();
+      CDAtom c1 = element();
+      CDAtom c2 = element();
+      CDAtom c3 = element();
+      CDAtom node = new CDAtom();
+      node.setNodeType(CDNodeType.VariableAttachment);
+      node.setAttachedAtoms(List.of(c1, c2, c3));
+      atoms.addAll(List.of(substituent, c1, c2, c3, node));
+      bonds.add(bond(node, substituent));
+    }
+    fragment.setAtoms(atoms);
+    fragment.setBonds(bonds);
+
+    assertThat(AttachmentHandler.expandVariableAttachments(fragment)).isEmpty();
+  }
+
+  @Test
   public void normalizeConvertsCrossingBondIntoVariableAttachmentAndMergesFragments() {
     // Scaffold: a two-atom "ring" edge c1-c2, each further bonded so both have degree >= 2.
     CDAtom c1 = element(0f, 0f);
