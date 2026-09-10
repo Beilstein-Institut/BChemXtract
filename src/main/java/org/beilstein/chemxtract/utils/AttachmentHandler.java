@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -70,6 +71,15 @@ public final class AttachmentHandler {
    */
   private static final long MAX_VARIANTS = 1000L;
 
+  /**
+   * How far a position-variation bond may stay clear of the bond it attaches to, as a fraction of
+   * that bond's length. ChemDraw's crossing-bond list is a drawing relationship and also names
+   * bonds the crossing bond never reaches, whose endpoints must not become attachment candidates.
+   * Across the reference corpus every real attachment closes to within 0.4 bond lengths of its
+   * crossed bond while unrelated pairs stay beyond 0.8.
+   */
+  private static final double MAX_ATTACHMENT_GAP = 0.5;
+
   private AttachmentHandler() {
     // private constructor to hide implicit public one
   }
@@ -92,6 +102,10 @@ public final class AttachmentHandler {
    * relationship after a merge, are both ignored (the scaffold endpoint is not a degree-one free
    * end, and the candidates then live in the fragment being inspected).
    *
+   * <p>A crossing reference only describes an attachment when the two bonds actually meet on the
+   * page (see {@link #reaches(CDBond, CDBond)}); bonds merely named by each other, as overlapping
+   * drawings are, contribute no candidates.
+   *
    * @param fragments the fragments collected from a page; mutated in place
    * @return the fragments to extract, with substituent fragments folded into their scaffolds
    */
@@ -105,6 +119,9 @@ public final class AttachmentHandler {
         }
         List<CDAtom> candidates = new ArrayList<>();
         for (CDBond c : crossed) {
+          if (!reaches(bond, c)) {
+            continue;
+          }
           addDistinct(candidates, c.getBegin());
           addDistinct(candidates, c.getEnd());
         }
@@ -134,6 +151,43 @@ public final class AttachmentHandler {
     List<CDFragment> result = new ArrayList<>(fragments);
     result.removeAll(merged);
     return result;
+  }
+
+  /**
+   * Whether the given bond reaches the bond it is said to cross: the two segments meet, or their
+   * gap stays within {@link #MAX_ATTACHMENT_GAP} of the crossed bond's length. A pair without
+   * coordinates is accepted, there being nothing to judge it by.
+   *
+   * @param bond the bond carrying the crossing reference
+   * @param crossed the bond it names
+   * @return {@code true} if the two are close enough to describe an attachment
+   */
+  private static boolean reaches(CDBond bond, CDBond crossed) {
+    CDPoint2D b1 = position(bond.getBegin());
+    CDPoint2D b2 = position(bond.getEnd());
+    CDPoint2D c1 = position(crossed.getBegin());
+    CDPoint2D c2 = position(crossed.getEnd());
+    if (b1 == null || b2 == null || c1 == null || c2 == null) {
+      return true;
+    }
+    Line2D bondLine = new Line2D.Float(b1.getX(), b1.getY(), b2.getX(), b2.getY());
+    Line2D crossedLine = new Line2D.Float(c1.getX(), c1.getY(), c2.getX(), c2.getY());
+    if (bondLine.intersectsLine(crossedLine)) {
+      return true;
+    }
+    double gap =
+        Math.min(
+            Math.min(
+                crossedLine.ptSegDist(b1.getX(), b1.getY()),
+                crossedLine.ptSegDist(b2.getX(), b2.getY())),
+            Math.min(
+                bondLine.ptSegDist(c1.getX(), c1.getY()),
+                bondLine.ptSegDist(c2.getX(), c2.getY())));
+    return gap <= MAX_ATTACHMENT_GAP * Math.hypot(c2.getX() - c1.getX(), c2.getY() - c1.getY());
+  }
+
+  private static CDPoint2D position(CDAtom atom) {
+    return atom == null ? null : atom.getPosition2D();
   }
 
   private static void addDistinct(List<CDAtom> atoms, CDAtom atom) {
