@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,8 @@ import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for resolving multi-center and variable attachment nodes within a {@link
@@ -58,6 +61,25 @@ import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
  */
 public final class AttachmentHandler {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentHandler.class);
+
+  /**
+   * Upper bound on the number of position-variation isomers enumerated for a single fragment. The
+   * candidate choices of all variable attachment nodes in a fragment multiply, so a drawing with a
+   * handful of nodes can span billions of combinations - a generic depiction rather than an
+   * enumerable set of substances. Such a fragment is skipped instead of exhausting the heap.
+   */
+  private static final long MAX_VARIANTS = 1000L;
+
+  /**
+   * How far a position-variation bond may stay clear of the bond it attaches to, as a fraction of
+   * that bond's length. ChemDraw's crossing-bond list is a drawing relationship and also names
+   * bonds the crossing bond never reaches, whose endpoints must not become attachment candidates.
+   * Across the reference corpus every real attachment closes to within 0.4 bond lengths of its
+   * crossed bond while unrelated pairs stay beyond 0.8.
+   */
+  private static final double MAX_ATTACHMENT_GAP = 0.5;
+
   private AttachmentHandler() {
     // private constructor to hide implicit public one
   }
@@ -80,12 +102,21 @@ public final class AttachmentHandler {
    * relationship after a merge, are both ignored (the scaffold endpoint is not a degree-one free
    * end, and the candidates then live in the fragment being inspected).
    *
+   * <p>A crossing reference only describes an attachment when the two bonds actually meet on the
+   * page (see {@link #reaches(CDBond, CDBond)}); bonds merely named by each other, as overlapping
+   * drawings are, contribute no candidates. A substituent moves to one scaffold and moves once,
+   * however many of its bonds cross it, so that several crossings mark several junctions rather
+   * than duplicating the substituent.
+   *
    * @param fragments the fragments collected from a page; mutated in place
    * @return the fragments to extract, with substituent fragments folded into their scaffolds
    */
   public static List<CDFragment> normalizeVariableAttachmentBonds(List<CDFragment> fragments) {
     List<CDFragment> merged = new ArrayList<>();
     for (CDFragment sub : fragments) {
+      // The substituent's atoms and bonds move to its scaffold once, however many of its bonds
+      // carry a crossing reference; a second copy would duplicate the whole substituent.
+      CDFragment target = null;
       for (CDBond bond : new ArrayList<>(sub.getBonds())) {
         Set<CDBond> crossed = bond.getCrossingBonds();
         if (crossed == null || crossed.isEmpty()) {
@@ -93,6 +124,9 @@ public final class AttachmentHandler {
         }
         List<CDAtom> candidates = new ArrayList<>();
         for (CDBond c : crossed) {
+          if (!reaches(bond, c)) {
+            continue;
+          }
           addDistinct(candidates, c.getBegin());
           addDistinct(candidates, c.getEnd());
         }
@@ -106,14 +140,22 @@ public final class AttachmentHandler {
           continue;
         }
         CDFragment scaffold = fragmentContaining(fragments, candidates);
-        if (scaffold == null || scaffold == sub) {
+        // A scaffold that is itself a substituent has already moved elsewhere, and merging into it
+        // would discard these atoms with it; that chained drawing keeps its bond unresolved.
+        if (scaffold == null || scaffold == sub || merged.contains(scaffold)) {
+          continue;
+        }
+        if (target != null && target != scaffold) {
           continue;
         }
         attach.setNodeType(CDNodeType.VariableAttachment);
         attach.setAttachedAtoms(candidates);
-        scaffold.addAllAtoms(sub.getAtoms());
-        sub.getBonds().forEach(scaffold::addBond);
-        merged.add(sub);
+        if (target == null) {
+          target = scaffold;
+          scaffold.addAllAtoms(sub.getAtoms());
+          sub.getBonds().forEach(scaffold::addBond);
+          merged.add(sub);
+        }
       }
     }
     if (merged.isEmpty()) {
@@ -122,6 +164,43 @@ public final class AttachmentHandler {
     List<CDFragment> result = new ArrayList<>(fragments);
     result.removeAll(merged);
     return result;
+  }
+
+  /**
+   * Whether the given bond reaches the bond it is said to cross: the two segments meet, or their
+   * gap stays within {@link #MAX_ATTACHMENT_GAP} of the crossed bond's length. A pair without
+   * coordinates is accepted, there being nothing to judge it by.
+   *
+   * @param bond the bond carrying the crossing reference
+   * @param crossed the bond it names
+   * @return {@code true} if the two are close enough to describe an attachment
+   */
+  private static boolean reaches(CDBond bond, CDBond crossed) {
+    CDPoint2D b1 = position(bond.getBegin());
+    CDPoint2D b2 = position(bond.getEnd());
+    CDPoint2D c1 = position(crossed.getBegin());
+    CDPoint2D c2 = position(crossed.getEnd());
+    if (b1 == null || b2 == null || c1 == null || c2 == null) {
+      return true;
+    }
+    Line2D bondLine = new Line2D.Float(b1.getX(), b1.getY(), b2.getX(), b2.getY());
+    Line2D crossedLine = new Line2D.Float(c1.getX(), c1.getY(), c2.getX(), c2.getY());
+    if (bondLine.intersectsLine(crossedLine)) {
+      return true;
+    }
+    double gap =
+        Math.min(
+            Math.min(
+                crossedLine.ptSegDist(b1.getX(), b1.getY()),
+                crossedLine.ptSegDist(b2.getX(), b2.getY())),
+            Math.min(
+                bondLine.ptSegDist(c1.getX(), c1.getY()),
+                bondLine.ptSegDist(c2.getX(), c2.getY())));
+    return gap <= MAX_ATTACHMENT_GAP * Math.hypot(c2.getX() - c1.getX(), c2.getY() - c1.getY());
+  }
+
+  private static CDPoint2D position(CDAtom atom) {
+    return atom == null ? null : atom.getPosition2D();
   }
 
   private static void addDistinct(List<CDAtom> atoms, CDAtom atom) {
@@ -280,7 +359,8 @@ public final class AttachmentHandler {
    *
    * @param fragment the fragment to expand
    * @return the list of expanded fragments; the singleton list {@code [fragment]} when no variable
-   *     attachment node is present
+   *     attachment node is present, and an empty list when the combinations exceed {@link
+   *     #MAX_VARIANTS}
    */
   public static List<CDFragment> expandVariableAttachments(CDFragment fragment) {
     List<CDAtom> variableNodes =
@@ -310,6 +390,18 @@ public final class AttachmentHandler {
 
     if (points.isEmpty()) {
       return List.of(fragment);
+    }
+
+    long combinations = 1L;
+    for (VariablePoint point : points) {
+      combinations *= point.candidates().size();
+      if (combinations > MAX_VARIANTS) {
+        LOGGER.warn(
+            "Skipping fragment: {} variable attachment nodes enumerate more than {} isomers.",
+            points.size(),
+            MAX_VARIANTS);
+        return List.of();
+      }
     }
 
     // Atoms and bonds that are common to every variant: everything except the variable nodes and

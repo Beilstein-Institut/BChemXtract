@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
@@ -227,6 +228,30 @@ public class AttachmentHandlerTest {
   }
 
   @Test
+  public void expandVariableAttachmentsSkipsFragmentsBeyondTheCombinationLimit() {
+    // 12 variable nodes with three candidates each multiply out to 531441 isomers - far past what
+    // a drawing can mean, and enough to exhaust the heap when enumerated.
+    CDFragment fragment = new CDFragment();
+    List<CDAtom> atoms = new ArrayList<>();
+    List<CDBond> bonds = new ArrayList<>();
+    for (int i = 0; i < 12; i++) {
+      CDAtom substituent = element();
+      CDAtom c1 = element();
+      CDAtom c2 = element();
+      CDAtom c3 = element();
+      CDAtom node = new CDAtom();
+      node.setNodeType(CDNodeType.VariableAttachment);
+      node.setAttachedAtoms(List.of(c1, c2, c3));
+      atoms.addAll(List.of(substituent, c1, c2, c3, node));
+      bonds.add(bond(node, substituent));
+    }
+    fragment.setAtoms(atoms);
+    fragment.setBonds(bonds);
+
+    assertThat(AttachmentHandler.expandVariableAttachments(fragment)).isEmpty();
+  }
+
+  @Test
   public void normalizeConvertsCrossingBondIntoVariableAttachmentAndMergesFragments() {
     // Scaffold: a two-atom "ring" edge c1-c2, each further bonded so both have degree >= 2.
     CDAtom c1 = element(0f, 0f);
@@ -265,6 +290,81 @@ public class AttachmentHandlerTest {
       assertThat(variant.getAtoms()).doesNotContain(attach);
       assertThat(other(substituentBond(variant, substituent), substituent)).isIn(c1, c2);
     }
+  }
+
+  @Test
+  public void normalizeIgnoresCrossedBondsTheStubDoesNotReach() {
+    // Scaffold edge c1-c2, both endpoints further bonded so neither is a free end.
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, bond(c1, x), bond(c2, y))));
+
+    // A bond that names the scaffold edge as crossed but is drawn two bond lengths clear of it -
+    // ChemDraw records such pairs, and their endpoints are no attachment candidates.
+    CDAtom near = element(20f, 5f);
+    CDAtom far = element(30f, 5f);
+    CDBond stub = bond(near, far);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(near, far));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(result).containsExactly(scaffold, sub);
+    assertThat(near.getNodeType()).isEqualTo(CDNodeType.Element);
+    assertThat(near.getAttachedAtoms()).isNull();
+    assertThat(scaffold.getAtoms()).doesNotContain(near, far);
+  }
+
+  @Test
+  public void normalizeMovesASubstituentWithSeveralCrossingBondsOnlyOnce() {
+    // Scaffold: a four-ring whose left (c1-c2) and right (c3-c4) edges are both crossed.
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom c3 = element(20f, 0f);
+    CDAtom c4 = element(20f, 10f);
+    CDBond left = bond(c1, c2);
+    CDBond right = bond(c3, c4);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, c3, c4));
+    scaffold.setBonds(new ArrayList<>(List.of(left, right, bond(c2, c4), bond(c1, c3))));
+
+    // One substituent chain, drawn across both edges: each of its two bonds crosses one edge.
+    CDAtom endLeft = element(-2f, 5f);
+    CDAtom middle = element(10f, 5f);
+    CDAtom endRight = element(22f, 5f);
+    CDBond toLeft = bond(endLeft, middle);
+    CDBond toRight = bond(middle, endRight);
+    toLeft.setCrossingBonds(new HashSet<>(List.of(left)));
+    toRight.setCrossingBonds(new HashSet<>(List.of(right)));
+    left.setCrossingBonds(new HashSet<>(List.of(toLeft)));
+    right.setCrossingBonds(new HashSet<>(List.of(toRight)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(endLeft, middle, endRight));
+    sub.setBonds(new ArrayList<>(List.of(toLeft, toRight)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    // Both free ends become junctions, but the substituent's atoms and bonds move across once.
+    assertThat(result).containsExactly(scaffold);
+    assertThat(scaffold.getAtoms()).containsExactly(c1, c2, c3, c4, endLeft, middle, endRight);
+    assertThat(scaffold.getBonds()).hasSize(6);
+    assertThat(endLeft.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(endLeft.getAttachedAtoms()).containsExactlyInAnyOrder(c1, c2);
+    assertThat(endRight.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(endRight.getAttachedAtoms()).containsExactlyInAnyOrder(c3, c4);
+
+    // Two junctions with two candidates each -> the four position isomers, no duplicated atoms.
+    assertThat(AttachmentHandler.expandVariableAttachments(scaffold)).hasSize(4);
   }
 
   @Test
