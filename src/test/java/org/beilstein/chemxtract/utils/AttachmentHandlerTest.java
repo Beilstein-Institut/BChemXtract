@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
@@ -289,6 +290,38 @@ public class AttachmentHandlerTest {
       assertThat(variant.getAtoms()).doesNotContain(attach);
       assertThat(other(substituentBond(variant, substituent), substituent)).isIn(c1, c2);
     }
+  }
+
+  @Test
+  public void normalizeIgnoresCrossedBondsTheStubDoesNotReach() {
+    // Scaffold edge c1-c2, both endpoints further bonded so neither is a free end.
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, bond(c1, x), bond(c2, y))));
+
+    // A bond that names the scaffold edge as crossed but is drawn two bond lengths clear of it -
+    // ChemDraw records such pairs, and their endpoints are no attachment candidates.
+    CDAtom near = element(20f, 5f);
+    CDAtom far = element(30f, 5f);
+    CDBond stub = bond(near, far);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(near, far));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(result).containsExactly(scaffold, sub);
+    assertThat(near.getNodeType()).isEqualTo(CDNodeType.Element);
+    assertThat(near.getAttachedAtoms()).isNull();
+    assertThat(scaffold.getAtoms()).doesNotContain(near, far);
   }
 
   @Test
