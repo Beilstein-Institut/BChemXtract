@@ -104,7 +104,9 @@ public final class AttachmentHandler {
    *
    * <p>A crossing reference only describes an attachment when the two bonds actually meet on the
    * page (see {@link #reaches(CDBond, CDBond)}); bonds merely named by each other, as overlapping
-   * drawings are, contribute no candidates.
+   * drawings are, contribute no candidates. A substituent moves to one scaffold and moves once,
+   * however many of its bonds cross it, so that several crossings mark several junctions rather
+   * than duplicating the substituent.
    *
    * @param fragments the fragments collected from a page; mutated in place
    * @return the fragments to extract, with substituent fragments folded into their scaffolds
@@ -112,6 +114,9 @@ public final class AttachmentHandler {
   public static List<CDFragment> normalizeVariableAttachmentBonds(List<CDFragment> fragments) {
     List<CDFragment> merged = new ArrayList<>();
     for (CDFragment sub : fragments) {
+      // The substituent's atoms and bonds move to its scaffold once, however many of its bonds
+      // carry a crossing reference; a second copy would duplicate the whole substituent.
+      CDFragment target = null;
       for (CDBond bond : new ArrayList<>(sub.getBonds())) {
         Set<CDBond> crossed = bond.getCrossingBonds();
         if (crossed == null || crossed.isEmpty()) {
@@ -135,14 +140,22 @@ public final class AttachmentHandler {
           continue;
         }
         CDFragment scaffold = fragmentContaining(fragments, candidates);
-        if (scaffold == null || scaffold == sub) {
+        // A scaffold that is itself a substituent has already moved elsewhere, and merging into it
+        // would discard these atoms with it; that chained drawing keeps its bond unresolved.
+        if (scaffold == null || scaffold == sub || merged.contains(scaffold)) {
+          continue;
+        }
+        if (target != null && target != scaffold) {
           continue;
         }
         attach.setNodeType(CDNodeType.VariableAttachment);
         attach.setAttachedAtoms(candidates);
-        scaffold.addAllAtoms(sub.getAtoms());
-        sub.getBonds().forEach(scaffold::addBond);
-        merged.add(sub);
+        if (target == null) {
+          target = scaffold;
+          scaffold.addAllAtoms(sub.getAtoms());
+          sub.getBonds().forEach(scaffold::addBond);
+          merged.add(sub);
+        }
       }
     }
     if (merged.isEmpty()) {

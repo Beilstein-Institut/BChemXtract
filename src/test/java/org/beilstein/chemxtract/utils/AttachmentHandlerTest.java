@@ -325,6 +325,49 @@ public class AttachmentHandlerTest {
   }
 
   @Test
+  public void normalizeMovesASubstituentWithSeveralCrossingBondsOnlyOnce() {
+    // Scaffold: a four-ring whose left (c1-c2) and right (c3-c4) edges are both crossed.
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom c3 = element(20f, 0f);
+    CDAtom c4 = element(20f, 10f);
+    CDBond left = bond(c1, c2);
+    CDBond right = bond(c3, c4);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, c3, c4));
+    scaffold.setBonds(new ArrayList<>(List.of(left, right, bond(c2, c4), bond(c1, c3))));
+
+    // One substituent chain, drawn across both edges: each of its two bonds crosses one edge.
+    CDAtom endLeft = element(-2f, 5f);
+    CDAtom middle = element(10f, 5f);
+    CDAtom endRight = element(22f, 5f);
+    CDBond toLeft = bond(endLeft, middle);
+    CDBond toRight = bond(middle, endRight);
+    toLeft.setCrossingBonds(new HashSet<>(List.of(left)));
+    toRight.setCrossingBonds(new HashSet<>(List.of(right)));
+    left.setCrossingBonds(new HashSet<>(List.of(toLeft)));
+    right.setCrossingBonds(new HashSet<>(List.of(toRight)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(endLeft, middle, endRight));
+    sub.setBonds(new ArrayList<>(List.of(toLeft, toRight)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    // Both free ends become junctions, but the substituent's atoms and bonds move across once.
+    assertThat(result).containsExactly(scaffold);
+    assertThat(scaffold.getAtoms()).containsExactly(c1, c2, c3, c4, endLeft, middle, endRight);
+    assertThat(scaffold.getBonds()).hasSize(6);
+    assertThat(endLeft.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(endLeft.getAttachedAtoms()).containsExactlyInAnyOrder(c1, c2);
+    assertThat(endRight.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(endRight.getAttachedAtoms()).containsExactlyInAnyOrder(c3, c4);
+
+    // Two junctions with two candidates each -> the four position isomers, no duplicated atoms.
+    assertThat(AttachmentHandler.expandVariableAttachments(scaffold)).hasSize(4);
+  }
+
+  @Test
   public void normalizeLeavesFragmentsWithoutCrossingBondsUntouched() {
     CDAtom a = element(0f, 0f);
     CDAtom b = element(0f, 10f);
