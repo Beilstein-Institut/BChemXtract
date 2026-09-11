@@ -71,4 +71,33 @@ class AbbreviationLayoutIntegrationTest {
         first.getExtendedSmiles().contains("|"),
         "extended SMILES should include a coordinate block");
   }
+
+  /**
+   * Issue #141: in this drawing the pinacol boronate is drawn entirely as an abbreviation, so its
+   * connection atom is the only atom with ChemDraw coordinates and it carries no bond to another
+   * fixed atom. Partial layout used to throw {@code IndexOutOfBoundsException} there and the atoms
+   * stayed collapsed on one point.
+   */
+  @Test
+  void abbreviationWithSingleUnanchoredConnectionAtomIsLaidOut() throws Exception {
+    InputStream in =
+        AbbreviationLayoutIntegrationTest.class.getResourceAsStream(
+            "/cheminf/bugs/m24903405-i1.cdx");
+    assertNotNull(in, "fixture must be on the classpath");
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document, "document must parse");
+
+    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    List<BCXSubstance> substances = xtractor.xtractUnique(document, new BCXSubstanceInfo(), true);
+
+    BCXSubstance boronate =
+        substances.stream()
+            .filter(s -> "UCFSYHMCKWNKAH-UHFFFAOYSA-N".equals(s.getInchiKey()))
+            .findFirst()
+            .orElse(null);
+    assertNotNull(boronate, "pinacolborane must still be extracted");
+    assertFalse(
+        ChemicalUtils.hasDuplicateCoordinates(boronate.getAtomContainer()),
+        "expanded abbreviation atoms must have distinct coordinates");
+  }
 }
