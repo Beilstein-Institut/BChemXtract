@@ -81,7 +81,7 @@ class AbbreviationLayoutIntegrationTest {
   @Test
   void abbreviationWithSingleUnanchoredConnectionAtomIsLaidOut() throws Exception {
     InputStream in =
-        AbbreviationLayoutIntegrationTest.class.getResourceAsStream("/bugs/m24903405-i1.cdx");
+        AbbreviationLayoutIntegrationTest.class.getResourceAsStream("/cheminf/bugs/m24903405-i1.cdx");
     assertNotNull(in, "fixture must be on the classpath");
     CDDocument document = CDXReader.readDocument(in);
     assertNotNull(document, "document must parse");
