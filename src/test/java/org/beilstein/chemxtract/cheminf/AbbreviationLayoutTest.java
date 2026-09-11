@@ -120,6 +120,31 @@ class AbbreviationLayoutTest {
     }
   }
 
+  /**
+   * Issue #141: when the abbreviation covers everything but its single connection atom, that atom
+   * is the only fixed one and carries no fixed bond. CDK's partial layout cannot start from such an
+   * atom, so the layout must fall back instead of throwing.
+   */
+  @Test
+  void singleUnanchoredFixedAtomFallsBackToFullLayout() throws Exception {
+    IAtomContainer mol = BUILDER.newAtomContainer();
+    mol.addAtom(carbon(0, 0)); // connection atom, the only one with real coordinates
+    mol.addAtom(carbon(0, 0));
+    mol.addAtom(carbon(0, 0));
+    mol.addAtom(carbon(0, 0));
+    mol.addBond(0, 1, IBond.Order.SINGLE);
+    mol.addBond(1, 2, IBond.Order.SINGLE);
+    mol.addBond(2, 3, IBond.Order.SINGLE);
+    Set<IAtom> free = Set.of(mol.getAtom(1), mol.getAtom(2), mol.getAtom(3));
+
+    AbbreviationLayout.layoutExpandedAbbreviations(mol, free);
+
+    assertFalse(ChemicalUtils.hasDuplicateCoordinates(mol), "expanded atoms should be spread out");
+    for (IAtom atom : mol.atoms()) {
+      assertNotNull(atom.getPoint2d(), "every atom must have a 2D coordinate");
+    }
+  }
+
   @Test
   void oversizedMoleculeIsSkipped() throws Exception {
     IAtomContainer mol = BUILDER.newAtomContainer();
