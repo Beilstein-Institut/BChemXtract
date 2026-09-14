@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.converter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -285,6 +286,24 @@ public class BondConverterTest {
     CDBond bond4 = mockBond(CDBondOrder.Any, null, null);
     assertTrue(
         converter.convert(bond4) instanceof org.openscience.cdk.isomorphism.matchers.QueryBond);
+  }
+
+  /**
+   * Issue #143: a fragment may reach conversion with a bond whose endpoint is not one of its own
+   * atoms (e.g. a position-variation candidate that stayed behind in another fragment). Such a bond
+   * has no mapped CDK atom and must be reported as unconvertible instead of failing with a {@code
+   * NullPointerException} deeper in the bond setup.
+   */
+  @Test
+  public void testBondWithUnmappedAtomIsSkipped() throws CDKException {
+    CDAtom unmapped = mock(CDAtom.class);
+    CDBond bond = mock(CDBond.class);
+    when(bond.getBegin()).thenReturn(cdAtom1);
+    when(bond.getEnd()).thenReturn(unmapped);
+    when(bond.getBondOrder()).thenReturn(CDBondOrder.OneHalf);
+
+    assertNull(converter.convert(bond));
+    assertTrue(converter.getBondMap().isEmpty());
   }
 
   @Test

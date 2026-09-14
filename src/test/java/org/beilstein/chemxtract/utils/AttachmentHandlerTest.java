@@ -367,6 +367,58 @@ public class AttachmentHandlerTest {
     assertThat(AttachmentHandler.expandVariableAttachments(scaffold)).hasSize(4);
   }
 
+  /**
+   * Issue #143: one stub bond may cross bonds belonging to <em>different</em> fragments, but the
+   * substituent is folded into a single scaffold. Candidates from the fragments it did not move
+   * into would make expansion bond the substituent to an atom the variant does not contain.
+   */
+  @Test
+  public void normalizeLimitsCandidatesToTheScaffoldTheSubstituentMovesInto() {
+    // Two separate fragments, each a long horizontal bond; the stub crosses the lower one and
+    // stops just short of the upper one, well inside the reach threshold of its length.
+    CDAtom a1 = element(0f, 0f);
+    CDAtom a2 = element(20f, 0f);
+    CDBond lower = bond(a1, a2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(a1, a2));
+    scaffold.setBonds(new ArrayList<>(List.of(lower)));
+
+    CDAtom b1 = element(0f, 10f);
+    CDAtom b2 = element(20f, 10f);
+    CDBond upper = bond(b1, b2);
+    CDFragment neighbour = new CDFragment();
+    neighbour.setAtoms(List.of(b1, b2));
+    neighbour.setBonds(new ArrayList<>(List.of(upper)));
+
+    CDAtom substituent = element(10f, -6f);
+    CDAtom attach = element(10f, 6f);
+    CDBond stub = bond(substituent, attach);
+    stub.setCrossingBonds(new HashSet<>(List.of(lower, upper)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(substituent, attach));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(
+            new ArrayList<>(List.of(scaffold, neighbour, sub)));
+
+    // The substituent moves into the first scaffold only, so only its atoms may be candidates.
+    assertThat(result).containsExactly(scaffold, neighbour);
+    assertThat(attach.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(attach.getAttachedAtoms()).containsExactlyInAnyOrder(a1, a2);
+
+    // Every enumerated variant is self-contained: no bond reaches an atom outside the fragment.
+    List<CDFragment> variants = AttachmentHandler.expandVariableAttachments(scaffold);
+    assertThat(variants).hasSize(2);
+    for (CDFragment variant : variants) {
+      for (CDBond variantBond : variant.getBonds()) {
+        assertThat(variant.getAtoms())
+            .as("bond endpoints must belong to the variant")
+            .contains(variantBond.getBegin(), variantBond.getEnd());
+      }
+    }
+  }
+
   @Test
   public void normalizeLeavesFragmentsWithoutCrossingBondsUntouched() {
     CDAtom a = element(0f, 0f);
