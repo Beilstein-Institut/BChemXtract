@@ -90,6 +90,18 @@ public final class AbbreviationLayout {
       }
     }
 
+    // A fixed atom whose every neighbour is free anchors no bond, and CDK's partial layout cannot
+    // start from such an atom (it reads the first placed neighbour unguarded and throws). Hand
+    // those atoms to the layout as well; an atom with no fixed neighbour holds no relative ChemDraw
+    // geometry worth preserving anyway.
+    Set<IAtom> placeableAtoms = new HashSet<>(freeAtoms);
+    for (IAtom atom : new ArrayList<>(fixedAtoms)) {
+      if (!hasFixedNeighbour(container, atom, fixedAtoms)) {
+        fixedAtoms.remove(atom);
+        placeableAtoms.add(atom);
+      }
+    }
+
     StructureDiagramGenerator sdg = new StructureDiagramGenerator();
     if (fixedAtoms.isEmpty()) {
       // Nothing to anchor to: lay the whole structure out fresh.
@@ -115,7 +127,7 @@ public final class AbbreviationLayout {
     }
 
     // Clear collapsed coordinates so the generator treats them as unplaced.
-    for (IAtom atom : freeAtoms) {
+    for (IAtom atom : placeableAtoms) {
       atom.setPoint2d(null);
       atom.setPoint3d(null);
     }
@@ -141,13 +153,24 @@ public final class AbbreviationLayout {
         }
       }
       scaleAbout(placed, pivot, 1.0 / toNative);
-      LOGGER.debug("Laid out {} expanded abbreviation atom(s).", freeAtoms.size());
+      LOGGER.debug("Laid out {} expanded abbreviation atom(s).", placeableAtoms.size());
     } catch (CDKException | RuntimeException e) {
       for (Map.Entry<IAtom, Point2d> entry : originalPoints.entrySet()) {
         entry.getKey().setPoint2d(entry.getValue());
       }
       throw e;
     }
+  }
+
+  /** Whether the atom shares a bond with another atom of {@code fixedAtoms}. */
+  private static boolean hasFixedNeighbour(
+      IAtomContainer container, IAtom atom, Set<IAtom> fixedAtoms) {
+    for (IBond bond : container.getConnectedBondsList(atom)) {
+      if (fixedAtoms.contains(bond.getOther(atom))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Uniformly scales the given atoms about {@code pivot} by {@code factor} (pivot stays fixed). */
