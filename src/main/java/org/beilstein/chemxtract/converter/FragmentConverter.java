@@ -159,6 +159,9 @@ public class FragmentConverter {
     List<IBond> coordinationBonds = new ArrayList<>();
     for (CDBond cdBond : cdBonds) {
       IBond bond = bondConverter.convert(cdBond);
+      if (bond == null) {
+        continue;
+      }
       if (cdBond.isCoordination()) {
         coordinationBonds.add(bond);
       } else {

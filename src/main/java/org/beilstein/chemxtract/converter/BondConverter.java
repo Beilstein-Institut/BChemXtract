@@ -34,6 +34,8 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.QueryBond;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts {@link CDBond} instances (e.g. from ChemDraw/CDXML or CDX) into CDK {@link IBond}
@@ -63,6 +65,8 @@ public class BondConverter {
   private final Map<CDAtom, IAtom> atomMap;
   private final Map<CDBond, IBond> bondMap;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(BondConverter.class);
+
   /**
    * Constructs a new {@code BondConverter} using the given {@link IChemObjectBuilder} and atom
    * mapping.
@@ -83,13 +87,21 @@ public class BondConverter {
    * <p>The method creates a new bond between the corresponding CDK atoms, assigns bond order,
    * aromaticity, and stereochemistry, and stores the result in an internal bond map.
    *
+   * <p>A bond whose endpoints are not both present in the atom map does not belong to the structure
+   * being converted and cannot be represented; it is logged and skipped.
+   *
    * @param source the {@link CDBond} object to convert
-   * @return the created {@link IBond} instance
+   * @return the created {@link IBond} instance, or {@code null} if an endpoint has no converted
+   *     atom
    * @throws CDKException if an unsupported or invalid bond order is encountered
    */
   public IBond convert(CDBond source) throws CDKException {
     IAtom atom1 = atomMap.get(source.getBegin());
     IAtom atom2 = atomMap.get(source.getEnd());
+    if (atom1 == null || atom2 == null) {
+      LOGGER.warn("Skipping bond: an endpoint is not part of the converted structure.");
+      return null;
+    }
 
     IBond bond = builder.newBond();
     bond.setAtoms(new IAtom[] {atom1, atom2});

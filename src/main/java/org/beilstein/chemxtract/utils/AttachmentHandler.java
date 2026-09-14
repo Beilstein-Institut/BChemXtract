@@ -25,6 +25,7 @@ import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -106,7 +107,9 @@ public final class AttachmentHandler {
    * page (see {@link #reaches(CDBond, CDBond)}); bonds merely named by each other, as overlapping
    * drawings are, contribute no candidates. A substituent moves to one scaffold and moves once,
    * however many of its bonds cross it, so that several crossings mark several junctions rather
-   * than duplicating the substituent.
+   * than duplicating the substituent. For the same reason the candidates of a junction are limited
+   * to the scaffold the substituent moves into: a crossed bond in a third fragment names atoms that
+   * no enumerated variant contains.
    *
    * @param fragments the fragments collected from a page; mutated in place
    * @return the fragments to extract, with substituent fragments folded into their scaffolds
@@ -148,8 +151,15 @@ public final class AttachmentHandler {
         if (target != null && target != scaffold) {
           continue;
         }
+        // One stub may cross bonds in several fragments, but the substituent moves into one of
+        // them. Candidates left behind in another fragment are absent from every enumerated
+        // variant, so bonding to them would leave the variant's bond dangling.
+        List<CDAtom> scoped = atomsIn(scaffold, candidates);
+        if (scoped.isEmpty()) {
+          continue;
+        }
         attach.setNodeType(CDNodeType.VariableAttachment);
-        attach.setAttachedAtoms(candidates);
+        attach.setAttachedAtoms(scoped);
         if (target == null) {
           target = scaffold;
           scaffold.addAllAtoms(sub.getAtoms());
@@ -272,6 +282,13 @@ public final class AttachmentHandler {
     double dx = p.getX() - point.getX();
     double dy = p.getY() - point.getY();
     return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /** Returns those of the given atoms that the fragment contains (by identity). */
+  private static List<CDAtom> atomsIn(CDFragment fragment, List<CDAtom> atoms) {
+    return atoms.stream()
+        .filter(atom -> fragment.getAtoms().stream().anyMatch(a -> a == atom))
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 
   /** Returns the fragment that contains any of the given atoms (by identity), or {@code null}. */

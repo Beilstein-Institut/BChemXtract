@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -161,6 +162,35 @@ public class MultiAttachmentTest {
     List<BCXSubstance> subs = xtractCdxml("variableAttachment.cdxml");
     assertEquals(2, subs.size());
     assertEquals(VARIABLE_ATTACHMENT_KEYS, inchiKeys(subs));
+  }
+
+  /**
+   * Issue #143: in this drawing a grid of unlabelled stub bonds crosses horizontal bonds that
+   * belong to two different fragments, so the candidate list spanned both while the substituent was
+   * folded into only one of them. Expansion then produced bonds into atoms the variant did not
+   * contain and conversion failed with a {@code NullPointerException}.
+   */
+  @Test
+  public void crossingBondsSpanningTwoFragmentsStillExtract() throws IOException {
+    InputStream in = MultiAttachmentTest.class.getResourceAsStream("/cheminf/bugs/m2490959-i1.cdx");
+    assertNotNull(in, "Missing fixture: m2490959-i1.cdx");
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+
+    List<BCXSubstance> subs = xtractor.xtractUnique(document, new BCXSubstanceInfo(), true);
+
+    // The drawn structures are still extracted; the grid contributes only its own stub fragments.
+    assertTrue(
+        inchiKeys(subs)
+            .containsAll(
+                Set.of(
+                    "UXNBGVUKBFZULV-UHFFFAOYSA-N",
+                    "ANVCWQKIKMBTSL-VIFPVBQESA-N",
+                    "MTGOGSQUOYTZNN-UHFFFAOYSA-N",
+                    "JTEYFTMDXBRRJY-UHFFFAOYSA-N",
+                    "DSOBKSCOEWTDIZ-UHFFFAOYSA-N")),
+        "the drawn substances must be extracted");
   }
 
   @Test
