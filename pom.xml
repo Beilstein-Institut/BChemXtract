@@ -51,6 +51,9 @@
 		<source.encoding>UTF-8</source.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bchemlookup.abbreviations.url>https://raw.githubusercontent.com/Beilstein-Institut/BChemLookup/main/abbreviations.smi</bchemlookup.abbreviations.url>
+		<!-- Empty default so Surefire's argLine still resolves when JaCoCo is
+		     skipped (-Djacoco.skip=true); jacoco:prepare-agent overwrites it. -->
+		<jacocoArgLine></jacocoArgLine>
 	</properties>
 
 
@@ -201,7 +204,10 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-					<argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/jdk.internal.reflect=ALL-UNNAMED -Dnet.bytebuddy.experimental=true</argLine>
+					<!-- @{jacocoArgLine} is late-resolved by Surefire so the JaCoCo
+					     agent set during initialize is picked up; without it this
+					     argLine silently overrides the agent and no *.exec is written. -->
+					<argLine>@{jacocoArgLine} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/jdk.internal.reflect=ALL-UNNAMED -Dnet.bytebuddy.experimental=true</argLine>
 				</configuration>
 			</plugin>
 
@@ -279,6 +285,9 @@
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<configuration>
+							<propertyName>jacocoArgLine</propertyName>
+						</configuration>
 					</execution>
 					<execution>
 						<id>report</id>
