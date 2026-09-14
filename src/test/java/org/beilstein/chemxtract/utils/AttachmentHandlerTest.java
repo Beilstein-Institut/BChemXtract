@@ -419,6 +419,52 @@ public class AttachmentHandlerTest {
     }
   }
 
+  /**
+   * Two drawings sharing the same page area cross each other along their whole length, and every
+   * terminal atom of the upper one is a degree-one end floating on a bond of the lower one. Read as
+   * position variation that is one junction per terminal atom and a combinatorial explosion; the
+   * two drawings must be left alone instead (see {@code vol20Test/m28096433-4.cdx}).
+   */
+  @Test
+  public void normalizeLeavesOverlappingDrawingsUnmerged() {
+    // A scaffold whose bonds run the length of the page area.
+    CDFragment scaffold = new CDFragment();
+    List<CDAtom> scaffoldAtoms = new ArrayList<>();
+    List<CDBond> scaffoldBonds = new ArrayList<>();
+    for (int i = 0; i < 8; i++) {
+      scaffoldAtoms.add(element(i * 10f, 0f));
+      scaffoldAtoms.add(element(i * 10f, 20f));
+      scaffoldBonds.add(bond(scaffoldAtoms.get(2 * i), scaffoldAtoms.get(2 * i + 1)));
+    }
+    scaffold.setAtoms(scaffoldAtoms);
+    scaffold.setBonds(scaffoldBonds);
+
+    // A second drawing laid over it: a hub with eight spokes, each spoke end sitting on one of the
+    // scaffold's bonds, so each would otherwise become a junction of its own.
+    CDAtom hub = element(35f, 10f);
+    List<CDAtom> subAtoms = new ArrayList<>(List.of(hub));
+    List<CDBond> subBonds = new ArrayList<>();
+    for (int i = 0; i < 8; i++) {
+      CDAtom spoke = element(i * 10f, 10f);
+      subAtoms.add(spoke);
+      CDBond spokeBond = bond(spoke, hub);
+      spokeBond.setCrossingBonds(new HashSet<>(List.of(scaffoldBonds.get(i))));
+      subBonds.add(spokeBond);
+    }
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(subAtoms);
+    sub.setBonds(subBonds);
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    // Both drawings survive as they were drawn; no junction, no merge, no enumeration.
+    assertThat(result).containsExactly(scaffold, sub);
+    assertThat(scaffold.getAtoms()).doesNotContainAnyElementsOf(subAtoms);
+    assertThat(subAtoms).allSatisfy(a -> assertThat(a.getNodeType()).isEqualTo(CDNodeType.Element));
+    assertThat(AttachmentHandler.expandVariableAttachments(scaffold)).containsExactly(scaffold);
+  }
+
   @Test
   public void normalizeLeavesFragmentsWithoutCrossingBondsUntouched() {
     CDAtom a = element(0f, 0f);
