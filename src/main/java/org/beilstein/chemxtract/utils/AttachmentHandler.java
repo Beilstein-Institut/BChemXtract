@@ -23,7 +23,9 @@ package org.beilstein.chemxtract.utils;
 
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -81,6 +83,17 @@ public final class AttachmentHandler {
    */
   private static final double MAX_ATTACHMENT_GAP = 0.5;
 
+  /**
+   * How many of a fragment's bonds may carry a crossing reference before it is read as a second
+   * drawing laid over the first rather than a position-variation substituent. A substituent is
+   * attached by the one bond it is drawn across, or by the handful that mark several junctions; two
+   * drawings sharing a page area cross each other along their whole length. Across the reference
+   * corpus every merged substituent carries at most three such bonds (145 of 160 carry exactly
+   * one), while the overlapping drawings of {@code vol20Test/m28096433-4.cdx} carry 34 and 49 - an
+   * empty valley between.
+   */
+  private static final int MAX_SUBSTITUENT_CROSSING_BONDS = 3;
+
   private AttachmentHandler() {
     // private constructor to hide implicit public one
   }
@@ -105,7 +118,9 @@ public final class AttachmentHandler {
    *
    * <p>A crossing reference only describes an attachment when the two bonds actually meet on the
    * page (see {@link #reaches(CDBond, CDBond)}); bonds merely named by each other, as overlapping
-   * drawings are, contribute no candidates. A substituent moves to one scaffold and moves once,
+   * drawings are, contribute no candidates. A fragment that crosses its surroundings along its
+   * whole length is a second drawing rather than a substituent and is left where it was drawn (see
+   * {@link #MAX_SUBSTITUENT_CROSSING_BONDS}). A substituent moves to one scaffold and moves once,
    * however many of its bonds cross it, so that several crossings mark several junctions rather
    * than duplicating the substituent. For the same reason the candidates of a junction are limited
    * to the scaffold the substituent moves into: a crossed bond in a third fragment names atoms that
@@ -116,7 +131,25 @@ public final class AttachmentHandler {
    */
   public static List<CDFragment> normalizeVariableAttachmentBonds(List<CDFragment> fragments) {
     List<CDFragment> merged = new ArrayList<>();
+    // Counted before the first merge: a scaffold inherits the crossing bonds of everything folded
+    // into it, so counting as we go would judge a fragment by its neighbours' drawing rather than
+    // its own, and the outcome would depend on the order the fragments happen to arrive in.
+    Map<CDFragment, Long> crossingBonds = new IdentityHashMap<>();
+    for (CDFragment fragment : fragments) {
+      crossingBonds.put(fragment, crossingBondCount(fragment));
+    }
     for (CDFragment sub : fragments) {
+      // A fragment that crosses its surroundings along its whole length is a second drawing
+      // sharing the page area, not a substituent attaching to one: reading it as position
+      // variation would make a junction of each of its free ends.
+      if (crossingBonds.get(sub) > MAX_SUBSTITUENT_CROSSING_BONDS) {
+        LOGGER.info(
+            "Not a position-variation substituent: {} of the fragment's {} bonds cross another"
+                + " fragment; leaving the overlapping drawings unmerged.",
+            crossingBonds.get(sub),
+            sub.getBonds().size());
+        continue;
+      }
       // The substituent's atoms and bonds move to its scaffold once, however many of its bonds
       // carry a crossing reference; a second copy would duplicate the whole substituent.
       CDFragment target = null;
@@ -289,6 +322,13 @@ public final class AttachmentHandler {
     return atoms.stream()
         .filter(atom -> fragment.getAtoms().stream().anyMatch(a -> a == atom))
         .collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  /** Returns how many of the fragment's bonds carry at least one crossing reference. */
+  private static long crossingBondCount(CDFragment fragment) {
+    return fragment.getBonds().stream()
+        .filter(bond -> bond.getCrossingBonds() != null && !bond.getCrossingBonds().isEmpty())
+        .count();
   }
 
   /** Returns the fragment that contains any of the given atoms (by identity), or {@code null}. */
