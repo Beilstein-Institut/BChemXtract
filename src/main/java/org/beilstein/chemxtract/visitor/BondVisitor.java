@@ -90,11 +90,13 @@ public class BondVisitor extends CDVisitor {
     } else {
       // if one of the bonded atoms is fragment, add bonds of fragment and reconnect fragment to
       // structure
+      boolean attachesUnwantedAbbreviation = false;
       if (hasNestedFragment(bond)) {
         CDFragment fragment = getNestedFragment(bond);
         // if nested fragment is unwanted abbreviation skip all nested bonds
         if (isNestedFragmentUnwantedAbbreviation(bond)) {
           skip.addAll(fragment.getBonds());
+          attachesUnwantedAbbreviation = true;
         } else {
           CDAtom extCon =
               fragment.getAtoms().stream()
@@ -118,7 +120,8 @@ public class BondVisitor extends CDVisitor {
       if ((onlyElementsAtBond(bond)
               || isRGroupBond(bond)
               || isMultiAttachmentBond(bond)
-              || isAbbreviationAtBond(bond))
+              || isAbbreviationAtBond(bond)
+              || attachesUnwantedAbbreviation)
           && !skip.contains(bond)) {
         bonds.add(bond);
       }

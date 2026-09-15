@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.visitor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,7 +36,9 @@ import java.util.*;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -197,6 +200,34 @@ public class BondVisitorTest {
 
     BondVisitor visitor = new BondVisitor(realFragment);
     assertTrue(visitor.getBonds().isEmpty()); // bond should not be collected
+  }
+
+  /**
+   * Issue #144: ChemDraw may store an unwanted abbreviation as an {@code Unspecified} node without
+   * a chemical warning, which {@code isAbbreviationAtBond} does not recognise. Its inner bonds are
+   * skipped, but the bond attaching it to the skeleton must be kept, otherwise the pseudoatom ends
+   * up unbonded and cannot be resubstituted.
+   */
+  @Test
+  public void unwantedAbbreviationKeepsItsAttachmentBondTest() {
+    CDBond innerBond = mock(CDBond.class);
+    CDFragment nested = mock(CDFragment.class);
+    when(nested.getBonds()).thenReturn(Collections.singletonList(innerBond));
+
+    CDText text = mock(CDText.class);
+    CDStyledString styledString = mock(CDStyledString.class);
+    when(text.getText()).thenReturn(styledString);
+    when(styledString.getText()).thenReturn("C6H4F");
+
+    when(atom2.getNodeType()).thenReturn(CDNodeType.Unspecified);
+    when(atom2.getText()).thenReturn(text);
+    when(atom2.getFragments()).thenReturn(Collections.singletonList(nested));
+
+    BondVisitor visitor = new BondVisitor(fragment);
+    visitor.visitBond(bond);
+
+    assertTrue(visitor.getBonds().contains(bond), "attachment bond must be collected");
+    assertFalse(visitor.getBonds().contains(innerBond), "inner abbreviation bond must be skipped");
   }
 
   @Test
