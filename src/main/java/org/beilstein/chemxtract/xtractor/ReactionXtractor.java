@@ -115,6 +115,14 @@ public class ReactionXtractor {
    * Reaction steps are then converted to {@link BCXReaction} objects with reactants, products, and
    * agents linked to their corresponding components.
    *
+   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
+   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
+   * are expanded into their fragments, and variable-attachment substituents are folded into their
+   * scaffolds. This xtractor runs {@link SubstanceXtractor} over every fragment, so extracting from
+   * the same {@code CDDocument} a second time — here or with {@code SubstanceXtractor} — reads an
+   * already-rewritten model and can silently return a different result. Parse a fresh document for
+   * every extraction.
+   *
    * @param document the ChemDraw {@link CDDocument} to extract reactions from
    * @param reactionInfo populated with the number of reaction steps found and valid reactions
    *     extracted
