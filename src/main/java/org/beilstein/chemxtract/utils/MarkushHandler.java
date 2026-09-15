@@ -101,6 +101,13 @@ public class MarkushHandler {
   private final SmilesParser smilesParser;
 
   /**
+   * Label/value pairs already reported as unresolved. A value is retried for every scaffold and
+   * every combination that mentions it, always with the same outcome, so without this the same
+   * warning is emitted tens of thousands of times for one drawing.
+   */
+  private final Set<String> reportedUnresolved = new HashSet<>();
+
+  /**
    * Constructs a MarkushHandler using a CDPage and a CDK builder.
    *
    * @param page CDPage containing the chemical diagram
@@ -112,6 +119,14 @@ public class MarkushHandler {
     blocks = mergeColumnBlocks(textVisitor.getBlocks());
     smilesParser = new SmilesParser(builder);
   }
+
+  /**
+   * One independent choice in the enumeration: exactly one of {@code options} is taken. An option
+   * assigns one label (an independent R-group) or several at once (a row of a correlated group).
+   *
+   * @param options the mutually exclusive partial assignments
+   */
+  private record Choice(List<Map<String, String>> options) {}
 
   /**
    * Merges definition blocks that form one legend column drawn as several stacked single-line text
@@ -292,9 +307,11 @@ public class MarkushHandler {
       IAtomContainer atomContainer, CDRectangle scaffoldBounds)
       throws CloneNotSupportedException, IOException, CDKException {
     Set<String> present = presentResidueLabels(atomContainer);
-    List<Map<String, String>> combinations = residueCombinationsNear(present, scaffoldBounds);
+    List<Map<String, String>> combinations =
+        viableCombinations(atomContainer, residueChoicesNear(present, scaffoldBounds));
     if (combinations.isEmpty()) {
-      // No scoped definitions apply to this scaffold; defer to the page-wide union.
+      // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
+      // page-wide union.
       return replaceRGroups(atomContainer, residueLabels);
     }
     List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations);
@@ -318,36 +335,28 @@ public class MarkushHandler {
   }
 
   /**
-   * Builds the substituent combinations for a scaffold, honouring correlated (positional-table)
-   * groups: their labels vary together as fixed row-tuples, while remaining labels vary
-   * independently (cartesian). Definitions are scoped to the blocks nearest the scaffold.
+   * Builds the choices to enumerate a scaffold over, honouring correlated (positional-table)
+   * groups: their labels vary together as fixed row-tuples, and so form one choice, while every
+   * remaining label is a choice of its own. Definitions are scoped to the blocks nearest the
+   * scaffold.
    *
    * @param present labels of the pseudo-atoms in the scaffold
    * @param scaffoldBounds bounding box of the scaffold, for nearest-block scoping
-   * @return the list of label-to-substituent assignments; empty if no definition applies
+   * @return one choice per correlated group and per independent label; empty if no definition
+   *     applies
    */
-  private List<Map<String, String>> residueCombinationsNear(
-      Set<String> present, CDRectangle scaffoldBounds) {
-    List<Map<String, String>> combinations = new ArrayList<>();
-    combinations.add(new LinkedHashMap<>());
+  private List<Choice> residueChoicesNear(Set<String> present, CDRectangle scaffoldBounds) {
+    List<Choice> choices = new ArrayList<>();
 
-    // Correlated groups first: for each distinct label set, pick the nearest block's group and
-    // expand the running combinations by its explicit row-tuples.
+    // Correlated groups first: for each distinct label set, pick the nearest block's group; its
+    // explicit row-tuples are the options, so correlated labels vary together rather than freely.
     Set<String> claimed = new HashSet<>();
     for (CorrelatedGroup group : nearestCorrelatedGroups(present, scaffoldBounds)) {
-      List<Map<String, String>> expanded = new ArrayList<>();
-      for (Map<String, String> base : combinations) {
-        for (Map<String, String> tuple : group.tuples()) {
-          Map<String, String> merged = new LinkedHashMap<>(base);
-          merged.putAll(tuple);
-          expanded.add(merged);
-        }
-      }
-      combinations = expanded;
+      choices.add(new Choice(List.copyOf(group.tuples())));
       claimed.addAll(group.labels());
     }
 
-    // Independent labels: cartesian expansion, scoped per-label to the nearest defining block.
+    // Independent labels: one choice each, scoped per-label to the nearest defining block.
     Map<String, List<String>> scopedIndependent = residueLabelsNear(scaffoldBounds);
     for (String label : present) {
       if (claimed.contains(label)) {
@@ -357,22 +366,122 @@ public class MarkushHandler {
       if (values == null || values.isEmpty()) {
         continue;
       }
-      List<Map<String, String>> expanded = new ArrayList<>();
-      for (Map<String, String> base : combinations) {
-        for (String value : values) {
-          Map<String, String> merged = new LinkedHashMap<>(base);
-          merged.put(label, value);
-          expanded.add(merged);
-        }
+      List<Map<String, String>> options = new ArrayList<>(values.size());
+      for (String value : values) {
+        options.add(Map.of(label, value));
       }
-      combinations = expanded;
+      choices.add(new Choice(options));
     }
 
-    // A single empty assignment means nothing was applicable.
-    if (combinations.size() == 1 && combinations.get(0).isEmpty()) {
+    return choices;
+  }
+
+  /**
+   * Enumerates the assignments that actually graft, pruning the rest as it goes.
+   *
+   * <p>The assignments are the cartesian product of the choices, which grows multiplicatively: six
+   * labels of six or seven substituents each make close to fifty thousand assignments for one
+   * scaffold, and a drawing that also varies the attachment position repeats that per variant.
+   * Nearly all of them are dropped again, because one of their values does not resolve.
+   *
+   * <p>Whether a value grafts depends only on the scaffold and the values already applied, never on
+   * the choices still to be made, so a value that fails rules out every assignment extending it.
+   * Walking the product depth-first and abandoning a prefix as soon as one of its values fails
+   * therefore discards those subtrees whole, rather than building and re-failing each assignment in
+   * them individually.
+   *
+   * @param scaffold the structure the assignments apply to; left unmodified
+   * @param choices the independent choices to enumerate over
+   * @return the assignments whose every value grafted, in cartesian order
+   */
+  private List<Map<String, String>> viableCombinations(
+      IAtomContainer scaffold, List<Choice> choices)
+      throws CDKException, CloneNotSupportedException, IOException {
+    if (choices.isEmpty()) {
       return List.of();
     }
-    return combinations;
+    List<Map<String, String>> viable = new ArrayList<>();
+    extendCombination(scaffold, choices, 0, new LinkedHashMap<>(), viable);
+    return viable;
+  }
+
+  /**
+   * Extends a partial assignment by one choice, recursing into the options that graft.
+   *
+   * @param container the scaffold with the assignments so far applied
+   * @param choices the choices being enumerated
+   * @param index the choice to take next
+   * @param assigned the assignment built so far, mutated during the walk
+   * @param viable collects the complete assignments that grafted
+   */
+  private void extendCombination(
+      IAtomContainer container,
+      List<Choice> choices,
+      int index,
+      Map<String, String> assigned,
+      List<Map<String, String>> viable)
+      throws CDKException, CloneNotSupportedException, IOException {
+    if (index == choices.size()) {
+      viable.add(new LinkedHashMap<>(assigned));
+      return;
+    }
+    for (Map<String, String> option : choices.get(index).options()) {
+      IAtomContainer candidate = container.clone();
+      if (!applyOption(candidate, option)) {
+        continue;
+      }
+      assigned.putAll(option);
+      extendCombination(candidate, choices, index + 1, assigned, viable);
+      option.keySet().forEach(assigned::remove);
+    }
+  }
+
+  /**
+   * Applies every label of one option, stopping at the first that does not resolve.
+   *
+   * @param container the structure to modify
+   * @param option the partial assignment to apply
+   * @return {@code true} if every label grafted
+   */
+  private boolean applyOption(IAtomContainer container, Map<String, String> option)
+      throws CDKException, CloneNotSupportedException, IOException {
+    for (Map.Entry<String, String> entry : option.entrySet()) {
+      if (!applyEntry(container, entry.getKey(), entry.getValue())) {
+        reportUnresolved(entry.getKey(), entry.getValue());
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Grafts one label's substituent, by plain SMILES if the value resolves to one and by positional
+   * notation otherwise.
+   *
+   * @param container the structure to modify
+   * @param label the R-group label to substitute
+   * @param value the raw legend value
+   * @return {@code true} if the substituent was grafted; {@code false} if the value could not be
+   *     resolved at all, in which case the container is left unchanged
+   */
+  private boolean applyEntry(IAtomContainer container, String label, String value)
+      throws CDKException, CloneNotSupportedException, IOException {
+    String smiles = resolveSmiles(value);
+    if (ChemicalUtils.isValidSmiles(smiles)) {
+      replaceRGroup(container, label, smiles);
+      return true;
+    }
+    return replacePositionalRGroup(container, label, value);
+  }
+
+  /** Warns about a label/value that does not resolve, once per drawing. */
+  private void reportUnresolved(String label, String value) {
+    if (reportedUnresolved.add(label + "=" + value)) {
+      LOGGER.warn(
+          "Unresolved R-group label {}=\"{}\"; dropping the substituent combinations using it.",
+          label,
+          value);
+    }
   }
 
   /**
@@ -420,7 +529,8 @@ public class MarkushHandler {
     if (relevantRGroups.isEmpty()) {
       return List.of(atomContainer);
     }
-    return applyCombinations(atomContainer, generateCombinations(relevantRGroups));
+    return applyCombinations(
+        atomContainer, viableCombinations(atomContainer, independentChoices(relevantRGroups)));
   }
 
   /**
@@ -446,20 +556,14 @@ public class MarkushHandler {
       boolean allResolved = true;
 
       for (Map.Entry<String, String> entry : combination.entrySet()) {
-        String smiles = resolveSmiles(entry.getValue());
-        if (ChemicalUtils.isValidSmiles(smiles)) {
-          replaceRGroup(clone, entry.getKey(), smiles);
-          substituted = true;
-        } else if (replacePositionalRGroup(clone, entry.getKey(), entry.getValue())) {
+        if (applyEntry(clone, entry.getKey(), entry.getValue())) {
           substituted = true;
         } else {
           // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
           // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
           // so the whole combination is dropped rather than substituting only some of its labels.
-          LOGGER.warn(
-              "Unresolved R-group label {}=\"{}\"; dropping this substituent combination.",
-              entry.getKey(),
-              entry.getValue());
+          // Enumeration already pruned these, so this is a guard rather than the usual path.
+          reportUnresolved(entry.getKey(), entry.getValue());
           allResolved = false;
           break;
         }
@@ -760,43 +864,21 @@ public class MarkushHandler {
   }
 
   /**
-   * Generates all combinations of residue labels for replacement.
+   * Turns a label-to-substituents map into one independent choice per label.
    *
    * @param residueLabels map of residue labels and possible substituents
-   * @return list of maps representing all possible label-to-substituent combinations
+   * @return one choice per label, in the map's iteration order
    */
-  private List<Map<String, String>> generateCombinations(Map<String, List<String>> residueLabels) {
-    List<Map<String, String>> result = new ArrayList<>();
-    List<String> labels = new ArrayList<>(residueLabels.keySet());
-
-    backtrack(residueLabels, labels, 0, new HashMap<>(), result);
-    return result;
-  }
-
-  /**
-   * Recursive helper method to backtrack through all R-group combinations.
-   *
-   * @param residueLabels residue labels map
-   * @param rLabels list of R-group labels
-   * @param index current index in recursion
-   * @param current current combination being built
-   * @param results list of all combinations generated
-   */
-  private void backtrack(
-      Map<String, List<String>> residueLabels,
-      List<String> rLabels,
-      int index,
-      Map<String, String> current,
-      List<Map<String, String>> results) {
-    if (index == rLabels.size()) {
-      results.add(new LinkedHashMap<>(current));
-      return;
+  private static List<Choice> independentChoices(Map<String, List<String>> residueLabels) {
+    List<Choice> choices = new ArrayList<>(residueLabels.size());
+    for (Map.Entry<String, List<String>> entry : residueLabels.entrySet()) {
+      List<Map<String, String>> options = new ArrayList<>(entry.getValue().size());
+      for (String substituent : entry.getValue()) {
+        options.add(Map.of(entry.getKey(), substituent));
+      }
+      choices.add(new Choice(options));
     }
-    String currentRLabel = rLabels.get(index);
-    for (String substituent : residueLabels.get(currentRLabel)) {
-      current.put(currentRLabel, substituent);
-      backtrack(residueLabels, rLabels, index + 1, current, results);
-    }
+    return choices;
   }
 
   /**
