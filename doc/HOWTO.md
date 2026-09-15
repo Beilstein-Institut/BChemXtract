@@ -2,6 +2,37 @@
 
 This document contains some code snippets of how to use the libary in your own code.
 
+## A parsed document is consumed by extraction
+
+Every recipe below parses the CDX file immediately before extracting from it. That is not
+incidental: extraction rewrites the parsed `CDDocument` in place. Bond endpoints are repointed when
+nested fragments are resolved, S-group repeat units are expanded into their fragments, and
+variable-attachment substituents are folded into their scaffolds.
+
+A `CDDocument` is therefore good for **one** extraction. Running a second one over the same object
+reads an already-rewritten model and can silently return fewer or different structures — on one test
+file, nine substances on the first pass and one on the second. This applies across xtractors too,
+because `ReactionXtractor` runs `SubstanceXtractor` over every fragment:
+
+```
+CDDocument document = CDXReader.readDocument(in);
+
+List<BCXSubstance> substances = substanceXtractor.xtractUnique(document, substanceInfo, false);
+List<BCXReaction> reactions = reactionXtractor.xtract(document, reactionInfo);   // WRONG
+```
+
+Parse a fresh document for each extraction instead:
+
+```
+List<BCXSubstance> substances =
+    substanceXtractor.xtractUnique(CDXReader.readDocument(newInputStream()), substanceInfo, false);
+List<BCXReaction> reactions =
+    reactionXtractor.xtract(CDXReader.readDocument(newInputStream()), reactionInfo);
+```
+
+Re-parsing is cheap: on the repository's test files it costs a low single-digit percentage of the
+extraction itself.
+
 ## Extracting substances
 
 ```
