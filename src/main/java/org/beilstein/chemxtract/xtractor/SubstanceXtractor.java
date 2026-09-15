@@ -97,6 +97,13 @@ public class SubstanceXtractor {
    * <p>Each fragment is processed and converted into one or more {@link BCXSubstance} objects,
    * optionally resolving R-groups if specified.
    *
+   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
+   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
+   * are expanded into their fragments, and variable-attachment substituents are folded into their
+   * scaffolds. Extracting from the same {@code CDDocument} a second time — with this xtractor, an
+   * overload, or {@link ReactionXtractor} — therefore reads an already-rewritten model and can
+   * silently return fewer or different substances. Parse a fresh document for every extraction.
+   *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata (e.g., number of fragments)
    * @param resolveRGroups if {@code true}, R-groups are resolved to generate all possible variants
@@ -133,6 +140,8 @@ public class SubstanceXtractor {
 
   /**
    * Extracts all chemical substances without resolving R-groups.
+   *
+   * <p>The document is consumed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
@@ -201,6 +210,13 @@ public class SubstanceXtractor {
    *
    * <p>Substances are considered unique based on their InChI identifiers.
    *
+   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
+   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
+   * are expanded into their fragments, and variable-attachment substituents are folded into their
+   * scaffolds. Extracting from the same {@code CDDocument} a second time — with this xtractor, an
+   * overload, or {@link ReactionXtractor} — therefore reads an already-rewritten model and can
+   * silently return fewer or different substances. Parse a fresh document for every extraction.
+   *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
    * @param resolveRGroups if {@code true}, R-groups are resolved
@@ -228,6 +244,8 @@ public class SubstanceXtractor {
 
   /**
    * Extracts unique chemical substances without resolving R-groups.
+   *
+   * <p>The document is consumed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
