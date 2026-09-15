@@ -30,18 +30,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDRadical;
+import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.utils.StereoHandler;
 import org.beilstein.chemxtract.visitor.AtomVisitor;
 import org.beilstein.chemxtract.visitor.BondVisitor;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -82,6 +87,9 @@ public class FragmentConverter {
   private final IChemObjectReader.Mode mode;
   private final SmilesParser smilesParser;
   private static final Logger LOGGER = LoggerFactory.getLogger(FragmentConverter.class);
+
+  /** Matches an atom-numbering label such as {@code P1}, {@code C3} or {@code Fe2}. */
+  private static final Pattern NUMBERED_ATOM_LABEL = Pattern.compile("([A-Z][a-z]?)(\\d{1,3})");
 
   /**
    * Constructs a new {@code FragmentConverter} using the given {@link IChemObjectBuilder} and
@@ -137,6 +145,9 @@ public class FragmentConverter {
 
     // check for and "clean" dot allene
     checkForDotAllene(fragment);
+
+    // collapse atom-numbering labels (P1, C3, ...) that ChemDraw parsed as element formulas
+    checkForNumberedAtomLabels(fragment);
 
     // get atoms
     AtomVisitor atomVisitor = new AtomVisitor(fragment, rawMode);
@@ -254,6 +265,90 @@ public class FragmentConverter {
                 dot.setChemicalWarning(null);
               }
             });
+  }
+
+  /**
+   * Collapses atom-numbering labels such as {@code P4} or {@code C3} that ChemDraw parsed as
+   * element formulas.
+   *
+   * <p>A node labelled {@code P4} in a drawing keyed to a table is a numbered phosphorus, but
+   * ChemDraw reads the label as the formula P<sub>4</sub> and expands it into a nested fragment of
+   * four phosphorus atoms. Converting that fragment adds atoms and homoatomic bonds the drawing
+   * never showed, so such a node is rewritten into a plain element atom.
+   *
+   * <p>Homoatomic formulas are legitimate substituents too — {@code N3} is azide — so three
+   * conditions must hold together before a label is collapsed: the nested fragment is exactly the
+   * homoatomic chain the label spells out, the node carries a bond, and ChemDraw itself rejected
+   * the formula reading with a chemical warning. Azide drawn correctly carries no warning and is
+   * left alone; {@code P2}, {@code P3} and {@code P4} bonded into a skeleton are flagged "An atom
+   * in this label has an invalid valence" and are collapsed.
+   *
+   * @param fragment the {@link CDFragment} to clean
+   */
+  private void checkForNumberedAtomLabels(CDFragment fragment) {
+    for (CDAtom atom : fragment.getAtoms()) {
+      String label = numberedAtomLabelOf(atom);
+      if (label == null
+          || atom.getChemicalWarning() == null
+          || getConnectedBonds(fragment, atom).isEmpty()) {
+        continue;
+      }
+      Matcher matcher = NUMBERED_ATOM_LABEL.matcher(label);
+      if (!matcher.matches()) {
+        continue;
+      }
+      Elements element = Elements.ofString(matcher.group(1));
+      int count = Integer.parseInt(matcher.group(2));
+      if (Elements.Unknown.equals(element) || !spellsOutFormula(atom, element, count)) {
+        continue;
+      }
+      LOGGER.info("Treating label {} as a numbered {} atom, not as a formula.", label, element);
+      atom.setNodeType(CDNodeType.Element);
+      atom.setElementNumber(element.number());
+      atom.setFragments(new ArrayList<>());
+      atom.setText(null);
+      atom.setLabelText(null);
+      atom.setChemicalWarning(null);
+    }
+  }
+
+  /**
+   * Returns the label of a node that carries a nested fragment, or {@code null} if the node has no
+   * nested fragment or no label.
+   *
+   * @param atom the {@link CDAtom} to inspect
+   * @return the node label, or {@code null}
+   */
+  private String numberedAtomLabelOf(CDAtom atom) {
+    if (atom.getFragments().size() != 1) {
+      return null;
+    }
+    return Optional.ofNullable(atom.getText())
+        .map(CDText::getText)
+        .map(CDStyledString::getText)
+        .orElseGet(atom::getLabelText);
+  }
+
+  /**
+   * Checks whether the nested fragment of the given node is exactly the homoatomic chain its label
+   * spells out, i.e. {@code count} atoms of {@code element} plus external connection points.
+   *
+   * @param atom the labelled {@link CDAtom}
+   * @param element the element parsed from the label
+   * @param count the atom count parsed from the label
+   * @return {@code true} if the nested fragment is that formula, otherwise {@code false}
+   */
+  private boolean spellsOutFormula(CDAtom atom, Elements element, int count) {
+    long elementAtoms =
+        atom.getFragments().get(0).getAtoms().stream()
+            .filter(a -> CDNodeType.Element.equals(a.getNodeType()))
+            .filter(a -> a.getElementNumber() == element.number())
+            .count();
+    long otherAtoms =
+        atom.getFragments().get(0).getAtoms().stream()
+            .filter(a -> !CDNodeType.ExternalConnectionPoint.equals(a.getNodeType()))
+            .count();
+    return elementAtoms == count && otherAtoms == count;
   }
 
   /**
