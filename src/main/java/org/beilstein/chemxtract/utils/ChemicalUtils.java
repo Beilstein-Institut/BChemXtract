@@ -247,6 +247,15 @@ public class ChemicalUtils {
   }
 
   /**
+   * Parser used only to answer {@link #isValidSmiles}. Constructing a {@link SmilesParser} is far
+   * more expensive than the parse itself — it initialises a CDK logging tool reflectively — and
+   * validation is called once per candidate substituent, so the parser is kept rather than built
+   * per call. {@link SmilesParser} carries per-parse state, hence one instance per thread.
+   */
+  private static final ThreadLocal<SmilesParser> VALIDATION_PARSER =
+      ThreadLocal.withInitial(() -> new SmilesParser(DefaultChemObjectBuilder.getInstance()));
+
+  /**
    * Validates whether a given string is a valid SMILES notation using the CDK {@link SmilesParser}.
    *
    * @param smiles the SMILES string to validate
@@ -254,8 +263,7 @@ public class ChemicalUtils {
    */
   public static boolean isValidSmiles(String smiles) {
     try {
-      SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-      parser.parseSmiles(smiles);
+      VALIDATION_PARSER.get().parseSmiles(smiles);
       return true;
     } catch (Exception _) {
       return false;
