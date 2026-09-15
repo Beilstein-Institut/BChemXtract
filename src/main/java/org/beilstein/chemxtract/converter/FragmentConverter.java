@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.converter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -392,11 +393,24 @@ public class FragmentConverter {
       return;
     }
     IAtom connectionPoint = connectionPoints.getFirst();
-    // Find bond between pseudoAtom and its origin
-    IBond bondOrigin = pseudoAtom.bonds().iterator().next();
+    // Find bond between pseudoAtom and its origin. An abbreviation drawn without an attachment
+    // bond has nothing to reconnect to, so it is left collapsed rather than expanded.
+    Iterator<IBond> originBonds = pseudoAtom.bonds().iterator();
+    if (!originBonds.hasNext()) {
+      LOGGER.warn(
+          "Abbreviation {} carries no attachment bond; keeping it collapsed.",
+          ((IPseudoAtom) pseudoAtom).getLabel());
+      return;
+    }
+    IBond bondOrigin = originBonds.next();
     IAtom originAtom = bondOrigin.getOther(pseudoAtom);
     // Find bond inside abbreviation connecting to connection point
-    IBond bondInsideAbbr = connectionPoint.bonds().iterator().next();
+    Iterator<IBond> abbrBonds = connectionPoint.bonds().iterator();
+    if (!abbrBonds.hasNext()) {
+      LOGGER.error("Abbreviation connection point carries no bond.");
+      return;
+    }
+    IBond bondInsideAbbr = abbrBonds.next();
     IAtom atomInsideAbbr = bondInsideAbbr.getOther(connectionPoint);
     // Reconnect: origin to abbreviation atom
     IBond newBond;
