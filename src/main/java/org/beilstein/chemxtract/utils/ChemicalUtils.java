@@ -195,9 +195,13 @@ public class ChemicalUtils {
         | NullPointerException
         | IllegalArgumentException
         | CloneNotSupportedException
+        | IndexOutOfBoundsException
         | IllegalStateException anException) {
+      // IndexOutOfBoundsException comes out of CDK's canonical numbering (InChINumbersTools and
+      // Beam) on some organometallic structures. Like every other generator failure it is reported
+      // as a CDKException, so a caller loses one structure instead of the whole document.
       LOGGER.error("SMILES generation failed", anException);
-      throw new CDKException("Unable to generate SMILES.", anException.getCause());
+      throw new CDKException("Unable to generate SMILES.", anException);
     }
     return smiles;
   }
