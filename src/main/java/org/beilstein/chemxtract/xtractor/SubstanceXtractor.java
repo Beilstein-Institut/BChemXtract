@@ -403,10 +403,18 @@ public class SubstanceXtractor {
     }
     // set SMILES
     String smiles;
-    if (atomContainer.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
-      smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Isomeric);
-    } else {
-      smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
+    try {
+      if (atomContainer.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
+        smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Isomeric);
+      } else {
+        smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
+      }
+    } catch (CDKException e) {
+      // Absolute and isomeric SMILES need CDK's InChI-based canonical numbering, which fails on
+      // some organometallic structures. The canonical flavour uses graph invariants instead, so it
+      // still yields a SMILES for the substance.
+      LOGGER.warn("Absolute SMILES generation failed, falling back to canonical.", e);
+      smiles = null;
     }
     if (smiles == null) {
       // Fallback to canonical SMILES
