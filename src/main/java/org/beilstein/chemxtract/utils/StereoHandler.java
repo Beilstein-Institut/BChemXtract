@@ -30,6 +30,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
+import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -139,11 +140,16 @@ public class StereoHandler {
    * Selects an appropriate {@link StereoElementFactory} based on whether the atom container has 3D
    * or 2D coordinates.
    *
+   * <p>The 3D factory is only usable when <em>every</em> atom carries 3D coordinates; ChemDraw
+   * documents can mix atoms with and without a Z position, and the 3D factory dereferences the
+   * missing points. Every atom placed by {@code AtomConverter} has a 2D position, so the 2D factory
+   * is the safe choice for such mixed fragments.
+   *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @return a {@link StereoElementFactory} instance for 2D or 3D
    */
   private static StereoElementFactory selectFactory(IAtomContainer atomContainer) {
-    return (atomContainer.getAtom(0).getPoint3d() != null)
+    return GeometryUtil.has3DCoordinates(atomContainer)
         ? StereoElementFactory.using3DCoordinates(atomContainer)
         : StereoElementFactory.using2DCoordinates(atomContainer);
   }
