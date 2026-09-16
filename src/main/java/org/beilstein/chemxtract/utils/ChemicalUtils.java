@@ -23,7 +23,10 @@ package org.beilstein.chemxtract.utils;
 
 import io.github.dan2097.jnainchi.InchiFlag;
 import io.github.dan2097.jnainchi.InchiStatus;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -35,8 +38,10 @@ import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.inchi.InChIGeneratorFactory;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.rinchi.RInChIGenerator;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
@@ -254,6 +259,76 @@ public class ChemicalUtils {
    */
   private static final ThreadLocal<SmilesParser> VALIDATION_PARSER =
       ThreadLocal.withInitial(() -> new SmilesParser(DefaultChemObjectBuilder.getInstance()));
+
+  /**
+   * A key identifying a structure among those one fragment produces.
+   *
+   * <p>The atoms, bonds and stereo descriptors written out in the container's own order, not a
+   * canonical form. The duplicates this is here to catch are the same substituent combination
+   * applied to different position-variation variants of one fragment, which the same code builds
+   * the same way and so lays out identically; canonicalising them would cost as much as building
+   * the substance the key is meant to avoid building.
+   *
+   * <p>The bargain this strikes is one-sided on purpose. Two containers sharing a key are the same
+   * structure, since the key spells out the whole graph. Two that do not share one may still be the
+   * same structure written differently, and are then built twice and merged by InChI at the end of
+   * extraction as before — a missed saving, never a lost substance.
+   *
+   * @param container the structure to key
+   * @return the key
+   */
+  public static String structureKey(IAtomContainer container) {
+    StringBuilder key = new StringBuilder(container.getAtomCount() * 8);
+    for (IAtom atom : container.atoms()) {
+      key.append(atom.getSymbol())
+          .append(':')
+          .append(atom.getImplicitHydrogenCount())
+          .append(':')
+          .append(atom.getFormalCharge())
+          .append(',');
+    }
+    // Moving a residue onto the position a legend names drops its bond and appends the new one, so
+    // the bond order within the container depends on where the variant had drawn the residue.
+    // Sorting removes that difference, which is exactly the one this key must see past.
+    key.append('|').append(sorted(bondEntries(container)));
+    key.append('|').append(sorted(stereoEntries(container)));
+    return key.toString();
+  }
+
+  /** One entry per bond, endpoints in a fixed order so a bond reads the same from either end. */
+  private static List<String> bondEntries(IAtomContainer container) {
+    List<String> entries = new ArrayList<>(container.getBondCount());
+    for (IBond bond : container.bonds()) {
+      int begin = container.indexOf(bond.getBegin());
+      int end = container.indexOf(bond.getEnd());
+      entries.add(Math.min(begin, end) + "-" + Math.max(begin, end) + ":" + bond.getOrder());
+    }
+    return entries;
+  }
+
+  /** One entry per stereo element, its focus and carriers named by atom index. */
+  private static List<String> stereoEntries(IAtomContainer container) {
+    List<String> entries = new ArrayList<>();
+    for (IStereoElement<?, ?> stereo : container.stereoElements()) {
+      StringBuilder entry = new StringBuilder();
+      entry.append(stereo.getConfigClass()).append(':').append(stereo.getConfigOrder()).append(':');
+      if (stereo.getFocus() instanceof IAtom focus) {
+        entry.append(container.indexOf(focus));
+      }
+      entry.append(':');
+      for (Object carrier : stereo.getCarriers()) {
+        entry.append(carrier instanceof IAtom atom ? container.indexOf(atom) : carrier).append('.');
+      }
+      entries.add(entry.toString());
+    }
+    return entries;
+  }
+
+  /** The entries joined in sorted order, so their order in the container does not reach the key. */
+  private static String sorted(List<String> entries) {
+    Collections.sort(entries);
+    return String.join(",", entries);
+  }
 
   /**
    * Validates whether a given string is a valid SMILES notation using the CDK {@link SmilesParser}.
