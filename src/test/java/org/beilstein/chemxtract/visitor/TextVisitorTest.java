@@ -202,4 +202,20 @@ public class TextVisitorTest {
     assertEquals(List.of("H"), r.get("R1"), "R1 must inherit the chained value");
     assertEquals(List.of("H"), r.get("R2"), "R2 must be resolved");
   }
+
+  @Test
+  public void keepsLocantSetTogether() {
+    // "5,7-Me2" names one disubstituted value, not the scheme number 5 followed by "7-Me2": the
+    // comma inside a locant set is not a list separator (#166).
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("R6 = H, 7-Me, 5,7-Me2")).getRgroups();
+    assertEquals(List.of("H", "7-Me", "5,7-Me2"), r.get("R6"), "the locant set must stay whole");
+  }
+
+  @Test
+  public void keepsThreeMemberedLocantSetTogether() {
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("R = H, 3,4,5-(OMe)3")).getRgroups();
+    assertEquals(List.of("H", "3,4,5-(OMe)3"), r.get("R"));
+  }
 }

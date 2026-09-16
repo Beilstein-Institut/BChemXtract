@@ -37,6 +37,7 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.Test;
+import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.graph.Cycles;
@@ -45,7 +46,11 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.layout.StructureDiagramGenerator;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.smiles.SmilesParser;
 
 /** Tests for scaffold-scoped resolution of R-group definitions in {@link MarkushHandler}. */
 public class MarkushHandlerTest {
@@ -499,5 +504,83 @@ public class MarkushHandlerTest {
     assertEquals(6, product.getBondCount());
     assertEquals(1, Cycles.mcb(product).numberOfCycles(), "the oxygen closes the ring");
     assertNoPseudoAtoms(product);
+  }
+
+  /** The indole of #166 with an R-group drawn on its benzo ring, laid out so grafting can work. */
+  private static IAtomContainer scaffoldFromSmiles(String smiles, String label, int anchorIndex)
+      throws CDKException {
+    IAtomContainer scaffold =
+        new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles(smiles);
+    IPseudoAtom residue =
+        SilentChemObjectBuilder.getInstance().newInstance(IPseudoAtom.class, label);
+    residue.setLabel(label);
+    IAtom anchor = scaffold.getAtom(anchorIndex);
+    scaffold.addAtom(residue);
+    scaffold.addBond(new Bond(anchor, residue, IBond.Order.SINGLE));
+    Integer hydrogens = anchor.getImplicitHydrogenCount();
+    if (hydrogens != null && hydrogens > 0) {
+      anchor.setImplicitHydrogenCount(hydrogens - 1);
+    }
+    new StructureDiagramGenerator().generateCoordinates(scaffold);
+    return scaffold;
+  }
+
+  private static String canonicalSmiles(IAtomContainer container) throws CDKException {
+    return new SmilesGenerator(SmiFlavor.Canonical).create(container);
+  }
+
+  /**
+   * A value naming several locants ("5,7-Me2") puts one copy of the group on each of them: the
+   * drawn residue moves to the first, the others are grafted onto the atoms their numbers name
+   * (#166).
+   */
+  @Test
+  public void multiLocantValueSubstitutesEveryPositionItNames() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("5,7-Me2")));
+    // Indole, R drawn on a benzo carbon; the legend states where the methyls actually go.
+    IAtomContainer scaffold = scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    assertNoPseudoAtoms(results.getFirst());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("[nH]1ccc2cc(C)cc(C)c12")),
+        canonicalSmiles(results.getFirst()),
+        "5,7-Me2 must give 5,7-dimethylindole");
+  }
+
+  /** The bracketed multiplier form, on a single ring numbered from its attachment atom. */
+  @Test
+  public void bracketedMultiplierValueSubstitutesEveryPositionItNames() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("3,4-(OMe)2")));
+    // Chlorobenzene: the chlorine is the ring's attachment atom, so positions count from it.
+    IAtomContainer scaffold = scaffoldFromSmiles("Clc1ccccc1", "R", 3);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    assertNoPseudoAtoms(results.getFirst());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("COc1ccc(Cl)cc1OC")),
+        canonicalSmiles(results.getFirst()),
+        "3,4-(OMe)2 must give the 3,4-dimethoxy ring");
+  }
+
+  /**
+   * Counted from its attachment atom, a single ring cannot tell position 3 from position 5 — both
+   * are two bonds away. Rather than stack both methyls on the one atom it picks, the value is
+   * dropped.
+   */
+  @Test
+  public void indistinguishablePositionsOnOneRingDropTheValue() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("3,5-Me2")));
+    IAtomContainer scaffold = scaffoldFromSmiles("Clc1ccccc1", "R", 3);
+
+    assertTrue(handler.replaceRGroups(scaffold).isEmpty(), "an ambiguous position must not graft");
   }
 }
