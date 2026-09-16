@@ -40,6 +40,7 @@ import javax.vecmath.Point2d;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
+import org.beilstein.chemxtract.cheminf.RingSystemNumbering;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.CorrelatedGroup;
 import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
@@ -288,13 +289,12 @@ public class MarkushHandler {
    */
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
       throws CloneNotSupportedException, IOException, CDKException {
-    return replaceRGroups(atomContainer, residueLabels);
+    return replaceRGroups(atomContainer, residueLabels, new HashSet<>());
   }
 
   /**
-   * Generates all possible structures for a scaffold, resolving its R-groups from the definition
-   * block nearest to the scaffold. This prevents definitions of one scaffold from leaking into
-   * another when several scaffolds on the same page reuse the same R-group labels.
+   * Generates all structures for a scaffold, resolving its R-groups from the definition block
+   * nearest to it, without sharing produced structures with any other scaffold.
    *
    * @param atomContainer molecule containing pseudo-atoms (R-groups)
    * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
@@ -306,19 +306,41 @@ public class MarkushHandler {
   public List<IAtomContainer> replaceRGroups(
       IAtomContainer atomContainer, CDRectangle scaffoldBounds)
       throws CloneNotSupportedException, IOException, CDKException {
+    return replaceRGroups(atomContainer, scaffoldBounds, new HashSet<>());
+  }
+
+  /**
+   * Generates all possible structures for a scaffold, resolving its R-groups from the definition
+   * block nearest to the scaffold. This prevents definitions of one scaffold from leaking into
+   * another when several scaffolds on the same page reuse the same R-group labels.
+   *
+   * @param atomContainer molecule containing pseudo-atoms (R-groups)
+   * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
+   * @param produced keys of the structures already produced for this fragment, added to as more are
+   *     produced; a scaffold drawn with a position-variation attachment is expanded once per
+   *     candidate atom, and a legend giving substituents by ring position makes those expansions
+   *     yield the same structures, which this lets the later ones skip before they are laid out
+   * @return list of all substituted atom containers not already in {@code produced}
+   * @throws CloneNotSupportedException if atom container cloning fails
+   * @throws IOException if reading SMILES definitions fails
+   * @throws InvalidSmilesException if a SMILES string is invalid
+   */
+  public List<IAtomContainer> replaceRGroups(
+      IAtomContainer atomContainer, CDRectangle scaffoldBounds, Set<String> produced)
+      throws CloneNotSupportedException, IOException, CDKException {
     Set<String> present = presentResidueLabels(atomContainer);
     List<Map<String, String>> combinations =
         viableCombinations(atomContainer, residueChoicesNear(present, scaffoldBounds));
     if (combinations.isEmpty()) {
       // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
       // page-wide union.
-      return replaceRGroups(atomContainer, residueLabels);
+      return replaceRGroups(atomContainer, residueLabels, produced);
     }
-    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations);
+    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations, produced);
     // Scoping is a refinement: if it narrowed the definitions down to something that produced no
     // structures, fall back to the page-wide union so scoping never does worse than no scoping.
     if (scoped.isEmpty()) {
-      return replaceRGroups(atomContainer, residueLabels);
+      return replaceRGroups(atomContainer, residueLabels, produced);
     }
     return scoped;
   }
@@ -521,7 +543,7 @@ public class MarkushHandler {
   }
 
   private List<IAtomContainer> replaceRGroups(
-      IAtomContainer atomContainer, Map<String, List<String>> definitions)
+      IAtomContainer atomContainer, Map<String, List<String>> definitions, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
 
     Map<String, List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, definitions);
@@ -530,7 +552,9 @@ public class MarkushHandler {
       return List.of(atomContainer);
     }
     return applyCombinations(
-        atomContainer, viableCombinations(atomContainer, independentChoices(relevantRGroups)));
+        atomContainer,
+        viableCombinations(atomContainer, independentChoices(relevantRGroups)),
+        produced);
   }
 
   /**
@@ -542,7 +566,7 @@ public class MarkushHandler {
    * @return the substituted structures
    */
   private List<IAtomContainer> applyCombinations(
-      IAtomContainer atomContainer, List<Map<String, String>> combinations)
+      IAtomContainer atomContainer, List<Map<String, String>> combinations, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
     List<IAtomContainer> results = new ArrayList<>(combinations.size());
 
@@ -569,6 +593,13 @@ public class MarkushHandler {
         }
       }
       if (substituted && allResolved) {
+        // A structure an earlier position-variation variant of this fragment already produced is
+        // dropped before it is laid out: the legend moved the residue onto the position it names,
+        // so the variants differ in nothing that survives, and laying out and building each copy
+        // only to merge them again at the end of extraction is the bulk of the work here.
+        if (!produced.add(ChemicalUtils.structureKey(clone))) {
+          continue;
+        }
         layoutGraftedAtoms(clone, scaffoldAtoms);
         results.add(clone);
       }
@@ -730,15 +761,7 @@ public class MarkushHandler {
     }
     IBond bond = bonds.next();
     IAtom anchor = bond.getOther(residue);
-    IAtomContainer ring = smallestRingContaining(rings, anchor);
-    if (ring == null) {
-      return false;
-    }
-    IAtom ipso = soleAttachmentAtom(container, ring);
-    if (ipso == null) {
-      return false;
-    }
-    IAtom target = ringAtomAtDistance(ring, ipso, position - 1, residue);
+    IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
     if (target == null) {
       return false;
     }
@@ -750,6 +773,39 @@ public class MarkushHandler {
     shiftImplicitHydrogens(anchor, 1);
     shiftImplicitHydrogens(target, -1);
     return true;
+  }
+
+  /**
+   * The atom a positional substituent names, for the ring system the residue is attached to.
+   *
+   * <p>Which numbering applies depends on the ring system. A fused system is numbered the way its
+   * name is — indole's positions 5, 6 and 7 are on its benzo ring, counted round the periphery from
+   * the nitrogen — which {@link RingSystemNumbering} works out and which the ortho/meta/para model
+   * below cannot express. A single ring has no such numbering to appeal to, so its positions are
+   * counted round it from its attachment atom, {@code o}/{@code m}/{@code p} being 2/3/4.
+   *
+   * @param container the structure the residue belongs to
+   * @param rings the container's ring set
+   * @param anchor the ring atom the residue is currently attached to
+   * @param residue the residue being placed, used to break the direction tie on a single ring
+   * @param position the 1-based position named by the legend
+   * @return the atom at that position, or {@code null} if it cannot be determined
+   */
+  private static IAtom ringPositionAtom(
+      IAtomContainer container, IRingSet rings, IAtom anchor, IAtom residue, int position) {
+    Map<Integer, IAtom> locants = RingSystemNumbering.locants(container, rings, anchor);
+    if (!locants.isEmpty()) {
+      return locants.get(position);
+    }
+    IAtomContainer ring = smallestRingContaining(rings, anchor);
+    if (ring == null) {
+      return null;
+    }
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    if (ipso == null) {
+      return null;
+    }
+    return ringAtomAtDistance(ring, ipso, position - 1, residue);
   }
 
   /** The smallest ring containing the atom, or {@code null} if it lies in none. */
