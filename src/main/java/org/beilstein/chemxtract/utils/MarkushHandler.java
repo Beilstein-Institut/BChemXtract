@@ -40,6 +40,7 @@ import javax.vecmath.Point2d;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
+import org.beilstein.chemxtract.cheminf.RingSystemNumbering;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.CorrelatedGroup;
 import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
@@ -86,14 +87,22 @@ public class MarkushHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(MarkushHandler.class);
 
   /**
-   * A substituent written as {@code <position>-<group>}, e.g. {@code 3-OMe} or {@code p-Cl}: the
-   * group sits on the named ring position, counted from the ring's attachment atom. The position is
-   * either a number or one of the ortho/meta/para prefixes, which chemists use interchangeably with
-   * 2/3/4. Only tried after the plain abbreviation lookup fails, because many abbreviations
-   * legitimately start the same way ({@code 2-py}, {@code 4-ClPh}, {@code p-Tol}) and there the
-   * prefix belongs to the substituent's own name.
+   * A substituent written as {@code <positions>-<group>}, e.g. {@code 3-OMe}, {@code p-Cl} or
+   * {@code 5,7-Me2}: the group sits on each named ring position, counted from the ring's attachment
+   * atom. A position is either a number or one of the ortho/meta/para prefixes, which chemists use
+   * interchangeably with 2/3/4. Only tried after the plain abbreviation lookup fails, because many
+   * abbreviations legitimately start the same way ({@code 2-py}, {@code 4-ClPh}, {@code p-Tol}) and
+   * there the prefix belongs to the substituent's own name.
    */
-  private static final Pattern POSITIONAL_SUBSTITUENT = Pattern.compile("(\\d{1,2}|[omp])-(.+)");
+  private static final Pattern POSITIONAL_SUBSTITUENT =
+      Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|[omp])-(.+)");
+
+  /**
+   * The multiplier a multi-locant value carries on its group: the {@code 2} of {@code Me2}, or the
+   * brackets and {@code 3} of {@code (OMe)3}. It states how often the group appears and is only
+   * stripped when it agrees with the number of locants.
+   */
+  private static final Pattern GROUP_MULTIPLIER = Pattern.compile("\\(?(.+?)\\)?(\\d+)");
 
   private final Map<String, List<String>> residueLabels;
   private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
@@ -288,13 +297,12 @@ public class MarkushHandler {
    */
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
       throws CloneNotSupportedException, IOException, CDKException {
-    return replaceRGroups(atomContainer, residueLabels);
+    return replaceRGroups(atomContainer, residueLabels, new HashSet<>());
   }
 
   /**
-   * Generates all possible structures for a scaffold, resolving its R-groups from the definition
-   * block nearest to the scaffold. This prevents definitions of one scaffold from leaking into
-   * another when several scaffolds on the same page reuse the same R-group labels.
+   * Generates all structures for a scaffold, resolving its R-groups from the definition block
+   * nearest to it, without sharing produced structures with any other scaffold.
    *
    * @param atomContainer molecule containing pseudo-atoms (R-groups)
    * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
@@ -306,19 +314,41 @@ public class MarkushHandler {
   public List<IAtomContainer> replaceRGroups(
       IAtomContainer atomContainer, CDRectangle scaffoldBounds)
       throws CloneNotSupportedException, IOException, CDKException {
+    return replaceRGroups(atomContainer, scaffoldBounds, new HashSet<>());
+  }
+
+  /**
+   * Generates all possible structures for a scaffold, resolving its R-groups from the definition
+   * block nearest to the scaffold. This prevents definitions of one scaffold from leaking into
+   * another when several scaffolds on the same page reuse the same R-group labels.
+   *
+   * @param atomContainer molecule containing pseudo-atoms (R-groups)
+   * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
+   * @param produced keys of the structures already produced for this fragment, added to as more are
+   *     produced; a scaffold drawn with a position-variation attachment is expanded once per
+   *     candidate atom, and a legend giving substituents by ring position makes those expansions
+   *     yield the same structures, which this lets the later ones skip before they are laid out
+   * @return list of all substituted atom containers not already in {@code produced}
+   * @throws CloneNotSupportedException if atom container cloning fails
+   * @throws IOException if reading SMILES definitions fails
+   * @throws InvalidSmilesException if a SMILES string is invalid
+   */
+  public List<IAtomContainer> replaceRGroups(
+      IAtomContainer atomContainer, CDRectangle scaffoldBounds, Set<String> produced)
+      throws CloneNotSupportedException, IOException, CDKException {
     Set<String> present = presentResidueLabels(atomContainer);
     List<Map<String, String>> combinations =
         viableCombinations(atomContainer, residueChoicesNear(present, scaffoldBounds));
     if (combinations.isEmpty()) {
       // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
       // page-wide union.
-      return replaceRGroups(atomContainer, residueLabels);
+      return replaceRGroups(atomContainer, residueLabels, produced);
     }
-    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations);
+    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations, produced);
     // Scoping is a refinement: if it narrowed the definitions down to something that produced no
     // structures, fall back to the page-wide union so scoping never does worse than no scoping.
     if (scoped.isEmpty()) {
-      return replaceRGroups(atomContainer, residueLabels);
+      return replaceRGroups(atomContainer, residueLabels, produced);
     }
     return scoped;
   }
@@ -521,7 +551,7 @@ public class MarkushHandler {
   }
 
   private List<IAtomContainer> replaceRGroups(
-      IAtomContainer atomContainer, Map<String, List<String>> definitions)
+      IAtomContainer atomContainer, Map<String, List<String>> definitions, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
 
     Map<String, List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, definitions);
@@ -530,7 +560,9 @@ public class MarkushHandler {
       return List.of(atomContainer);
     }
     return applyCombinations(
-        atomContainer, viableCombinations(atomContainer, independentChoices(relevantRGroups)));
+        atomContainer,
+        viableCombinations(atomContainer, independentChoices(relevantRGroups)),
+        produced);
   }
 
   /**
@@ -542,7 +574,7 @@ public class MarkushHandler {
    * @return the substituted structures
    */
   private List<IAtomContainer> applyCombinations(
-      IAtomContainer atomContainer, List<Map<String, String>> combinations)
+      IAtomContainer atomContainer, List<Map<String, String>> combinations, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
     List<IAtomContainer> results = new ArrayList<>(combinations.size());
 
@@ -569,6 +601,13 @@ public class MarkushHandler {
         }
       }
       if (substituted && allResolved) {
+        // A structure an earlier position-variation variant of this fragment already produced is
+        // dropped before it is laid out: the legend moved the residue onto the position it names,
+        // so the variants differ in nothing that survives, and laying out and building each copy
+        // only to merge them again at the end of extraction is the bulk of the work here.
+        if (!produced.add(ChemicalUtils.structureKey(clone))) {
+          continue;
+        }
         layoutGraftedAtoms(clone, scaffoldAtoms);
         results.add(clone);
       }
@@ -643,15 +682,142 @@ public class MarkushHandler {
     if (!matcher.matches()) {
       return false;
     }
-    String smiles = resolveSmiles(matcher.group(2));
+    List<Integer> positions = new ArrayList<>();
+    for (String token : matcher.group(1).split(",")) {
+      positions.add(ringPosition(token));
+    }
+    String smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
     if (!ChemicalUtils.isValidSmiles(smiles)) {
       return false;
     }
-    if (!moveResiduesToRingPosition(container, label, ringPosition(matcher.group(1)))) {
+    if (!placeResidues(container, label, positions)) {
       return false;
     }
     replaceRGroup(container, label, smiles);
     return true;
+  }
+
+  /**
+   * The group of a multi-locant value, without the multiplier that states how often it appears:
+   * {@code Me2} on two locants is two methyls, {@code (OMe)3} on three is three methoxys. A
+   * multiplier that disagrees with the number of locants is not one — the digit belongs to the
+   * group's own name — and the group is left as written.
+   *
+   * @param group the group part of a positional value
+   * @param locants how many positions the value names
+   * @return the group without its multiplier
+   */
+  private static String stripMultiplier(String group, int locants) {
+    if (locants < 2) {
+      return group;
+    }
+    Matcher matcher = GROUP_MULTIPLIER.matcher(group);
+    if (matcher.matches() && Integer.parseInt(matcher.group(2)) == locants) {
+      return matcher.group(1);
+    }
+    return group;
+  }
+
+  /**
+   * Puts a residue on each position the value names. The drawn residue moves to the first; every
+   * further position gets a residue of its own, carrying the same label, so that the single
+   * replacement that follows grafts a copy of the group onto each of them.
+   *
+   * @param container the structure to modify
+   * @param label the R-group label
+   * @param positions the 1-based ring positions the value names, in the order written
+   * @return {@code true} if every residue now sits on the named positions
+   */
+  private static boolean placeResidues(
+      IAtomContainer container, String label, List<Integer> positions) {
+    List<IAtom> residues = new ArrayList<>();
+    for (IAtom atom : container.atoms()) {
+      if (atom instanceof IPseudoAtom pseudo && label.equals(pseudo.getLabel())) {
+        residues.add(atom);
+      }
+    }
+    if (residues.isEmpty()) {
+      return false;
+    }
+    IRingSet rings = Cycles.mcb(container).toRingSet();
+    for (IAtom residue : residues) {
+      if (!placeResidue(container, rings, residue, label, positions)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Places one residue on the named positions.
+   *
+   * <p>The further positions are resolved before the residue moves, and their residues attached
+   * afterwards: the ring numbering is read from the structure as drawn, and a residue added to it
+   * would be another attachment to count from.
+   *
+   * @param container the structure to modify
+   * @param rings the ring set of the container
+   * @param residue the drawn residue
+   * @param label the R-group label
+   * @param positions the 1-based ring positions the value names, in the order written
+   * @return {@code true} if the residue and its copies sit on the named positions
+   */
+  private static boolean placeResidue(
+      IAtomContainer container,
+      IRingSet rings,
+      IAtom residue,
+      String label,
+      List<Integer> positions) {
+    Iterator<IBond> bonds = residue.bonds().iterator();
+    if (!bonds.hasNext()) {
+      return false;
+    }
+    IAtom anchor = bonds.next().getOther(residue);
+    List<IAtom> targets = new ArrayList<>();
+    for (int position : positions) {
+      IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
+      // Two of the value's positions landing on one atom means the numbering cannot tell them
+      // apart — a single ring counted from its attachment has no way to distinguish 3 from 5, for
+      // instance. Stacking both groups on that atom would be a plausible but wrong structure, so
+      // the value is dropped instead.
+      if (target == null || containsSame(targets, target)) {
+        return false;
+      }
+      targets.add(target);
+    }
+    if (!moveResidueToAtom(container, residue, targets.getFirst())) {
+      return false;
+    }
+    for (IAtom target : targets.subList(1, targets.size())) {
+      attachResidue(container, target, label);
+    }
+    return true;
+  }
+
+  /** Whether the list already holds this very atom. */
+  private static boolean containsSame(List<IAtom> atoms, IAtom atom) {
+    for (IAtom candidate : atoms) {
+      if (candidate == atom) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Attaches a further residue of the given label to an atom, correcting its implicit hydrogen
+   * count. The residue carries no coordinates; the graft it becomes is laid out with the rest.
+   *
+   * @param container the structure to modify
+   * @param target the atom to attach the residue to
+   * @param label the R-group label the residue carries
+   */
+  private static void attachResidue(IAtomContainer container, IAtom target, String label) {
+    IPseudoAtom residue = container.getBuilder().newInstance(IPseudoAtom.class, label);
+    residue.setLabel(label);
+    container.addAtom(residue);
+    container.addBond(new Bond(target, residue, IBond.Order.SINGLE));
+    shiftImplicitHydrogens(target, -1);
   }
 
   /**
@@ -685,63 +851,21 @@ public class MarkushHandler {
   }
 
   /**
-   * Moves every residue carrying the given label onto the ring atom named by the position index.
+   * Re-bonds a single residue to the given ring atom, correcting the implicit hydrogen count of the
+   * atom it left and the one it arrived at.
    *
    * @param container the structure to modify
-   * @param label the R-group label
-   * @param position the 1-based ring position, counted from the ring's attachment atom
-   * @return {@code true} if every such residue now sits on the named position
-   */
-  private static boolean moveResiduesToRingPosition(
-      IAtomContainer container, String label, int position) {
-    List<IAtom> residues = new ArrayList<>();
-    for (IAtom atom : container.atoms()) {
-      if (atom instanceof IPseudoAtom pseudo && label.equals(pseudo.getLabel())) {
-        residues.add(atom);
-      }
-    }
-    if (residues.isEmpty()) {
-      return false;
-    }
-    IRingSet rings = Cycles.mcb(container).toRingSet();
-    for (IAtom residue : residues) {
-      if (!moveResidueToRingPosition(container, rings, residue, position)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Re-bonds a single residue to the ring atom at the given position, correcting the implicit
-   * hydrogen count of the atom it left and the one it arrived at.
-   *
-   * @param container the structure to modify
-   * @param rings the ring set of the container
    * @param residue the residue (pseudo-atom) to move
-   * @param position the 1-based ring position, counted from the ring's attachment atom
-   * @return {@code true} if the residue sits on the named position afterwards
+   * @param target the ring atom the residue belongs on
+   * @return {@code true} if the residue sits on that atom afterwards
    */
-  private static boolean moveResidueToRingPosition(
-      IAtomContainer container, IRingSet rings, IAtom residue, int position) {
+  private static boolean moveResidueToAtom(IAtomContainer container, IAtom residue, IAtom target) {
     Iterator<IBond> bonds = residue.bonds().iterator();
     if (!bonds.hasNext()) {
       return false;
     }
     IBond bond = bonds.next();
     IAtom anchor = bond.getOther(residue);
-    IAtomContainer ring = smallestRingContaining(rings, anchor);
-    if (ring == null) {
-      return false;
-    }
-    IAtom ipso = soleAttachmentAtom(container, ring);
-    if (ipso == null) {
-      return false;
-    }
-    IAtom target = ringAtomAtDistance(ring, ipso, position - 1, residue);
-    if (target == null) {
-      return false;
-    }
     if (target == anchor) {
       return true;
     }
@@ -750,6 +874,39 @@ public class MarkushHandler {
     shiftImplicitHydrogens(anchor, 1);
     shiftImplicitHydrogens(target, -1);
     return true;
+  }
+
+  /**
+   * The atom a positional substituent names, for the ring system the residue is attached to.
+   *
+   * <p>Which numbering applies depends on the ring system. A fused system is numbered the way its
+   * name is — indole's positions 5, 6 and 7 are on its benzo ring, counted round the periphery from
+   * the nitrogen — which {@link RingSystemNumbering} works out and which the ortho/meta/para model
+   * below cannot express. A single ring has no such numbering to appeal to, so its positions are
+   * counted round it from its attachment atom, {@code o}/{@code m}/{@code p} being 2/3/4.
+   *
+   * @param container the structure the residue belongs to
+   * @param rings the container's ring set
+   * @param anchor the ring atom the residue is currently attached to
+   * @param residue the residue being placed, used to break the direction tie on a single ring
+   * @param position the 1-based position named by the legend
+   * @return the atom at that position, or {@code null} if it cannot be determined
+   */
+  private static IAtom ringPositionAtom(
+      IAtomContainer container, IRingSet rings, IAtom anchor, IAtom residue, int position) {
+    Map<Integer, IAtom> locants = RingSystemNumbering.locants(container, rings, anchor);
+    if (!locants.isEmpty()) {
+      return locants.get(position);
+    }
+    IAtomContainer ring = smallestRingContaining(rings, anchor);
+    if (ring == null) {
+      return null;
+    }
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    if (ipso == null) {
+      return null;
+    }
+    return ringAtomAtDistance(ring, ipso, position - 1, residue);
   }
 
   /** The smallest ring containing the atom, or {@code null} if it lies in none. */

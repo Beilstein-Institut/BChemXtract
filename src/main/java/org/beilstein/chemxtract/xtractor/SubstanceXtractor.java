@@ -309,6 +309,13 @@ public class SubstanceXtractor {
     boolean variablePosition = AttachmentHandler.hasVariableAttachment(fragment);
 
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
+    // Markush expansion runs per position-variation variant, and a legend that gives a substituent
+    // by ring position moves the residue onto the atom it names, discarding the position the
+    // variant had drawn it at. Every variant then yields the same structure, once per variant. The
+    // structures this fragment has already produced are therefore remembered, so that the InChI,
+    // SMILES and extended SMILES of a repeat are not generated only for the duplicate to be
+    // dropped again at the end of extraction.
+    Set<String> builtStructures = new HashSet<>();
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
     // variable attachment yield the original fragment unchanged.
     for (CDFragment variant : AttachmentHandler.expandVariableAttachments(fragment)) {
@@ -329,9 +336,13 @@ public class SubstanceXtractor {
           // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
           // to emitting the unexpanded scaffold below.
           for (IAtomContainer container :
-              markushHandler.replaceRGroups(atomContainer, fragment.getBounds())) {
+              markushHandler.replaceRGroups(atomContainer, fragment.getBounds(), builtStructures)) {
             expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
           }
+          // Expansion may have returned nothing because every structure it reached had already
+          // been produced by an earlier variant. That is still an expansion: without this the
+          // unexpanded scaffold would be emitted below as though no definition had applied.
+          expandedRGroups |= !builtStructures.isEmpty();
         } catch (IOException | CloneNotSupportedException e) {
           LOGGER.error("R-group replacement failed", e);
         }
