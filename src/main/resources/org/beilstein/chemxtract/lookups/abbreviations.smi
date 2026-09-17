@@ -268,3 +268,9 @@ PhCONMe	[*]N(C)C(=O)C1=CC=CC=C1
 PhCONH	[*]NC(=O)C1=CC=CC=C1
 PhCOO	[*]OC(=O)C1=CC=CC=C1
 NHMe	[*]NC
+# substituted phenyls whose locant spelling the table did not yet carry (issue #165)
+2-MeC6H4	[*]C1=CC=CC=C1C
+3-OMeC6H4	[*]C1=CC=CC(OC)=C1
+3-FC6H4	[*]C1=CC=CC(F)=C1
+4-FC6H4	[*]C1=CC=C(F)C=C1
+4-t-BuC6H4	[*]C1=CC=C(C(C)(C)C)C=C1
