@@ -712,8 +712,14 @@ public class MarkushHandler {
       return group;
     }
     Matcher matcher = GROUP_MULTIPLIER.matcher(group);
-    if (matcher.matches() && Integer.parseInt(matcher.group(2)) == locants) {
-      return matcher.group(1);
+    if (matcher.matches()) {
+      try {
+        if (Integer.parseInt(matcher.group(2)) == locants) {
+          return matcher.group(1);
+        }
+      } catch (NumberFormatException e) {
+        LOGGER.debug("Multiplier of {} is not a number, leaving the group as written.", group);
+      }
     }
     return group;
   }
