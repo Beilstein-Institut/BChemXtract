@@ -85,7 +85,9 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static String get(String key) throws IOException {
-    return getInstance().smilesLookup.get(key.toLowerCase());
+    Map<String, String> lookup = getInstance().smilesLookup;
+    String smiles = lookup.get(key.toLowerCase());
+    return smiles != null ? smiles : lookup.get(otherLocantSpelling(key.toLowerCase()));
   }
 
   /**
@@ -96,7 +98,43 @@ public class SmilesAbbreviations {
    * @throws IOException if the lookup table cannot be initialized
    */
   public static boolean contains(String key) throws IOException {
-    return getInstance().smilesLookup.containsKey(key.toLowerCase());
+    Map<String, String> lookup = getInstance().smilesLookup;
+    return lookup.containsKey(key.toLowerCase())
+        || lookup.containsKey(otherLocantSpelling(key.toLowerCase()));
+  }
+
+  /**
+   * The same abbreviation with its leading ring locant written the other way round.
+   *
+   * <p>Chemists write the position of a substituent on a benzene ring as either a number or an
+   * ortho/meta/para prefix, and use the two interchangeably: {@code 4-MeC6H4} and {@code p-MeC6H4}
+   * name the same group. The table has grown both spellings unevenly — {@code p-MeC6H4} and {@code
+   * 4-ClC6H4} are both in it, their counterparts are not — so a lookup that misses is retried in
+   * the other spelling rather than each entry having to be written twice.
+   *
+   * <p>Only a leading {@code 2}/{@code 3}/{@code 4} or {@code o}/{@code m}/{@code p} is rewritten,
+   * and it is rewritten wherever it appears, not only on benzenes. So {@code o-py} finds the
+   * table's {@code 2-py}, which is a spelling no one uses but reads the way it was meant. Prefixes
+   * that are not locants are left alone, {@code n-Bu} and {@code t-Bu} among them. An abbreviation
+   * with no leading locant, or one whose rewritten form the table does not hold, misses as before.
+   *
+   * @param key the lowercased abbreviation
+   * @return the alternative spelling, or the key unchanged if it has no leading locant
+   */
+  private static String otherLocantSpelling(String key) {
+    if (key.length() < 2 || key.charAt(1) != '-') {
+      return key;
+    }
+    String rest = key.substring(1);
+    return switch (key.charAt(0)) {
+      case '2' -> "o" + rest;
+      case '3' -> "m" + rest;
+      case '4' -> "p" + rest;
+      case 'o' -> "2" + rest;
+      case 'm' -> "3" + rest;
+      case 'p' -> "4" + rest;
+      default -> key;
+    };
   }
 
   /**

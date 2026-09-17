@@ -35,6 +35,9 @@ import org.beilstein.chemxtract.utils.Definitions;
 /** Visitor class for traversing a ChemDraw page and extracting R-group definitions from text. */
 public class TextVisitor extends CDVisitor {
 
+  /** A ring position, or the several a locant set names: the {@code 5,7} of {@code 5,7-Me2}. */
+  private static final String LOCANT_SET = "\\d{1,2}(?:,\\d{1,2})*";
+
   private final Map<String, List<String>> rgroups;
   private final List<RGroupDefinitionBlock> blocks;
 
@@ -269,7 +272,7 @@ public class TextVisitor extends CDVisitor {
 
     // Case 2: plain comma- or semicolon-separated list if no (a)/(b)/(c) found
     if (abbreviations.isEmpty()) {
-      for (String rawPart : rhs.split("\\s*[,;]\\s*")) {
+      for (String rawPart : splitValues(rhs)) {
         String part = rawPart.trim();
         // A leaked reaction condition of the form "label = value" (e.g. a temperature
         // "T = 250 °C" or "t = 30 min") is not a substituent. Its label is one the assignment
@@ -292,6 +295,31 @@ public class TextVisitor extends CDVisitor {
     }
 
     return abbreviations;
+  }
+
+  /**
+   * Splits a value list on its separators, keeping a locant set together: the comma of {@code
+   * 5,7-Me2} names a second ring position for one value, it does not start another one. Such a
+   * comma is one with nothing but a bare number in front of it and a number that carries its own
+   * substituent behind it — a list separator always has a whole value on at least one side.
+   *
+   * @param rhs the right-hand side text of a single "label = ..." definition
+   * @return the value tokens, locant sets unsplit
+   */
+  private static List<String> splitValues(String rhs) {
+    List<String> values = new ArrayList<>();
+    for (String part : rhs.split("\\s*[,;]\\s*")) {
+      values.add(part);
+      // A set of three or more locants ("3,4,5-(OMe)3") arrives one number at a time, so keep
+      // folding the bare number in front of the value until there is none left.
+      while (values.size() > 1
+          && values.get(values.size() - 2).matches(LOCANT_SET)
+          && values.getLast().matches(LOCANT_SET + "-.+")) {
+        String merged = values.get(values.size() - 2) + "," + values.removeLast();
+        values.set(values.size() - 1, merged);
+      }
+    }
+    return values;
   }
 
   /**
