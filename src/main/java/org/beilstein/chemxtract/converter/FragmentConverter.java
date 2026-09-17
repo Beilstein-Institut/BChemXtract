@@ -298,7 +298,13 @@ public class FragmentConverter {
         continue;
       }
       Elements element = Elements.ofString(matcher.group(1));
-      int count = Integer.parseInt(matcher.group(2));
+      int count;
+      try {
+        count = Integer.parseInt(matcher.group(2));
+      } catch (NumberFormatException e) {
+        LOGGER.debug("Count of label {} is not a number, leaving the label as written.", label);
+        continue;
+      }
       if (Elements.Unknown.equals(element) || !spellsOutFormula(atom, element, count)) {
         continue;
       }
