@@ -31,9 +31,11 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.vecmath.Point2d;
@@ -75,7 +77,7 @@ import org.slf4j.LoggerFactory;
  *
  * <pre>{@code
  * CDPage page = ...;
- * IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
+ * IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
  * IAtomContainer molecule = ...;
  *
  * MarkushHandler handler = new MarkushHandler(page, builder);
@@ -297,7 +299,7 @@ public class MarkushHandler {
    */
   public List<IAtomContainer> replaceRGroups(IAtomContainer atomContainer)
       throws CloneNotSupportedException, IOException, CDKException {
-    return replaceRGroups(atomContainer, residueLabels, new HashSet<>());
+    return replaceRGroups(List.of(atomContainer), residueLabels, new HashSet<>());
   }
 
   /**
@@ -336,19 +338,50 @@ public class MarkushHandler {
   public List<IAtomContainer> replaceRGroups(
       IAtomContainer atomContainer, CDRectangle scaffoldBounds, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
-    Set<String> present = presentResidueLabels(atomContainer);
+    return replaceRGroups(List.of(atomContainer), scaffoldBounds, produced);
+  }
+
+  /**
+   * Generates all structures for a scaffold that a position-variation attachment drew as several
+   * candidates, resolving its R-groups from the definition block nearest to it.
+   *
+   * <p>The candidates are the same scaffold with one residue bonded to a different atom each. They
+   * are enumerated together rather than one after another: the assignments are enumerated once, and
+   * an assignment is built only once per attachment its substituents actually reach. A value that
+   * names a ring position moves the residue onto the atom it names, and a value that is a lone
+   * hydrogen leaves the atom it replaces as it was, so neither can tell the candidates apart — for
+   * an assignment whose every value is of that kind, one structure is built instead of one per
+   * candidate.
+   *
+   * @param candidates the scaffold as drawn, one per candidate attachment atom; a scaffold without
+   *     a position-variation attachment is a single-element list
+   * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
+   * @param produced keys of the structures already produced for this fragment, added to as more are
+   *     produced
+   * @return list of all substituted atom containers not already in {@code produced}
+   * @throws CloneNotSupportedException if atom container cloning fails
+   * @throws IOException if reading SMILES definitions fails
+   * @throws InvalidSmilesException if a SMILES string is invalid
+   */
+  public List<IAtomContainer> replaceRGroups(
+      List<IAtomContainer> candidates, CDRectangle scaffoldBounds, Set<String> produced)
+      throws CloneNotSupportedException, IOException, CDKException {
+    if (candidates.isEmpty()) {
+      return List.of();
+    }
+    Set<String> present = presentResidueLabels(candidates.getFirst());
     List<Map<String, String>> combinations =
-        viableCombinations(atomContainer, residueChoicesNear(present, scaffoldBounds));
+        viableCombinations(candidates, residueChoicesNear(present, scaffoldBounds));
     if (combinations.isEmpty()) {
       // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
       // page-wide union.
-      return replaceRGroups(atomContainer, residueLabels, produced);
+      return replaceRGroups(candidates, residueLabels, produced);
     }
-    List<IAtomContainer> scoped = applyCombinations(atomContainer, combinations, produced);
+    List<IAtomContainer> scoped = applyCombinations(candidates, combinations, produced);
     // Scoping is a refinement: if it narrowed the definitions down to something that produced no
     // structures, fall back to the page-wide union so scoping never does worse than no scoping.
     if (scoped.isEmpty()) {
-      return replaceRGroups(atomContainer, residueLabels, produced);
+      return replaceRGroups(candidates, residueLabels, produced);
     }
     return scoped;
   }
@@ -425,14 +458,21 @@ public class MarkushHandler {
    * @return the assignments whose every value grafted, in cartesian order
    */
   private List<Map<String, String>> viableCombinations(
-      IAtomContainer scaffold, List<Choice> choices)
+      List<IAtomContainer> candidates, List<Choice> choices)
       throws CDKException, CloneNotSupportedException, IOException {
     if (choices.isEmpty()) {
       return List.of();
     }
-    List<Map<String, String>> viable = new ArrayList<>();
-    extendCombination(scaffold, choices, 0, new LinkedHashMap<>(), viable);
-    return viable;
+    // A value can graft on one candidate attachment and not on another — a ring position counted
+    // from where the residue is drawn need not resolve from every candidate — so the assignments
+    // viable on any of them are enumerated, not only those the first one reaches.
+    Set<Map<String, String>> viable = new LinkedHashSet<>();
+    for (IAtomContainer candidate : candidates) {
+      List<Map<String, String>> reached = new ArrayList<>();
+      extendCombination(candidate, choices, 0, new LinkedHashMap<>(), reached);
+      viable.addAll(reached);
+    }
+    return new ArrayList<>(viable);
   }
 
   /**
@@ -551,18 +591,17 @@ public class MarkushHandler {
   }
 
   private List<IAtomContainer> replaceRGroups(
-      IAtomContainer atomContainer, Map<String, List<String>> definitions, Set<String> produced)
+      List<IAtomContainer> candidates, Map<String, List<String>> definitions, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
 
-    Map<String, List<String>> relevantRGroups = filterRelevantRGroups(atomContainer, definitions);
+    Map<String, List<String>> relevantRGroups =
+        filterRelevantRGroups(candidates.getFirst(), definitions);
 
     if (relevantRGroups.isEmpty()) {
-      return List.of(atomContainer);
+      return List.copyOf(candidates);
     }
     return applyCombinations(
-        atomContainer,
-        viableCombinations(atomContainer, independentChoices(relevantRGroups)),
-        produced);
+        candidates, viableCombinations(candidates, independentChoices(relevantRGroups)), produced);
   }
 
   /**
@@ -574,45 +613,69 @@ public class MarkushHandler {
    * @return the substituted structures
    */
   private List<IAtomContainer> applyCombinations(
-      IAtomContainer atomContainer, List<Map<String, String>> combinations, Set<String> produced)
+      List<IAtomContainer> candidates, List<Map<String, String>> combinations, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
     List<IAtomContainer> results = new ArrayList<>(combinations.size());
+    AttachmentIndex attachments = new AttachmentIndex(candidates);
 
     for (Map<String, String> combination : combinations) {
-      IAtomContainer clone = atomContainer.clone();
-      // Snapshot the pre-substitution atoms so the grafted (coordinate-less) atoms can be
-      // distinguished from the retained scaffold afterwards.
-      Set<IAtom> scaffoldAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
-      clone.atoms().forEach(scaffoldAtoms::add);
-      boolean substituted = false;
-      boolean allResolved = true;
-
-      for (Map.Entry<String, String> entry : combination.entrySet()) {
-        if (applyEntry(clone, entry.getKey(), entry.getValue())) {
-          substituted = true;
-        } else {
-          // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
-          // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
-          // so the whole combination is dropped rather than substituting only some of its labels.
-          // Enumeration already pruned these, so this is a guard rather than the usual path.
-          reportUnresolved(entry.getKey(), entry.getValue());
-          allResolved = false;
+      // Candidates an assignment cannot tell apart would each build the same structure; one of
+      // them stands for the group. The others are only reached when it cannot be substituted.
+      for (List<IAtomContainer> group : attachments.groupsFor(combination)) {
+        for (IAtomContainer candidate : group) {
+          Substitution substitution = substitute(candidate, combination);
+          if (substitution == null) {
+            continue;
+          }
+          // A structure an earlier assignment or fragment variant already produced is dropped
+          // before it is laid out: building and laying out each copy only to merge them again at
+          // the end of extraction is the bulk of the work here.
+          if (produced.add(ChemicalUtils.structureKey(substitution.structure()))) {
+            layoutGraftedAtoms(substitution.structure(), substitution.scaffoldAtoms());
+            results.add(substitution.structure());
+          }
           break;
         }
       }
-      if (substituted && allResolved) {
-        // A structure an earlier position-variation variant of this fragment already produced is
-        // dropped before it is laid out: the legend moved the residue onto the position it names,
-        // so the variants differ in nothing that survives, and laying out and building each copy
-        // only to merge them again at the end of extraction is the bulk of the work here.
-        if (!produced.add(ChemicalUtils.structureKey(clone))) {
-          continue;
-        }
-        layoutGraftedAtoms(clone, scaffoldAtoms);
-        results.add(clone);
-      }
     }
     return results;
+  }
+
+  /**
+   * A substituted structure and the atoms it had before substitution, which are the ones that keep
+   * their drawn coordinates when the grafted atoms are laid out.
+   */
+  private record Substitution(IAtomContainer structure, Set<IAtom> scaffoldAtoms) {}
+
+  /**
+   * Applies one assignment to a clone of the candidate.
+   *
+   * @param candidate the scaffold to substitute; left unmodified
+   * @param combination the assignment to apply
+   * @return the substituted structure, or {@code null} if one of the labels did not resolve
+   */
+  private Substitution substitute(IAtomContainer candidate, Map<String, String> combination)
+      throws CloneNotSupportedException, IOException, CDKException {
+    IAtomContainer clone = candidate.clone();
+    // Snapshot the pre-substitution atoms so the grafted (coordinate-less) atoms can be
+    // distinguished from the retained scaffold afterwards.
+    Set<IAtom> scaffoldAtoms = Collections.newSetFromMap(new IdentityHashMap<>());
+    clone.atoms().forEach(scaffoldAtoms::add);
+    boolean substituted = false;
+
+    for (Map.Entry<String, String> entry : combination.entrySet()) {
+      if (applyEntry(clone, entry.getKey(), entry.getValue())) {
+        substituted = true;
+      } else {
+        // An unresolvable label (unknown abbreviation, cross-referenced R-group, ...) would
+        // leave a dangling pseudo-atom. A structure with an unresolved R-group is never emitted,
+        // so the whole combination is dropped rather than substituting only some of its labels.
+        // Enumeration already pruned these, so this is a guard rather than the usual path.
+        reportUnresolved(entry.getKey(), entry.getValue());
+        return null;
+      }
+    }
+    return substituted ? new Substitution(clone, scaffoldAtoms) : null;
   }
 
   /**
@@ -678,23 +741,221 @@ public class MarkushHandler {
    */
   private boolean replacePositionalRGroup(IAtomContainer container, String label, String value)
       throws CDKException, CloneNotSupportedException, IOException {
+    PositionalValue positional = parsePositional(value);
+    if (positional == null) {
+      return false;
+    }
+    if (!placeResidues(container, label, positional.positions())) {
+      return false;
+    }
+    replaceRGroup(container, label, positional.smiles());
+    return true;
+  }
+
+  /** A value written in positional notation: the ring positions it names, and its group. */
+  private record PositionalValue(List<Integer> positions, String smiles) {}
+
+  /**
+   * Which of a scaffold's candidate attachments an assignment can tell apart.
+   *
+   * <p>A position-variation attachment is drawn once and expanded into one scaffold per candidate
+   * atom. Substituting them all is only warranted for values that stay where the residue is drawn:
+   * a value naming a ring position moves the residue onto the atom it names, and a value that is a
+   * lone hydrogen gives the atom it replaces back the hydrogen it had, so neither reaches the drawn
+   * position at all. Candidates an assignment leaves indistinguishable are grouped, and the group
+   * is substituted once.
+   *
+   * <p>Where each label ends up depends only on the candidate and the one value, never on the rest
+   * of the assignment, so it is resolved once per candidate and value and read back from there.
+   */
+  private final class AttachmentIndex {
+
+    private final List<IAtomContainer> candidates;
+    private final List<IRingSet> rings;
+    private final List<Map<IAtom, Integer>> atomIndices;
+    private final List<Map<String, String>> attachments;
+    private final List<String> skeletons;
+    private final Map<String, Boolean> loneHydrogen = new HashMap<>();
+
+    AttachmentIndex(List<IAtomContainer> candidates) {
+      this.candidates = candidates;
+      this.rings = new ArrayList<>(Collections.nCopies(candidates.size(), null));
+      this.atomIndices = new ArrayList<>(Collections.nCopies(candidates.size(), null));
+      this.attachments = new ArrayList<>();
+      this.skeletons = new ArrayList<>();
+      // A scaffold drawn without a position variation has nothing to tell apart.
+      for (int i = 0; i < candidates.size() && candidates.size() > 1; i++) {
+        this.attachments.add(new HashMap<>());
+        this.skeletons.add(skeleton(candidates.get(i)));
+      }
+    }
+
+    /**
+     * Groups the candidates by where the assignment's substituents land on them.
+     *
+     * @param combination the assignment about to be applied
+     * @return the candidate groups, each to be substituted once
+     */
+    List<List<IAtomContainer>> groupsFor(Map<String, String> combination) throws IOException {
+      if (candidates.size() < 2) {
+        return List.of(candidates);
+      }
+      Map<String, List<IAtomContainer>> byAttachment = new LinkedHashMap<>();
+      for (int i = 0; i < candidates.size(); i++) {
+        byAttachment
+            .computeIfAbsent(signature(i, combination), _ -> new ArrayList<>())
+            .add(candidates.get(i));
+      }
+      return new ArrayList<>(byAttachment.values());
+    }
+
+    /** Where every substituent of the assignment lands on one candidate. */
+    private String signature(int candidate, Map<String, String> combination) throws IOException {
+      // A variable attachment can move a drawn group rather than a residue, and then the candidates
+      // are different structures before any substitution. Their skeletons open the signature so
+      // that only candidates which really are the same scaffold can be grouped.
+      StringBuilder key = new StringBuilder(skeletons.get(candidate)).append('|');
+      for (Map.Entry<String, String> entry : new TreeMap<>(combination).entrySet()) {
+        key.append(entry.getKey()).append('=').append(attachment(candidate, entry)).append(';');
+      }
+      return key.toString();
+    }
+
+    /** Where one label's substituent lands on one candidate, resolved once and cached. */
+    private String attachment(int candidate, Map.Entry<String, String> entry) throws IOException {
+      Map<String, String> cache = attachments.get(candidate);
+      String cached = cache.get(entry.getKey() + '=' + entry.getValue());
+      if (cached != null) {
+        return cached;
+      }
+      String resolved = resolveAttachment(candidate, entry.getKey(), entry.getValue());
+      cache.put(entry.getKey() + '=' + entry.getValue(), resolved);
+      return resolved;
+    }
+
+    private String resolveAttachment(int candidate, String label, String value) throws IOException {
+      if (graftsLoneHydrogen(value)) {
+        // The residue is replaced by the hydrogen the atom already carried, wherever it was drawn.
+        return "*";
+      }
+      IAtomContainer container = candidates.get(candidate);
+      PositionalValue positional = parsePositional(value);
+      List<Integer> landing = new ArrayList<>();
+      for (IAtom residue : residues(container, label)) {
+        List<IAtom> targets =
+            positional == null
+                ? null
+                : residueTargets(container, rings(candidate), residue, positional.positions());
+        if (targets == null) {
+          // Not positional notation, or a position this candidate cannot resolve: the substituent
+          // stays on the atom the residue is drawn on, which is what the candidates differ in.
+          landing.add(index(candidate, drawnOn(residue)));
+        } else {
+          targets.forEach(target -> landing.add(index(candidate, target)));
+        }
+      }
+      Collections.sort(landing);
+      return landing.toString();
+    }
+
+    /** Whether the value's substituent is a single hydrogen. */
+    private boolean graftsLoneHydrogen(String value) throws IOException {
+      Boolean known = loneHydrogen.get(value);
+      if (known != null) {
+        return known;
+      }
+      boolean lone = false;
+      String smiles = resolveSmiles(value);
+      if (ChemicalUtils.isValidSmiles(smiles)) {
+        try {
+          IAtomContainer substituent = smilesParser.parseSmiles(smiles);
+          lone =
+              substituent.getAtomCount() == 1
+                  && "H".equals(substituent.getAtom(0).getSymbol())
+                  && substituent.getAtom(0).getImplicitHydrogenCount() == 0;
+        } catch (CDKException e) {
+          LOGGER.debug("Substituent {} does not parse; treated as drawn in place.", smiles);
+        }
+      }
+      loneHydrogen.put(value, lone);
+      return lone;
+    }
+
+    /**
+     * The candidate's structure without its residues: what the candidates share when they differ
+     * only in where a residue is drawn.
+     */
+    private String skeleton(IAtomContainer container) {
+      StringBuilder key = new StringBuilder(container.getAtomCount() * 8);
+      for (IAtom atom : container.atoms()) {
+        if (atom instanceof IPseudoAtom) {
+          continue;
+        }
+        // Hydrogen counts are left out: the atom a residue is drawn on carries one less, which is
+        // the very difference between candidates that the substitution then settles.
+        key.append(atom.getSymbol()).append(':').append(atom.getFormalCharge()).append(',');
+      }
+      List<String> bonds = new ArrayList<>(container.getBondCount());
+      for (IBond bond : container.bonds()) {
+        if (bond.getBegin() instanceof IPseudoAtom || bond.getEnd() instanceof IPseudoAtom) {
+          continue;
+        }
+        int begin = container.indexOf(bond.getBegin());
+        int end = container.indexOf(bond.getEnd());
+        bonds.add(Math.min(begin, end) + "-" + Math.max(begin, end) + ':' + bond.getOrder());
+      }
+      Collections.sort(bonds);
+      return key.append('|').append(bonds).toString();
+    }
+
+    /** The atom a residue is drawn on, or the residue itself when it carries no bond. */
+    private IAtom drawnOn(IAtom residue) {
+      Iterator<IBond> bonds = residue.bonds().iterator();
+      return bonds.hasNext() ? bonds.next().getOther(residue) : residue;
+    }
+
+    private IRingSet rings(int candidate) {
+      IRingSet known = rings.get(candidate);
+      if (known == null) {
+        known = Cycles.mcb(candidates.get(candidate)).toRingSet();
+        rings.set(candidate, known);
+      }
+      return known;
+    }
+
+    private int index(int candidate, IAtom atom) {
+      Map<IAtom, Integer> known = atomIndices.get(candidate);
+      if (known == null) {
+        known = new IdentityHashMap<>();
+        IAtomContainer container = candidates.get(candidate);
+        for (int i = 0; i < container.getAtomCount(); i++) {
+          known.put(container.getAtom(i), i);
+        }
+        atomIndices.set(candidate, known);
+      }
+      return known.getOrDefault(atom, -1);
+    }
+  }
+
+  /**
+   * Reads a value written in positional notation, {@code <position>-<group>}.
+   *
+   * @param value the raw legend value
+   * @return the positions it names and the SMILES of its group, or {@code null} if the value is not
+   *     positional notation or its group does not resolve
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private PositionalValue parsePositional(String value) throws IOException {
     Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
     if (!matcher.matches()) {
-      return false;
+      return null;
     }
     List<Integer> positions = new ArrayList<>();
     for (String token : matcher.group(1).split(",")) {
       positions.add(ringPosition(token));
     }
     String smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
-    if (!ChemicalUtils.isValidSmiles(smiles)) {
-      return false;
-    }
-    if (!placeResidues(container, label, positions)) {
-      return false;
-    }
-    replaceRGroup(container, label, smiles);
-    return true;
+    return ChemicalUtils.isValidSmiles(smiles) ? new PositionalValue(positions, smiles) : null;
   }
 
   /**
@@ -736,12 +997,7 @@ public class MarkushHandler {
    */
   private static boolean placeResidues(
       IAtomContainer container, String label, List<Integer> positions) {
-    List<IAtom> residues = new ArrayList<>();
-    for (IAtom atom : container.atoms()) {
-      if (atom instanceof IPseudoAtom pseudo && label.equals(pseudo.getLabel())) {
-        residues.add(atom);
-      }
-    }
+    List<IAtom> residues = residues(container, label);
     if (residues.isEmpty()) {
       return false;
     }
@@ -774,22 +1030,9 @@ public class MarkushHandler {
       IAtom residue,
       String label,
       List<Integer> positions) {
-    Iterator<IBond> bonds = residue.bonds().iterator();
-    if (!bonds.hasNext()) {
+    List<IAtom> targets = residueTargets(container, rings, residue, positions);
+    if (targets == null) {
       return false;
-    }
-    IAtom anchor = bonds.next().getOther(residue);
-    List<IAtom> targets = new ArrayList<>();
-    for (int position : positions) {
-      IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
-      // Two of the value's positions landing on one atom means the numbering cannot tell them
-      // apart — a single ring counted from its attachment has no way to distinguish 3 from 5, for
-      // instance. Stacking both groups on that atom would be a plausible but wrong structure, so
-      // the value is dropped instead.
-      if (target == null || containsSame(targets, target)) {
-        return false;
-      }
-      targets.add(target);
     }
     if (!moveResidueToAtom(container, residue, targets.getFirst())) {
       return false;
@@ -798,6 +1041,48 @@ public class MarkushHandler {
       attachResidue(container, target, label);
     }
     return true;
+  }
+
+  /** The residues of one label, in container order. */
+  private static List<IAtom> residues(IAtomContainer container, String label) {
+    List<IAtom> residues = new ArrayList<>();
+    for (IAtom atom : container.atoms()) {
+      if (atom instanceof IPseudoAtom pseudo && label.equals(pseudo.getLabel())) {
+        residues.add(atom);
+      }
+    }
+    return residues;
+  }
+
+  /**
+   * The atoms a positional value's positions name for one residue, counted from where the residue
+   * is drawn.
+   *
+   * @param container the structure the residue belongs to
+   * @param rings the container's ring set
+   * @param residue the drawn residue
+   * @param positions the 1-based ring positions the value names, in the order written
+   * @return one atom per position, or {@code null} if the residue carries no bond, a position
+   *     cannot be determined, or two of them land on the same atom — a single ring counted from its
+   *     attachment has no way to tell 3 from 5, for instance, and stacking both groups on the one
+   *     atom it picks would be a plausible but wrong structure
+   */
+  private static List<IAtom> residueTargets(
+      IAtomContainer container, IRingSet rings, IAtom residue, List<Integer> positions) {
+    Iterator<IBond> bonds = residue.bonds().iterator();
+    if (!bonds.hasNext()) {
+      return null;
+    }
+    IAtom anchor = bonds.next().getOther(residue);
+    List<IAtom> targets = new ArrayList<>();
+    for (int position : positions) {
+      IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
+      if (target == null || containsSame(targets, target)) {
+        return null;
+      }
+      targets.add(target);
+    }
+    return targets;
   }
 
   /** Whether the list already holds this very atom. */
