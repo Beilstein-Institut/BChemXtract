@@ -50,7 +50,6 @@ import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtom;
@@ -60,6 +59,7 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.io.MDLV3000Writer;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 import org.slf4j.Logger;
@@ -86,9 +86,18 @@ public class SubstanceXtractor {
     this.builder = builder;
   }
 
-  /** Constructs a {@code SubstanceXtractor} using the default CDK object builder. */
+  /**
+   * Constructs a {@code SubstanceXtractor} using {@link SilentChemObjectBuilder}.
+   *
+   * <p>The silent builder is the one to use for extraction: its chem objects carry no change
+   * notification, which nothing here listens for, and a notifying structure costs several times the
+   * memory of a silent one — enough to decide whether a Markush drawing with tens of thousands of
+   * assignments fits in the heap at all. Pass {@link #SubstanceXtractor(IChemObjectBuilder)} a
+   * notifying builder where the extracted structures are handed to something that listens for
+   * changes, such as an editor or a live depiction.
+   */
   public SubstanceXtractor() {
-    this(DefaultChemObjectBuilder.getInstance());
+    this(SilentChemObjectBuilder.getInstance());
   }
 
   /**

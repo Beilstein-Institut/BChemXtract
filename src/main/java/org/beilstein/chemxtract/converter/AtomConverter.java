@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  * <p><b>Usage example:</b>
  *
  * <pre>{@code
- * IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
+ * IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
  * AtomConverter converter = new AtomConverter(builder);
  * IAtom cdkAtom = converter.convert(cdAtom);
  * }</pre>

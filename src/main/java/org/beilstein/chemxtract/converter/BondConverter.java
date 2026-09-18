@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * <p><b>Usage example:</b>
  *
  * <pre>{@code
- * IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
+ * IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
  * Map<CDAtom, IAtom> atomMap = atomConverter.getAtomMap();
  * BondConverter bondConverter = new BondConverter(builder, atomMap);
  * IBond bond = bondConverter.convert(cdBond);

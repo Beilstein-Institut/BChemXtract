@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Set;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Kekulization;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ShortestPaths;
@@ -43,6 +42,7 @@ import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.rinchi.RInChIGenerator;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -258,7 +258,7 @@ public class ChemicalUtils {
    * per call. {@link SmilesParser} carries per-parse state, hence one instance per thread.
    */
   private static final ThreadLocal<SmilesParser> VALIDATION_PARSER =
-      ThreadLocal.withInitial(() -> new SmilesParser(DefaultChemObjectBuilder.getInstance()));
+      ThreadLocal.withInitial(() -> new SmilesParser(SilentChemObjectBuilder.getInstance()));
 
   /**
    * A key identifying a structure among those one fragment produces.
