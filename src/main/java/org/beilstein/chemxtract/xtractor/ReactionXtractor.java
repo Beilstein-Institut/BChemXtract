@@ -42,12 +42,12 @@ import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.beilstein.chemxtract.visitor.ReactionStepVisitor;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,23 +89,26 @@ public class ReactionXtractor {
   }
 
   /**
-   * Constructs a {@code ReactionXtractor} using the default chemical object builder.
+   * Constructs a {@code ReactionXtractor} using {@link SilentChemObjectBuilder}.
    *
-   * <p>This convenience constructor uses {@link DefaultChemObjectBuilder#getInstance()} as the
-   * builder factory.
+   * <p>Its chem objects carry no change notification, which nothing here listens for and which
+   * costs several times the memory of a silent structure.
    *
    * @param sanitize if {@code true}, enables sanitization of the reaction during the conversion
    *     process: only structures in line with the reaction arrow are considered; if {@code false},
    *     reactions are processed as-is
    */
   public ReactionXtractor(boolean sanitize) {
-    this(DefaultChemObjectBuilder.getInstance());
+    this(SilentChemObjectBuilder.getInstance());
     this.sanitize = sanitize;
   }
 
-  /** Constructs a {@code ReactionXtractor} using the default CDK object builder. */
+  /**
+   * Constructs a {@code ReactionXtractor} using {@link SilentChemObjectBuilder}; see {@link
+   * #ReactionXtractor(boolean)} for why.
+   */
   public ReactionXtractor() {
-    this(DefaultChemObjectBuilder.getInstance());
+    this(SilentChemObjectBuilder.getInstance());
   }
 
   /**

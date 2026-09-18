@@ -583,4 +583,91 @@ public class MarkushHandlerTest {
 
     assertTrue(handler.replaceRGroups(scaffold).isEmpty(), "an ambiguous position must not graft");
   }
+
+  /**
+   * A scaffold drawn with a position-variation attachment is converted once per candidate atom.
+   * When the legend gives the substituent by ring position, the residue moves onto the position it
+   * names and every candidate yields the same structure, so only one of them is built.
+   */
+  @Test
+  public void positionalValueBuildsOneStructureForAllAttachmentCandidates() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("5-Me")));
+    List<IAtomContainer> candidates =
+        List.of(
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1),
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 2));
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+
+    assertEquals(1, results.size(), "the legend names the position, so the candidates collapse");
+    assertNoPseudoAtoms(results.getFirst());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("[nH]1ccc2cc(C)ccc12")),
+        canonicalSmiles(results.getFirst()),
+        "5-Me must give 5-methylindole whichever candidate carried the residue");
+  }
+
+  /**
+   * A substituent that is a lone hydrogen leaves the ring atom it replaces with the hydrogen count
+   * it already had, so it too gives the same structure from every candidate atom.
+   */
+  @Test
+  public void hydrogenValueBuildsOneStructureForAllAttachmentCandidates() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("H")));
+    List<IAtomContainer> candidates =
+        List.of(
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1),
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 2));
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+
+    assertEquals(1, results.size(), "substituting H cannot depend on which candidate was drawn");
+    assertNoPseudoAtoms(results.getFirst());
+    assertEquals(
+        ChemicalUtils.getInChI(
+                new SmilesParser(SilentChemObjectBuilder.getInstance())
+                    .parseSmiles("c1ccc2[nH]ccc2c1"))
+            .getInchiKey(),
+        ChemicalUtils.getInChI(results.getFirst()).getInchiKey(),
+        "R = H must give the bare scaffold, the hydrogen it grafts being the one the atom had");
+  }
+
+  /**
+   * A substituent that stays where it is drawn does depend on the candidate atom: those structures
+   * are different substances and every candidate must be built.
+   */
+  @Test
+  public void substituentThatStaysWhereDrawnBuildsEveryAttachmentCandidate() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("Me")));
+    List<IAtomContainer> candidates =
+        List.of(
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1),
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 6));
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+
+    assertEquals(2, results.size(), "benzo and pyrrole methylation are different substances");
+  }
+
+  /**
+   * A variable attachment can move a drawn group rather than a residue, and then the candidates are
+   * already different structures. Nothing may merge them, whatever the assignment does with the
+   * residue — here a hydrogen, which on one scaffold alone would collapse them.
+   */
+  @Test
+  public void candidatesThatAreDifferentScaffoldsAreNeverMerged() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("H")));
+    List<IAtomContainer> candidates =
+        List.of(scaffoldFromSmiles("Fc1ccccc1", "R", 3), scaffoldFromSmiles("Clc1ccccc1", "R", 3));
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+
+    assertEquals(2, results.size(), "candidates drawn on different skeletons stay apart");
+  }
 }

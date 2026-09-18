@@ -50,7 +50,6 @@ import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtom;
@@ -60,6 +59,7 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.io.MDLV3000Writer;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 import org.slf4j.Logger;
@@ -86,9 +86,18 @@ public class SubstanceXtractor {
     this.builder = builder;
   }
 
-  /** Constructs a {@code SubstanceXtractor} using the default CDK object builder. */
+  /**
+   * Constructs a {@code SubstanceXtractor} using {@link SilentChemObjectBuilder}.
+   *
+   * <p>The silent builder is the one to use for extraction: its chem objects carry no change
+   * notification, which nothing here listens for, and a notifying structure costs several times the
+   * memory of a silent one — enough to decide whether a Markush drawing with tens of thousands of
+   * assignments fits in the heap at all. Pass {@link #SubstanceXtractor(IChemObjectBuilder)} a
+   * notifying builder where the extracted structures are handed to something that listens for
+   * changes, such as an editor or a live depiction.
+   */
   public SubstanceXtractor() {
-    this(DefaultChemObjectBuilder.getInstance());
+    this(SilentChemObjectBuilder.getInstance());
   }
 
   /**
@@ -309,46 +318,42 @@ public class SubstanceXtractor {
     boolean variablePosition = AttachmentHandler.hasVariableAttachment(fragment);
 
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
-    // Markush expansion runs per position-variation variant, and a legend that gives a substituent
-    // by ring position moves the residue onto the atom it names, discarding the position the
-    // variant had drawn it at. Every variant then yields the same structure, once per variant. The
-    // structures this fragment has already produced are therefore remembered, so that the InChI,
-    // SMILES and extended SMILES of a repeat are not generated only for the duplicate to be
-    // dropped again at the end of extraction.
-    Set<String> builtStructures = new HashSet<>();
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
-    // variable attachment yield the original fragment unchanged.
+    // variable attachment yield the original fragment unchanged. The candidates are converted
+    // together and expanded in one go: a legend that gives a substituent by ring position moves the
+    // residue onto the atom it names, discarding the position the candidate had drawn it at, so
+    // most assignments reach the same structure from every candidate and are worth building once.
+    List<IAtomContainer> candidates = new ArrayList<>();
     for (CDFragment variant : AttachmentHandler.expandVariableAttachments(fragment)) {
-      IAtomContainer atomContainer;
       try {
-        atomContainer = fragmentConverter.convert(variant);
+        candidates.add(fragmentConverter.convert(variant));
       } catch (IllegalArgumentException e) {
         LOGGER.error("Fragment conversion failed", e);
-        continue;
       }
+    }
+    if (candidates.isEmpty()) {
+      return substances;
+    }
 
-      boolean expandedRGroups = false;
-      if (markushHandler != null
-          && variant.hasRGroup()
-          && !markushHandler.getResidueLabels().isEmpty()) {
-        try {
-          // Expansion counts as done only if it actually yielded a substance: an empty result, or
-          // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
-          // to emitting the unexpanded scaffold below.
-          for (IAtomContainer container :
-              markushHandler.replaceRGroups(atomContainer, fragment.getBounds(), builtStructures)) {
-            expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
-          }
-          // Expansion may have returned nothing because every structure it reached had already
-          // been produced by an earlier variant. That is still an expansion: without this the
-          // unexpanded scaffold would be emitted below as though no definition had applied.
-          expandedRGroups |= !builtStructures.isEmpty();
-        } catch (IOException | CloneNotSupportedException e) {
-          LOGGER.error("R-group replacement failed", e);
+    boolean expandedRGroups = false;
+    if (markushHandler != null
+        && fragment.hasRGroup()
+        && !markushHandler.getResidueLabels().isEmpty()) {
+      try {
+        // Expansion counts as done only if it actually yielded a substance: an empty result, or
+        // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
+        // to emitting the unexpanded scaffold below.
+        for (IAtomContainer container :
+            markushHandler.replaceRGroups(candidates, fragment.getBounds(), new HashSet<>())) {
+          expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
         }
+      } catch (IOException | CloneNotSupportedException e) {
+        LOGGER.error("R-group replacement failed", e);
       }
-      if (!expandedRGroups) {
-        addIfBuilt(substances, atomContainer, fragment, variablePosition, false);
+    }
+    if (!expandedRGroups) {
+      for (IAtomContainer container : candidates) {
+        addIfBuilt(substances, container, fragment, variablePosition, false);
       }
     }
     return substances;
