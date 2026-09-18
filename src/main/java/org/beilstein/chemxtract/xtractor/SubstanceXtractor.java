@@ -309,46 +309,42 @@ public class SubstanceXtractor {
     boolean variablePosition = AttachmentHandler.hasVariableAttachment(fragment);
 
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
-    // Markush expansion runs per position-variation variant, and a legend that gives a substituent
-    // by ring position moves the residue onto the atom it names, discarding the position the
-    // variant had drawn it at. Every variant then yields the same structure, once per variant. The
-    // structures this fragment has already produced are therefore remembered, so that the InChI,
-    // SMILES and extended SMILES of a repeat are not generated only for the duplicate to be
-    // dropped again at the end of extraction.
-    Set<String> builtStructures = new HashSet<>();
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
-    // variable attachment yield the original fragment unchanged.
+    // variable attachment yield the original fragment unchanged. The candidates are converted
+    // together and expanded in one go: a legend that gives a substituent by ring position moves the
+    // residue onto the atom it names, discarding the position the candidate had drawn it at, so
+    // most assignments reach the same structure from every candidate and are worth building once.
+    List<IAtomContainer> candidates = new ArrayList<>();
     for (CDFragment variant : AttachmentHandler.expandVariableAttachments(fragment)) {
-      IAtomContainer atomContainer;
       try {
-        atomContainer = fragmentConverter.convert(variant);
+        candidates.add(fragmentConverter.convert(variant));
       } catch (IllegalArgumentException e) {
         LOGGER.error("Fragment conversion failed", e);
-        continue;
       }
+    }
+    if (candidates.isEmpty()) {
+      return substances;
+    }
 
-      boolean expandedRGroups = false;
-      if (markushHandler != null
-          && variant.hasRGroup()
-          && !markushHandler.getResidueLabels().isEmpty()) {
-        try {
-          // Expansion counts as done only if it actually yielded a substance: an empty result, or
-          // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
-          // to emitting the unexpanded scaffold below.
-          for (IAtomContainer container :
-              markushHandler.replaceRGroups(atomContainer, fragment.getBounds(), builtStructures)) {
-            expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
-          }
-          // Expansion may have returned nothing because every structure it reached had already
-          // been produced by an earlier variant. That is still an expansion: without this the
-          // unexpanded scaffold would be emitted below as though no definition had applied.
-          expandedRGroups |= !builtStructures.isEmpty();
-        } catch (IOException | CloneNotSupportedException e) {
-          LOGGER.error("R-group replacement failed", e);
+    boolean expandedRGroups = false;
+    if (markushHandler != null
+        && fragment.hasRGroup()
+        && !markushHandler.getResidueLabels().isEmpty()) {
+      try {
+        // Expansion counts as done only if it actually yielded a substance: an empty result, or
+        // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
+        // to emitting the unexpanded scaffold below.
+        for (IAtomContainer container :
+            markushHandler.replaceRGroups(candidates, fragment.getBounds(), new HashSet<>())) {
+          expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
         }
+      } catch (IOException | CloneNotSupportedException e) {
+        LOGGER.error("R-group replacement failed", e);
       }
-      if (!expandedRGroups) {
-        addIfBuilt(substances, atomContainer, fragment, variablePosition, false);
+    }
+    if (!expandedRGroups) {
+      for (IAtomContainer container : candidates) {
+        addIfBuilt(substances, container, fragment, variablePosition, false);
       }
     }
     return substances;
