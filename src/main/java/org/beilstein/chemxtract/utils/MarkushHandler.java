@@ -622,19 +622,18 @@ public class MarkushHandler {
       // Candidates an assignment cannot tell apart would each build the same structure; one of
       // them stands for the group. The others are only reached when it cannot be substituted.
       for (List<IAtomContainer> group : attachments.groupsFor(combination)) {
-        for (IAtomContainer candidate : group) {
-          Substitution substitution = substitute(candidate, combination);
-          if (substitution == null) {
-            continue;
-          }
-          // A structure an earlier assignment or fragment variant already produced is dropped
-          // before it is laid out: building and laying out each copy only to merge them again at
-          // the end of extraction is the bulk of the work here.
-          if (produced.add(ChemicalUtils.structureKey(substitution.structure()))) {
-            layoutGraftedAtoms(substitution.structure(), substitution.scaffoldAtoms());
-            results.add(substitution.structure());
-          }
-          break;
+        Substitution substitution = null;
+        Iterator<IAtomContainer> candidate = group.iterator();
+        while (substitution == null && candidate.hasNext()) {
+          substitution = substitute(candidate.next(), combination);
+        }
+        // A structure an earlier assignment or fragment variant already produced is dropped before
+        // it is laid out: building and laying out each copy only to merge them again at the end of
+        // extraction is the bulk of the work here.
+        if (substitution != null
+            && produced.add(ChemicalUtils.structureKey(substitution.structure()))) {
+          layoutGraftedAtoms(substitution.structure(), substitution.scaffoldAtoms());
+          results.add(substitution.structure());
         }
       }
     }
