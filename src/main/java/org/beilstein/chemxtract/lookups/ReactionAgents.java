@@ -24,7 +24,7 @@ package org.beilstein.chemxtract.lookups;
 import java.io.IOException;
 import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
-import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 /**
  * Singleton utility class that provides a lookup table for chemical reaction agents, mapping common
@@ -55,7 +55,7 @@ public class ReactionAgents {
    * @throws IOException if the SMILES abbreviation file cannot be read or parsed
    */
   private ReactionAgents() throws IOException {
-    SMILESLookupReader reader = new SMILESLookupReader(DefaultChemObjectBuilder.getInstance());
+    SMILESLookupReader reader = new SMILESLookupReader(SilentChemObjectBuilder.getInstance());
     this.lookup =
         reader.loadSmilesLookup(Definitions.AGENT_ABBREVIATION_PATH, Definitions.AGENTS_SIZE);
   }
