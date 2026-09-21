@@ -288,8 +288,8 @@ public final class AttachmentHandler {
     if (atom == null || atom.getText() == null || atom.getText().getText() == null) {
       return "";
     }
-    String text = atom.getText().getText().getText();
-    return text == null ? "" : text.trim();
+    // CDStyledString.getText() concatenates its chunks into a new string and never returns null.
+    return atom.getText().getText().getText().trim();
   }
 
   /**
