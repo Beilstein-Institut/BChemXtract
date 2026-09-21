@@ -22,7 +22,10 @@
 package org.beilstein.chemxtract.utils;
 
 import java.awt.geom.Line2D;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +97,13 @@ public final class AttachmentHandler {
    */
   private static final int MAX_SUBSTITUENT_CROSSING_BONDS = 3;
 
+  /**
+   * Largest ring a position-variation stub may be read as pointing into. Rings this size and below
+   * are the ones drawn as a closed figure a bond can come to rest inside; beyond it a "ring" is a
+   * macrocycle whose interior is page background the author draws through, not a position set.
+   */
+  private static final int MAX_RING_SIZE = 8;
+
   private AttachmentHandler() {
     // private constructor to hide implicit public one
   }
@@ -125,6 +135,10 @@ public final class AttachmentHandler {
    * than duplicating the substituent. For the same reason the candidates of a junction are limited
    * to the scaffold the substituent moves into: a crossed bond in a third fragment names atoms that
    * no enumerated variant contains.
+   *
+   * <p>A junction whose stub comes to rest inside a ring is widened from the atoms its crossings
+   * name to every free position on that ring, which is what the drawing means (see {@link
+   * #widenToRing(CDFragment, CDBond, List)}).
    *
    * @param fragments the fragments collected from a page; mutated in place
    * @return the fragments to extract, with substituent fragments folded into their scaffolds
@@ -191,6 +205,7 @@ public final class AttachmentHandler {
         if (scoped.isEmpty()) {
           continue;
         }
+        scoped = widenToRing(scaffold, bond, scoped);
         attach.setNodeType(CDNodeType.VariableAttachment);
         attach.setAttachedAtoms(scoped);
         if (target == null) {
@@ -207,6 +222,195 @@ public final class AttachmentHandler {
     List<CDFragment> result = new ArrayList<>(fragments);
     result.removeAll(merged);
     return result;
+  }
+
+  /**
+   * Widens a junction's candidates from the endpoints of the bonds it crosses to every free carbon
+   * of the ring it points into.
+   *
+   * <p>A crossing names only the two atoms of the one bond the stub happens to cut, and a straight
+   * bond crosses a convex ring exactly twice, so the crossing encoding can never name more than
+   * three atoms of a six-ring however the author draws it. The drawing says more than that: a
+   * substituent bond that runs in from outside and comes to rest <em>inside</em> the ring is the
+   * standard way to say "any free position on this ring" (ACD's own Markush tutorial draws exactly
+   * this, a hydroxyl stopping inside the benzo ring of an indene, and reads it as all four free
+   * carbons).
+   *
+   * <p>Two conditions keep this narrow. One end of the stub must carry a label and the other must
+   * not: that is what makes it a substituent with an identity to place, and it leaves the
+   * unlabelled annotation marks that cross a ring - cut marks, brackets, leader lines - naming only
+   * what they touch. And the unlabelled end must lie inside the ring's own polygon: a bond drawn
+   * straight through a ring and out the other side is passing over it, not aimed at it.
+   *
+   * <p>The widened set is a union, never a replacement. A crossing may name a ring atom that
+   * already carries a substituent, and that atom is still what the author drew a line across.
+   *
+   * @param scaffold the fragment holding the candidates
+   * @param bond the position-variation bond crossing the scaffold
+   * @param candidates the candidates named by the crossings, scoped to the scaffold
+   * @return the candidates, widened to the ring when the drawing asks for it
+   */
+  private static List<CDAtom> widenToRing(
+      CDFragment scaffold, CDBond bond, List<CDAtom> candidates) {
+    CDAtom inner = unlabelledEnd(bond);
+    if (inner == null || inner.getPosition2D() == null) {
+      return candidates;
+    }
+    List<CDAtom> ring = ringEnclosing(scaffold, candidates, inner.getPosition2D());
+    if (ring == null) {
+      return candidates;
+    }
+    List<CDAtom> widened = new ArrayList<>(candidates);
+    for (CDAtom atom : ring) {
+      if (isSubstitutableCarbon(scaffold, atom)) {
+        addDistinct(widened, atom);
+      }
+    }
+    return widened;
+  }
+
+  /**
+   * Returns the end of the bond that carries no label, when exactly one of the two does, and {@code
+   * null} otherwise. Two labelled ends are a bond between two named groups rather than a stub, and
+   * two plain ends carry no substituent to place.
+   */
+  private static CDAtom unlabelledEnd(CDBond bond) {
+    boolean beginLabelled = !label(bond.getBegin()).isEmpty();
+    boolean endLabelled = !label(bond.getEnd()).isEmpty();
+    if (beginLabelled == endLabelled) {
+      return null;
+    }
+    return beginLabelled ? bond.getEnd() : bond.getBegin();
+  }
+
+  /** The atom's text label, or the empty string when it carries none. */
+  private static String label(CDAtom atom) {
+    if (atom == null || atom.getText() == null || atom.getText().getText() == null) {
+      return "";
+    }
+    String text = atom.getText().getText().getText();
+    return text == null ? "" : text.trim();
+  }
+
+  /**
+   * Whether the ring atom can take another substituent: an unlabelled carbon still holding an
+   * implicit hydrogen. Counting bonds is what tells them apart before conversion - a ring atom with
+   * a third bond is either fused or already substituted, and either way the author did not leave a
+   * position there.
+   */
+  private static boolean isSubstitutableCarbon(CDFragment fragment, CDAtom atom) {
+    return atom.getElementNumber() == 6
+        && label(atom).isEmpty()
+        && incidentBonds(fragment, atom).size() <= 2;
+  }
+
+  /**
+   * Returns the smallest ring through any bond between two candidates that encloses the given
+   * point, or {@code null} when no such ring exists. Bonds are walked in the fragment's own order
+   * so that a junction whose candidates span more than one ring resolves the same way every run.
+   */
+  private static List<CDAtom> ringEnclosing(
+      CDFragment fragment, List<CDAtom> candidates, CDPoint2D point) {
+    for (CDBond bond : fragment.getBonds()) {
+      if (!containsIdentical(candidates, bond.getBegin())
+          || !containsIdentical(candidates, bond.getEnd())) {
+        continue;
+      }
+      List<CDAtom> ring = smallestRingThrough(fragment, bond);
+      if (ring != null
+          && ring.stream().allMatch(atom -> atom.getPosition2D() != null)
+          && encloses(ring, point)) {
+        return ring;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the atoms of the smallest ring containing the given bond, or {@code null} when the bond
+   * is acyclic or its ring is larger than {@link #MAX_RING_SIZE}. A breadth-first walk from one
+   * endpoint back to the other, with the bond itself removed.
+   */
+  private static List<CDAtom> smallestRingThrough(CDFragment fragment, CDBond bond) {
+    CDAtom from = bond.getBegin();
+    CDAtom to = bond.getEnd();
+    if (from == null || to == null) {
+      return null;
+    }
+    Map<CDAtom, List<CDAtom>> neighbours = new IdentityHashMap<>();
+    for (CDBond other : fragment.getBonds()) {
+      if (other.getBegin() == null || other.getEnd() == null) {
+        continue;
+      }
+      neighbours.computeIfAbsent(other.getBegin(), key -> new ArrayList<>()).add(other.getEnd());
+      neighbours.computeIfAbsent(other.getEnd(), key -> new ArrayList<>()).add(other.getBegin());
+    }
+    Deque<List<CDAtom>> paths = new ArrayDeque<>();
+    paths.add(new ArrayList<>(List.of(from)));
+    List<CDAtom> shortest = null;
+    while (!paths.isEmpty()) {
+      List<CDAtom> path = paths.poll();
+      if (shortest != null && path.size() >= shortest.size()) {
+        continue;
+      }
+      CDAtom last = path.get(path.size() - 1);
+      for (CDAtom next : neighbours.getOrDefault(last, List.of())) {
+        if (last == from && next == to && path.size() == 1) {
+          // The bond under test itself; a ring has to come back the long way round.
+          continue;
+        }
+        if (next == to && path.size() >= 2) {
+          if (shortest == null || path.size() + 1 < shortest.size()) {
+            shortest = new ArrayList<>(path);
+            shortest.add(next);
+          }
+          continue;
+        }
+        if (containsIdentical(path, next) || path.size() >= MAX_RING_SIZE - 1) {
+          continue;
+        }
+        List<CDAtom> extended = new ArrayList<>(path);
+        extended.add(next);
+        paths.add(extended);
+      }
+    }
+    return shortest;
+  }
+
+  /**
+   * Whether the point lies inside the polygon the ring atoms draw. The atoms come off the ring walk
+   * in connection order, which is already the polygon's outline, but they are re-sorted by angle
+   * about the centroid so that the test does not depend on the walk's direction or start.
+   */
+  private static boolean encloses(List<CDAtom> ring, CDPoint2D point) {
+    CDPoint2D centre = centroid(ring);
+    if (centre == null) {
+      return false;
+    }
+    List<CDPoint2D> outline =
+        ring.stream()
+            .map(CDAtom::getPosition2D)
+            .sorted(
+                Comparator.comparingDouble(
+                    p -> Math.atan2(p.getY() - centre.getY(), p.getX() - centre.getX())))
+            .toList();
+    boolean inside = false;
+    for (int i = 0, j = outline.size() - 1; i < outline.size(); j = i++) {
+      CDPoint2D a = outline.get(i);
+      CDPoint2D b = outline.get(j);
+      if ((a.getY() > point.getY()) != (b.getY() > point.getY())
+          && point.getX()
+              < (b.getX() - a.getX()) * (point.getY() - a.getY()) / (b.getY() - a.getY())
+                  + a.getX()) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  /** Whether the list holds the given atom by object identity. */
+  private static boolean containsIdentical(List<CDAtom> atoms, CDAtom atom) {
+    return atom != null && atoms.stream().anyMatch(a -> a == atom);
   }
 
   /**
@@ -274,11 +478,7 @@ public final class AttachmentHandler {
 
   /** Whether the atom's label is an R-group label ({@code R}, {@code R1}, {@code Ar}, …). */
   private static boolean isResidue(CDAtom atom) {
-    if (atom.getText() == null || atom.getText().getText() == null) {
-      return false;
-    }
-    String label = atom.getText().getText().getText();
-    return label != null && Definitions.RGROUP_LABEL_PATTERN.matcher(label).find();
+    return Definitions.RGROUP_LABEL_PATTERN.matcher(label(atom)).find();
   }
 
   /** Returns the endpoint of {@code bond} closest to the centroid of the candidate atoms. */
