@@ -23,16 +23,21 @@ package org.beilstein.chemxtract.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
+import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
+import org.beilstein.chemxtract.cdx.reader.CDXReader;
+import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link AttachmentHandler} covering the multi-center and variable node logic. */
@@ -549,5 +554,190 @@ public class AttachmentHandlerTest {
     CDFragment withVariable = new CDFragment();
     withVariable.setAtoms(List.of(element(), variableNode));
     assertThat(AttachmentHandler.hasVariableAttachment(withVariable)).isTrue();
+  }
+
+  /**
+   * The drawing this rule was written for. Each of the four scaffolds on the page carries a
+   * position-variation stub that stops inside a benzo ring, and ChemDraw recorded only the one or
+   * two bonds each stub happens to cut - three candidate atoms at best, and a straight bond cannot
+   * name more. Every one of them is a ring the substituent may take any free position on.
+   */
+  @Test
+  public void normalizeWidensEveryStubOnTheFusedRingDrawing() throws Exception {
+    try (InputStream in =
+        AttachmentHandlerTest.class.getResourceAsStream("/cheminf/bugs/m8881674-i73.cdx")) {
+      assertThat(in).as("fixture must be on the classpath").isNotNull();
+      CDDocument document = CDXReader.readDocument(in);
+      assertThat(document).as("document must parse").isNotNull();
+
+      List<Integer> candidateCounts = new ArrayList<>();
+      for (CDPage page : document.getPages()) {
+        List<CDFragment> fragments = new FragmentVisitor(page).getFragments();
+        for (CDFragment fragment :
+            AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(fragments))) {
+          fragment.getAtoms().stream()
+              .filter(atom -> CDNodeType.VariableAttachment.equals(atom.getNodeType()))
+              .forEach(atom -> candidateCounts.add(atom.getAttachedAtoms().size()));
+        }
+      }
+
+      assertThat(candidateCounts)
+          .as("every benzo ring on the page offers its four free positions")
+          .containsExactly(4, 4, 4, 4);
+    }
+  }
+
+  /**
+   * A benzo ring drawn with two fused (degree-three) carbons, as in the indole of {@code
+   * m8881674-i73.cdx} or the indene of ACD's own positional-variation figure: the substituent bond
+   * runs in from outside, crosses one ring bond and stops at the ring centre. The crossing names
+   * only the two endpoints of the bond it happens to cut, but the drawing means any free position
+   * on that ring.
+   */
+  @Test
+  public void normalizeWidensCandidatesToTheRingTheStubEndsIn() {
+    CDFragment scaffold = benzoRing();
+    List<CDAtom> ring = List.copyOf(scaffold.getAtoms().subList(0, 6));
+    CDBond crossed = scaffold.getBonds().get(0);
+
+    // Y----o : the label sits outside, the free end stops on the ring centre.
+    CDAtom residue = residue(20f, 0f);
+    CDAtom free = element(0f, 0f);
+    CDBond stub = bond(residue, free);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(residue, free));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    // c1 and c6 are the crossed bond; c2 and c5 are the ring's other two free carbons. c3 and c4
+    // carry the fusion bonds and stay out.
+    assertThat(free.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(free.getAttachedAtoms())
+        .as("every free carbon of the ring the stub ends in")
+        .containsExactlyInAnyOrder(ring.get(0), ring.get(1), ring.get(4), ring.get(5));
+  }
+
+  /**
+   * A bond drawn straight through a ring and out the other side is not aimed at that ring, so it
+   * keeps the positions its crossings name. Only a stub that comes to rest inside the ring is read
+   * as "any free position on this ring".
+   */
+  @Test
+  public void normalizeLeavesCandidatesAloneWhenTheStubPassesThroughTheRing() {
+    CDFragment scaffold = benzoRing();
+    List<CDAtom> ring = List.copyOf(scaffold.getAtoms().subList(0, 6));
+    CDBond nearEdge = scaffold.getBonds().get(0);
+    CDBond farEdge = scaffold.getBonds().get(3);
+
+    CDAtom residue = residue(20f, 0f);
+    CDAtom free = element(-20f, 0f);
+    CDBond stub = bond(residue, free);
+    stub.setCrossingBonds(new HashSet<>(List.of(nearEdge, farEdge)));
+    nearEdge.setCrossingBonds(new HashSet<>(List.of(stub)));
+    farEdge.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(residue, free));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(free.getAttachedAtoms())
+        .containsExactlyInAnyOrder(ring.get(0), ring.get(5), ring.get(2), ring.get(3));
+  }
+
+  /**
+   * The zigzag cut marks of {@code m5445236-i5.cdx} are plain bonds with no label at either end,
+   * laid over a ring they annotate rather than attach to. Without a substituent to place, there is
+   * nothing to widen, and reading them generously would multiply the spurious positions.
+   */
+  @Test
+  public void normalizeLeavesCandidatesAloneWhenNeitherStubEndCarriesALabel() {
+    CDFragment scaffold = benzoRing();
+    List<CDAtom> ring = List.copyOf(scaffold.getAtoms().subList(0, 6));
+    CDBond crossed = scaffold.getBonds().get(0);
+
+    CDAtom outer = element(20f, 0f);
+    CDAtom free = element(0f, 0f);
+    CDBond stub = bond(outer, free);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(outer, free));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(free.getAttachedAtoms()).containsExactlyInAnyOrder(ring.get(0), ring.get(5));
+  }
+
+  /**
+   * ChemDraw authors also draw the stub from the label inwards, which makes the labelled end the
+   * one nearest the crossed bond and so the junction. The ring is still what the free end points
+   * at, so the widening must not depend on which end became the junction.
+   */
+  @Test
+  public void normalizeWidensEvenWhenTheLabelledEndBecameTheJunction() {
+    CDFragment scaffold = benzoRing();
+    List<CDAtom> ring = List.copyOf(scaffold.getAtoms().subList(0, 6));
+    CDBond crossed = scaffold.getBonds().get(0);
+
+    // "Br" is not an R-group label, and it sits nearer the crossed bond than the free end does.
+    CDAtom label = labelled(10f, 0f, "Br");
+    CDAtom free = element(0f, 0f);
+    CDBond stub = bond(label, free);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(label, free));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    CDAtom junction = label.getAttachedAtoms() == null ? free : label;
+    assertThat(junction.getAttachedAtoms())
+        .containsExactlyInAnyOrder(ring.get(0), ring.get(1), ring.get(4), ring.get(5));
+  }
+
+  /**
+   * A six-ring centred on the origin with a vertical right-hand edge (c1-c6), and fusion bonds on
+   * c3 and c4 so that only c1, c2, c5 and c6 can take a substituent. Bond 0 is the right edge and
+   * bond 3 the left one, so a horizontal line through the origin crosses exactly those two.
+   */
+  private static CDFragment benzoRing() {
+    CDAtom c1 = element(8.66f, 5f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom c3 = element(-8.66f, 5f);
+    CDAtom c4 = element(-8.66f, -5f);
+    CDAtom c5 = element(0f, -10f);
+    CDAtom c6 = element(8.66f, -5f);
+    CDAtom f1 = element(-17.32f, 10f);
+    CDAtom f2 = element(-17.32f, -10f);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(new ArrayList<>(List.of(c1, c2, c3, c4, c5, c6, f1, f2)));
+    scaffold.setBonds(
+        new ArrayList<>(
+            List.of(
+                bond(c1, c6),
+                bond(c1, c2),
+                bond(c2, c3),
+                bond(c3, c4),
+                bond(c4, c5),
+                bond(c5, c6),
+                bond(c3, f1),
+                bond(c4, f2))));
+    return scaffold;
+  }
+
+  private static CDAtom labelled(float x, float y, String text) {
+    CDStyledString styled = new CDStyledString();
+    styled.addChunk(new CDStyledString.CDXChunk(null, 10f, null, null, text));
+    CDText label = new CDText();
+    label.setText(styled);
+    CDAtom atom = element(x, y);
+    atom.setText(label);
+    return atom;
   }
 }
