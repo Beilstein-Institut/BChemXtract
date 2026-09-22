@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import org.beilstein.chemxtract.utils.Definitions;
-import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 /**
  * Singleton utility class providing access to a lookup table of common chemical abbreviations and
@@ -59,7 +59,7 @@ public class SmilesAbbreviations {
    * @throws IOException if the abbreviation file cannot be read or parsed
    */
   private SmilesAbbreviations() throws IOException {
-    SMILESLookupReader reader = new SMILESLookupReader(DefaultChemObjectBuilder.getInstance());
+    SMILESLookupReader reader = new SMILESLookupReader(SilentChemObjectBuilder.getInstance());
     this.smilesLookup =
         reader.loadSmilesLookup(Definitions.ABBREVIATION_PATH, Definitions.ABBREVIATION_SIZE);
   }
