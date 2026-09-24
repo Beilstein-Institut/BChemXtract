@@ -157,15 +157,15 @@ public class ChemicalUtils {
    * @return {@code true} if duplicates exist, {@code false} otherwise
    */
   public static boolean hasDuplicateCoordinates(IAtomContainer container) {
-    Set<String> seen = new HashSet<>();
+    Set<RoundedPoint> seen = new HashSet<>();
     for (IAtom atom : container.atoms()) {
       Point3d p3 = atom.getPoint3d();
       Point2d p2 = atom.getPoint2d();
-      String key;
+      RoundedPoint key;
       if (p3 != null) {
-        key = String.format("3D:%.6f,%.6f,%.6f", p3.x, p3.y, p3.z);
+        key = new RoundedPoint(true, micro(p3.x), micro(p3.y), micro(p3.z));
       } else if (p2 != null) {
-        key = String.format("2D:%.6f,%.6f", p2.x, p2.y);
+        key = new RoundedPoint(false, micro(p2.x), micro(p2.y), 0);
       } else {
         continue;
       }
@@ -174,6 +174,13 @@ public class ChemicalUtils {
       }
     }
     return false; // all unique
+  }
+
+  /** A coordinate rounded to six decimals, the precision at which two atoms count as coincident. */
+  private record RoundedPoint(boolean threeD, long x, long y, long z) {}
+
+  private static long micro(double coordinate) {
+    return Math.round(coordinate * 1e6);
   }
 
   /**
