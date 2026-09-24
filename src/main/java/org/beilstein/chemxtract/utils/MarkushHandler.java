@@ -466,10 +466,11 @@ public class MarkushHandler {
     // A value can graft on one candidate attachment and not on another — a ring position counted
     // from where the residue is drawn need not resolve from every candidate — so the assignments
     // viable on any of them are enumerated, not only those the first one reaches.
+    int settled = settledFrom(choices);
     Set<Map<String, String>> viable = new LinkedHashSet<>();
     for (IAtomContainer candidate : candidates) {
       List<Map<String, String>> reached = new ArrayList<>();
-      extendCombination(candidate, choices, 0, new LinkedHashMap<>(), reached);
+      extendCombination(candidate, choices, settled, 0, new LinkedHashMap<>(), reached);
       viable.addAll(reached);
     }
     return new ArrayList<>(viable);
@@ -480,6 +481,7 @@ public class MarkushHandler {
    *
    * @param container the scaffold with the assignments so far applied
    * @param choices the choices being enumerated
+   * @param settled the first choice from which on every option grafts; see {@link #settledFrom}
    * @param index the choice to take next
    * @param assigned the assignment built so far, mutated during the walk
    * @param viable collects the complete assignments that grafted
@@ -487,6 +489,7 @@ public class MarkushHandler {
   private void extendCombination(
       IAtomContainer container,
       List<Choice> choices,
+      int settled,
       int index,
       Map<String, String> assigned,
       List<Map<String, String>> viable)
@@ -496,14 +499,46 @@ public class MarkushHandler {
       return;
     }
     for (Map<String, String> option : choices.get(index).options()) {
-      IAtomContainer candidate = container.clone();
-      if (!applyOption(candidate, option)) {
-        continue;
+      // Past the last choice that can fail, grafting would only confirm what is already known.
+      IAtomContainer candidate = container;
+      if (index < settled) {
+        candidate = container.clone();
+        if (!applyOption(candidate, option)) {
+          continue;
+        }
       }
       assigned.putAll(option);
-      extendCombination(candidate, choices, index + 1, assigned, viable);
+      extendCombination(candidate, choices, settled, index + 1, assigned, viable);
       option.keySet().forEach(assigned::remove);
     }
+  }
+
+  /**
+   * The first choice from which on every option is plain SMILES. {@link #applyEntry} grafts such a
+   * value unconditionally, so once no later choice can fail, every completion of the assignment is
+   * viable and need not be built to find that out.
+   *
+   * @param choices the choices being enumerated
+   * @return the index of that choice, or {@code choices.size()} if the last one can already fail
+   */
+  private int settledFrom(List<Choice> choices) throws IOException {
+    int settled = choices.size();
+    while (settled > 0 && graftsUnconditionally(choices.get(settled - 1))) {
+      settled--;
+    }
+    return settled;
+  }
+
+  /** Whether every value of every option of the choice is plain SMILES. */
+  private boolean graftsUnconditionally(Choice choice) throws IOException {
+    for (Map<String, String> option : choice.options()) {
+      for (String value : option.values()) {
+        if (!ChemicalUtils.isValidSmiles(resolveSmiles(value))) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**
