@@ -42,6 +42,10 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 public class MarkushBugTest {
 
   private List<BCXSubstance> xtract(String fileName) throws IOException {
+    return xtract(fileName, false);
+  }
+
+  private List<BCXSubstance> xtract(String fileName, boolean unrestricted) throws IOException {
     InputStream in = MarkushBugTest.class.getResourceAsStream("/cheminf/bugs/markush/" + fileName);
     assertNotNull(in, "fixture missing on classpath: " + fileName);
 
@@ -50,22 +54,29 @@ public class MarkushBugTest {
     assertNotNull(document);
 
     BCXSubstanceInfo info = new BCXSubstanceInfo();
-    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    SubstanceXtractor xtractor =
+        new SubstanceXtractor(SilentChemObjectBuilder.getInstance())
+            .setUnrestrictedMarkush(unrestricted);
     return xtractor.xtractUnique(document, info, true);
   }
 
   /**
    * R-groups defined structurally via a ChemDraw {@code NamedAlternativeGroup} (not text) must be
    * resolved: the benzene scaffold with alternatives {methyl, chloro} enumerates to toluene and
-   * chlorobenzene.
+   * chlorobenzene, with and without the expansion rules.
    */
   @Test
   public void testNamedAlternativeGroupResolved() throws IOException {
-    List<BCXSubstance> substances = xtract("altgroup_R_methyl_chloro.cdxml");
-
-    Set<String> formulas =
-        substances.stream().map(BCXSubstance::getMolecularFormula).collect(Collectors.toSet());
-    assertEquals(Set.of("C7H8", "C6H5Cl"), formulas, "expected toluene and chlorobenzene");
+    for (boolean unrestricted : new boolean[] {false, true}) {
+      Set<String> formulas =
+          xtract("altgroup_R_methyl_chloro.cdxml", unrestricted).stream()
+              .map(BCXSubstance::getMolecularFormula)
+              .collect(Collectors.toSet());
+      assertEquals(
+          Set.of("C7H8", "C6H5Cl"),
+          formulas,
+          "expected toluene and chlorobenzene, unrestricted=" + unrestricted);
+    }
   }
 
   /**

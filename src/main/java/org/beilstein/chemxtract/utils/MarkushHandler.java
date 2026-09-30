@@ -73,6 +73,12 @@ import org.slf4j.LoggerFactory;
  * <p>The replacement handles single-bonded residues as well as dual-bonded residues, reconnecting
  * the generated structures properly.
  *
+ * <p>By default a legend is only expanded where it states each structure unambiguously: at most one
+ * R-group of a scaffold may list several substituents, and an R-group on a position-variation
+ * attachment only takes substituents that name their ring position or are hydrogen. A legend
+ * outside those rules leaves the scaffold unexpanded. An unrestricted handler enumerates the full
+ * cartesian product instead; see {@link #MarkushHandler(CDPage, IChemObjectBuilder, boolean)}.
+ *
  * <h2>Example usage:</h2>
  *
  * <pre>{@code
@@ -118,17 +124,38 @@ public class MarkushHandler {
    */
   private final Set<String> reportedUnresolved = new HashSet<>();
 
+  /** Whether the expansion rules are bypassed; see {@link #permittedChoices}. */
+  private final boolean unrestricted;
+
+  /** Legend restrictions already reported, once per drawing like {@link #reportedUnresolved}. */
+  private final Set<String> reportedRestricted = new HashSet<>();
+
   /**
-   * Constructs a MarkushHandler using a CDPage and a CDK builder.
+   * Constructs a MarkushHandler using a CDPage and a CDK builder, expanding only legends that state
+   * each structure unambiguously.
    *
    * @param page CDPage containing the chemical diagram
    * @param builder CDK object builder for creating atom containers
    */
   public MarkushHandler(CDPage page, IChemObjectBuilder builder) {
+    this(page, builder, false);
+  }
+
+  /**
+   * Constructs a MarkushHandler using a CDPage and a CDK builder.
+   *
+   * @param page CDPage containing the chemical diagram
+   * @param builder CDK object builder for creating atom containers
+   * @param unrestricted if {@code true}, every legend is expanded to the full cartesian product of
+   *     its R-groups, and a position-variation attachment takes any substituent; if {@code false},
+   *     only the legends {@link #permittedChoices} allows are expanded
+   */
+  public MarkushHandler(CDPage page, IChemObjectBuilder builder, boolean unrestricted) {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
     blocks = mergeColumnBlocks(textVisitor.getBlocks());
     smilesParser = new SmilesParser(builder);
+    this.unrestricted = unrestricted;
   }
 
   /**
@@ -371,7 +398,8 @@ public class MarkushHandler {
     }
     Set<String> present = presentResidueLabels(candidates.getFirst());
     List<Map<String, String>> combinations =
-        viableCombinations(candidates, residueChoicesNear(present, scaffoldBounds));
+        viableCombinations(
+            candidates, permittedChoices(candidates, residueChoicesNear(present, scaffoldBounds)));
     if (combinations.isEmpty()) {
       // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
       // page-wide union.
@@ -636,7 +664,114 @@ public class MarkushHandler {
       return List.copyOf(candidates);
     }
     return applyCombinations(
-        candidates, viableCombinations(candidates, independentChoices(relevantRGroups)), produced);
+        candidates,
+        viableCombinations(
+            candidates, permittedChoices(candidates, independentChoices(relevantRGroups))),
+        produced);
+  }
+
+  /**
+   * Restricts the choices to what the legend states unambiguously, unless the handler is
+   * unrestricted.
+   *
+   * <p>A legend that varies two R-groups at once ({@code R1 = a, b, c; R2 = d, e}) is a claim over
+   * a family, not a list of the compounds made: its cartesian product is not expanded. One varying
+   * R-group, with every other fixed to a single substituent, is. A correlated table counts as one
+   * choice, because its rows name the compounds explicitly.
+   *
+   * <p>On a position-variation attachment the drawing does not say which atom carries the
+   * substituent, so a value only applies there if it names its ring position ({@code 5-OMe}) or is
+   * hydrogen, which lands nowhere; other values are dropped.
+   *
+   * @param candidates the scaffold as drawn, one per candidate attachment atom
+   * @param choices the choices the legend gives for the scaffold
+   * @return the choices to enumerate; empty if the legend is not to be expanded
+   */
+  private List<Choice> permittedChoices(List<IAtomContainer> candidates, List<Choice> choices)
+      throws IOException {
+    if (unrestricted) {
+      return choices;
+    }
+    if (choices.stream().filter(choice -> choice.options().size() > 1).count() > 1) {
+      reportRestricted("more than one R-group lists several substituents");
+      return List.of();
+    }
+    Set<String> variable = variableAttachmentLabels(candidates);
+    if (variable.isEmpty()) {
+      return choices;
+    }
+    List<Choice> permitted = new ArrayList<>(choices.size());
+    for (Choice choice : choices) {
+      List<Map<String, String>> options = new ArrayList<>();
+      for (Map<String, String> option : choice.options()) {
+        if (placesVariableAttachment(option, variable)) {
+          options.add(option);
+        }
+      }
+      if (options.isEmpty()) {
+        reportRestricted(
+            "a position-variation R-group takes only substituents that name their position or H");
+        return List.of();
+      }
+      permitted.add(new Choice(options));
+    }
+    return permitted;
+  }
+
+  /** Whether every value the option gives a position-variation label names its position or is H. */
+  private boolean placesVariableAttachment(Map<String, String> option, Set<String> variable)
+      throws IOException {
+    for (Map.Entry<String, String> entry : option.entrySet()) {
+      if (variable.contains(entry.getKey())
+          && parsePositional(entry.getValue()) == null
+          && !isLoneHydrogen(entry.getValue())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * The labels whose residues sit on a position-variation attachment: those drawn on different
+   * atoms in different candidates.
+   */
+  private static Set<String> variableAttachmentLabels(List<IAtomContainer> candidates) {
+    Set<String> variable = new HashSet<>();
+    if (candidates.size() < 2) {
+      return variable;
+    }
+    Map<String, Set<List<Integer>>> placements = new HashMap<>();
+    for (IAtomContainer candidate : candidates) {
+      Map<String, List<Integer>> drawnOn = new HashMap<>();
+      for (IAtom atom : candidate.atoms()) {
+        if (atom instanceof IPseudoAtom pseudo && pseudo.getLabel() != null) {
+          List<Integer> neighbours =
+              drawnOn.computeIfAbsent(pseudo.getLabel(), _ -> new ArrayList<>());
+          for (IBond bond : candidate.getConnectedBondsList(atom)) {
+            neighbours.add(candidate.indexOf(bond.getOther(atom)));
+          }
+        }
+      }
+      drawnOn.forEach(
+          (label, neighbours) -> {
+            Collections.sort(neighbours);
+            placements.computeIfAbsent(label, _ -> new HashSet<>()).add(neighbours);
+          });
+    }
+    placements.forEach(
+        (label, drawn) -> {
+          if (drawn.size() > 1) {
+            variable.add(label);
+          }
+        });
+    return variable;
+  }
+
+  /** Reports a legend left unexpanded by the rules, once per drawing and reason. */
+  private void reportRestricted(String reason) {
+    if (reportedRestricted.add(reason)) {
+      LOGGER.info("R-group legend not expanded: {}.", reason);
+    }
   }
 
   /**
@@ -898,19 +1033,7 @@ public class MarkushHandler {
       if (known != null) {
         return known;
       }
-      boolean lone = false;
-      String smiles = resolveSmiles(value);
-      if (ChemicalUtils.isValidSmiles(smiles)) {
-        try {
-          IAtomContainer substituent = smilesParser.parseSmiles(smiles);
-          lone =
-              substituent.getAtomCount() == 1
-                  && "H".equals(substituent.getAtom(0).getSymbol())
-                  && substituent.getAtom(0).getImplicitHydrogenCount() == 0;
-        } catch (CDKException e) {
-          LOGGER.debug("Substituent {} does not parse; treated as drawn in place.", smiles);
-        }
-      }
+      boolean lone = isLoneHydrogen(value);
       loneHydrogen.put(value, lone);
       return lone;
     }
@@ -968,6 +1091,23 @@ public class MarkushHandler {
         atomIndices.set(candidate, known);
       }
       return known.getOrDefault(atom, -1);
+    }
+  }
+
+  /** Whether the value's substituent is a single hydrogen. */
+  private boolean isLoneHydrogen(String value) throws IOException {
+    String smiles = resolveSmiles(value);
+    if (!ChemicalUtils.isValidSmiles(smiles)) {
+      return false;
+    }
+    try {
+      IAtomContainer substituent = smilesParser.parseSmiles(smiles);
+      return substituent.getAtomCount() == 1
+          && "H".equals(substituent.getAtom(0).getSymbol())
+          && substituent.getAtom(0).getImplicitHydrogenCount() == 0;
+    } catch (CDKException e) {
+      LOGGER.debug("Substituent {} does not parse; treated as drawn in place.", smiles);
+      return false;
     }
   }
 
