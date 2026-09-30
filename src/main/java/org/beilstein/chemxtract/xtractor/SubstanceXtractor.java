@@ -76,6 +76,7 @@ public class SubstanceXtractor {
 
   private final IChemObjectBuilder builder;
   private static final Logger LOGGER = LoggerFactory.getLogger(SubstanceXtractor.class);
+  private boolean unrestrictedMarkush;
 
   /**
    * Constructs a {@code SubstanceXtractor} using a custom CDK {@link IChemObjectBuilder}.
@@ -101,6 +102,34 @@ public class SubstanceXtractor {
   }
 
   /**
+   * Bypasses the rules that limit which R-group legends are expanded.
+   *
+   * <p>By default a legend is expanded only where it states each structure unambiguously: at most
+   * one R-group of a scaffold may list several substituents, and an R-group on a position-variation
+   * attachment takes only substituents that name their ring position or are hydrogen. The rules
+   * apply alike to R-groups defined by text captions and by ChemDraw {@code
+   * NamedAlternativeGroup}s. Unrestricted, every legend is expanded to the full cartesian product
+   * and position-variation attachments take any substituent.
+   *
+   * @param unrestrictedMarkush {@code true} to bypass the rules
+   * @return this xtractor
+   */
+  public SubstanceXtractor setUnrestrictedMarkush(boolean unrestrictedMarkush) {
+    this.unrestrictedMarkush = unrestrictedMarkush;
+    return this;
+  }
+
+  /**
+   * Whether the rules limiting R-group expansion are bypassed.
+   *
+   * @return {@code true} if every legend is expanded in full; see {@link
+   *     #setUnrestrictedMarkush(boolean)}
+   */
+  public boolean isUnrestrictedMarkush() {
+    return unrestrictedMarkush;
+  }
+
+  /**
    * Extracts all chemical substances from the given ChemDraw document.
    *
    * <p>Each fragment is processed and converted into one or more {@link BCXSubstance} objects,
@@ -115,7 +144,8 @@ public class SubstanceXtractor {
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata (e.g., number of fragments)
-   * @param resolveRGroups if {@code true}, R-groups are resolved to generate all possible variants
+   * @param resolveRGroups if {@code true}, R-groups are resolved to generate their variants, within
+   *     the limits of {@link #setUnrestrictedMarkush(boolean)}
    * @return a list of extracted {@link BCXSubstance} objects
    */
   public List<BCXSubstance> xtract(
@@ -131,7 +161,7 @@ public class SubstanceXtractor {
           AttachmentHandler.normalizeVariableAttachmentBonds(fragmentVisitor.getFragments());
       MarkushHandler markushHandler = null;
       if (resolveRGroups) {
-        markushHandler = new MarkushHandler(page, this.builder);
+        markushHandler = new MarkushHandler(page, this.builder, unrestrictedMarkush);
         markushHandler.addResidueDefinitions(resolveAltGroupDefinitions(page));
       }
 

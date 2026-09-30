@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,8 @@ import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
@@ -65,7 +68,8 @@ public class MarkushTest {
     assertNotNull(document);
 
     BCXSubstanceInfo info = new BCXSubstanceInfo();
-    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    SubstanceXtractor xtractor =
+        new SubstanceXtractor(SilentChemObjectBuilder.getInstance()).setUnrestrictedMarkush(true);
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
     assertEquals(9, substances.size());
   }
@@ -80,8 +84,43 @@ public class MarkushTest {
     assertNotNull(document);
 
     BCXSubstanceInfo info = new BCXSubstanceInfo();
-    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    SubstanceXtractor xtractor =
+        new SubstanceXtractor(SilentChemObjectBuilder.getInstance()).setUnrestrictedMarkush(true);
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
     assertEquals(14, substances.size());
+  }
+
+  /**
+   * The product scaffolds carry two R-groups that each list several substituents ({@code Y} and
+   * {@code Ar}; {@code R} and {@code R1}), so by default their cartesian product is not expanded.
+   * The reactant scaffolds carry one varying R-group each and are expanded either way.
+   */
+  @ParameterizedTest
+  @CsvSource({"Markush_Ar_X_Y.cdx, 5", "Markush_R_R1.cdx, 6"})
+  public void twoVaryingRGroupsAreNotExpanded(String fileName, int restricted) throws IOException {
+    List<BCXSubstance> unrestrictedSubstances = xtract(fileName, true);
+    List<BCXSubstance> restrictedSubstances = xtract(fileName, false);
+
+    assertEquals(restricted, restrictedSubstances.size(), "only the one-R scaffolds expand");
+    assertTrue(
+        unrestrictedSubstances.stream()
+            .map(BCXSubstance::getInchiKey)
+            .toList()
+            .containsAll(restrictedSubstances.stream().map(BCXSubstance::getInchiKey).toList()),
+        "restricting drops structures, it never adds any");
+  }
+
+  private static List<BCXSubstance> xtract(String fileName, boolean unrestricted)
+      throws IOException {
+    InputStream in = MarkushTest.class.getResourceAsStream("/integrationTests/markush/" + fileName);
+    assertNotNull(in);
+
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+
+    SubstanceXtractor xtractor =
+        new SubstanceXtractor(SilentChemObjectBuilder.getInstance())
+            .setUnrestrictedMarkush(unrestricted);
+    return xtractor.xtractUnique(document, new BCXSubstanceInfo(), true);
   }
 }

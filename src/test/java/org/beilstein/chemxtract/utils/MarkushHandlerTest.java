@@ -305,8 +305,13 @@ public class MarkushHandlerTest {
 
   /** Handler with structural definitions only, so substituent SMILES bypass legend parsing. */
   private static MarkushHandler handlerWith(Map<String, List<String>> definitions) {
+    return handlerWith(definitions, false);
+  }
+
+  private static MarkushHandler handlerWith(
+      Map<String, List<String>> definitions, boolean unrestricted) {
     MarkushHandler handler =
-        new MarkushHandler(new CDPage(), SilentChemObjectBuilder.getInstance());
+        new MarkushHandler(new CDPage(), SilentChemObjectBuilder.getInstance(), unrestricted);
     handler.addResidueDefinitions(definitions);
     return handler;
   }
@@ -642,7 +647,7 @@ public class MarkushHandlerTest {
    */
   @Test
   public void substituentThatStaysWhereDrawnBuildsEveryAttachmentCandidate() throws Exception {
-    MarkushHandler handler = handlerWith(Map.of("R", List.of("Me")));
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("Me")), true);
     List<IAtomContainer> candidates =
         List.of(
             scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1),
@@ -669,5 +674,86 @@ public class MarkushHandlerTest {
         handler.replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
 
     assertEquals(2, results.size(), "candidates drawn on different skeletons stay apart");
+  }
+
+  /** Benzene with {@code R1} and {@code R2} para to each other, laid out so grafting can work. */
+  private static IAtomContainer twoResidueScaffold() throws CDKException {
+    IAtomContainer scaffold =
+        new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("c1ccccc1");
+    for (Map.Entry<String, Integer> entry : Map.of("R1", 0, "R2", 3).entrySet()) {
+      IPseudoAtom residue =
+          SilentChemObjectBuilder.getInstance().newInstance(IPseudoAtom.class, entry.getKey());
+      residue.setLabel(entry.getKey());
+      IAtom anchor = scaffold.getAtom(entry.getValue());
+      scaffold.addAtom(residue);
+      scaffold.addBond(new Bond(anchor, residue, IBond.Order.SINGLE));
+      anchor.setImplicitHydrogenCount(0);
+    }
+    new StructureDiagramGenerator().generateCoordinates(scaffold);
+    return scaffold;
+  }
+
+  /** Two R-groups each listing several substituents are a family claim, not a compound list. */
+  @Test
+  public void twoVaryingRGroupsAreNotExpanded() throws Exception {
+    Map<String, List<String>> definitions =
+        Map.of("R1", List.of("Cl", "Br"), "R2", List.of("F", "I"));
+
+    assertTrue(
+        handlerWith(definitions).replaceRGroups(twoResidueScaffold()).isEmpty(),
+        "R1 = Cl, Br; R2 = F, I must not be expanded");
+    assertEquals(
+        4,
+        handlerWith(definitions, true).replaceRGroups(twoResidueScaffold()).size(),
+        "unrestricted, the cartesian product is enumerated");
+  }
+
+  /** One varying R-group beside fixed ones names each compound, and is expanded. */
+  @Test
+  public void oneVaryingRGroupBesideFixedOnesIsExpanded() throws Exception {
+    MarkushHandler handler =
+        handlerWith(Map.of("R1", List.of("Cl", "Br", "I"), "R2", List.of("F")));
+
+    List<IAtomContainer> results = handler.replaceRGroups(twoResidueScaffold());
+
+    assertEquals(3, results.size(), "R1 = Cl, Br, I; R2 = F gives three compounds");
+    results.forEach(MarkushHandlerTest::assertNoPseudoAtoms);
+  }
+
+  /** R-groups that each have a single substituent name exactly one compound. */
+  @Test
+  public void singleValuedRGroupsAreExpanded() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R1", List.of("Cl"), "R2", List.of("F")));
+
+    List<IAtomContainer> results = handler.replaceRGroups(twoResidueScaffold());
+
+    assertEquals(1, results.size(), "R1 = Cl; R2 = F gives one compound");
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("Fc1ccc(Cl)cc1")),
+        canonicalSmiles(results.get(0)));
+  }
+
+  /**
+   * On a position-variation attachment the drawing leaves the carrying atom open, so only values
+   * that name their position or are hydrogen apply there; {@code Me} is dropped.
+   */
+  @Test
+  public void positionVariationTakesOnlyPositionedOrHydrogenValues() throws Exception {
+    List<IAtomContainer> candidates =
+        List.of(
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 1),
+            scaffoldFromSmiles("c1ccc2[nH]ccc2c1", "R", 6));
+
+    assertTrue(
+        handlerWith(Map.of("R", List.of("Me")))
+            .replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>())
+            .isEmpty(),
+        "an unplaced Me on a position variation must not be expanded");
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("R", List.of("5-Me", "Me", "H")))
+            .replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+    assertEquals(2, results.size(), "5-Me and H apply, Me is dropped");
   }
 }
