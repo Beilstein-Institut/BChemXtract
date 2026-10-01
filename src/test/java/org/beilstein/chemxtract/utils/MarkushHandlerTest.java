@@ -756,4 +756,32 @@ public class MarkushHandlerTest {
             .replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
     assertEquals(2, results.size(), "5-Me and H apply, Me is dropped");
   }
+
+  /**
+   * A legend naming ring positions describes an R-group on a ring. On a scaffold whose R-group is
+   * drawn off any ring only its hydrogen entry would graft, which is not what the legend states, so
+   * it is not applied there (22-9-i2: R on the sulfur of the reaction scheme).
+   */
+  @Test
+  public void positionalLegendIsNotAppliedToAnOffRingRGroup() throws Exception {
+    Map<String, List<String>> definitions = Map.of("R", List.of("H", "p-OMe"));
+
+    assertTrue(
+        handlerWith(definitions)
+            .replaceRGroups(scaffoldFromSmiles("CC(=O)NS", "R", 4), rect(0, 0, 40, 40))
+            .isEmpty(),
+        "R = H, p-OMe must not be applied to an R on sulfur");
+    assertEquals(
+        2,
+        handlerWith(definitions)
+            .replaceRGroups(scaffoldFromSmiles("CSc1ccccc1", "R", 3), rect(0, 0, 40, 40))
+            .size(),
+        "on an aryl R both entries apply");
+    assertEquals(
+        1,
+        handlerWith(definitions, true)
+            .replaceRGroups(scaffoldFromSmiles("CC(=O)NS", "R", 4), rect(0, 0, 40, 40))
+            .size(),
+        "unrestricted, the hydrogen entry still grafts");
+  }
 }
