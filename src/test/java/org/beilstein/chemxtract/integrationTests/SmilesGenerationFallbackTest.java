@@ -56,7 +56,10 @@ class SmilesGenerationFallbackTest {
     assertThat(in).as("fixture must be on the classpath").isNotNull();
     CDDocument document = CDXReader.readDocument(in);
     assertThat(document).as("document must parse").isNotNull();
-    SubstanceXtractor xtractor = new SubstanceXtractor(SilentChemObjectBuilder.getInstance());
+    // Unrestricted, so the page's R/X legend expands and every structure the fallback guards is
+    // built.
+    SubstanceXtractor xtractor =
+        new SubstanceXtractor(SilentChemObjectBuilder.getInstance()).setUnrestrictedMarkush(true);
     return xtractor.xtractUnique(document, new BCXSubstanceInfo(), true);
   }
 
