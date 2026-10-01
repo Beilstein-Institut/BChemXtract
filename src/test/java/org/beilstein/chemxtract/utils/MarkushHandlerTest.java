@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.vecmath.Point2d;
+import javax.vecmath.Vector2d;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
@@ -783,5 +784,102 @@ public class MarkushHandlerTest {
             .replaceRGroups(scaffoldFromSmiles("CC(=O)NS", "R", 4), rect(0, 0, 40, 40))
             .size(),
         "unrestricted, the hydrogen entry still grafts");
+  }
+
+  /**
+   * Thioanisole with {@code R} drawn on the meta carbon next to ortho carbon {@code c3}, and the
+   * S-methyl moved onto the spot outside {@code c3} where a substituent placed there would go, the
+   * way the carbonyl O sits over the ring in 22-9-i2.
+   */
+  private static IAtomContainer scaffoldWithBlockedOrtho(String smiles) throws CDKException {
+    IAtomContainer scaffold = scaffoldFromSmiles(smiles, "R", 4);
+    IAtom ortho = scaffold.getAtom(3);
+    Point2d centre = new Point2d();
+    List<IAtom> ring = List.of(2, 3, 4, 5, 6, 7).stream().map(scaffold::getAtom).toList();
+    ring.forEach(atom -> centre.add(atom.getPoint2d()));
+    centre.scale(1.0 / ring.size());
+    Vector2d outward = new Vector2d(ortho.getPoint2d());
+    outward.sub(centre);
+    outward.normalize();
+    outward.scale(ortho.getPoint2d().distance(scaffold.getAtom(2).getPoint2d()));
+    Point2d outside = new Point2d(ortho.getPoint2d());
+    outside.add(outward);
+    scaffold.getAtom(0).setPoint2d(outside);
+    return scaffold;
+  }
+
+  /** The distance from the atom to the nearest atom it is not bonded to, in mean bond lengths. */
+  private static double clearance(IAtomContainer container, IAtom atom) {
+    double bondLength = 0;
+    for (IBond bond : container.bonds()) {
+      bondLength += bond.getBegin().getPoint2d().distance(bond.getEnd().getPoint2d());
+    }
+    bondLength /= container.getBondCount();
+    double nearest = Double.MAX_VALUE;
+    for (IAtom other : container.atoms()) {
+      if (other != atom && container.getBond(atom, other) == null) {
+        nearest = Math.min(nearest, atom.getPoint2d().distance(other.getPoint2d()));
+      }
+    }
+    return nearest / bondLength;
+  }
+
+  private static IAtom firstOf(IAtomContainer container, String symbol) {
+    for (IAtom atom : container.atoms()) {
+      if (symbol.equals(atom.getSymbol())) {
+        return atom;
+      }
+    }
+    throw new AssertionError("no " + symbol + " in the structure");
+  }
+
+  /**
+   * On a ring symmetric about its attachment, ortho positions 2 and 6 are the same compound, so the
+   * substituent goes to the one with room rather than onto an atom drawn over the other.
+   */
+  @Test
+  public void orthoSubstituentTakesTheFreeSideOfASymmetricRing() throws Exception {
+    List<IAtomContainer> results =
+        handlerWith(Map.of("R", List.of("o-F")))
+            .replaceRGroups(scaffoldWithBlockedOrtho("CSc1ccccc1"), rect(0, 0, 40, 40));
+
+    assertEquals(1, results.size());
+    IAtomContainer product = results.get(0);
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("CSc1ccccc1F")),
+        canonicalSmiles(product));
+    assertTrue(
+        clearance(product, firstOf(product, "F")) > 0.5, "the F must not sit on the S-methyl");
+  }
+
+  /**
+   * A second R-group on the ring makes ortho positions 2 and 6 different compounds, and the drawn R
+   * says which is meant, even where the layout is then crowded.
+   */
+  @Test
+  public void orthoSubstituentFollowsTheDrawnSideOfAnAsymmetricRing() throws Exception {
+    IAtomContainer scaffold = scaffoldWithBlockedOrtho("CSc1ccccc1");
+    IAtom meta = scaffold.getAtom(6);
+    IPseudoAtom other = SilentChemObjectBuilder.getInstance().newInstance(IPseudoAtom.class, "R1");
+    other.setLabel("R1");
+    Point2d point = new Point2d(meta.getPoint2d());
+    point.scale(1.5);
+    other.setPoint2d(point);
+    scaffold.addAtom(other);
+    scaffold.addBond(new Bond(meta, other, IBond.Order.SINGLE));
+    meta.setImplicitHydrogenCount(0);
+
+    List<IAtomContainer> results =
+        handlerWith(Map.of("R", List.of("o-F"), "R1", List.of("Cl")))
+            .replaceRGroups(scaffold, rect(0, 0, 40, 40));
+
+    assertEquals(1, results.size());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("CSc1c(F)ccc(Cl)c1")),
+        canonicalSmiles(results.get(0)),
+        "F goes on the ortho carbon next to the drawn R");
   }
 }

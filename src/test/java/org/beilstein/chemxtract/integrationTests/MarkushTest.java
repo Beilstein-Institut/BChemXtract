@@ -38,6 +38,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 public class MarkushTest {
@@ -141,5 +144,40 @@ public class MarkushTest {
         .as("the scheme's R on sulfur is not replaced by H")
         .doesNotContain("AAUKAELUJMWJIL-UHFFFAOYSA-N", "RZQOAUROAHKPRB-UHFFFAOYSA-N");
     assertEquals(19, substances.size(), "3b–3s and MeOH");
+  }
+
+  /**
+   * The aryl is drawn with one ortho carbon under the carbonyl O. The o-substituents of 3l–3o go on
+   * the other, interchangeable, ortho carbon, so no grafted atom lands on a drawn one.
+   */
+  @Test
+  public void orthoSubstituentsDoNotOverlapTheDrawnScaffold() throws IOException {
+    for (BCXSubstance substance : xtract("Markush_positional_off_ring_R.cdx", false)) {
+      if (substance.isMarkush()) {
+        assertThat(closestNonBondedPair(substance.getAtomContainer()))
+            .as("no two unbonded atoms closer than half a bond in %s", substance.getSmiles())
+            .isGreaterThan(0.5);
+      }
+    }
+  }
+
+  /** The smallest distance between two unbonded atoms, in mean bond lengths. */
+  private static double closestNonBondedPair(IAtomContainer container) {
+    double bondLength = 0;
+    for (IBond bond : container.bonds()) {
+      bondLength += bond.getBegin().getPoint2d().distance(bond.getEnd().getPoint2d());
+    }
+    bondLength /= container.getBondCount();
+    double closest = Double.MAX_VALUE;
+    for (int i = 0; i < container.getAtomCount(); i++) {
+      for (int j = i + 1; j < container.getAtomCount(); j++) {
+        IAtom a = container.getAtom(i);
+        IAtom b = container.getAtom(j);
+        if (container.getBond(a, b) == null) {
+          closest = Math.min(closest, a.getPoint2d().distance(b.getPoint2d()));
+        }
+      }
+    }
+    return closest / bondLength;
   }
 }
