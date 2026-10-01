@@ -39,6 +39,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.vecmath.Point2d;
+import javax.vecmath.Vector2d;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
@@ -52,6 +53,8 @@ import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.graph.Cycles;
+import org.openscience.cdk.graph.GraphUtil;
+import org.openscience.cdk.graph.invariant.Canon;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -683,6 +686,11 @@ public class MarkushHandler {
    * substituent, so a value only applies there if it names its ring position ({@code 5-OMe}) or is
    * hydrogen, which lands nowhere; other values are dropped.
    *
+   * <p>A value naming a ring position describes an R-group drawn on a ring. A scaffold whose
+   * R-group is drawn off every ring cannot carry it, and a legend that names positions is then
+   * about another scaffold: it is not applied, rather than expanded with the few of its values that
+   * happen to graft (typically hydrogen).
+   *
    * @param candidates the scaffold as drawn, one per candidate attachment atom
    * @param choices the choices the legend gives for the scaffold
    * @return the choices to enumerate; empty if the legend is not to be expanded
@@ -694,6 +702,11 @@ public class MarkushHandler {
     }
     if (choices.stream().filter(choice -> choice.options().size() > 1).count() > 1) {
       reportRestricted("more than one R-group lists several substituents");
+      return List.of();
+    }
+    if (namesPositionOffRing(choices, offRingLabels(candidates))) {
+      reportRestricted(
+          "a legend naming ring positions does not apply to an R-group drawn off a ring");
       return List.of();
     }
     Set<String> variable = variableAttachmentLabels(candidates);
@@ -716,6 +729,52 @@ public class MarkushHandler {
       permitted.add(new Choice(options));
     }
     return permitted;
+  }
+
+  /** Whether any option gives one of the off-ring labels a value that names a ring position. */
+  private boolean namesPositionOffRing(List<Choice> choices, Set<String> offRing)
+      throws IOException {
+    if (offRing.isEmpty()) {
+      return false;
+    }
+    for (Choice choice : choices) {
+      for (Map<String, String> option : choice.options()) {
+        for (Map.Entry<String, String> entry : option.entrySet()) {
+          if (offRing.contains(entry.getKey()) && parsePositional(entry.getValue()) != null) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The labels whose residues are drawn on no ring atom in any candidate: every atom they are
+   * bonded to lies outside every ring.
+   */
+  private static Set<String> offRingLabels(List<IAtomContainer> candidates) {
+    Set<String> onRing = new HashSet<>();
+    Set<String> labels = new HashSet<>();
+    for (IAtomContainer candidate : candidates) {
+      IRingSet rings = null;
+      for (IAtom atom : candidate.atoms()) {
+        if (!(atom instanceof IPseudoAtom pseudo) || pseudo.getLabel() == null) {
+          continue;
+        }
+        labels.add(pseudo.getLabel());
+        for (IBond bond : candidate.getConnectedBondsList(atom)) {
+          if (rings == null) {
+            rings = Cycles.mcb(candidate).toRingSet();
+          }
+          if (rings.contains(bond.getOther(atom))) {
+            onRing.add(pseudo.getLabel());
+          }
+        }
+      }
+    }
+    labels.removeAll(onRing);
+    return labels;
   }
 
   /** Whether every value the option gives a position-variation label names its position or is H. */
@@ -1371,7 +1430,7 @@ public class MarkushHandler {
     if (ipso == null) {
       return null;
     }
-    return ringAtomAtDistance(ring, ipso, position - 1, residue);
+    return ringAtomAtDistance(container, ring, ipso, position - 1, residue);
   }
 
   /** The smallest ring containing the atom, or {@code null} if it lies in none. */
@@ -1415,10 +1474,13 @@ public class MarkushHandler {
 
   /**
    * The ring atom a given number of bonds from the ipso atom. Both directions round the ring are
-   * walked; when they reach different atoms (positions 2/6, 3/5, ... of a six-ring) the one nearer
-   * the drawn residue is taken — for a ring that is symmetric about the ipso atom the two are the
-   * same structure anyway, and otherwise the drawing states which side is meant.
+   * walked, and they may reach two different atoms (positions 2/6, 3/5, ... of a six-ring). Where
+   * the two are interchangeable, the choice is only one of layout, and the atom whose outside has
+   * room for the substituent is taken: the scaffold keeps its drawn coordinates, so a substituent
+   * on the other would land on whatever the drawing put there. Otherwise, or with room on both
+   * sides, the one nearer the drawn residue is taken, since the drawing states which side is meant.
    *
+   * @param container the structure the ring belongs to
    * @param ring the ring to walk
    * @param ipso the ring's attachment atom, position 1
    * @param distance the number of bonds to walk, i.e. position - 1
@@ -1426,7 +1488,7 @@ public class MarkushHandler {
    * @return the ring atom at that position, or {@code null} if the position does not exist
    */
   private static IAtom ringAtomAtDistance(
-      IAtomContainer ring, IAtom ipso, int distance, IAtom residue) {
+      IAtomContainer container, IAtomContainer ring, IAtom ipso, int distance, IAtom residue) {
     if (distance <= 0 || distance > ring.getAtomCount() / 2) {
       return null;
     }
@@ -1450,7 +1512,108 @@ public class MarkushHandler {
         }
       }
     }
+    if (reached.size() == 2
+        && interchangeable(container, residue, reached.get(0), reached.get(1))) {
+      IAtom roomier = roomier(container, ring, residue, reached.get(0), reached.get(1));
+      if (roomier != null) {
+        return roomier;
+      }
+    }
     return nearestTo(reached, residue.getPoint2d());
+  }
+
+  /**
+   * Whether two atoms are symmetry-equivalent in the structure once the residue is taken off, i.e.
+   * putting the residue on either gives the same compound.
+   */
+  private static boolean interchangeable(
+      IAtomContainer container, IAtom residue, IAtom first, IAtom second) {
+    try {
+      IAtomContainer copy = container.clone();
+      IAtom copiedFirst = copy.getAtom(container.indexOf(first));
+      IAtom copiedSecond = copy.getAtom(container.indexOf(second));
+      IAtom copiedResidue = copy.getAtom(container.indexOf(residue));
+      for (IAtom neighbour : copy.getConnectedAtomsList(copiedResidue)) {
+        shiftImplicitHydrogens(neighbour, 1);
+      }
+      copy.removeAtom(copiedResidue);
+      for (IAtom atom : copy.atoms()) {
+        if (atom.getAtomicNumber() == null) {
+          atom.setAtomicNumber(0);
+        }
+        if (atom.getImplicitHydrogenCount() == null) {
+          atom.setImplicitHydrogenCount(0);
+        }
+      }
+      long[] classes = Canon.symmetry(copy, GraphUtil.toAdjList(copy));
+      return classes[copy.indexOf(copiedFirst)] == classes[copy.indexOf(copiedSecond)];
+    } catch (CloneNotSupportedException | RuntimeException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Of two ring atoms, the one with clearly more room outside the ring, where a substituent on it
+   * is laid out; {@code null} if neither is clearly freer or the coordinates are missing.
+   */
+  private static IAtom roomier(
+      IAtomContainer container, IAtomContainer ring, IAtom residue, IAtom first, IAtom second) {
+    double bondLength = 0;
+    int bonds = 0;
+    for (IBond bond : container.bonds()) {
+      Point2d begin = bond.getBegin().getPoint2d();
+      Point2d end = bond.getEnd().getPoint2d();
+      if (begin != null && end != null) {
+        bondLength += begin.distance(end);
+        bonds++;
+      }
+    }
+    Point2d centre = new Point2d();
+    for (IAtom atom : ring.atoms()) {
+      if (atom.getPoint2d() == null) {
+        return null;
+      }
+      centre.add(atom.getPoint2d());
+    }
+    if (bonds == 0) {
+      return null;
+    }
+    bondLength /= bonds;
+    centre.scale(1.0 / ring.getAtomCount());
+    double firstRoom = roomOutside(container, residue, first, centre, bondLength);
+    double secondRoom = roomOutside(container, residue, second, centre, bondLength);
+    double margin = 0.1 * bondLength;
+    if (firstRoom > secondRoom + margin) {
+      return first;
+    }
+    if (secondRoom > firstRoom + margin) {
+      return second;
+    }
+    return null;
+  }
+
+  /**
+   * The distance from the point one bond length outside the ring atom to the nearest other atom,
+   * leaving out the residue about to move.
+   */
+  private static double roomOutside(
+      IAtomContainer container, IAtom residue, IAtom ringAtom, Point2d centre, double bondLength) {
+    Vector2d outward = new Vector2d(ringAtom.getPoint2d());
+    outward.sub(centre);
+    if (outward.length() == 0) {
+      return 0;
+    }
+    outward.normalize();
+    outward.scale(bondLength);
+    Point2d outside = new Point2d(ringAtom.getPoint2d());
+    outside.add(outward);
+    double nearest = Double.MAX_VALUE;
+    for (IAtom atom : container.atoms()) {
+      if (atom != ringAtom && atom != residue && atom.getPoint2d() != null) {
+        nearest = Math.min(nearest, outside.distance(atom.getPoint2d()));
+      }
+    }
+    return nearest;
   }
 
   /** The atom of the list closest to the given point; the first one when there is no point. */
