@@ -683,6 +683,11 @@ public class MarkushHandler {
    * substituent, so a value only applies there if it names its ring position ({@code 5-OMe}) or is
    * hydrogen, which lands nowhere; other values are dropped.
    *
+   * <p>A value naming a ring position describes an R-group drawn on a ring. A scaffold whose
+   * R-group is drawn off every ring cannot carry it, and a legend that names positions is then
+   * about another scaffold: it is not applied, rather than expanded with the few of its values that
+   * happen to graft (typically hydrogen).
+   *
    * @param candidates the scaffold as drawn, one per candidate attachment atom
    * @param choices the choices the legend gives for the scaffold
    * @return the choices to enumerate; empty if the legend is not to be expanded
@@ -694,6 +699,11 @@ public class MarkushHandler {
     }
     if (choices.stream().filter(choice -> choice.options().size() > 1).count() > 1) {
       reportRestricted("more than one R-group lists several substituents");
+      return List.of();
+    }
+    if (namesPositionOffRing(choices, offRingLabels(candidates))) {
+      reportRestricted(
+          "a legend naming ring positions does not apply to an R-group drawn off a ring");
       return List.of();
     }
     Set<String> variable = variableAttachmentLabels(candidates);
@@ -716,6 +726,52 @@ public class MarkushHandler {
       permitted.add(new Choice(options));
     }
     return permitted;
+  }
+
+  /** Whether any option gives one of the off-ring labels a value that names a ring position. */
+  private boolean namesPositionOffRing(List<Choice> choices, Set<String> offRing)
+      throws IOException {
+    if (offRing.isEmpty()) {
+      return false;
+    }
+    for (Choice choice : choices) {
+      for (Map<String, String> option : choice.options()) {
+        for (Map.Entry<String, String> entry : option.entrySet()) {
+          if (offRing.contains(entry.getKey()) && parsePositional(entry.getValue()) != null) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The labels whose residues are drawn on no ring atom in any candidate: every atom they are
+   * bonded to lies outside every ring.
+   */
+  private static Set<String> offRingLabels(List<IAtomContainer> candidates) {
+    Set<String> onRing = new HashSet<>();
+    Set<String> labels = new HashSet<>();
+    for (IAtomContainer candidate : candidates) {
+      IRingSet rings = null;
+      for (IAtom atom : candidate.atoms()) {
+        if (!(atom instanceof IPseudoAtom pseudo) || pseudo.getLabel() == null) {
+          continue;
+        }
+        labels.add(pseudo.getLabel());
+        for (IBond bond : candidate.getConnectedBondsList(atom)) {
+          if (rings == null) {
+            rings = Cycles.mcb(candidate).toRingSet();
+          }
+          if (rings.contains(bond.getOther(atom))) {
+            onRing.add(pseudo.getLabel());
+          }
+        }
+      }
+    }
+    labels.removeAll(onRing);
+    return labels;
   }
 
   /** Whether every value the option gives a position-variation label names its position or is H. */
