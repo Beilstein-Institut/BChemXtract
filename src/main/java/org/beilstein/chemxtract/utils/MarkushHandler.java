@@ -61,6 +61,8 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IRingSet;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.slf4j.Logger;
@@ -107,6 +109,26 @@ public class MarkushHandler {
    */
   private static final Pattern POSITIONAL_SUBSTITUENT =
       Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|[omp])-(.+)");
+
+  /**
+   * A substituted phenyl group named by its substituent's ring position, e.g. {@code o-Cl-Ph-},
+   * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
+   * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
+   * or {@code ortho}/{@code meta}/{@code para}. It looks like positional notation but names no
+   * position on the scaffold, so it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
+   */
+  private static final Pattern SUBSTITUTED_PHENYL =
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?Ph-?");
+
+  /**
+   * The single atoms that end a substituted phenyl's substituent. Any other lone atom ({@code O},
+   * {@code S}, {@code N}) is a linker: {@code p-OPh} is a phenoxy group on the scaffold's para
+   * position, not 4-hydroxyphenyl.
+   */
+  private static final Set<String> TERMINAL_PHENYL_SUBSTITUENTS = Set.of("F", "Cl", "Br", "I", "C");
+
+  /** Label of the phenyl's substituent residue while a substituted phenyl is assembled. */
+  private static final String PHENYL_SUBSTITUENT = "#substituent";
 
   /**
    * The multiplier a multi-locant value carries on its group: the {@code 2} of {@code Me2}, or the
@@ -949,7 +971,53 @@ public class MarkushHandler {
         && Elements.ofString(definition) != Elements.Unknown) {
       return "[" + definition + "]";
     }
+    if (!ChemicalUtils.isValidSmiles(definition)) {
+      String phenyl = substitutedPhenyl(definition);
+      if (phenyl != null) {
+        return phenyl;
+      }
+    }
     return definition;
+  }
+
+  /**
+   * Resolves a value naming a substituted phenyl group ({@link #SUBSTITUTED_PHENYL}) to its SMILES.
+   *
+   * @param value the raw legend value
+   * @return the SMILES of the phenyl group with one attachment point, or {@code null} if the value
+   *     does not name one or its substituent does not resolve to a halogen, a methyl or a group
+   *     with one attachment point
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private String substitutedPhenyl(String value) throws IOException {
+    Matcher matcher = SUBSTITUTED_PHENYL.matcher(value);
+    if (!matcher.matches()) {
+      return null;
+    }
+    String substituent = resolveSmiles(matcher.group(2));
+    if (!ChemicalUtils.isValidSmiles(substituent)) {
+      return null;
+    }
+    int position = ringPosition(matcher.group(1));
+    try {
+      IAtomContainer group = smilesParser.parseSmiles(substituent);
+      long attachments = substituent.chars().filter(c -> '*' == c).count();
+      if (group.getAtomCount() == 1
+          ? !TERMINAL_PHENYL_SUBSTITUENTS.contains(group.getAtom(0).getSymbol())
+          : attachments != 1) {
+        return null;
+      }
+      // The ipso carbon carries the attachment point, the substituent sits position - 1 bonds on.
+      IAtomContainer phenyl =
+          smilesParser.parseSmiles(
+              "*c1" + "c".repeat(position - 2) + "c(*)" + "c".repeat(5 - position) + "c1");
+      ((IPseudoAtom) phenyl.getAtom(position + 1)).setLabel(PHENYL_SUBSTITUENT);
+      replaceRGroup(phenyl, PHENYL_SUBSTITUENT, substituent);
+      return new SmilesGenerator(SmiFlavor.Default).create(phenyl);
+    } catch (CDKException | CloneNotSupportedException e) {
+      LOGGER.debug("Substituted phenyl {} could not be assembled: {}", value, e.getMessage());
+      return null;
+    }
   }
 
   /**
@@ -1175,12 +1243,12 @@ public class MarkushHandler {
    *
    * @param value the raw legend value
    * @return the positions it names and the SMILES of its group, or {@code null} if the value is not
-   *     positional notation or its group does not resolve
+   *     positional notation, names a substituted phenyl group, or its group does not resolve
    * @throws IOException if reading SMILES definitions fails
    */
   private PositionalValue parsePositional(String value) throws IOException {
     Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
-    if (!matcher.matches()) {
+    if (!matcher.matches() || substitutedPhenyl(value) != null) {
       return null;
     }
     List<Integer> positions = new ArrayList<>();
@@ -1345,8 +1413,8 @@ public class MarkushHandler {
   }
 
   /**
-   * The 1-based ring position a positional token names: {@code o}/{@code m}/{@code p} are the
-   * ortho/meta/para positions 2/3/4, any other token is the number itself.
+   * The 1-based ring position a positional token names: {@code o}/{@code m}/{@code p} and {@code
+   * ortho}/{@code meta}/{@code para} are the positions 2/3/4, any other token is the number itself.
    *
    * <p>{@link #POSITIONAL_SUBSTITUENT} already restricts the token to one or two digits or a single
    * {@code o}/{@code m}/{@code p}, so the parse cannot currently fail. It is guarded anyway: the
@@ -1361,9 +1429,9 @@ public class MarkushHandler {
    */
   private static int ringPosition(String token) {
     return switch (token) {
-      case "o" -> 2;
-      case "m" -> 3;
-      case "p" -> 4;
+      case "o", "ortho" -> 2;
+      case "m", "meta" -> 3;
+      case "p", "para" -> 4;
       default -> {
         try {
           yield Integer.parseInt(token);
