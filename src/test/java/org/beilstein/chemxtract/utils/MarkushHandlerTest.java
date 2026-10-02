@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -784,6 +785,45 @@ public class MarkushHandlerTest {
             .replaceRGroups(scaffoldFromSmiles("CC(=O)NS", "R", 4), rect(0, 0, 40, 40))
             .size(),
         "unrestricted, the hydrogen entry still grafts");
+  }
+
+  /**
+   * A value such as {@code o-Cl-Ph-} names a substituted phenyl group, not a position on the
+   * scaffold: it grafts as 2-chlorophenyl even where R is off every ring (22-9-i3, 3a'-3g'). The
+   * locant may also be written 2-4 or ortho/meta/para.
+   */
+  @Test
+  public void substitutedPhenylValueGraftsAsAnArylGroup() throws Exception {
+    Map<String, String> expected = new LinkedHashMap<>();
+    expected.put("o-Cl-Ph-", "CC(=O)c1ccccc1Cl");
+    expected.put("m-Br-Ph-", "CC(=O)c1cccc(Br)c1");
+    expected.put("p-OMe-Ph-", "CC(=O)c1ccc(OC)cc1");
+    expected.put("p-OMe-Ph", "CC(=O)c1ccc(OC)cc1");
+    expected.put("p-ClPh", "CC(=O)c1ccc(Cl)cc1");
+    expected.put("2-F-Ph", "CC(=O)c1ccccc1F");
+    expected.put("3-CF3Ph", "CC(=O)c1cccc(C(F)(F)F)c1");
+    expected.put("ortho-Br-Ph-", "CC(=O)c1ccccc1Br");
+    expected.put("meta-I-Ph", "CC(=O)c1cccc(I)c1");
+    expected.put("para-NO2-Ph", "CC(=O)c1ccc([N+](=O)[O-])cc1");
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+      assertEquals(1, results.size(), entry.getKey() + " must graft on an R off every ring");
+      assertNoPseudoAtoms(results.getFirst());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey() + " must graft as the substituted phenyl it names");
+    }
+    // A lone O, S or N is a linker to the phenyl, which then sits on the named scaffold position.
+    assertTrue(
+        handlerWith(Map.of("R", List.of("p-OPh")))
+            .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40))
+            .isEmpty(),
+        "p-OPh names a scaffold position, not 4-hydroxyphenyl");
   }
 
   /**
