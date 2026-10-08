@@ -181,9 +181,9 @@ that accepts arbitrary CDXML.
 No dedicated unit tests exist for several non-trivial, correctness-critical
 classes — they are exercised only indirectly through integration tests:
 
-- `StereoHandler`, `SugarProjectionDetector`, `ChemicalUtils`,
-  `SgroupHandler`, `TextVisitor`, `BracketVisitor`, `ReactionStepVisitor`,
-  and the lookup classes.
+- `SugarProjectionDetector`, `ChemicalUtils`, `SgroupHandler`,
+  `TextVisitor`, `BracketVisitor`, `ReactionStepVisitor`, and the lookup
+  classes.
 
 Additionally, JaCoCo has no minimum-coverage threshold, and the
 static-analysis and CVE gates are advisory (`failOnViolation=false`, CVE
