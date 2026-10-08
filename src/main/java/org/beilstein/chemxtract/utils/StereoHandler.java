@@ -24,6 +24,8 @@ package org.beilstein.chemxtract.utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
@@ -31,10 +33,10 @@ import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
 import org.openscience.cdk.geometry.GeometryUtil;
+import org.openscience.cdk.geometry.cip.CIPTool;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.stereo.Projection;
@@ -120,7 +122,8 @@ public class StereoHandler {
    * Extracts stereochemical elements for non-sugar molecules.
    *
    * <p>Sets bond stereo from display types if necessary and determines tetrahedral chirality from
-   * {@link CDAtom} CIP types if coordinates are duplicated or stereo elements are empty.
+   * {@link CDAtom} CIP types if coordinates are duplicated or stereo elements are empty. CIP types
+   * only fill in atoms that have no perceived stereo element.
    *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom} for tetrahedral stereochemistry
@@ -130,8 +133,11 @@ public class StereoHandler {
       IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
     List<IStereoElement> elements = selectFactory(atomContainer).createAll();
     if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
-      //      return
-      elements.addAll(getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap));
+      Set<Object> perceived =
+          elements.stream().map(IStereoElement::getFocus).collect(Collectors.toSet());
+      getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap).stream()
+          .filter(element -> !perceived.contains(element.getFocus()))
+          .forEach(elements::add);
     }
     return elements;
   }
@@ -182,6 +188,9 @@ public class StereoHandler {
   /**
    * Generates tetrahedral chirality stereochemical elements for atoms with defined CIP type.
    *
+   * <p>R/S depends on ligand priority, not ligand order, so each element is labelled with {@link
+   * CIPTool} and inverted when that label disagrees with ChemDraw's.
+   *
    * @param atomContainer the {@link IAtomContainer} containing the atoms
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom}
    * @return list of tetrahedral chirality stereo elements
@@ -197,48 +206,26 @@ public class StereoHandler {
         continue;
       }
       CDAtomCIPType cipType = cdAtom.getStereochemistry();
-      ITetrahedralChirality.Stereo stereo;
-      if (cipType == CDAtomCIPType.R) {
-        stereo = ITetrahedralChirality.Stereo.CLOCKWISE;
-      } else if (cipType == CDAtomCIPType.S) {
-        stereo = ITetrahedralChirality.Stereo.ANTI_CLOCKWISE;
-      } else {
+      if (cipType != CDAtomCIPType.R && cipType != CDAtomCIPType.S) {
         continue;
       }
-      int nNbrs = 0;
-      IAtom[] ligands = new IAtom[4];
-      int idxOfH = -1;
-      for (IAtom ligand : atomContainer.getConnectedAtomsList(atom)) {
-        if (nNbrs == 4) {
-          continue; // too many ligands
-        }
-        if (ligand.getAtomicNumber() == IElement.H) {
-          if (idxOfH >= 0) {
-            continue; // too many hydrogens
-          }
-          idxOfH = nNbrs;
-        }
-        ligands[nNbrs++] = ligand;
+      List<IAtom> ligands = new ArrayList<>(atomContainer.getConnectedAtomsList(atom));
+      if (ligands.size() == 3) {
+        ligands.add(atom); // implicit neighbour (H or lone pair)
       }
-      // incorrect number of neighbours?
-      if (nNbrs < 3 || nNbrs < 4 && idxOfH >= 0) {
+      if (ligands.size() != 4) {
         continue;
       }
-      // implicit neighbour (H or lone-pair)
-      if (nNbrs == 3) {
-        ligands[nNbrs++] = atom;
+      TetrahedralChirality chirality =
+          new TetrahedralChirality(
+              atom, ligands.toArray(IAtom[]::new), ITetrahedralChirality.Stereo.CLOCKWISE);
+      CIPTool.CIP_CHIRALITY label = CIPTool.getCIPChirality(atomContainer, chirality);
+      if (label == CIPTool.CIP_CHIRALITY.NONE) {
+        continue; // not a stereocentre by CIP, e.g. two hydrogens
       }
-      if (nNbrs != 4) {
-        continue;
+      if (!label.name().equals(cipType.name())) {
+        chirality.setStereo(ITetrahedralChirality.Stereo.ANTI_CLOCKWISE);
       }
-      // H is always at back, even if explicit! At least this seems to be the case.
-      // we adjust the winding as needed which is when the explict H is in slot
-      // 0 or 2 (odd number of swaps to get to index 3)
-      if (idxOfH == 0 || idxOfH == 2) {
-        stereo = stereo.invert();
-      }
-
-      TetrahedralChirality chirality = new TetrahedralChirality(atom, ligands, stereo);
       stereoElements.add(chirality);
     }
     return stereoElements;
