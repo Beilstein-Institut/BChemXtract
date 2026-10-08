@@ -22,6 +22,9 @@
 package org.beilstein.chemxtract.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,8 +51,7 @@ import org.openscience.cdk.stereo.TetrahedralChirality;
  *
  * <p>This class provides methods to extract, interpret, and set stereochemical elements, including
  * tetrahedral chirality and bond stereochemistry, based on 2D or 3D coordinates. It handles special
- * cases for sugars and adjusts stereochemistry for atoms with duplicate coordinates. Wavy bonds are
- * filtered out when adding stereo elements to the container.
+ * cases for sugar projections and adjusts stereochemistry for atoms with duplicate coordinates.
  */
 public class StereoHandler {
 
@@ -61,77 +63,21 @@ public class StereoHandler {
    * Sets stereochemistry elements on the given {@link IAtomContainer} based on the provided mapping
    * between {@link CDAtom}/{@link CDBond} objects and CDK {@link IAtom}/{@link IBond} objects.
    *
-   * <p>Sugar stereochemistry is handled differently from non-sugar stereochemistry. Wavy bonds are
-   * filtered out from the generated stereo elements.
+   * <p>Stereo is perceived from wedges, from chair, Haworth and Fischer projections, and, where the
+   * drawing leaves an atom undefined, from the CIP label ChemDraw stored on it. An atom with a wavy
+   * bond gets no tetrahedral stereo.
    *
    * @param atomContainer the {@link IAtomContainer} to set stereochemistry on
-   * @param bondMap mapping of {@link CDBond} to {@link IBond} used to identify wavy bonds
+   * @param bondMap mapping of {@link CDBond} to {@link IBond} used to read the drawn bond styles
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom} used for tetrahedral stereochemistry
    */
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
-    List<IStereoElement> stereoElements = getStereoElements(atomContainer, atomMap, bondMap);
-    //
-    stereoElements.forEach(atomContainer::addStereoElement);
-  }
-
-  /**
-   * Determines and returns all stereochemical elements for the given atom container. Handles sugars
-   * differently from non-sugar structures.
-   *
-   * @param atomContainer the {@link IAtomContainer} to analyze
-   * @param atomMap mapping of {@link CDAtom} to {@link IAtom} for tetrahedral stereochemistry
-   * @return list of stereochemical elements
-   */
-  private static List<IStereoElement> getStereoElements(
-      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap, Map<CDBond, IBond> bondMap) {
-    SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
-    return detector.containsChairProjections()
-        ? extractSugarStereoElements(atomContainer, bondMap)
-        : extractNonSugarStereoElements(atomContainer, atomMap);
-  }
-
-  /**
-   * Extracts stereochemical elements specifically for sugar-containing molecules.
-   *
-   * @param atomContainer the {@link IAtomContainer} containing sugar rings
-   * @return list of stereochemical elements
-   */
-  private static List<IStereoElement> extractSugarStereoElements(
-      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
-    removeBondDisplay(atomContainer);
+    Set<Projection> projections = flattenProjectionRings(atomContainer, bondMap);
     List<IStereoElement> elements =
         selectFactory(atomContainer)
-            .interpretProjections(Projection.Chair, Projection.Fischer, Projection.Haworth)
+            .interpretProjections(projections.toArray(Projection[]::new))
             .createAll();
-    filterWavyBonds(elements, bondMap);
-    return elements;
-  }
-
-  /**
-   * Resets all bond display styles within the given atom container to {@link IBond.Display#Solid}.
-   *
-   * @param atomContainer the {@link IAtomContainer} whose bonds are to be normalised; must not be
-   *     {@code null}
-   */
-  private static void removeBondDisplay(IAtomContainer atomContainer) {
-    atomContainer.bonds().forEach(b -> b.setDisplay(IBond.Display.Solid));
-  }
-
-  /**
-   * Extracts stereochemical elements for non-sugar molecules.
-   *
-   * <p>Sets bond stereo from display types if necessary and determines tetrahedral chirality from
-   * {@link CDAtom} CIP types if coordinates are duplicated or stereo elements are empty. CIP types
-   * only fill in atoms that have no perceived stereo element.
-   *
-   * @param atomContainer the {@link IAtomContainer} to analyze
-   * @param atomMap mapping of {@link CDAtom} to {@link IAtom} for tetrahedral stereochemistry
-   * @return list of stereochemical elements
-   */
-  private static List<IStereoElement> extractNonSugarStereoElements(
-      IAtomContainer atomContainer, Map<CDAtom, IAtom> atomMap) {
-    List<IStereoElement> elements = selectFactory(atomContainer).createAll();
     if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
       Set<Object> perceived =
           elements.stream().map(IStereoElement::getFocus).collect(Collectors.toSet());
@@ -139,7 +85,76 @@ public class StereoHandler {
           .filter(element -> !perceived.contains(element.getFocus()))
           .forEach(elements::add);
     }
-    return elements;
+    filterWavyBonds(elements, bondMap);
+    elements.forEach(atomContainer::addStereoElement);
+  }
+
+  /**
+   * Finds chair and Haworth rings and draws the bonds at their atoms as plain bonds, returning the
+   * projections to interpret. Their edges and substituents are drawn bold or wedged for
+   * perspective, and CDK reads a projection only if every bond at its centres is plain; a single
+   * wavy bond voids the whole ring, so wavy bonds are flattened too and their centres dropped by
+   * {@link #filterWavyBonds}.
+   *
+   * <p>Every bond at a chair is reset, and a chair also enables Haworth and Fischer as before. A
+   * Haworth-shaped outline alone is common in ordinary drawings, where a vertical substituent would
+   * be misread as up or down, so a ring counts as Haworth only when an edge is drawn bold or
+   * hashed, and it loses just its bold, hashed and wavy bonds so a real wedge is kept.
+   *
+   * @param atomContainer the {@link IAtomContainer} to analyze
+   * @param bondMap mapping of {@link CDBond} to {@link IBond} giving each bond's drawn style
+   * @return the projections found
+   */
+  private static Set<Projection> flattenProjectionRings(
+      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
+    Set<IBond> perspective = bondsDrawn(bondMap, CDBondDisplay.Bold, CDBondDisplay.Hash);
+    Set<IBond> wavy = bondsDrawn(bondMap, CDBondDisplay.Wavy);
+    Set<Projection> projections = EnumSet.noneOf(Projection.class);
+    SugarProjectionDetector detector = new SugarProjectionDetector(atomContainer);
+    for (int[] ring : detector.findChairProjections()) {
+      ringAtomBonds(atomContainer, ring).forEach(bond -> bond.setDisplay(IBond.Display.Solid));
+      Collections.addAll(projections, Projection.Chair, Projection.Haworth, Projection.Fischer);
+    }
+    for (int[] ring : detector.findHaworthProjections()) {
+      Set<IBond> bonds = ringAtomBonds(atomContainer, ring);
+      Set<IAtom> atoms = new HashSet<>();
+      for (int atom : ring) {
+        atoms.add(atomContainer.getAtom(atom));
+      }
+      boolean frontEdge =
+          bonds.stream()
+              .anyMatch(
+                  bond ->
+                      perspective.contains(bond)
+                          && atoms.contains(bond.getBegin())
+                          && atoms.contains(bond.getEnd()));
+      if (!frontEdge) {
+        continue;
+      }
+      bonds.stream()
+          .filter(bond -> perspective.contains(bond) || wavy.contains(bond))
+          .forEach(bond -> bond.setDisplay(IBond.Display.Solid));
+      projections.add(Projection.Haworth);
+    }
+    return projections;
+  }
+
+  /** The CDK bonds whose ChemDraw bond was drawn in one of the given styles. */
+  private static Set<IBond> bondsDrawn(Map<CDBond, IBond> bondMap, CDBondDisplay... displays) {
+    Set<CDBondDisplay> styles = Set.of(displays);
+    return bondMap.entrySet().stream()
+        .filter(entry -> styles.contains(entry.getKey().getBondDisplay()))
+        .map(Map.Entry::getValue)
+        .collect(Collectors.toSet());
+  }
+
+  /** The bonds at the atoms of a ring, ring bonds and substituent bonds alike. */
+  private static Set<IBond> ringAtomBonds(IAtomContainer atomContainer, int[] ring) {
+    Set<IBond> bonds = new HashSet<>();
+    for (int atom : ring) {
+      atomContainer.getConnectedBondsList(atomContainer.getAtom(atom)).forEach(bonds::add);
+    }
+    return bonds;
   }
 
   /**
