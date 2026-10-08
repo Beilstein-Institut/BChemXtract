@@ -183,6 +183,8 @@ public class SugarProjectionDetector {
 
       double deltaY = curr.y - next.y;
 
+      // compares a coordinate difference with an angle, exactly as CDK does; CDK decides whether
+      // the ring is read, so this must accept the same rings rather than a "correct" angle
       if (Math.abs(deltaY) < CARDINALITY_THRESHOLD) {
         return true;
       }
