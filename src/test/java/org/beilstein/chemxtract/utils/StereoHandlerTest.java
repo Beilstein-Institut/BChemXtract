@@ -23,22 +23,28 @@ package org.beilstein.chemxtract.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.vecmath.Point2d;
 import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.stereo.Projection;
+import org.openscience.cdk.stereo.StereoElementFactory;
 
 class StereoHandlerTest {
 
@@ -76,6 +82,56 @@ class StereoHandlerTest {
           .as("the wedge decides, %s", label)
           .isEqualTo(SMIGEN.create(fromWedge));
     }
+  }
+
+  @Test
+  void haworthWithBoldFrontEdgeIsReadAsHaworth() throws CDKException {
+    // the reference: CDK's own Haworth reading of the same drawing with plain bonds
+    IAtomContainer plain = haworthPyranose();
+    List<IStereoElement> reference =
+        StereoElementFactory.using2DCoordinates(plain)
+            .interpretProjections(Projection.Haworth)
+            .createAll();
+    reference.forEach(plain::addStereoElement);
+    assertThat(reference).as("CDK reads every ring carbon of the plain drawing").hasSize(5);
+
+    // ChemDraw draws the front edge bold; BondConverter turns bold into a wedge
+    IAtomContainer bold = haworthPyranose();
+    Map<CDBond, IBond> bondMap = new HashMap<>();
+    for (int i = 0; i < 3; i++) {
+      IBond bond = bold.getBond(i);
+      bond.setDisplay(IBond.Display.WedgeBegin);
+      CDBond cdBond = new CDBond();
+      cdBond.setBondDisplay(CDBondDisplay.Bold);
+      bondMap.put(cdBond, bond);
+    }
+    StereoHandler.setStereo(bold, bondMap, Map.of());
+    assertThat(SMIGEN.create(bold))
+        .as("a bold front edge is perspective, not a wedge")
+        .isEqualTo(SMIGEN.create(plain));
+  }
+
+  /**
+   * A 6-deoxy pyranose in Haworth projection: ring C1-C2-C3-C4-C5-O5 with C1-C2, C2-C3 and C3-C4 as
+   * the front edges (bonds 0-2), and every substituent straight up or down.
+   */
+  private static IAtomContainer haworthPyranose() {
+    IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
+    double[][] ring = {{1, 0}, {0.5, -0.4}, {-0.5, -0.4}, {-1, 0}, {-0.5, 0.4}, {0.5, 0.4}};
+    for (int i = 0; i < ring.length; i++) {
+      atom(container, i < 5 ? "C" : "O", i < 5 ? 1 : 0, new Point2d(ring[i][0], ring[i][1]));
+    }
+    for (int i = 0; i < ring.length; i++) {
+      container.addBond(i, (i + 1) % ring.length, IBond.Order.SINGLE);
+    }
+    // substituent on each ring carbon: O1 down, O2 down, O3 up, O4 down, C6 up
+    double[] dy = {-0.8, -0.8, 0.5, -0.8, 0.8};
+    for (int i = 0; i < 5; i++) {
+      atom(
+          container, i < 4 ? "O" : "C", i < 4 ? 1 : 3, new Point2d(ring[i][0], ring[i][1] + dy[i]));
+      container.addBond(i, container.getAtomCount() - 1, IBond.Order.SINGLE);
+    }
+    return container;
   }
 
   /**

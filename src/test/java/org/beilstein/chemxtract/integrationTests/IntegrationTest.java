@@ -308,6 +308,9 @@ public class IntegrationTest {
     List<BCXSubstance> substances = xtractor.xtract(document, new BCXSubstanceInfo(), false);
 
     assertEquals("JYVGPYJRTSEMTB-APCUNRMYSA-N", substances.get(0).getInchiKey());
+    // the two wedged centres of the fused benzylidene ring survive the chair handling of the
+    // other rings, which used to reset every bond of the molecule
+    assertEquals("NKZIWIMQFACPAG-MXYJNFNHSA-N", substances.get(1).getInchiKey());
     assertEquals("USIHOLUAXUVUHQ-MPUZOFBHSA-N", substances.get(2).getInchiKey());
     assertEquals("OQRGNZAPLDELGL-JGEXHRIQSA-N", substances.get(3).getInchiKey());
     assertEquals("QLYBVIQMCILRJU-SGZWNVLDSA-N", substances.get(4).getInchiKey());
