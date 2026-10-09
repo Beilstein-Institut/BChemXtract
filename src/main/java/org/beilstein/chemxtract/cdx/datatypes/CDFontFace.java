@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** Font face definition. This class hold the various style attributes for text. */
-public class CDFontFace {
+public class CDFontFace implements Serializable {
   /** Bond text style attribute. */
   private boolean bold = false;
 

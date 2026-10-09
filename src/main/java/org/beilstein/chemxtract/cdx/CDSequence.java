@@ -21,11 +21,13 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
+
 /**
  * @deprecated Not used anymore.
  */
 @Deprecated
-public class CDSequence {
+public class CDSequence implements Serializable {
 
   /** The identifier of the object. */
   private String identifier;

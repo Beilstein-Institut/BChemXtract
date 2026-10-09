@@ -21,12 +21,13 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /** Physical or chemical property that corresponds to a group of atoms or bonds. */
-public class CDChemicalProperty {
+public class CDChemicalProperty implements Serializable {
 
   private List<Object> basisObjects;
   private long type;

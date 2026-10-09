@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -28,7 +29,7 @@ import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
 /** The root of the CDX object model. Contains at least one page object. */
-public class CDDocument {
+public class CDDocument implements Serializable {
   /** The magnification level for the control as a percentage. */
   private float magnification;
 

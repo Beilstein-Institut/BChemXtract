@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** The type of a line object. */
-public class CDLineType {
+public class CDLineType implements Serializable {
 
   private boolean dashed = false;
   private boolean bold = false;
