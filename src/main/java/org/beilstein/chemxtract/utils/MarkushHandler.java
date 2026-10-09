@@ -274,7 +274,8 @@ public class MarkushHandler {
 
   /**
    * Whether two blocks are stacked lines of the same column: horizontally overlapping and within
-   * roughly one line-height vertically.
+   * roughly one line-height vertically. The line height is that of the text, not the height of the
+   * block: two multi-line tables with a blank line or two between them are separate tables.
    */
   private static boolean sameColumnAdjacent(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
     CDRectangle ra = a.bounds();
@@ -286,7 +287,7 @@ public class MarkushHandler {
     }
     double verticalGap =
         Math.max(0, Math.max(ra.getTop() - rb.getBottom(), rb.getTop() - ra.getBottom()));
-    double lineHeight = Math.max(ra.getBottom() - ra.getTop(), rb.getBottom() - rb.getTop());
+    double lineHeight = Math.max(a.lineHeight(), b.lineHeight());
     return verticalGap <= lineHeight * 1.5;
   }
 
@@ -331,7 +332,9 @@ public class MarkushHandler {
     float left = Float.MAX_VALUE;
     float bottom = -Float.MAX_VALUE;
     float right = -Float.MAX_VALUE;
+    float lineHeight = 0;
     for (RGroupDefinitionBlock block : cluster) {
+      lineHeight = Math.max(lineHeight, block.lineHeight());
       CDRectangle b = block.bounds();
       top = Math.min(top, b.getTop());
       left = Math.min(left, b.getLeft());
@@ -365,7 +368,8 @@ public class MarkushHandler {
     bounds.setLeft(left);
     bounds.setBottom(bottom);
     bounds.setRight(right);
-    return new RGroupDefinitionBlock(bounds, definitions, new ArrayList<>(correlated.values()));
+    return new RGroupDefinitionBlock(
+        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight);
   }
 
   /**

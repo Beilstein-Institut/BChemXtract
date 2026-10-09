@@ -300,6 +300,31 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Two positional tables stacked one above the other with a blank gap of about two lines between
+   * them are separate tables, one per scaffold, not one table split over two boxes. Geometry
+   * mirrors {@code volumeTest/markush/m28144482-i5}, rows 6/12a-c and 13l-n.
+   */
+  @Test
+  public void stackedSeparateTablesAreNotMerged() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(
+        textAt(
+            rect(102.3f, 261.3f, 235.0f, 295.0f),
+            "6: R1 = R2 = H\n12a: R1 = Me, R2 = H\n12b: R1 = F, R2 = H"));
+    page.addText(
+        textAt(
+            rect(102.7f, 322.3f, 229.0f, 354.2f),
+            "13l: R1 = H, R2 = CN\n13m: R1 = H, R2 = Br\n13n: R1 = H, R2 = OMe"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    List<IAtomContainer> results =
+        handler.replaceRGroups(
+            List.of(twoResidueScaffold()), rect(7f, 310f, 91f, 387f), new HashSet<>());
+
+    assertEquals(3, results.size(), "only the table beside the scaffold may reach it");
+  }
+
+  /**
    * The column merge must not swallow the case nearest-block scoping exists for: two scaffolds far
    * apart, each with its own definition of the same label, stay separate.
    */
