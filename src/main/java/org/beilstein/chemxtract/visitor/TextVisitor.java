@@ -70,7 +70,10 @@ public class TextVisitor extends CDVisitor {
     }
     blocks.add(
         new RGroupDefinitionBlock(
-            cdText.getBounds(), parsed.independent(), parsed.correlatedGroups()));
+            cdText.getBounds(),
+            parsed.independent(),
+            parsed.correlatedGroups(),
+            lineHeight(cdText)));
     // Keep a page-wide union as a fallback; merge rather than drop on label collisions. Correlated
     // values are flattened into the union too so the fallback/guard still see them (the union path
     // over-enumerates by design; the scoped path preserves the tuples).
@@ -82,6 +85,15 @@ public class TextVisitor extends CDVisitor {
         tuple.forEach((label, value) -> mergeSubstituents(rgroups, label, List.of(value)));
       }
     }
+  }
+
+  /** Height of one line of the text: its bounds' height over its number of lines. */
+  private static float lineHeight(CDText cdText) {
+    if (cdText.getBounds() == null) {
+      return 0;
+    }
+    int lines = cdText.getText().getText().strip().split("\\r\\n|\\r|\\n", -1).length;
+    return Math.abs(cdText.getBounds().getHeight()) / lines;
   }
 
   /** Independent per-label lists plus correlated (positional-table) groups from one text node. */
