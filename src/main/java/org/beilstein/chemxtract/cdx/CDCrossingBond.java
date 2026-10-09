@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
+
 /** This bond connects a bracket to an external atom. */
-public class CDCrossingBond {
+public class CDCrossingBond implements Serializable {
 
   private CDBond bond;
   private CDAtom innerAtom;

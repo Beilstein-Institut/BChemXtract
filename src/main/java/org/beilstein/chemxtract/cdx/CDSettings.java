@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDFont;
 import org.beilstein.chemxtract.cdx.datatypes.CDFontFace;
@@ -30,7 +31,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDJustification;
  * This class holds all common display attributes for a {@link CDObject}. By extracting this
  * informations into a separate object the settings can be easily transferred to other objects.
  */
-public class CDSettings {
+public class CDSettings implements Serializable {
   public static final float LineHeight_Variable = -1;
   public static final float LineHeight_Automatic = -2;
 

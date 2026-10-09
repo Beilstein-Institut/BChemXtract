@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** ChemDraw point. */
-public class CDPoint2D {
+public class CDPoint2D implements Serializable {
 
   /** The X-coordinate of the point. */
   private float x;

@@ -21,10 +21,11 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
 /** Used for ChemDraw templates. */
-public class CDTemplateGrid {
+public class CDTemplateGrid implements Serializable {
 
   private CDPoint2D extent;
   private float paneHeight;

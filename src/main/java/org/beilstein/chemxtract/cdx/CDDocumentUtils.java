@@ -22,6 +22,12 @@
 package org.beilstein.chemxtract.cdx;
 
 import java.awt.geom.Point2D;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +48,35 @@ public class CDDocumentUtils {
    * Constant representing the maximum acceptable distance between a fragment and a structure label.
    */
   private static final double LABEL_MAX_DISTANCE_CUT_OFF = 5.0;
+
+  /**
+   * Returns a deep copy of the given document: every object it reaches is copied, and objects that
+   * share a reference in the original share one in the copy.
+   *
+   * <p>Extraction rewrites the model it reads — nested fragments are resolved by repointing bond
+   * endpoints, S-group repeat units are expanded into their fragments, variable-attachment
+   * substituents are folded into their scaffolds — so the xtractors work on a copy and leave the
+   * caller's document as parsed.
+   *
+   * @param document the document to copy
+   * @return an independent copy of {@code document}
+   */
+  public static CDDocument copy(CDDocument document) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {
+      out.writeObject(document);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Could not copy document " + document.getName(), e);
+    }
+    try (ObjectInputStream in =
+        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
+      return (CDDocument) in.readObject();
+    } catch (IOException e) {
+      throw new UncheckedIOException("Could not copy document " + document.getName(), e);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("Could not copy document " + document.getName(), e);
+    }
+  }
 
   /**
    * Retrieves a list of all fragments present in the given CDDocument.

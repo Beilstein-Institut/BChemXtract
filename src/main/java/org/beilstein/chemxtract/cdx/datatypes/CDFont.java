@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** A logical font definition. */
-public class CDFont {
+public class CDFont implements Serializable {
   private CDCharSet charSet;
   private String name;
 
