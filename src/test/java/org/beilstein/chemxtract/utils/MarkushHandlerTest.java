@@ -790,7 +790,8 @@ public class MarkushHandlerTest {
   /**
    * A value such as {@code o-Cl-Ph-} names a substituted phenyl group, not a position on the
    * scaffold: it grafts as 2-chlorophenyl even where R is off every ring (22-9-i3, 3a'-3g'). The
-   * locant may also be written 2-4 or ortho/meta/para.
+   * locant may also be written 2-4 or ortho/meta/para, the phenyl {@code C6H4}, and the substituent
+   * after the phenyl ({@code p-PhNO2}, {@code p-C6H4(OMe)}).
    */
   @Test
   public void substitutedPhenylValueGraftsAsAnArylGroup() throws Exception {
@@ -805,6 +806,16 @@ public class MarkushHandlerTest {
     expected.put("ortho-Br-Ph-", "CC(=O)c1ccccc1Br");
     expected.put("meta-I-Ph", "CC(=O)c1cccc(I)c1");
     expected.put("para-NO2-Ph", "CC(=O)c1ccc([N+](=O)[O-])cc1");
+    // The phenyl may also be written C6H4, and the substituent may follow it (m28188630-7).
+    expected.put("p-C6H4(Cl)", "CC(=O)c1ccc(Cl)cc1");
+    expected.put("p-C6H4(OMe)", "CC(=O)c1ccc(OC)cc1");
+    expected.put("p-C6H4(Me)", "CC(=O)c1ccc(C)cc1");
+    expected.put("o-C6H4Br", "CC(=O)c1ccccc1Br");
+    expected.put("4-ClC6H4", "CC(=O)c1ccc(Cl)cc1");
+    expected.put("m-F-C6H4-", "CC(=O)c1cccc(F)c1");
+    expected.put("p-PhNO2", "CC(=O)c1ccc([N+](=O)[O-])cc1");
+    expected.put("m-Ph-Br", "CC(=O)c1cccc(Br)c1");
+    expected.put("2-Ph(CF3)", "CC(=O)c1ccccc1C(F)(F)F");
     SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
     for (Map.Entry<String, String> entry : expected.entrySet()) {
       List<IAtomContainer> results =
