@@ -325,6 +325,32 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A scaffold carrying R1-R5 takes the R1-R5 table drawn for it, not also an R1-R3 table that
+   * belongs to another scaffold: the smaller table's labels are all covered by the larger one.
+   * Taking both made two varying choices, so the scaffold was not expanded at all (m28144482-i5,
+   * nucleophiles 5 and 18-25).
+   */
+  @Test
+  public void tableOverASubsetOfTheLabelsGivesWayToTheFullTable() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(
+        textAt(rect(100f, 0f, 230f, 22f), "6: R1 = R2 = R3 = H\n12a: R1 = Me, R2 = R3 = H"));
+    page.addText(
+        textAt(
+            rect(100f, 100f, 250f, 133f),
+            "5: R1 = R3 = R5 = OMe, R2 = R4 = H\n"
+                + "18: R1 = R3 = OMe, R2 = R4 = R5 = H\n"
+                + "20: R1 = R3 = R5 = Me, R2 = R4 = H"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    IAtomContainer scaffold = residueScaffold(Map.of("R1", 0, "R2", 1, "R3", 2, "R4", 3, "R5", 4));
+    List<IAtomContainer> results =
+        handler.replaceRGroups(List.of(scaffold), rect(40f, 90f, 90f, 140f), new HashSet<>());
+
+    assertEquals(3, results.size(), "the R1-R5 table must expand the scaffold on its own");
+  }
+
+  /**
    * The column merge must not swallow the case nearest-block scoping exists for: two scaffolds far
    * apart, each with its own definition of the same label, stay separate.
    */
@@ -730,9 +756,14 @@ public class MarkushHandlerTest {
 
   /** Benzene with {@code R1} and {@code R2} para to each other, laid out so grafting can work. */
   private static IAtomContainer twoResidueScaffold() throws CDKException {
+    return residueScaffold(Map.of("R1", 0, "R2", 3));
+  }
+
+  /** Benzene carrying the given residues on the given ring atoms, laid out for grafting. */
+  private static IAtomContainer residueScaffold(Map<String, Integer> residues) throws CDKException {
     IAtomContainer scaffold =
         new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("c1ccccc1");
-    for (Map.Entry<String, Integer> entry : Map.of("R1", 0, "R2", 3).entrySet()) {
+    for (Map.Entry<String, Integer> entry : residues.entrySet()) {
       IPseudoAtom residue =
           SilentChemObjectBuilder.getInstance().newInstance(IPseudoAtom.class, entry.getKey());
       residue.setLabel(entry.getKey());

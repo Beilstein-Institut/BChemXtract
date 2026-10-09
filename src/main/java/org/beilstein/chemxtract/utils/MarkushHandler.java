@@ -677,7 +677,8 @@ public class MarkushHandler {
 
   /**
    * Selects the correlated groups that apply to the scaffold: those whose labels are all present,
-   * choosing, per distinct label set, the group whose source block is nearest to the scaffold.
+   * choosing, per distinct label set, the group whose source block is nearest to the scaffold, and
+   * dropping a group whose labels another chosen group covers together with more.
    *
    * @param present labels present in the scaffold
    * @param scaffoldBounds bounding box of the scaffold
@@ -700,7 +701,21 @@ public class MarkushHandler {
         }
       }
     }
-    return new ArrayList<>(chosen.values());
+    // A table over some of the labels gives way to one over all of them: the larger table is the
+    // one drawn for this scaffold, and enumerating both would vary the shared labels twice.
+    List<CorrelatedGroup> applicable = new ArrayList<>();
+    for (CorrelatedGroup group : chosen.values()) {
+      boolean covered =
+          chosen.values().stream()
+              .anyMatch(
+                  other ->
+                      other.labels().size() > group.labels().size()
+                          && other.labels().containsAll(group.labels()));
+      if (!covered) {
+        applicable.add(group);
+      }
+    }
+    return applicable;
   }
 
   /** Distance from a scaffold to a block, treating a block with no bounds as maximally far. */
