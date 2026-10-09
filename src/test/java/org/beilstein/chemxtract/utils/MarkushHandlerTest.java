@@ -275,6 +275,31 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A positional table split into two side-by-side text boxes is one table: each box holds whole
+   * rows, so its rows are unioned. Geometry mirrors {@code volumeTest/markush/m28188630-7}, where
+   * the scaffold sits closer to the right box (19f-i) and lost the left one (19a-e).
+   */
+  @Test
+  public void sideBySideCorrelatedTableColumnsMergeIntoOneTable() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(
+        textAt(
+            rect(293.4f, 332.6f, 364.3f, 388.8f),
+            "19a: R1 = R2 = OMe\n19b: R1 = R2 = H\n19c: R1 = R2 = F"));
+    page.addText(
+        textAt(
+            rect(367.1f, 321.2f, 456.9f, 377.5f),
+            "19f: R1 = R2 = Cl\n19g: R1 = CF3, R2 = OMe\n19h: R1 = CF3, R2 = F"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    List<IAtomContainer> results =
+        handler.replaceRGroups(
+            List.of(twoResidueScaffold()), rect(327f, 213f, 414f, 329f), new HashSet<>());
+
+    assertEquals(6, results.size(), "the rows of both boxes must reach the scaffold");
+  }
+
+  /**
    * The column merge must not swallow the case nearest-block scoping exists for: two scaffolds far
    * apart, each with its own definition of the same label, stay separate.
    */
