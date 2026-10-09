@@ -207,7 +207,9 @@ public class MarkushHandler {
    * horizontally, and sit within about a line-height of one another vertically.
    *
    * <p>The same legend may also be laid out as two side-by-side columns, which {@link
-   * #sideBySideLegend} folds together as well. Legends that sit far apart (one per scaffold) stay
+   * #sideBySideLegend} folds together as well. A positional table split over several text boxes is
+   * merged the same way, provided every box tabulates the same labels: each box then holds whole
+   * rows, and the table is their union. Legends that sit far apart (one per scaffold) stay
    * separate, so nearest-block scoping keeps disambiguating those.
    *
    * @param blocks the per-text-node blocks from {@link TextVisitor}
@@ -221,9 +223,10 @@ public class MarkushHandler {
         continue;
       }
       RGroupDefinitionBlock base = blocks.get(i);
-      // Only column-merge positioned, single-legend (independent) blocks; correlated tables and
-      // unpositioned blocks are left untouched.
-      if (base.bounds() == null || base.definitions().isEmpty()) {
+      // Only column-merge positioned blocks that define something; unpositioned blocks are left
+      // untouched.
+      if (base.bounds() == null
+          || (base.definitions().isEmpty() && base.correlatedGroups().isEmpty())) {
         result.add(base);
         merged[i] = true;
         continue;
@@ -240,8 +243,8 @@ public class MarkushHandler {
           }
           RGroupDefinitionBlock candidate = blocks.get(j);
           if (candidate.bounds() == null
-              || candidate.definitions().isEmpty()
-              || !candidate.definitions().keySet().equals(base.definitions().keySet())) {
+              || !candidate.definitions().keySet().equals(base.definitions().keySet())
+              || !correlatedLabels(candidate).equals(correlatedLabels(base))) {
             continue;
           }
           if (cluster.stream()
@@ -258,6 +261,15 @@ public class MarkushHandler {
       result.add(cluster.size() == 1 ? base : mergeCluster(cluster));
     }
     return result;
+  }
+
+  /** The label sets of a block's positional tables, which blocks must share to be merged. */
+  private static Set<List<String>> correlatedLabels(RGroupDefinitionBlock block) {
+    Set<List<String>> labels = new HashSet<>();
+    for (CorrelatedGroup group : block.correlatedGroups()) {
+      labels.add(group.labels().stream().sorted().toList());
+    }
+    return labels;
   }
 
   /**
@@ -284,13 +296,11 @@ public class MarkushHandler {
    * A substrate scope listing 11 substituents as two adjacent columns is one legend for the
    * scaffold, not two competing definitions of the same label.
    *
-   * <p>Correlated tables are excluded: their row-tuples would have to be paired across the columns
-   * rather than unioned, which this merge does not do.
+   * <p>A positional table qualifies too when both columns tabulate the same labels, which the
+   * caller checks: every row then sits whole in one column. A table split by label instead, one
+   * column per label, parses as two different label sets and is not merged.
    */
   private static boolean sideBySideLegend(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
-    if (!a.correlatedGroups().isEmpty() || !b.correlatedGroups().isEmpty()) {
-      return false;
-    }
     CDRectangle ra = a.bounds();
     CDRectangle rb = b.bounds();
     double horizontalGap =
@@ -310,12 +320,13 @@ public class MarkushHandler {
   }
 
   /**
-   * Combines a cluster of same-column blocks into one, unioning per-label values (order-preserving,
-   * de-duplicated) and taking the bounding box of the sources.
+   * Combines a cluster of same-column blocks into one, unioning per-label values and the rows of
+   * positional tables over the same labels (order-preserving, de-duplicated), and taking the
+   * bounding box of the sources.
    */
   private static RGroupDefinitionBlock mergeCluster(List<RGroupDefinitionBlock> cluster) {
     Map<String, List<String>> definitions = new LinkedHashMap<>();
-    List<CorrelatedGroup> correlated = new ArrayList<>();
+    Map<List<String>, CorrelatedGroup> correlated = new LinkedHashMap<>();
     float top = Float.MAX_VALUE;
     float left = Float.MAX_VALUE;
     float bottom = -Float.MAX_VALUE;
@@ -337,14 +348,24 @@ public class MarkushHandler {
                   }
                 }
               });
-      correlated.addAll(block.correlatedGroups());
+      for (CorrelatedGroup group : block.correlatedGroups()) {
+        CorrelatedGroup table =
+            correlated.computeIfAbsent(
+                group.labels().stream().sorted().toList(),
+                key -> new CorrelatedGroup(group.labels(), new ArrayList<>()));
+        for (Map<String, String> row : group.tuples()) {
+          if (!table.tuples().contains(row)) {
+            table.tuples().add(row);
+          }
+        }
+      }
     }
     CDRectangle bounds = new CDRectangle();
     bounds.setTop(top);
     bounds.setLeft(left);
     bounds.setBottom(bottom);
     bounds.setRight(right);
-    return new RGroupDefinitionBlock(bounds, definitions, correlated);
+    return new RGroupDefinitionBlock(bounds, definitions, new ArrayList<>(correlated.values()));
   }
 
   /**
