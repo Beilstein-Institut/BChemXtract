@@ -298,6 +298,9 @@ public class TextVisitor extends CDVisitor {
         if (!part.isEmpty()) {
           part = part.split("\\s+")[0];
         }
+        // A row that names its compound after a colon ("R3 = CO2Me: 12k") leaves the colon on the
+        // last value; no substituent ends in one.
+        part = part.replaceFirst(":+$", "");
         // Drop leftover scheme-item numbers ("5:") and reaction yields ("84%") that are not
         // substituents.
         if (!part.isEmpty() && !part.matches("\\d+[:%]?")) {
