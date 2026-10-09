@@ -114,11 +114,19 @@ public class MarkushHandler {
    * A substituted phenyl group named by its substituent's ring position, e.g. {@code o-Cl-Ph-},
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
-   * or {@code ortho}/{@code meta}/{@code para}. It looks like positional notation but names no
-   * position on the scaffold, so it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
+   * or {@code ortho}/{@code meta}/{@code para}, and the phenyl as {@code Ph} or {@code C6H4}
+   * ({@code 4-ClC6H4}). It looks like positional notation but names no position on the scaffold, so
+   * it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
    */
   private static final Pattern SUBSTITUTED_PHENYL =
-      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?Ph-?");
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(?:Ph|C6H4)-?");
+
+  /**
+   * The same group with the substituent written after the phenyl, e.g. {@code p-PhNO2}, {@code
+   * m-Ph-Br}, {@code p-C6H4(OMe)}, {@code o-C6H4Br}; brackets round the substituent are dropped.
+   */
+  private static final Pattern PHENYL_THEN_SUBSTITUENT =
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(?:Ph|C6H4)-?(?:\\((.+)\\)|(.+))");
 
   /**
    * The single atoms that end a substituted phenyl's substituent. Any other lone atom ({@code O},
@@ -981,7 +989,8 @@ public class MarkushHandler {
   }
 
   /**
-   * Resolves a value naming a substituted phenyl group ({@link #SUBSTITUTED_PHENYL}) to its SMILES.
+   * Resolves a value naming a substituted phenyl group ({@link #SUBSTITUTED_PHENYL}, {@link
+   * #PHENYL_THEN_SUBSTITUENT}) to its SMILES.
    *
    * @param value the raw legend value
    * @return the SMILES of the phenyl group with one attachment point, or {@code null} if the value
@@ -990,15 +999,24 @@ public class MarkushHandler {
    * @throws IOException if reading SMILES definitions fails
    */
   private String substitutedPhenyl(String value) throws IOException {
+    String locant;
+    String named;
     Matcher matcher = SUBSTITUTED_PHENYL.matcher(value);
-    if (!matcher.matches()) {
+    Matcher trailing = PHENYL_THEN_SUBSTITUENT.matcher(value);
+    if (matcher.matches()) {
+      locant = matcher.group(1);
+      named = matcher.group(2);
+    } else if (trailing.matches()) {
+      locant = trailing.group(1);
+      named = trailing.group(2) != null ? trailing.group(2) : trailing.group(3);
+    } else {
       return null;
     }
-    String substituent = resolveSmiles(matcher.group(2));
+    String substituent = resolveSmiles(named);
     if (!ChemicalUtils.isValidSmiles(substituent)) {
       return null;
     }
-    int position = ringPosition(matcher.group(1));
+    int position = ringPosition(locant);
     try {
       IAtomContainer group = smilesParser.parseSmiles(substituent);
       long attachments = substituent.chars().filter(c -> '*' == c).count();

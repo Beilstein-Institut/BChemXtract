@@ -58,10 +58,11 @@ class MixedCoordinateStereoTest {
         new SubstanceXtractor(SilentChemObjectBuilder.getInstance())
             .xtractUnique(document, new BCXSubstanceInfo(), true);
 
-    // Six, not the four this expected when it was written: issue #165 made the locant-prefixed
-    // aryls resolve, and this page's 4-BrC6H4 groups now graft instead of leaving their structures
-    // with an unresolved R-group. The three keys below are what this test is actually about.
-    assertThat(substances).as("every structure on the page must survive").hasSize(6);
+    // Eight, not the four this expected when it was written: issue #165 made the locant-prefixed
+    // aryls resolve, so this page's 4-BrC6H4 groups graft instead of leaving their structures with
+    // an unresolved R-group, and the C6H4 spelling of a substituted phenyl adds its 2-FC6H4 ones.
+    // The three keys below are what this test is actually about.
+    assertThat(substances).as("every structure on the page must survive").hasSize(8);
     assertThat(substances)
         .as("the allene stereochemistry of the mixed-coordinate fragments must be perceived")
         .extracting(BCXSubstance::getInchiKey)
