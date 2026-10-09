@@ -21,13 +21,14 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 
 /** Abstract class for all drawable ChemDraw objects. */
-public abstract class CDObject {
+public abstract class CDObject implements Serializable {
   /** The object's object tags. */
   private List<CDObjectTag> objectTags = new ArrayList<>();
 

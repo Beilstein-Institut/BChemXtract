@@ -21,11 +21,12 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import org.beilstein.chemxtract.cdx.datatypes.CDPageDefinition;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 
 /** Divides a page into horizontal bands. */
-public class CDSplitter {
+public class CDSplitter implements Serializable {
 
   private CDPoint2D position2D;
   private CDPageDefinition pageDefinition = CDPageDefinition.Undefined;

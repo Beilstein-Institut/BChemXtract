@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDLineType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
@@ -29,7 +30,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDSideType;
  * Groups information about the edge of an object. Usually appears in page objects that are part of
  * a table.
  */
-public class CDBorder {
+public class CDBorder implements Serializable {
 
   /** The color of the border line. */
   private CDColor color;

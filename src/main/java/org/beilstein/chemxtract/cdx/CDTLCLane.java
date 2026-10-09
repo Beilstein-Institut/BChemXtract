@@ -21,12 +21,13 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /** Represents a lane of spots arranged vertically on a TLC plate. */
-public class CDTLCLane {
+public class CDTLCLane implements Serializable {
 
   /** The spots contained within this TLC lane. */
   private List<CDTLCSpot> spots = new ArrayList<>();

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDReactionStep;
@@ -118,13 +119,9 @@ public class ReactionXtractor {
    * Reaction steps are then converted to {@link BCXReaction} objects with reactants, products, and
    * agents linked to their corresponding components.
    *
-   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
-   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
-   * are expanded into their fragments, and variable-attachment substituents are folded into their
-   * scaffolds. This xtractor runs {@link SubstanceXtractor} over every fragment, so extracting from
-   * the same {@code CDDocument} a second time — here or with {@code SubstanceXtractor} — reads an
-   * already-rewritten model and can silently return a different result. Parse a fresh document for
-   * every extraction.
+   * <p>The document is left as parsed: extraction works on a {@linkplain CDDocumentUtils#copy copy}
+   * of it, so the same {@code CDDocument} can be extracted again, with this xtractor or {@link
+   * SubstanceXtractor}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract reactions from
    * @param reactionInfo populated with the number of reaction steps found and valid reactions
@@ -136,7 +133,7 @@ public class ReactionXtractor {
     SubstanceXtractor substanceXtractor = new SubstanceXtractor(this.builder);
     this.unknowns = new HashSet<>();
 
-    for (CDPage page : document.getPages()) {
+    for (CDPage page : CDDocumentUtils.copy(document).getPages()) {
       FragmentVisitor fragmentVisitor = new FragmentVisitor(page);
       List<CDFragment> fragments = fragmentVisitor.getFragments();
       Map<CDFragment, BCXSubstance> fragmentSubstanceMap = new HashMap<>();

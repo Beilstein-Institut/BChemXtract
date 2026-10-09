@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import java.util.List;
  * Set of elements, which are represented by their atomic number. This set can also be exclusive,
  * which means the set fits all elements except the element, which this set contains.
  */
-public class CDElementList {
+public class CDElementList implements Serializable {
   private boolean exclusive = false;
   private List<Integer> elements = new ArrayList<>();
 

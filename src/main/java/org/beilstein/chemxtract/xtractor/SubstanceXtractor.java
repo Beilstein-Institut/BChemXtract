@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
 import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
@@ -135,12 +136,9 @@ public class SubstanceXtractor {
    * <p>Each fragment is processed and converted into one or more {@link BCXSubstance} objects,
    * optionally resolving R-groups if specified.
    *
-   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
-   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
-   * are expanded into their fragments, and variable-attachment substituents are folded into their
-   * scaffolds. Extracting from the same {@code CDDocument} a second time — with this xtractor, an
-   * overload, or {@link ReactionXtractor} — therefore reads an already-rewritten model and can
-   * silently return fewer or different substances. Parse a fresh document for every extraction.
+   * <p>The document is left as parsed: extraction works on a {@linkplain CDDocumentUtils#copy copy}
+   * of it, so the same {@code CDDocument} can be extracted again, with this xtractor or {@link
+   * ReactionXtractor}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata (e.g., number of fragments)
@@ -152,7 +150,7 @@ public class SubstanceXtractor {
       CDDocument document, BCXSubstanceInfo substanceInfo, boolean resolveRGroups) {
     Objects.requireNonNull(document, "Document must not be null.");
     List<BCXSubstance> substances = new ArrayList<>();
-    for (CDPage page : document.getPages()) {
+    for (CDPage page : CDDocumentUtils.copy(document).getPages()) {
 
       FragmentVisitor fragmentVisitor = new FragmentVisitor(page);
       // Fold bond-encoded position-variation substituents into their scaffold fragments so the
@@ -180,7 +178,7 @@ public class SubstanceXtractor {
   /**
    * Extracts all chemical substances without resolving R-groups.
    *
-   * <p>The document is consumed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
+   * <p>The document is left as parsed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
@@ -249,12 +247,9 @@ public class SubstanceXtractor {
    *
    * <p>Substances are considered unique based on their InChI identifiers.
    *
-   * <p><strong>The document is consumed.</strong> Extraction rewrites the parsed {@link CDDocument}
-   * in place: bond endpoints are repointed when nested fragments are resolved, S-group repeat units
-   * are expanded into their fragments, and variable-attachment substituents are folded into their
-   * scaffolds. Extracting from the same {@code CDDocument} a second time — with this xtractor, an
-   * overload, or {@link ReactionXtractor} — therefore reads an already-rewritten model and can
-   * silently return fewer or different substances. Parse a fresh document for every extraction.
+   * <p>The document is left as parsed: extraction works on a {@linkplain CDDocumentUtils#copy copy}
+   * of it, so the same {@code CDDocument} can be extracted again, with this xtractor or {@link
+   * ReactionXtractor}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata
@@ -284,7 +279,7 @@ public class SubstanceXtractor {
   /**
    * Extracts unique chemical substances without resolving R-groups.
    *
-   * <p>The document is consumed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
+   * <p>The document is left as parsed; see {@link #xtract(CDDocument, BCXSubstanceInfo, boolean)}.
    *
    * @param document the ChemDraw {@link CDDocument} to extract substances from
    * @param substanceInfo object for tracking extraction metadata

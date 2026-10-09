@@ -21,12 +21,13 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /** Specifies an external connection for a bracket. */
-public class CDBracketAttachment {
+public class CDBracketAttachment implements Serializable {
 
   private List<CDCrossingBond> crossingBonds = new ArrayList<>();
   private CDGraphic graphic;

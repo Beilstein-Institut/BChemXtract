@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** An RGB color. */
-public class CDColor {
+public class CDColor implements Serializable {
 
   private static final float DELTA = 0.001f;
 

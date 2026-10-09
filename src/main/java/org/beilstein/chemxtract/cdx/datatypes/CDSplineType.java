@@ -21,12 +21,14 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /**
  * The type of curve object. If a curve has arrows of any type, it cannot also be closed, filled,
  * shaded, or doubled. If it has an arrow at start or end, it cannot also have a half-arrow at the
  * same location. A dashed spline cannot be filled, shaded, or doubled.
  */
-public class CDSplineType {
+public class CDSplineType implements Serializable {
   private boolean dashed = false;
   private boolean bold = false;
   private boolean doubled = false;

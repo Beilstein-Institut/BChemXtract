@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** The type of a rectangle object. */
-public class CDRectangleType {
+public class CDRectangleType implements Serializable {
 
   private boolean roundEdge = false;
   private boolean shadow = false;
