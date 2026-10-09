@@ -33,8 +33,11 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
  * @param bounds the bounding box of the source text ({@code null} if the text had no position)
  * @param definitions independent per-label substituent lists (each label varies on its own)
  * @param correlatedGroups positional tables whose labels vary together as fixed row-tuples
+ * @param lineHeight height of one line of the source text: its bounds' height over its number of
+ *     lines ({@code 0} if the text had no position)
  */
 public record RGroupDefinitionBlock(
     CDRectangle bounds,
     Map<String, List<String>> definitions,
-    List<CorrelatedGroup> correlatedGroups) {}
+    List<CorrelatedGroup> correlatedGroups,
+    float lineHeight) {}
