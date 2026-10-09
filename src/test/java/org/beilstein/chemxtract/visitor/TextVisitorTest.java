@@ -123,6 +123,23 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void compoundNumberAfterAColonDoesNotLeaveTheColonOnTheValue() {
+    // Rows that end "value: number (yield)" put the colon straight after the last value
+    // (m28144482-i5); the values are CO2Me and H, not "CO2Me:" and "H:".
+    RGroupDefinitionBlock block =
+        new TextVisitor(
+                pageWithTexts(
+                    "R1 = R2 = H, R3 = CO2Me: 12k (72%)\rR1 = Me, R2 = R3 = H: 12a (73%)"))
+            .getBlocks()
+            .get(0);
+    assertEquals(1, block.correlatedGroups().size());
+    assertEquals(
+        List.of(
+            Map.of("R1", "H", "R2", "H", "R3", "CO2Me"), Map.of("R1", "Me", "R2", "H", "R3", "H")),
+        block.correlatedGroups().get(0).tuples());
+  }
+
+  @Test
   public void positionalTableParsedAsCorrelatedGroup() {
     TextVisitor visitor =
         new TextVisitor(pageWithTexts("R1 = R2 = H\rR1 = F, R2 = H\rR1 = H, R2 = F"));
