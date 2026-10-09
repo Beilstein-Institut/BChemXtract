@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
+
 /** The type of a graphic object that represents a circle or ellipse. */
-public class CDOvalType {
+public class CDOvalType implements Serializable {
   private boolean circle = false;
   private boolean shaded = false;
   private boolean filled = false;

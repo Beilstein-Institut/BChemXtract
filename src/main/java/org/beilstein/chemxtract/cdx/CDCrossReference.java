@@ -21,11 +21,13 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
+
 /**
  * @deprecated Not used anymore
  */
 @Deprecated
-public class CDCrossReference {
+public class CDCrossReference implements Serializable {
 
   private String container;
   private String document;

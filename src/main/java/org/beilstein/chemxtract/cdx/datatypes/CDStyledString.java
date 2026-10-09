@@ -21,13 +21,14 @@
  */
 package org.beilstein.chemxtract.cdx.datatypes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 /** This class allows to store chunks of text with different text styles. */
-public class CDStyledString {
+public class CDStyledString implements Serializable {
   /** Text chunks. */
   private List<CDXChunk> chunks = new ArrayList<>();
 
@@ -61,7 +62,7 @@ public class CDStyledString {
   }
 
   /** This class stores a chunk of text and additional style attributes. */
-  public static class CDXChunk {
+  public static class CDXChunk implements Serializable {
     /** Text font. */
     private final CDFont font;
 

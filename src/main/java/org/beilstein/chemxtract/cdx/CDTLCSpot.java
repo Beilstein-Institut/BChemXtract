@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +29,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cdx.datatypes.CDSplineType;
 
 /** This object represents a spot on a TLC plate. */
-public class CDTLCSpot {
+public class CDTLCSpot implements Serializable {
 
   /** The color of the spot. */
   private CDColor color;

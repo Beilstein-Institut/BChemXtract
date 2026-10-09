@@ -21,8 +21,10 @@
  */
 package org.beilstein.chemxtract.cdx;
 
+import java.io.Serializable;
+
 /** ChemDraw rectangle. */
-public class CDRectangle {
+public class CDRectangle implements Serializable {
   /** The top edge of the rectangle. */
   private float top;
 
