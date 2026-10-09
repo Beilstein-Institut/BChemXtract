@@ -687,16 +687,15 @@ public class MarkushHandler {
   private List<CorrelatedGroup> nearestCorrelatedGroups(
       Set<String> present, CDRectangle scaffoldBounds) {
     Map<List<String>, CorrelatedGroup> chosen = new LinkedHashMap<>();
-    Map<List<String>, Double> bestDistance = new HashMap<>();
+    Map<List<String>, RGroupDefinitionBlock> source = new HashMap<>();
     for (RGroupDefinitionBlock block : blocks) {
       for (CorrelatedGroup group : block.correlatedGroups()) {
         if (!present.containsAll(group.labels())) {
           continue;
         }
-        double distance = blockDistance(scaffoldBounds, block.bounds());
-        Double current = bestDistance.get(group.labels());
-        if (current == null || distance < current) {
-          bestDistance.put(group.labels(), distance);
+        RGroupDefinitionBlock current = source.get(group.labels());
+        if (current == null || isNearer(scaffoldBounds, block, current)) {
+          source.put(group.labels(), block);
           chosen.put(group.labels(), group);
         }
       }
@@ -719,6 +718,47 @@ public class MarkushHandler {
   }
 
   /** Distance from a scaffold to a block, treating a block with no bounds as maximally far. */
+  /**
+   * Whether a definition block is nearer to the scaffold than the best one found so far. Distance
+   * decides, except between two blocks within a line of each other, one level with the scaffold
+   * (sharing rows or columns with it) and one off its corner: then the level one wins. A table
+   * drawn beside its scaffold whose neighbour's table ends just off the scaffold's corner would
+   * otherwise lose to that neighbour's table by a point or less.
+   *
+   * @param scaffoldBounds bounding box of the scaffold
+   * @param candidate the block to weigh
+   * @param best the nearest block found so far
+   * @return {@code true} if {@code candidate} should replace {@code best}
+   */
+  private static boolean isNearer(
+      CDRectangle scaffoldBounds, RGroupDefinitionBlock candidate, RGroupDefinitionBlock best) {
+    double candidateDistance = blockDistance(scaffoldBounds, candidate.bounds());
+    double bestDistance = blockDistance(scaffoldBounds, best.bounds());
+    double line = Math.max(candidate.lineHeight(), best.lineHeight());
+    if (candidateDistance != Double.MAX_VALUE
+        && bestDistance != Double.MAX_VALUE
+        && Math.abs(candidateDistance - bestDistance) <= line) {
+      boolean candidateLevel = isLevel(scaffoldBounds, candidate.bounds());
+      if (candidateLevel != isLevel(scaffoldBounds, best.bounds())) {
+        return candidateLevel;
+      }
+    }
+    return candidateDistance < bestDistance;
+  }
+
+  /**
+   * Whether the block shares rows or columns with the scaffold, rather than sitting off a corner.
+   */
+  private static boolean isLevel(CDRectangle scaffoldBounds, CDRectangle blockBounds) {
+    double rows =
+        Math.min(scaffoldBounds.getMaxY(), blockBounds.getMaxY())
+            - Math.max(scaffoldBounds.getMinY(), blockBounds.getMinY());
+    double columns =
+        Math.min(scaffoldBounds.getMaxX(), blockBounds.getMaxX())
+            - Math.max(scaffoldBounds.getMinX(), blockBounds.getMinX());
+    return rows > 0 || columns > 0;
+  }
+
   private static double blockDistance(CDRectangle scaffoldBounds, CDRectangle blockBounds) {
     if (scaffoldBounds == null || blockBounds == null) {
       return Double.MAX_VALUE;
@@ -2128,14 +2168,11 @@ public class MarkushHandler {
       return null;
     }
     RGroupDefinitionBlock best = null;
-    double bestDistance = Double.MAX_VALUE;
     for (RGroupDefinitionBlock block : blocks) {
       if (block.bounds() == null || !block.definitions().containsKey(label)) {
         continue;
       }
-      double distance = rectangleDistance(scaffoldBounds, block.bounds());
-      if (distance < bestDistance) {
-        bestDistance = distance;
+      if (best == null || isNearer(scaffoldBounds, block, best)) {
         best = block;
       }
     }
