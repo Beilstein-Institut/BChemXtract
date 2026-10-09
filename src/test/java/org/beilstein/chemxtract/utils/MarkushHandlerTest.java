@@ -53,6 +53,7 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /** Tests for scaffold-scoped resolution of R-group definitions in {@link MarkushHandler}. */
 public class MarkushHandlerTest {
@@ -348,6 +349,41 @@ public class MarkushHandlerTest {
         handler.replaceRGroups(List.of(scaffold), rect(40f, 90f, 90f, 140f), new HashSet<>());
 
     assertEquals(3, results.size(), "the R1-R5 table must expand the scaffold on its own");
+  }
+
+  /**
+   * A table level with the scaffold wins over one off its corner when both are about equally near.
+   * In m28144482-i5 the 12 table ends just above the 13 scaffold, off its upper right, and was
+   * nearer by less than a point than the 13 table drawn beside it, so the 13 scaffold took the 12
+   * rows.
+   */
+  @Test
+  public void tableBesideTheScaffoldWinsOverANearlyAsNearTableOffItsCorner() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(
+        textAt(
+            rect(102.3f, 261.3f, 235.0f, 295.0f),
+            "6: R1 = R2 = H\n12a: R1 = Me, R2 = H\n12b: R1 = F, R2 = H"));
+    page.addText(
+        textAt(
+            rect(102.7f, 322.3f, 229.0f, 354.2f),
+            "13l: R1 = H, R2 = CN\n13m: R1 = H, R2 = Br\n13n: R1 = H, R2 = OMe"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    List<IAtomContainer> results =
+        handler.replaceRGroups(
+            List.of(twoResidueScaffold()), rect(7f, 297f, 91f, 387f), new HashSet<>());
+    Set<String> expected = new HashSet<>();
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (String smiles : List.of("N#Cc1ccccc1", "Brc1ccccc1", "COc1ccccc1")) {
+      expected.add(canonicalSmiles(parser.parseSmiles(smiles)));
+    }
+    Set<String> actual = new HashSet<>();
+    for (IAtomContainer result : results) {
+      actual.add(canonicalSmiles(AtomContainerManipulator.suppressHydrogens(result)));
+    }
+
+    assertEquals(expected, actual, "the 13 scaffold must take the 13 table beside it");
   }
 
   /**
