@@ -42,20 +42,35 @@ import org.junit.jupiter.api.Timeout;
  */
 class CipLabelCageTest {
 
-  @Test
-  @Timeout(value = 60, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
-  void cageWithLabelOnlyCentresExtracts() throws Exception {
-    InputStream in = CipLabelCageTest.class.getResourceAsStream("/cheminf/bugs/m20970122-5.cdx");
+  private static List<BCXSubstance> xtract(String fixture) throws Exception {
+    InputStream in = CipLabelCageTest.class.getResourceAsStream("/cheminf/bugs/" + fixture);
     assertThat(in).as("fixture must be on the classpath").isNotNull();
     CDDocument document = CDXReader.readDocument(in);
     assertThat(document).as("document must parse").isNotNull();
+    return new SubstanceXtractor().xtractUnique(document, new BCXSubstanceInfo(), false);
+  }
 
-    List<BCXSubstance> substances =
-        new SubstanceXtractor().xtractUnique(document, new BCXSubstanceInfo(), false);
-
-    assertThat(substances)
+  @Test
+  @Timeout(value = 60, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void cageWithLabelOnlyCentresExtracts() throws Exception {
+    assertThat(xtract("m20970122-5.cdx"))
         .extracting(BCXSubstance::getInchiKey)
         .as("para isomer without stereo, meta isomer with its wedged centres")
         .containsExactlyInAnyOrder("VFVOCIPZIXHOIP-UHFFFAOYSA-N", "XPMUPRKPPAUJEY-YLMDTDHTSA-N");
+  }
+
+  /** Fullerene-silsesquioxane hybrids with azide, triazole and copper-triazole linkers. */
+  @Test
+  @Timeout(value = 60, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void fullereneSilsesquioxaneCagesExtract() throws Exception {
+    assertThat(xtract("m17773228-i16.cdx"))
+        .extracting(BCXSubstance::getInchiKey)
+        .as("three cage products, tripropargylamine and copper(I) iodide")
+        .containsExactlyInAnyOrder(
+            "UGFQJILFBOOEJM-UHFFFAOYSA-N",
+            "BXCRLDPNHKHLIH-UHFFFAOYSA-N",
+            "AFZQPSDAKNWVSX-UHFFFAOYSA-N",
+            "ZHOBJWVNWMQMLF-UHFFFAOYSA-N",
+            "LSXDOTMGLUJQCM-UHFFFAOYSA-M");
   }
 }
