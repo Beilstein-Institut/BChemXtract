@@ -213,6 +213,34 @@ public class TextVisitorTest {
   }
 
   @Test
+  public void doubleAndTriplePrimedLabelsAreTableLabels() {
+    // m28732236-i2: R', R'' and R''' are three labels, and "R', R'' = H" gives one value to both.
+    RGroupDefinitionBlock block =
+        new TextVisitor(
+                pageWithTexts(
+                    "4vv R', R'' = H, 36%\r4ww R' = Br, R'' =  H, 37%\r"
+                        + "4y R' = OH, R'' = NEt2, R''' = H, 35%"))
+            .getBlocks()
+            .getFirst();
+    assertTrue(block.definitions().isEmpty(), "R'/R''/R''' rows are table rows");
+    assertEquals(2, block.correlatedGroups().size());
+    assertEquals(
+        List.of(Map.of("R'", "H", "R''", "H"), Map.of("R'", "Br", "R''", "H")),
+        block.correlatedGroups().get(0).tuples());
+    assertEquals(
+        List.of(Map.of("R'", "OH", "R''", "NEt2", "R'''", "H")),
+        block.correlatedGroups().get(1).tuples());
+  }
+
+  @Test
+  public void labelListGivesItsValueToEveryLabel() {
+    Map<String, List<String>> r = new TextVisitor(pageWithTexts("R1, R2, R3 = Me")).getRgroups();
+    assertEquals(List.of("Me"), r.get("R1"), "R1 must get the shared value");
+    assertEquals(List.of("Me"), r.get("R2"), "R2 must get the shared value");
+    assertEquals(List.of("Me"), r.get("R3"), "R3 must get the shared value");
+  }
+
+  @Test
   public void resolvesChainedEqualityToAllLabels() {
     // "R1 = R2 = H" means both R1 and R2 are H.
     Map<String, List<String>> r = new TextVisitor(pageWithTexts("R1 = R2 = H")).getRgroups();

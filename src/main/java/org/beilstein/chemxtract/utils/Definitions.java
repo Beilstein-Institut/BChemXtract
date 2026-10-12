@@ -32,12 +32,12 @@ public class Definitions {
     // hide implicit public constructor
   }
 
-  // An R-group label is a known base (R, X, Y, Ar, E, L), an optional index, and an optional prime
-  // (ASCII ' or the Unicode right-single-quote/prime), so R and R' are distinct labels. The
-  // trailing
-  // negative lookahead replaces \b — a prime is a non-word char, so \b would not sit after it — and
-  // still prevents matching a prefix of a longer token (e.g. "R" inside "Region").
-  private static final String RGROUP_LABEL_CORE = "(?:R|X|Y|Ar|E|L)\\d*['’′]?(?![A-Za-z0-9])";
+  // An R-group label is a known base (R, X, Y, Ar, E, L), an optional index, and up to three primes
+  // (ASCII ' or the Unicode right-single-quote/prime), so R, R', R'' and R''' are distinct labels.
+  // The trailing negative lookahead replaces \b — a prime is a non-word char, so \b would not sit
+  // after it — and still prevents matching a prefix of a longer token (e.g. "R" inside "Region").
+  private static final String RGROUP_LABEL_CORE =
+      "(?:R|X|Y|Ar|E|L)\\d*['’′]{0,3}(?![A-Za-z0-9'’′])";
 
   public static final String RGROUP_LABEL_STRING = "^(" + RGROUP_LABEL_CORE + ")";
   public static final Pattern RGROUP_LABEL_PATTERN = Pattern.compile(RGROUP_LABEL_STRING);
@@ -51,6 +51,21 @@ public class Definitions {
   public static final String RGROUP_ASSIGN_STRING = "\\b(" + RGROUP_LABEL_CORE + ")\\s*=";
 
   public static final Pattern RGROUP_ASSIGN_PATTERN = Pattern.compile(RGROUP_ASSIGN_STRING);
+
+  /**
+   * Matches a label followed by a comma that opens a label list sharing one value, e.g. the {@code
+   * R1,} of {@code R1, R2 = H}.
+   */
+  public static final Pattern RGROUP_LABEL_LIST_PATTERN =
+      Pattern.compile(
+          "(?<![A-Za-z0-9'’′])("
+              + RGROUP_LABEL_CORE
+              + ")\\s*,\\s*(?=(?:"
+              + RGROUP_LABEL_CORE
+              + "\\s*,\\s*)*"
+              + RGROUP_LABEL_CORE
+              + "\\s*=)");
+
   public static final String ABBREVIATION_PATH =
       "/org/beilstein/chemxtract/lookups/abbreviations.smi";
   public static final int ABBREVIATION_SIZE = 400;
