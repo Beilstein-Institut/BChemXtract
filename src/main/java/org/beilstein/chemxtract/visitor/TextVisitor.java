@@ -222,14 +222,17 @@ public class TextVisitor extends CDVisitor {
   /**
    * Parses a single line into its {@code label = values} assignments, in source order, preserving
    * repeated labels (so several table rows on one line survive as separate assignments). Handles
-   * multiple assignments per line ("R1 = F, R2 = H"), chained equality ("R1 = R2 = H"), and
-   * comma/semicolon value lists.
+   * multiple assignments per line ("R1 = F, R2 = H"), chained equality ("R1 = R2 = H"), label lists
+   * sharing one value ("R1, R2 = H"), and comma/semicolon value lists.
    *
    * @param row a single line of definition text
    * @return the assignments, in order, one entry per {@code label =} head
    */
   private List<Assignment> parseAssignments(String row) {
     List<Assignment> result = new ArrayList<>();
+
+    // A label list sharing one value ("R1, R2 = H") is the chained form "R1 = R2 = H".
+    row = Definitions.RGROUP_LABEL_LIST_PATTERN.matcher(row).replaceAll("$1 = ");
 
     // Locate every "label =" head, then treat the text up to the next head (or end of line) as its
     // right-hand side so one assignment cannot swallow the next.
