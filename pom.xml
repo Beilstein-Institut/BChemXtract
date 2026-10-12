@@ -482,6 +482,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.simolecule.centres</groupId>
+			<artifactId>centres-cdk</artifactId>
+			<version>1.2.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.openscience.cdk</groupId>
 			<artifactId>cdk-inchi</artifactId>
 			<version>${cdk.version}</version>
