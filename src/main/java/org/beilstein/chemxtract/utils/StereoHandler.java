@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
+import com.simolecule.centres.CdkLabeller;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -35,8 +36,8 @@ import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.geometry.GeometryUtil;
-import org.openscience.cdk.geometry.cip.CIPTool;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -204,7 +205,8 @@ public class StereoHandler {
    * Generates tetrahedral chirality stereochemical elements for atoms with defined CIP type.
    *
    * <p>R/S depends on ligand priority, not ligand order, so each element is labelled with {@link
-   * CIPTool} and inverted when that label disagrees with ChemDraw's.
+   * CdkLabeller} and inverted when that label disagrees with ChemDraw's. A centre the labeller
+   * cannot rank, such as one inside a large polycyclic cage, is left without stereo.
    *
    * @param atomContainer the {@link IAtomContainer} containing the atoms
    * @param atomMap mapping of {@link CDAtom} to {@link IAtom}
@@ -234,15 +236,43 @@ public class StereoHandler {
       TetrahedralChirality chirality =
           new TetrahedralChirality(
               atom, ligands.toArray(IAtom[]::new), ITetrahedralChirality.Stereo.CLOCKWISE);
-      CIPTool.CIP_CHIRALITY label = CIPTool.getCIPChirality(atomContainer, chirality);
-      if (label == CIPTool.CIP_CHIRALITY.NONE) {
-        continue; // not a stereocentre by CIP, e.g. two hydrogens
+      String label = cipLabel(atomContainer, chirality);
+      if (!"R".equals(label) && !"S".equals(label)) {
+        continue; // not a stereocentre by CIP (e.g. two hydrogens), or too costly to rank
       }
-      if (!label.name().equals(cipType.name())) {
+      if (!label.equals(cipType.name())) {
         chirality.setStereo(ITetrahedralChirality.Stereo.ANTI_CLOCKWISE);
       }
       stereoElements.add(chirality);
     }
     return stereoElements;
+  }
+
+  /**
+   * Returns the CIP descriptor of a single tetrahedral centre, ranked as if it were the only stereo
+   * element in the container, so its label does not depend on the other centres' guesses.
+   *
+   * <p>Legacy {@code CIPTool} walks every path through the ligands without a bound and never
+   * returns on cages with dozens of rings; {@link CdkLabeller} stops after a fixed node budget and
+   * leaves the centre unlabelled.
+   *
+   * @param atomContainer the {@link IAtomContainer} holding the centre; its stereo elements and CIP
+   *     properties are restored afterwards
+   * @param chirality the centre to label
+   * @return the descriptor ({@code "R"}, {@code "S"}, ...), or {@code null} if none was assigned
+   */
+  private static String cipLabel(IAtomContainer atomContainer, ITetrahedralChirality chirality) {
+    List<IStereoElement> saved = new ArrayList<>();
+    atomContainer.stereoElements().forEach(saved::add);
+    atomContainer.setStereoElements(List.of(chirality));
+    try {
+      CdkLabeller.label(atomContainer);
+      Object descriptor = chirality.getChiralAtom().getProperty(CDKConstants.CIP_DESCRIPTOR);
+      return descriptor == null ? null : descriptor.toString();
+    } finally {
+      atomContainer.atoms().forEach(a -> a.removeProperty(CDKConstants.CIP_DESCRIPTOR));
+      atomContainer.bonds().forEach(b -> b.removeProperty(CDKConstants.CIP_DESCRIPTOR));
+      atomContainer.setStereoElements(saved);
+    }
   }
 }
