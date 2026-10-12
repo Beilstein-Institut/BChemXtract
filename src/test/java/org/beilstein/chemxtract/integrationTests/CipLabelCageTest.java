@@ -73,4 +73,18 @@ class CipLabelCageTest {
             "ZHOBJWVNWMQMLF-UHFFFAOYSA-N",
             "LSXDOTMGLUJQCM-UHFFFAOYSA-M");
   }
+
+  /**
+   * A methylated nanographene whose two sp3 CH centres carry only ChemDraw R/S labels (one bond at
+   * each is drawn dashed, which is not a stereo bond); both are too costly to rank and stay
+   * unassigned.
+   */
+  @Test
+  @Timeout(value = 60, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void nanographeneWithLabelOnlyCentresExtracts() throws Exception {
+    assertThat(xtract("m36659499-1.cdx"))
+        .extracting(BCXSubstance::getInchiKey)
+        .as("the C196H110 nanographene without stereo, and azulene")
+        .containsExactlyInAnyOrder("OHRLOFYDQUTGNF-UHFFFAOYSA-N", "CUFNKYGDVFVPHO-UHFFFAOYSA-N");
+  }
 }
