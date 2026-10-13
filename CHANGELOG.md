@@ -2,6 +2,100 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.2](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.1...v1.4.2) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* resolveRGroups extraction now yields fewer substances for legends that vary two or more R-groups at once; set unrestrictedMarkush to keep the previous output.
+
+### Features
+
+* expand R-group legends only where they state each structure ([f5628ec](https://github.com/Beilstein-Institut/BChemXtract/commit/f5628ec480f566c63afa742fcbae822f16e228f1))
+
+
+### Bug Fixes
+
+* bound and correct position-variation attachment handling (1.4.x) ([11885b5](https://github.com/Beilstein-Institut/BChemXtract/commit/11885b54274d7a57590b466a6cd52a750adf65df))
+* bound position-variation isomer enumeration ([137591d](https://github.com/Beilstein-Institut/BChemXtract/commit/137591ddbb145cabbc80500eed4a1f7f7dbea54e))
+* derive stereo from ChemDraw CIP labels by ligand priority ([770d2f2](https://github.com/Beilstein-Institut/BChemXtract/commit/770d2f2f949234faa647af714c9c448d076b9996))
+* derive stereo from ChemDraw CIP labels by ligand priority (1.4.x) ([2d87c1f](https://github.com/Beilstein-Institut/BChemXtract/commit/2d87c1f0e9b654b010bbb48cb0ebe24e8734886a))
+* drop the colon a compound number leaves on a legend value ([54b3abc](https://github.com/Beilstein-Institut/BChemXtract/commit/54b3abceb2210c3bb9e9e3c53f1c3e2752b7ee16))
+* drop the colon a compound number leaves on a legend value ([750b58a](https://github.com/Beilstein-Institut/BChemXtract/commit/750b58a1257b9be5eae07215303de6ee8738978a))
+* fall back to canonical SMILES when canonical numbering fails ([43a467e](https://github.com/Beilstein-Institut/BChemXtract/commit/43a467e31ef2c97063361636b55c053a54b7633f))
+* fall back to canonical SMILES when canonical numbering fails (1.4.x) ([a1695f6](https://github.com/Beilstein-Institut/BChemXtract/commit/a1695f65b1791b01bf32f05745984ec8ccb6873e))
+* give each scaffold its own legend table when tables sit between scaffolds ([7717598](https://github.com/Beilstein-Institut/BChemXtract/commit/7717598ae42cf0dd4d005527f4467b23b842a635))
+* give each scaffold its own legend table when tables sit between scaffolds (1.4.x) ([b8c1e93](https://github.com/Beilstein-Institut/BChemXtract/commit/b8c1e939c3e33de2a71056e5653ca3a80722d442))
+* guard label and multiplier parsing against NumberFormatException ([3f31da9](https://github.com/Beilstein-Institut/BChemXtract/commit/3f31da9be158a1d499eccdd98427b351e103056c))
+* ignore crossing bonds a position-variation bond never reaches ([087a366](https://github.com/Beilstein-Institut/BChemXtract/commit/087a366b44e27741a5a5df522e0b0d21b1938c6d))
+* keep abbreviation attachment bonds and read numbered atom labels as atoms (1.4.x) ([b2434cc](https://github.com/Beilstein-Institut/BChemXtract/commit/b2434cc60db9f6aecb7c21a1666602c40014f59f))
+* keep stacked legend tables apart unless a line apart ([0de1bca](https://github.com/Beilstein-Institut/BChemXtract/commit/0de1bca8277f83c6b30034224b23637a5bcf22e4))
+* keep stacked legend tables apart unless a line apart ([bf4e366](https://github.com/Beilstein-Institut/BChemXtract/commit/bf4e366e8d428c52a509eaee53596841a2823bd2))
+* keep the bond attaching an unwanted abbreviation ([b63cb9b](https://github.com/Beilstein-Institut/BChemXtract/commit/b63cb9b7d21ec569b4dd691742d42da20f36e787))
+* keep wedges outside sugar rings and read bold-edged Haworth rings ([210ec61](https://github.com/Beilstein-Institut/BChemXtract/commit/210ec61872ec1106022b43930a920171e4037a75))
+* keep wedges outside sugar rings and read bold-edged Haworth rings (1.4.x) ([acd0634](https://github.com/Beilstein-Institut/BChemXtract/commit/acd063463e1202a9213a5ab1309094bb77133492))
+* lay out abbreviations whose connection atom has no fixed neighbour ([619b81a](https://github.com/Beilstein-Institut/BChemXtract/commit/619b81a640649e8ab37e3e37b2556f02de95099b))
+* lay out abbreviations whose connection atom has no fixed neighbour (1.4.x) ([d552b19](https://github.com/Beilstein-Institut/BChemXtract/commit/d552b19b2ef64e0f93b4796e92795231e7ef29c9))
+* leave overlapping drawings out of position-variation merging ([3d1a58f](https://github.com/Beilstein-Institut/BChemXtract/commit/3d1a58f9e957efe8bcba8d37a2beda1da2454c75)), closes [#143](https://github.com/Beilstein-Institut/BChemXtract/issues/143)
+* leave overlapping drawings out of position-variation merging (1.4.x) ([92ed1da](https://github.com/Beilstein-Institut/BChemXtract/commit/92ed1da38c6fdb3cb4dd74d7b52c29ed95117fc9))
+* leave the parsed document unchanged by extraction ([5c4e157](https://github.com/Beilstein-Institut/BChemXtract/commit/5c4e157734962d1c6877561921d8415de82d6e81))
+* leave the parsed document unchanged by extraction ([d5a9a67](https://github.com/Beilstein-Institut/BChemXtract/commit/d5a9a67fe37a25ef6bb6636e875ae4cfe2dae1df))
+* let a legend table over all of a scaffold's labels win over one over some ([2c38a33](https://github.com/Beilstein-Institut/BChemXtract/commit/2c38a33dbd32bb97e0ece4f9d22ae5afe1bcbd00))
+* let a legend table over all of a scaffold's labels win over one over some ([520b379](https://github.com/Beilstein-Institut/BChemXtract/commit/520b379e8e9c7b73d6cba84672d852167228c8cf))
+* merge a positional table split over side-by-side text boxes ([d7043fa](https://github.com/Beilstein-Institut/BChemXtract/commit/d7043fa2d49edf68413173b454fd4ab999b52100))
+* merge a positional table split over side-by-side text boxes ([31e9f92](https://github.com/Beilstein-Institut/BChemXtract/commit/31e9f92bbf3466ee68590882823179c046dee8e9))
+* move a position-variation substituent to its scaffold only once ([76ce799](https://github.com/Beilstein-Institut/BChemXtract/commit/76ce799f059e9725cbc85f6ae75ce368591d9a66))
+* number fused ring systems for positional R-group substituents ([a3ac78f](https://github.com/Beilstein-Institut/BChemXtract/commit/a3ac78fdb92fc20d1308e8a7c7d164989b9ee5d3))
+* pick the 3D stereo factory only when every atom has 3D coordinates ([5737cdf](https://github.com/Beilstein-Institut/BChemXtract/commit/5737cdf4e4f4d00f77697f57336534e0ef3a0144)), closes [#146](https://github.com/Beilstein-Institut/BChemXtract/issues/146)
+* pick the 3D stereo factory only when every atom has 3D coordinates (1.4.x) ([bba615f](https://github.com/Beilstein-Institut/BChemXtract/commit/bba615f5fec69f07cde80d4386480e40d13ec369))
+* place ortho/meta substituents on the side of the ring with room ([9d78cde](https://github.com/Beilstein-Institut/BChemXtract/commit/9d78cde277a8b780dba928c8e8572925f6352dfa))
+* place ortho/meta substituents on the side of the ring with room (1.4.x) ([4f3ac69](https://github.com/Beilstein-Institut/BChemXtract/commit/4f3ac69aec12845888c6c0db28c6c3dc10f423e3))
+* prefer a legend level with the scaffold over one off its corner ([3dd2c9c](https://github.com/Beilstein-Institut/BChemXtract/commit/3dd2c9c4fcc84ab33c94b6839f0e7590122e42c9))
+* prefer a legend level with the scaffold over one off its corner ([87bb1a4](https://github.com/Beilstein-Institut/BChemXtract/commit/87bb1a40873ddad795f4e8625c8537ad9700d994))
+* read a position-variation stub ending in a ring as any free ring position ([30b6ae1](https://github.com/Beilstein-Institut/BChemXtract/commit/30b6ae106acf72d3822ed11bb17c905d09311d7d))
+* read numbered atom labels as atoms, not element formulas ([4561266](https://github.com/Beilstein-Institut/BChemXtract/commit/4561266cd8aa0250b4f84b5257937f526e9b1556))
+* read o-Cl-Ph-style R-group values as substituted phenyl groups ([ae37c85](https://github.com/Beilstein-Institut/BChemXtract/commit/ae37c85cbfdf037c1283d8b06ee5bdf20f1bf0c3))
+* read o-Cl-Ph-style R-group values as substituted phenyl groups (1.4.x) ([cfb52ee](https://github.com/Beilstein-Institut/BChemXtract/commit/cfb52ee6d648946456efb9c69435ca823ea0d256))
+* read R'' and R''' labels and label lists sharing one value ([935f4cf](https://github.com/Beilstein-Institut/BChemXtract/commit/935f4cfda27dff2ed0e4bf9434c357703a28b20c))
+* read R'' and R''' labels and label lists sharing one value (1.4.x) ([9e45b44](https://github.com/Beilstein-Institut/BChemXtract/commit/9e45b4455c2f37702870c90b52328d0755a2047c))
+* read substituted phenyls written as C6H4 or with the substituent after Ph ([1146f35](https://github.com/Beilstein-Institut/BChemXtract/commit/1146f3539f5d159349b07bd90bbcc19ad14827e0))
+* read substituted phenyls written as C6H4 or with the substituent after Ph ([d2de3e0](https://github.com/Beilstein-Institut/BChemXtract/commit/d2de3e0917092fe468d7e20b1cfd1d2ae7272ba7))
+* resolve locant-prefixed aryl substituents in either spelling ([c812e25](https://github.com/Beilstein-Institut/BChemXtract/commit/c812e25b467ba036de3a86a410ab99483aeca4a1)), closes [#165](https://github.com/Beilstein-Institut/BChemXtract/issues/165)
+* resolve positional, locant-prefixed and multi-locant R-group values (1.4.x) ([293f8b6](https://github.com/Beilstein-Institut/BChemXtract/commit/293f8b6d7c6e521779d3b96a1e621e642a1077aa))
+* scope position-variation candidates to the merged scaffold ([268c3c4](https://github.com/Beilstein-Institut/BChemXtract/commit/268c3c4fad293498b53a93486a3d2ea17f3da4c0)), closes [#143](https://github.com/Beilstein-Institut/BChemXtract/issues/143)
+* scope position-variation candidates to the merged scaffold (1.4.x) ([865068c](https://github.com/Beilstein-Institut/BChemXtract/commit/865068cead7fdd8800d4fad6e12434a6ed05dc02))
+* skip positional R-group legends on scaffolds whose R is off a ring ([e399ff3](https://github.com/Beilstein-Institut/BChemXtract/commit/e399ff308303ff4ca226ebebdeb15b2b701829a9))
+* stop CIP ranking from hanging on polycyclic cages ([81c03c5](https://github.com/Beilstein-Institut/BChemXtract/commit/81c03c59081478b282ce1bf8c0002a244970531a))
+* stop CIP ranking from hanging on polycyclic cages (1.4.x) ([2fc315c](https://github.com/Beilstein-Institut/BChemXtract/commit/2fc315c775e86b3afb30659f83f53d1435ab92ba))
+* substitute every locant a multi-locant value names ([6f57c74](https://github.com/Beilstein-Institut/BChemXtract/commit/6f57c748826d018769c9d5bd5a15f5c7cd99fcf4))
+
+
+### Performance Improvements
+
+* build a Markush assignment once per attachment it reaches ([d3f0760](https://github.com/Beilstein-Institut/BChemXtract/commit/d3f07607e37e4baaf1ae336957a63116510c31b1))
+* compare atom coordinates as rounded numbers instead of formatted strings ([0cd9068](https://github.com/Beilstein-Institut/BChemXtract/commit/0cd9068ac9b1da8379e76480202caccab7d45f20))
+* compare atom coordinates as rounded numbers instead of formatted strings ([dc46deb](https://github.com/Beilstein-Institut/BChemXtract/commit/dc46deba5d83428ecba3277bf780d938a32a92b9))
+* extract with the silent CDK builder by default ([9d125bf](https://github.com/Beilstein-Institut/BChemXtract/commit/9d125bfcb34118c9241a41539b46bb4ebc43b847))
+* prune Markush substituent combinations during enumeration ([1fa34e6](https://github.com/Beilstein-Institut/BChemXtract/commit/1fa34e6a29aa6cc6131aeca736f1eced717b601d)), closes [#142](https://github.com/Beilstein-Institut/BChemXtract/issues/142)
+* prune Markush substituent combinations during enumeration (1.4.x) ([694abda](https://github.com/Beilstein-Institut/BChemXtract/commit/694abdab48bd1bd35f506cb11c51ef871ad02068))
+* skip grafting the choices that cannot fail when pruning Markush combinations ([37948ea](https://github.com/Beilstein-Institut/BChemXtract/commit/37948ead145b179a9a24414154ddb7ae0cca23f0))
+* skip grafting the choices that cannot fail when pruning Markush combinations ([9b35169](https://github.com/Beilstein-Institut/BChemXtract/commit/9b35169e8b6528b31a7d2afa8169d2bc0cc665d4))
+
+
+### Continuous Integration
+
+* run release-please on release/1.4.x ([ecb6b06](https://github.com/Beilstein-Institut/BChemXtract/commit/ecb6b06a0ace110cc5c31bfe65b9be7fded87667))
+
+
+### Documentation
+
+* drop ChemicalUtils from the untested classes in LIMITATIONS ([d8fe454](https://github.com/Beilstein-Institut/BChemXtract/commit/d8fe45471094baa9bc0f0902a1545900bf51bd86))
+* drop StereoHandler from the untested classes in LIMITATIONS ([7be342d](https://github.com/Beilstein-Institut/BChemXtract/commit/7be342d5c8e3bd8c5be8b6d1679cc9aad30f09ae))
+* Haworth threshold note and StereoHandler test coverage in LIMITATIONS (1.4.x) ([bee2444](https://github.com/Beilstein-Institut/BChemXtract/commit/bee24447b224eac9b13d96c63237a44e73cb0751))
+* note that the Haworth alignment threshold mirrors CDK ([45a5d1c](https://github.com/Beilstein-Institut/BChemXtract/commit/45a5d1cc1f04036ca88e67ef4dc3a57b3d22043a))
+* state that extraction consumes the parsed document ([9b26723](https://github.com/Beilstein-Institut/BChemXtract/commit/9b26723f5f86cde682130f71a335b0c80589e1cb))
+* state that extraction consumes the parsed document (1.4.x) ([dfc003c](https://github.com/Beilstein-Institut/BChemXtract/commit/dfc003cdf6bdbf0f8bfaa7f17f96e14d9eb34838))
+
 ## [1.4.1](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.0...v1.4.1) (2026-08-21)
 
 
