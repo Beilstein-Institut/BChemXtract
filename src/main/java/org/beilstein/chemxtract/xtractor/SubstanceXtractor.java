@@ -161,6 +161,9 @@ public class SubstanceXtractor {
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder, unrestrictedMarkush);
         markushHandler.addResidueDefinitions(resolveAltGroupDefinitions(page));
+        for (CDFragment fragment : fragments) {
+          markushHandler.addScaffold(fragment.getBounds(), fragment.getRGroupLabels());
+        }
       }
 
       substanceInfo.setNoFragments(fragments.size());

@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.utils;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -163,6 +164,20 @@ public class MarkushHandler {
   /** Legend restrictions already reported, once per drawing like {@link #reportedUnresolved}. */
   private final Set<String> reportedRestricted = new HashSet<>();
 
+  /** The scaffolds on the page, for telling which scaffold a definition block was drawn for. */
+  private final List<Scaffold> scaffolds = new ArrayList<>();
+
+  /** Per label set, the scaffold each block defining it was drawn for; see {@link #owners}. */
+  private final Map<Set<String>, Map<RGroupDefinitionBlock, Scaffold>> owners = new HashMap<>();
+
+  /**
+   * A scaffold on the page.
+   *
+   * @param bounds its bounding box
+   * @param labels the R-group labels drawn on it
+   */
+  private record Scaffold(CDRectangle bounds, Set<String> labels) {}
+
   /**
    * Constructs a MarkushHandler using a CDPage and a CDK builder, expanding only legends that state
    * each structure unambiguously.
@@ -189,6 +204,24 @@ public class MarkushHandler {
     blocks = mergeColumnBlocks(textVisitor.getBlocks());
     smilesParser = new SmilesParser(builder);
     this.unrestricted = unrestricted;
+  }
+
+  /**
+   * Registers a scaffold on the page. Each definition block is drawn for at most one registered
+   * scaffold (see {@link #owners}), and another scaffold takes it only when no block defining its
+   * labels was drawn for it. A row of scaffolds each followed by its table puts a table between two
+   * scaffolds, often nearer to the scaffold after it than that scaffold's own table is;
+   * nearest-block scoping alone would give both scaffolds the same table.
+   *
+   * @param bounds bounding box of the scaffold, the same object later passed to {@code
+   *     replaceRGroups}
+   * @param labels the R-group labels drawn on the scaffold
+   */
+  public void addScaffold(CDRectangle bounds, Set<String> labels) {
+    if (bounds != null && !labels.isEmpty()) {
+      scaffolds.add(new Scaffold(bounds, Set.copyOf(labels)));
+      owners.clear();
+    }
   }
 
   /**
@@ -690,7 +723,8 @@ public class MarkushHandler {
     Map<List<String>, RGroupDefinitionBlock> source = new HashMap<>();
     for (RGroupDefinitionBlock block : blocks) {
       for (CorrelatedGroup group : block.correlatedGroups()) {
-        if (!present.containsAll(group.labels())) {
+        if (!present.containsAll(group.labels())
+            || belongsToAnother(scaffoldBounds, block, group.labels())) {
           continue;
         }
         RGroupDefinitionBlock current = source.get(group.labels());
@@ -2169,7 +2203,9 @@ public class MarkushHandler {
     }
     RGroupDefinitionBlock best = null;
     for (RGroupDefinitionBlock block : blocks) {
-      if (block.bounds() == null || !block.definitions().containsKey(label)) {
+      if (block.bounds() == null
+          || !block.definitions().containsKey(label)
+          || belongsToAnother(scaffoldBounds, block, List.of(label))) {
         continue;
       }
       if (best == null || isNearer(scaffoldBounds, block, best)) {
@@ -2177,6 +2213,141 @@ public class MarkushHandler {
       }
     }
     return best;
+  }
+
+  /**
+   * Whether the block was drawn for another registered scaffold while this scaffold has a block of
+   * its own; see {@link #owners}. A scaffold left without a block of its own keeps every block, so
+   * a legend shared by several scaffolds still reaches all of them.
+   *
+   * @param scaffoldBounds bounding box of this scaffold
+   * @param block the definition block
+   * @param labels the labels the block would define for this scaffold
+   * @return {@code true} if the block belongs to another scaffold
+   */
+  private boolean belongsToAnother(
+      CDRectangle scaffoldBounds, RGroupDefinitionBlock block, List<String> labels) {
+    Map<RGroupDefinitionBlock, Scaffold> owner = owners(labels);
+    Scaffold blockOwner = owner.get(block);
+    return blockOwner != null
+        && blockOwner.bounds() != scaffoldBounds
+        && owner.values().stream().anyMatch(scaffold -> scaffold.bounds() == scaffoldBounds);
+  }
+
+  /**
+   * Pairs the blocks defining a label set with the registered scaffolds carrying it, one block per
+   * scaffold and one scaffold per block, so that the paired distances add up to the least. A table
+   * between two scaffolds thus goes to the one it is nearer to, unless that one has a table of its
+   * own nearly as near and the other does not.
+   *
+   * @param labels the label set
+   * @return the scaffold each paired block was drawn for
+   */
+  private Map<RGroupDefinitionBlock, Scaffold> owners(List<String> labels) {
+    return owners.computeIfAbsent(
+        Set.copyOf(labels),
+        key -> {
+          List<Scaffold> carrying =
+              scaffolds.stream().filter(scaffold -> scaffold.labels().containsAll(key)).toList();
+          List<RGroupDefinitionBlock> defining =
+              blocks.stream()
+                  .filter(block -> block.bounds() != null && defines(block, key))
+                  .toList();
+          Map<RGroupDefinitionBlock, Scaffold> owner = new IdentityHashMap<>();
+          if (carrying.isEmpty() || defining.isEmpty()) {
+            return owner;
+          }
+          double[][] cost = new double[carrying.size()][defining.size()];
+          for (int i = 0; i < carrying.size(); i++) {
+            for (int j = 0; j < defining.size(); j++) {
+              cost[i][j] = rectangleDistance(carrying.get(i).bounds(), defining.get(j).bounds());
+            }
+          }
+          int[] assigned = leastCostAssignment(cost);
+          for (int i = 0; i < carrying.size(); i++) {
+            if (assigned[i] >= 0) {
+              owner.put(defining.get(assigned[i]), carrying.get(i));
+            }
+          }
+          return owner;
+        });
+  }
+
+  /**
+   * Solves the assignment problem (Hungarian method) on a rectangular cost matrix: pairs rows with
+   * columns, each at most once and as many as the smaller side allows, at the least total cost.
+   *
+   * @param cost cost of pairing row {@code i} with column {@code j}
+   * @return the column paired with each row, or {@code -1} for a row left unpaired
+   */
+  static int[] leastCostAssignment(double[][] cost) {
+    int rows = cost.length;
+    int n = Math.max(rows, cost[0].length);
+    // Square the matrix with zero-cost padding; a row paired with a padding column is unpaired.
+    double[] u = new double[n + 1];
+    double[] v = new double[n + 1];
+    int[] rowOf = new int[n + 1];
+    int[] way = new int[n + 1];
+    for (int i = 1; i <= n; i++) {
+      rowOf[0] = i;
+      int column = 0;
+      double[] minimum = new double[n + 1];
+      boolean[] used = new boolean[n + 1];
+      Arrays.fill(minimum, Double.POSITIVE_INFINITY);
+      do {
+        used[column] = true;
+        int row = rowOf[column];
+        double delta = Double.POSITIVE_INFINITY;
+        int next = 0;
+        for (int j = 1; j <= n; j++) {
+          if (!used[j]) {
+            double current = paddedCost(cost, row - 1, j - 1) - u[row] - v[j];
+            if (current < minimum[j]) {
+              minimum[j] = current;
+              way[j] = column;
+            }
+            if (minimum[j] < delta) {
+              delta = minimum[j];
+              next = j;
+            }
+          }
+        }
+        for (int j = 0; j <= n; j++) {
+          if (used[j]) {
+            u[rowOf[j]] += delta;
+            v[j] -= delta;
+          } else {
+            minimum[j] -= delta;
+          }
+        }
+        column = next;
+      } while (rowOf[column] != 0);
+      do {
+        int previous = way[column];
+        rowOf[column] = rowOf[previous];
+        column = previous;
+      } while (column != 0);
+    }
+    int[] assigned = new int[rows];
+    Arrays.fill(assigned, -1);
+    for (int j = 1; j <= n; j++) {
+      int row = rowOf[j] - 1;
+      if (row < rows && j - 1 < cost[0].length) {
+        assigned[row] = j - 1;
+      }
+    }
+    return assigned;
+  }
+
+  private static double paddedCost(double[][] cost, int row, int column) {
+    return row < cost.length && column < cost[0].length ? cost[row][column] : 0;
+  }
+
+  /** Whether the block defines every label of the set, by plain definitions or one table. */
+  private static boolean defines(RGroupDefinitionBlock block, Set<String> labels) {
+    return block.definitions().keySet().containsAll(labels)
+        || block.correlatedGroups().stream()
+            .anyMatch(group -> Set.copyOf(group.labels()).equals(labels));
   }
 
   /**
