@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -400,6 +401,104 @@ public class MarkushHandlerTest {
 
     assertEquals(List.of("Cl"), handler.residueLabelsNear(rect(0, 0, 40, 40)).get("R"));
     assertEquals(List.of("Br"), handler.residueLabelsNear(rect(210, 0, 240, 40)).get("R"));
+  }
+
+  /**
+   * A row of two scaffolds, each followed by its table, puts the first table between them, nearer
+   * to the second scaffold than that scaffold's own table. Each registered scaffold takes the table
+   * paired with it. Geometry mirrors the para row of {@code volumeTest/markush/m28732236-i2}
+   * (4a-4d, 4e-4j), where the second scaffold took the 4a-4d table 4 pt away over its own 5 pt.
+   */
+  @Test
+  public void tableBetweenTwoScaffoldsStaysWithTheScaffoldBeforeIt() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(45, 0, 80, 40), "R = NO2, Br"));
+    page.addText(textAt(rect(129, 0, 160, 40), "R = CN, Cl, F"));
+    CDRectangle first = rect(0, 0, 40, 40);
+    CDRectangle second = rect(84, 0, 124, 40);
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    handler.addScaffold(first, Set.of("R"));
+    handler.addScaffold(second, Set.of("R"));
+
+    assertEquals(
+        List.of("NO2", "Br"),
+        handler.residueLabelsNear(first).get("R"),
+        "the first scaffold keeps the table after it");
+    assertEquals(
+        List.of("CN", "Cl", "F"),
+        handler.residueLabelsNear(second).get("R"),
+        "the second scaffold takes its own table, not the nearer one before it");
+  }
+
+  /** The same row with positional tables: the second scaffold enumerates the rows of its own. */
+  @Test
+  public void correlatedTableBetweenTwoScaffoldsStaysWithTheScaffoldBeforeIt() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(45, 0, 80, 40), "1a: R1 = R2 = H\n1b: R1 = F, R2 = H"));
+    page.addText(
+        textAt(
+            rect(129, 0, 160, 40),
+            "2a: R1 = Cl, R2 = H\n2b: R1 = H, R2 = Br\n2c: R1 = H, R2 = CN"));
+    CDRectangle first = rect(0, 0, 40, 40);
+    CDRectangle second = rect(84, 0, 124, 40);
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    handler.addScaffold(first, Set.of("R1", "R2"));
+    handler.addScaffold(second, Set.of("R1", "R2"));
+
+    assertEquals(
+        2,
+        handler.replaceRGroups(List.of(twoResidueScaffold()), first, new HashSet<>()).size(),
+        "the first scaffold enumerates the two rows after it");
+    assertEquals(
+        3,
+        handler.replaceRGroups(List.of(twoResidueScaffold()), second, new HashSet<>()).size(),
+        "the second scaffold enumerates the three rows of its own table");
+  }
+
+  /** One legend drawn for two scaffolds reaches both: a scaffold left without a table keeps it. */
+  @Test
+  public void sharedLegendReachesEveryScaffold() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(45, 0, 80, 40), "R = NO2, Br"));
+    CDRectangle first = rect(0, 0, 40, 40);
+    CDRectangle second = rect(84, 0, 124, 40);
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    handler.addScaffold(first, Set.of("R"));
+    handler.addScaffold(second, Set.of("R"));
+
+    assertEquals(List.of("NO2", "Br"), handler.residueLabelsNear(first).get("R"));
+    assertEquals(
+        List.of("NO2", "Br"),
+        handler.residueLabelsNear(second).get("R"),
+        "the legend must reach the scaffold it was not paired with");
+  }
+
+  /**
+   * The pairing minimises the total cost; taking the cheapest pair first would pair row 0 with
+   * column 0 and leave row 1 the expensive column 1.
+   */
+  @Test
+  public void leastCostAssignmentMinimisesTheTotalNotEachPair() {
+    double[][] cost = {{1, 2}, {2, 100}};
+
+    assertEquals(List.of(1, 0), toList(MarkushHandler.leastCostAssignment(cost)));
+  }
+
+  /** With more rows than columns, the rows that would cost the most stay unpaired. */
+  @Test
+  public void leastCostAssignmentLeavesSurplusRowsUnpaired() {
+    double[][] tall = {{1, 9}, {9, 1}, {5, 5}};
+    double[][] wide = {{9, 1, 5}, {1, 9, 5}};
+
+    assertEquals(List.of(0, 1, -1), toList(MarkushHandler.leastCostAssignment(tall)));
+    assertEquals(List.of(1, 0), toList(MarkushHandler.leastCostAssignment(wide)));
+  }
+
+  private static List<Integer> toList(int[] values) {
+    return Arrays.stream(values).boxed().toList();
   }
 
   /** Scaffold atom with 2D coordinates at the given x, on the y = 0 axis. */
