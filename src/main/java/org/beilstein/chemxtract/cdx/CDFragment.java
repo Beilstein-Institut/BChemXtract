@@ -23,8 +23,11 @@ package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDSequenceType;
 import org.beilstein.chemxtract.utils.Definitions;
@@ -266,6 +269,26 @@ public class CDFragment extends CDObject {
         .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
         .filter(Objects::nonNull)
         .anyMatch(text -> Definitions.RGROUP_LABEL_PATTERN.matcher(text).find());
+  }
+
+  /**
+   * Returns the R-group labels drawn on the fragment's atoms, such as {@code R'} for an atom
+   * labelled {@code R'}.
+   *
+   * @return the distinct labels, in drawing order
+   */
+  public Set<String> getRGroupLabels() {
+    Set<String> labels = new LinkedHashSet<>();
+    for (CDAtom atom : atoms) {
+      if (atom.getText() != null) {
+        Matcher matcher =
+            Definitions.RGROUP_LABEL_PATTERN.matcher(atom.getText().getText().getText());
+        if (matcher.find()) {
+          labels.add(matcher.group(1));
+        }
+      }
+    }
+    return labels;
   }
 
   public List<String> getRGroups() {
