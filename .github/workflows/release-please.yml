@@ -2,7 +2,7 @@ name: Release Please
 
 on:
   push:
-    branches: [main]
+    branches: [release/1.4.x]
   workflow_dispatch:
 
 permissions:
@@ -20,3 +20,4 @@ jobs:
           token: ${{ secrets.RELEASE_BCHEMXTRACT }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: release/1.4.x
