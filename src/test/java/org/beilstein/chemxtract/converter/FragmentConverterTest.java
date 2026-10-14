@@ -94,6 +94,29 @@ public class FragmentConverterTest {
   }
 
   /**
+   * ChemDraw can store a flat 3D position (one z for every atom) next to a 2D drawing. Flat
+   * coordinates carry no configuration, so the wedges of the drawing still decide it.
+   */
+  @Test
+  public void flatThreeDimensionalCoordinatesKeepTheWedges() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+    CDFragment flat = halomethane(false);
+    flat.getAtoms()
+        .forEach(
+            atom ->
+                atom.setPosition3D(
+                    new CDPoint3D(
+                        atom.getPosition2D().getX(), atom.getPosition2D().getY(), -0.0005f)));
+
+    String wedged = smiles.create(converter.convert(halomethane(false)));
+
+    assertThat(smiles.create(converter.convert(flat)))
+        .as("flat 3D coordinates keep the configuration of the wedges")
+        .isEqualTo(wedged);
+  }
+
+  /**
    * Builds bromochlorofluoromethane with fluorine towards the viewer, either drawn in 2D with a
    * wedge or placed in 3D, both in ChemDraw's frame.
    *
