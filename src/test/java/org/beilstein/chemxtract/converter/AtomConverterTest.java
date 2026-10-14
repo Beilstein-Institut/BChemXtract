@@ -127,7 +127,7 @@ public class AtomConverterTest {
     assertNotNull(p);
     assertEquals(1.0, p.x, 0.0001);
     assertEquals(-2.0, p.y, 0.0001); // inverted
-    assertEquals(3.0, p.z, 0.0001);
+    assertEquals(-3.0, p.z, 0.0001); // inverted with y, a rotation rather than a mirror
   }
 
   @Test

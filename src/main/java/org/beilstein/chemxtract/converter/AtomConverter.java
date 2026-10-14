@@ -200,12 +200,13 @@ public class AtomConverter {
     double x;
     double y;
     double z;
-    // ChemDraw and CDK use different coordination system, therefore the '-' in the y coordinate
+    // ChemDraw's y axis points down, CDK's up. In 3D, z is negated with y: ChemDraw's z points
+    // into the screen, and flipping y alone would mirror the molecule and invert every stereocentre
     if (source.getPosition3D() != null) {
       CDPoint3D point3D = source.getPosition3D();
       x = point3D.getX();
       y = -point3D.getY();
-      z = point3D.getZ();
+      z = -point3D.getZ();
       atom.setPoint3d(new Point3d(x, y, z));
       atom.setPoint2d(new Point2d(x, y));
     } else if (source.getPosition2D() != null) {
