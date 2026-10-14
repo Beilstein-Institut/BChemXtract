@@ -56,6 +56,9 @@ import org.openscience.cdk.stereo.TetrahedralChirality;
  */
 public class StereoHandler {
 
+  /** Spread of z, in ChemDraw points, below which 3D coordinates count as flat. */
+  private static final double FLAT_Z_TOLERANCE = 0.01;
+
   private StereoHandler() {
     // utility class, prevent instantiation
   }
@@ -167,13 +170,28 @@ public class StereoHandler {
    * missing points. Every atom placed by {@code AtomConverter} has a 2D position, so the 2D factory
    * is the safe choice for such mixed fragments.
    *
+   * <p>ChemDraw also stores flat 3D positions, one z for every atom, next to a wedged drawing. They
+   * carry no configuration, and the 3D factory would ignore the wedges and read noise instead, so
+   * flat 3D coordinates use the 2D factory too.
+   *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @return a {@link StereoElementFactory} instance for 2D or 3D
    */
   private static StereoElementFactory selectFactory(IAtomContainer atomContainer) {
-    return GeometryUtil.has3DCoordinates(atomContainer)
+    return GeometryUtil.has3DCoordinates(atomContainer) && !isFlat(atomContainer)
         ? StereoElementFactory.using3DCoordinates(atomContainer)
         : StereoElementFactory.using2DCoordinates(atomContainer);
+  }
+
+  /** Whether all atoms share one z coordinate, within {@link #FLAT_Z_TOLERANCE}. */
+  private static boolean isFlat(IAtomContainer atomContainer) {
+    double min = Double.POSITIVE_INFINITY;
+    double max = Double.NEGATIVE_INFINITY;
+    for (IAtom atom : atomContainer.atoms()) {
+      min = Math.min(min, atom.getPoint3d().z);
+      max = Math.max(max, atom.getPoint3d().z);
+    }
+    return max - min < FLAT_Z_TOLERANCE;
   }
 
   /**

@@ -98,6 +98,29 @@ public class FragmentConverterTest {
   }
 
   /**
+   * ChemDraw can store a flat 3D position (one z for every atom) next to a 2D drawing. Flat
+   * coordinates carry no configuration, so the wedges of the drawing still decide it.
+   */
+  @Test
+  public void flatThreeDimensionalCoordinatesKeepTheWedges() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+    CDFragment flat = halomethane(false);
+    flat.getAtoms()
+        .forEach(
+            atom ->
+                atom.setPosition3D(
+                    new CDPoint3D(
+                        atom.getPosition2D().getX(), atom.getPosition2D().getY(), -0.0005f)));
+
+    String wedged = smiles.create(converter.convert(halomethane(false)));
+
+    assertThat(smiles.create(converter.convert(flat)))
+        .as("flat 3D coordinates keep the configuration of the wedges")
+        .isEqualTo(wedged);
+  }
+
+  /**
    * A wedge keeps its narrow end where it was drawn when the abbreviation at its other end is
    * expanded. Stored from the label to the centre as {@code WedgeEnd}, it is the same wedge as one
    * stored from the centre as {@code WedgeBegin}; {@code OH} expands to one atom, {@code OMe} to
