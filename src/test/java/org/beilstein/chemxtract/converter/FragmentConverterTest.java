@@ -28,13 +28,17 @@ import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 
 /**
  * Issue #144: ChemDraw reads an atom-numbering label such as {@code P2} as the formula P&#8322; and
@@ -68,6 +72,54 @@ public class FragmentConverterTest {
     assertThat(countSymbol(container, "N"))
         .as("N3 is azide and must keep all three nitrogen atoms")
         .isEqualTo(3);
+  }
+
+  /**
+   * ChemDraw stores 3D positions in the frame of its 2D drawing, x right and y down, so z points
+   * into the screen. A fluorine wedged towards the viewer in 2D and the same fluorine placed at
+   * negative z in 3D are one configuration.
+   */
+  @Test
+  public void threeDimensionalCentreKeepsTheHandednessOfTheDrawing() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+
+    String wedged = smiles.create(converter.convert(halomethane(false)));
+    String threeD = smiles.create(converter.convert(halomethane(true)));
+
+    assertThat(wedged).as("the wedged drawing defines a stereocentre").contains("@");
+    assertThat(threeD)
+        .as("3D coordinates give the configuration of the wedged drawing")
+        .isEqualTo(wedged);
+  }
+
+  /**
+   * Builds bromochlorofluoromethane with fluorine towards the viewer, either drawn in 2D with a
+   * wedge or placed in 3D, both in ChemDraw's frame.
+   *
+   * @param threeD {@code true} for 3D positions, {@code false} for a 2D drawing with a wedge
+   * @return the assembled {@link CDFragment}
+   */
+  private CDFragment halomethane(boolean threeD) {
+    CDAtom carbon = element(6, 0, 0);
+    CDAtom fluorine = element(9, 0, -1);
+    CDAtom chlorine = element(17, -0.87f, 0.5f);
+    CDAtom bromine = element(35, 0.87f, 0.5f);
+    CDBond toFluorine = bond(carbon, fluorine);
+    if (threeD) {
+      carbon.setPosition3D(new CDPoint3D(0, 0, 0));
+      fluorine.setPosition3D(new CDPoint3D(0, -1, -0.8f));
+      chlorine.setPosition3D(new CDPoint3D(-0.87f, 0.5f, 0.3f));
+      bromine.setPosition3D(new CDPoint3D(0.87f, 0.5f, 0.3f));
+    } else {
+      toFluorine.setBondDisplay(CDBondDisplay.WedgeBegin);
+    }
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(new ArrayList<>(List.of(carbon, fluorine, chlorine, bromine)));
+    fragment.addBond(toFluorine);
+    fragment.addBond(bond(carbon, chlorine));
+    fragment.addBond(bond(carbon, bromine));
+    return fragment;
   }
 
   /**
