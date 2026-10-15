@@ -3,7 +3,7 @@ run-openbabel-performance.sh, deduplicating per file on InChIKey.
 
 Usage:
   python run-toolkit-performance.py {rdkit|indigo|chemscanner} [corpus-dir] [--ext cdx|cdxml|all]
-                                    [--timeout SECONDS] [--tsv OUT]
+                                    [--timeout SECONDS] [--tsv OUT] [--dump OUT]
 
 Each file runs in its own worker process, capped at 120 s and 4 GB, so a hang or crash
 costs one file, not the run;
@@ -116,6 +116,7 @@ def main():
     ap.add_argument("--ext", choices=["cdx", "cdxml", "all"], default="cdx")
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--tsv", help="write per-file results here")
+    ap.add_argument("--dump", help="write every structure here (file, SMILES, InChIKey), e.g. for compare_structures.py")
     a = ap.parse_args()
 
     root = Path(a.corpus)
@@ -125,10 +126,19 @@ def main():
     print("Dedup: per-file InChIKey, with canonical-SMILES fallback where InChI is unavailable.\n")
 
     rows = []
+    dump = open(a.dump, "w") if a.dump else None
+    if dump:
+        dump.write("file\tsmiles\tinchikey\n")
     for f in files:
-        s = summarise(run_one(a.tool, f, a.timeout))
+        rec = run_one(a.tool, f, a.timeout)
+        if dump:
+            for smi, key in rec["structures"]:
+                dump.write(f"{f.relative_to(root)}\t{smi}\t{key}\n")
+        s = summarise(rec)
         s["file"] = str(f.relative_to(root))
         rows.append(s)
+    if dump:
+        dump.close()
 
     if a.tsv:
         with open(a.tsv, "w") as out:

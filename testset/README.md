@@ -10,6 +10,8 @@ Everything needed to reproduce the comparisons in
 | `run-bchemxtract-performance.sh` | BChemXtract benchmark; reads `.cdx` and `.cdxml` |
 | `run-openbabel-performance.sh` | Open Babel benchmark; reads `.cdx` only |
 | `toolkits/` | RDKit, Indigo and ChemScanner benchmark (`run-toolkit-performance.py`) and its per-file workers |
+| `compare_structures.py` | Compares reference and predicted SMILES row by row and classifies each difference (skeleton, charge/H, stereo conflict / extra / omission) |
+| `BChemXtract-1.4.1-structure-agreement.pdf` | Per-structure agreement of RDKit, Indigo, ChemScanner and Open Babel with BChemXtract 1.4.1, 2026-10-15 |
 | `BChemXtract-1.4.1-vs-ChemScanner-RDKit-Indigo-performance.pdf` | 1.4.1 vs ChemScanner 0.1.3, RDKit 2026.09.1, Indigo 1.46.0 (+ Open Babel 3.1.1), `.cdx` and `.cdxml`, 2026-10-15 |
 | `BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf` | Current report — 1.4.1 vs Open Babel 3.1.1, 225 files, 2026-09-09 |
 | `BChemXtract-vs-OpenBabel-performance.pdf` | Previous report — v1.0 & v1.1.3 vs Open Babel 3.1.0, 200 files, 2026-07-08 |
@@ -31,6 +33,19 @@ GEM_HOME=/tmp/gems gem install chem_scanner        # pulls a prebuilt rdkit_chem
 GEM_HOME=/tmp/gems /tmp/tk/bin/python -I testset/toolkits/run-toolkit-performance.py \
     {rdkit|indigo|chemscanner} [corpus-dir] --ext {cdx|cdxml|all} [--tsv per-file.tsv]
 ```
+
+Structure agreement (per structure, BChemXtract as the reference; the corpus has no ground truth):
+
+```bash
+java -cp /tmp/bcxdump:JAR BCXDump testset/corpus bcx.tsv false   # compile testset/toolkits/BCXDump.java against the fat jar first
+testset/toolkits/obabel-dump.sh testset/corpus obabel.tsv
+python -I testset/toolkits/run-toolkit-performance.py rdkit testset/corpus --ext all --dump rdkit.tsv
+python -I testset/toolkits/pair_structures.py bcx.tsv rdkit.tsv pairs-rdkit.tsv
+python -I testset/toolkits/run_compare.py pairs-rdkit.tsv cmp-rdkit       # wraps compare_structures.py
+```
+
+RDKit hangs on a few corpus structures, in parsing as well as in its CDX reader, so the pairing and
+comparison steps run every RDKit call in capped worker processes.
 
 ChemScanner 0.1.3 needs one compatibility patch against current `rdkit_chem`. The worker applies it at load
 time and leaves the gem untouched; see `toolkits/chemscanner_worker.rb`.
