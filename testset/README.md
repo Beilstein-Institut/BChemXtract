@@ -1,13 +1,16 @@
 # Test set and performance benchmarks
 
-Everything needed to reproduce the comparison in
-[`BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf`](BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf).
+Everything needed to reproduce the comparisons in
+[`BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf`](BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf) and
+[`BChemXtract-1.4.1-vs-ChemScanner-RDKit-Indigo-performance.pdf`](BChemXtract-1.4.1-vs-ChemScanner-RDKit-Indigo-performance.pdf).
 
 | Path | Contents |
 |---|---|
 | `corpus/` | 225 binary `.cdx` + 21 `.cdxml` ChemDraw files, laid out as in `src/test/resources` so paths quoted in the reports resolve here |
 | `run-bchemxtract-performance.sh` | BChemXtract benchmark; reads `.cdx` and `.cdxml` |
 | `run-openbabel-performance.sh` | Open Babel benchmark; reads `.cdx` only |
+| `toolkits/` | RDKit, Indigo and ChemScanner benchmark (`run-toolkit-performance.py`) and its per-file workers |
+| `BChemXtract-1.4.1-vs-ChemScanner-RDKit-Indigo-performance.pdf` | 1.4.1 vs ChemScanner 0.1.3, RDKit 2026.09.1, Indigo 1.46.0 (+ Open Babel 3.1.1), `.cdx` and `.cdxml`, 2026-10-15 |
 | `BChemXtract-1.4.1-vs-OpenBabel-3.1.1-performance.pdf` | Current report — 1.4.1 vs Open Babel 3.1.1, 225 files, 2026-09-09 |
 | `BChemXtract-vs-OpenBabel-performance.pdf` | Previous report — v1.0 & v1.1.3 vs Open Babel 3.1.0, 200 files, 2026-07-08 |
 
@@ -19,6 +22,18 @@ From the repository root. Both scripts default to `testset/corpus`; pass a direc
 testset/run-bchemxtract-performance.sh    # needs JDK 25 and Maven; builds the fat jar on first run
 testset/run-openbabel-performance.sh      # needs `obabel` on PATH
 ```
+
+RDKit, Indigo and ChemScanner (one worker process per file, capped at 120 s and 4 GB):
+
+```bash
+python3 -m venv /tmp/tk && /tmp/tk/bin/pip install rdkit epam.indigo
+GEM_HOME=/tmp/gems gem install chem_scanner        # pulls a prebuilt rdkit_chem
+GEM_HOME=/tmp/gems /tmp/tk/bin/python -I testset/toolkits/run-toolkit-performance.py \
+    {rdkit|indigo|chemscanner} [corpus-dir] --ext {cdx|cdxml|all} [--tsv per-file.tsv]
+```
+
+ChemScanner 0.1.3 needs one compatibility patch against current `rdkit_chem`. The worker applies it at load
+time and leaves the gem untouched; see `toolkits/chemscanner_worker.rb`.
 
 `pom.xml` sets `<java.version>25</java.version>`, so the build and the fat jar both require JDK 25 —
 an older JDK fails with `release version 25 not supported`, and a JDK 25-built jar will not run on one
