@@ -32,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDDocumentUtils;
@@ -77,6 +78,10 @@ public class SubstanceXtractor {
 
   private final IChemObjectBuilder builder;
   private static final Logger LOGGER = LoggerFactory.getLogger(SubstanceXtractor.class);
+
+  /** The double-bond (cis/trans) layer of an InChI. */
+  private static final Pattern DOUBLE_BOND_LAYER = Pattern.compile("/b[^/]*");
+
   private boolean unrestrictedMarkush;
 
   /**
@@ -384,7 +389,33 @@ public class SubstanceXtractor {
         addIfBuilt(substances, container, fragment, variablePosition, false);
       }
     }
-    return substances;
+    return variablePosition ? withoutDoubleBondStereoTwins(substances) : substances;
+  }
+
+  /**
+   * Drops position-variation candidates that repeat an earlier one: the same SMILES, and an InChI
+   * that differs only in the double-bond layer. Each candidate is laid out on its own, and the
+   * InChI reads a double-bond configuration from that layout even where BChemXtract's stereo
+   * perception finds none (a double bond in a six-membered ring of a macrocycle), so such
+   * candidates are one substance drawn twice. Candidates whose SMILES differ are kept, even when
+   * only E/Z sets them apart.
+   *
+   * @param substances the substances built from one fragment's candidates
+   * @return the substances without double-bond stereo twins, in their original order
+   */
+  private static List<BCXSubstance> withoutDoubleBondStereoTwins(List<BCXSubstance> substances) {
+    Set<String> seen = new HashSet<>();
+    List<BCXSubstance> kept = new ArrayList<>();
+    for (BCXSubstance substance : substances) {
+      String inchi = substance.getInchi();
+      if (inchi == null
+          || inchi.isEmpty()
+          || seen.add(
+              substance.getSmiles() + " " + DOUBLE_BOND_LAYER.matcher(inchi).replaceAll(""))) {
+        kept.add(substance);
+      }
+    }
+    return kept;
   }
 
   /**
