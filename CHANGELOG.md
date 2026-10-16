@@ -2,6 +2,13 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.3](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.2...v1.4.3) (2026-10-16)
+
+
+### Bug Fixes
+
+* read spelled-out ortho/meta/para as ring positions in R-group values ([13333ac](https://github.com/Beilstein-Institut/BChemXtract/commit/13333ac4c675ad5ac83c44000139afc49be9ced3))
+
 ## [1.4.2](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.1...v1.4.2) (2026-10-13)
 
 
