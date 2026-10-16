@@ -829,6 +829,34 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Spelled-out positions ({@code ortho-}, {@code meta-}, {@code para-}) name a ring position just
+   * as {@code o-}, {@code m-}, {@code p-} do, so a position-variation R-group takes them.
+   */
+  @Test
+  public void spelledOutPositionPlacesAVariableAttachment() throws Exception {
+    Map<String, String> expected = new LinkedHashMap<>();
+    expected.put("ortho-Me", "Cc1ccccc1Cl");
+    expected.put("meta-Me", "Cc1cccc(Cl)c1");
+    expected.put("para-Me", "Cc1ccc(Cl)cc1");
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      List<IAtomContainer> candidates =
+          List.of(
+              scaffoldFromSmiles("Clc1ccccc1", "R", 2), scaffoldFromSmiles("Clc1ccccc1", "R", 3));
+
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(candidates, rect(0, 0, 40, 40), new HashSet<>());
+
+      assertEquals(1, results.size(), entry.getKey() + " must place the variable attachment");
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey() + " must land on the position it names");
+    }
+  }
+
+  /**
    * A substituent that is a lone hydrogen leaves the ring atom it replaces with the hydrogen count
    * it already had, so it too gives the same structure from every candidate atom.
    */
