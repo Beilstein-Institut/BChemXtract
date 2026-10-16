@@ -28,6 +28,7 @@ import javax.vecmath.Point3d;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 class ChemicalUtilsTest {
@@ -37,6 +38,44 @@ class ChemicalUtilsTest {
         SilentChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
     container.addAtom(SilentChemObjectBuilder.getInstance().newInstance(IAtom.class, "C"));
     container.addAtom(SilentChemObjectBuilder.getInstance().newInstance(IAtom.class, "C"));
+    return container;
+  }
+
+  /**
+   * A wavy substituent bond at a double bond is ChemDraw's mark for "either E or Z". The SMILES
+   * already leaves such a bond unspecified; the InChI read the configuration from the drawn
+   * geometry instead.
+   */
+  @Test
+  void wavyBondAtADoubleBondLeavesItsConfigurationOutOfTheInchi() throws Exception {
+    String drawn = ChemicalUtils.getInChI(transButene(IBond.Display.Solid)).getInchi();
+    String wavy = ChemicalUtils.getInChI(transButene(IBond.Display.Wavy)).getInchi();
+
+    assertThat(drawn).as("the drawn trans-2-butene has a double-bond configuration").contains("/b");
+    assertThat(wavy)
+        .as("a wavy substituent bond leaves the configuration open")
+        .doesNotContain("/b");
+  }
+
+  /** Trans-2-butene in 2D, with the given display on the bond from C1 to C2. */
+  private static IAtomContainer transButene(IBond.Display firstBond) {
+    IAtomContainer container =
+        SilentChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
+    double[][] xy = {{0, 0}, {0.87, 0.5}, {1.73, 0}, {2.6, 0.5}};
+    for (double[] p : xy) {
+      IAtom carbon = SilentChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
+      carbon.setPoint2d(new Point2d(p[0], p[1]));
+      carbon.setImplicitHydrogenCount(0);
+      container.addAtom(carbon);
+    }
+    container.addBond(0, 1, IBond.Order.SINGLE);
+    container.addBond(1, 2, IBond.Order.DOUBLE);
+    container.addBond(2, 3, IBond.Order.SINGLE);
+    container.getAtom(0).setImplicitHydrogenCount(3);
+    container.getAtom(1).setImplicitHydrogenCount(1);
+    container.getAtom(2).setImplicitHydrogenCount(1);
+    container.getAtom(3).setImplicitHydrogenCount(3);
+    container.getBond(0).setDisplay(firstBond);
     return container;
   }
 
