@@ -103,13 +103,14 @@ public class MarkushHandler {
   /**
    * A substituent written as {@code <positions>-<group>}, e.g. {@code 3-OMe}, {@code p-Cl} or
    * {@code 5,7-Me2}: the group sits on each named ring position, counted from the ring's attachment
-   * atom. A position is either a number or one of the ortho/meta/para prefixes, which chemists use
-   * interchangeably with 2/3/4. Only tried after the plain abbreviation lookup fails, because many
-   * abbreviations legitimately start the same way ({@code 2-py}, {@code 4-ClPh}, {@code p-Tol}) and
-   * there the prefix belongs to the substituent's own name.
+   * atom. A position is either a number or one of the ortho/meta/para prefixes, abbreviated ({@code
+   * o}/{@code m}/{@code p}) or spelled out, which chemists use interchangeably with 2/3/4. Only
+   * tried after the plain abbreviation lookup fails, because many abbreviations legitimately start
+   * the same way ({@code 2-py}, {@code 4-ClPh}, {@code p-Tol}) and there the prefix belongs to the
+   * substituent's own name.
    */
   private static final Pattern POSITIONAL_SUBSTITUENT =
-      Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|[omp])-(.+)");
+      Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|ortho|meta|para|[omp])-(.+)");
 
   /**
    * A substituted phenyl group named by its substituent's ring position, e.g. {@code o-Cl-Ph-},
@@ -1548,13 +1549,13 @@ public class MarkushHandler {
    * The 1-based ring position a positional token names: {@code o}/{@code m}/{@code p} and {@code
    * ortho}/{@code meta}/{@code para} are the positions 2/3/4, any other token is the number itself.
    *
-   * <p>{@link #POSITIONAL_SUBSTITUENT} already restricts the token to one or two digits or a single
-   * {@code o}/{@code m}/{@code p}, so the parse cannot currently fail. It is guarded anyway: the
-   * guarantee lives in a pattern far from here, and an unreadable token must drop the one legend
-   * value rather than abort the whole document — {@code NumberFormatException} is unchecked and
-   * {@code SubstanceXtractor} catches only {@code IOException} and {@code
-   * CloneNotSupportedException} around R-group expansion. {@code -1} is a position no ring has, so
-   * the existing range check in {@link #ringAtomAtDistance} rejects it and the value is skipped.
+   * <p>{@link #POSITIONAL_SUBSTITUENT} already restricts the token to one or two digits or an
+   * ortho/meta/para prefix, so the parse cannot currently fail. It is guarded anyway: the guarantee
+   * lives in a pattern far from here, and an unreadable token must drop the one legend value rather
+   * than abort the whole document — {@code NumberFormatException} is unchecked and {@code
+   * SubstanceXtractor} catches only {@code IOException} and {@code CloneNotSupportedException}
+   * around R-group expansion. {@code -1} is a position no ring has, so the existing range check in
+   * {@link #ringAtomAtDistance} rejects it and the value is skipped.
    *
    * @param token the position part of a {@code <position>-<group>} value
    * @return the ring position counted from the attachment (ipso) atom, or {@code -1} if unreadable
