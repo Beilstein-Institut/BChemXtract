@@ -74,6 +74,7 @@ public class StereoHandler {
    */
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
+    flattenBoldBondsAtWedgedCentres(bondMap);
     Set<Projection> projections = flattenProjectionRings(atomContainer, bondMap);
     List<IStereoElement> elements =
         selectFactory(atomContainer)
@@ -88,6 +89,31 @@ public class StereoHandler {
     }
     filterWavyBonds(elements, bondMap);
     elements.forEach(atomContainer::addStereoElement);
+  }
+
+  /**
+   * Draws a bold bond as a plain bond when its first atom already has a wedge or hashed wedge
+   * pointing from it. A bold bond is read as a wedge from its first atom, but next to a real wedge
+   * it is a perspective edge (ChemDraw ignores it), and a second wedge at the centre can invert it.
+   *
+   * @param bondMap mapping of {@link CDBond} to {@link IBond} giving each bond's drawn style
+   */
+  private static void flattenBoldBondsAtWedgedCentres(Map<CDBond, IBond> bondMap) {
+    Set<CDAtom> wedgedCentres = new HashSet<>();
+    for (CDBond bond : bondMap.keySet()) {
+      switch (bond.getBondDisplay()) {
+        case WedgeBegin, WedgedHashBegin -> wedgedCentres.add(bond.getBegin());
+        case WedgeEnd, WedgedHashEnd -> wedgedCentres.add(bond.getEnd());
+        default -> {}
+      }
+    }
+    bondMap.forEach(
+        (cdBond, bond) -> {
+          if (cdBond.getBondDisplay() == CDBondDisplay.Bold
+              && wedgedCentres.contains(cdBond.getBegin())) {
+            bond.setDisplay(IBond.Display.Solid);
+          }
+        });
   }
 
   /**

@@ -94,6 +94,49 @@ public class FragmentConverterTest {
   }
 
   /**
+   * A bold bond is read as a wedge from its first atom, but next to a real wedge at that atom it is
+   * a perspective edge: ChemDraw ignores it, and reading it as a second wedge inverts the centre.
+   */
+  @Test
+  public void boldBondAtAWedgedCentreIsNotAStereoMark() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+
+    String wedged = smiles.create(converter.convert(crowdedCentre(CDBondDisplay.Solid)));
+    String perspective = smiles.create(converter.convert(crowdedCentre(CDBondDisplay.Bold)));
+
+    assertThat(wedged).as("the wedged drawing defines a stereocentre").contains("@");
+    assertThat(perspective)
+        .as("the bold bond to bromine does not change the configuration of the wedge")
+        .isEqualTo(wedged);
+  }
+
+  /**
+   * Builds bromochlorofluoromethane with its three substituents within 140 degrees of each other,
+   * fluorine wedged towards the viewer, as at a ring fusion drawn in perspective (the geometry is
+   * taken from {@code m25422595-i8.cdx}).
+   *
+   * @param toBromine the display of the bond from carbon to bromine
+   * @return the assembled {@link CDFragment}
+   */
+  private CDFragment crowdedCentre(CDBondDisplay toBromine) {
+    CDAtom carbon = element(6, 0, 0);
+    CDAtom fluorine = element(9, 0.20f, -0.98f);
+    CDAtom bromine = element(35, 0.89f, -0.46f);
+    CDAtom chlorine = element(17, -0.97f, -0.22f);
+    CDBond wedge = bond(carbon, fluorine);
+    wedge.setBondDisplay(CDBondDisplay.WedgeBegin);
+    CDBond bold = bond(carbon, bromine);
+    bold.setBondDisplay(toBromine);
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(new ArrayList<>(List.of(carbon, fluorine, bromine, chlorine)));
+    fragment.addBond(wedge);
+    fragment.addBond(bold);
+    fragment.addBond(bond(carbon, chlorine));
+    return fragment;
+  }
+
+  /**
    * Builds bromochlorofluoromethane with fluorine towards the viewer, either drawn in 2D with a
    * wedge or placed in 3D, both in ChemDraw's frame.
    *
