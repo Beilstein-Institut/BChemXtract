@@ -64,12 +64,17 @@ public class ChemicalUtils {
   /**
    * Generates an InChI representation for the given AtomContainer.
    *
+   * <p>The InChI library reads double-bond configurations from the drawn coordinates and ignores
+   * wavy bonds, ChemDraw's mark for "either E or Z". A double bond with a wavy bond at one of its
+   * atoms is therefore passed as unspecified, so the InChI leaves it open as the SMILES does.
+   *
    * @param atomContainer AtomContainer for which the InChI representation is generated
    * @return InChIGenerator representing the InChI representation of the AtomContainer, returns null
    *     if InChI generation fails
    * @throws CDKException If InChI generation encounters an error or warning
    */
   public static InChIGenerator getInChI(IAtomContainer atomContainer) throws CDKException {
+    atomContainer = withWavyDoubleBondsUnspecified(atomContainer);
     InChIGeneratorFactory factory = InChIGeneratorFactory.getInstance();
     StringBuilder options = new StringBuilder();
     InchiFlag[] opts = new InchiFlag[] {InchiFlag.Polymers, InchiFlag.NPZz};
@@ -148,6 +153,41 @@ public class ChemicalUtils {
       }
     }
     return createSmiles(atomContainer, SmiFlavor.CxSmilesWithCoords);
+  }
+
+  /**
+   * Returns a copy whose double bonds with a wavy bond at either atom are marked {@link
+   * IBond.Stereo#E_OR_Z}, or the container itself when it has none.
+   */
+  private static IAtomContainer withWavyDoubleBondsUnspecified(IAtomContainer atomContainer) {
+    List<Integer> unspecified = new ArrayList<>();
+    for (IBond bond : atomContainer.bonds()) {
+      if (bond.getOrder() == IBond.Order.DOUBLE && hasWavyNeighbour(atomContainer, bond)) {
+        unspecified.add(atomContainer.indexOf(bond));
+      }
+    }
+    if (unspecified.isEmpty()) {
+      return atomContainer;
+    }
+    IAtomContainer copy;
+    try {
+      copy = atomContainer.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new IllegalStateException("Could not copy the structure for InChI generation", e);
+    }
+    unspecified.forEach(index -> copy.getBond(index).setStereo(IBond.Stereo.E_OR_Z));
+    return copy;
+  }
+
+  private static boolean hasWavyNeighbour(IAtomContainer atomContainer, IBond doubleBond) {
+    for (IAtom atom : doubleBond.atoms()) {
+      for (IBond bond : atomContainer.getConnectedBondsList(atom)) {
+        if (bond != doubleBond && bond.getDisplay() == IBond.Display.Wavy) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
