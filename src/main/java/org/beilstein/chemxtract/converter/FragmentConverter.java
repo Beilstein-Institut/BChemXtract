@@ -457,12 +457,26 @@ public class FragmentConverter {
 
     List<IBond> connectedBonds = new ArrayList<>();
     pseudoAtom.bonds().forEach(connectedBonds::add);
-    connectedBonds.forEach(bond -> bond.setAtoms(new IAtom[] {bond.getOther(pseudoAtom), newAtom}));
+    connectedBonds.forEach(bond -> reattach(bond, pseudoAtom, newAtom));
     newAtom.setValency(connectedBonds.size());
     newAtom.setImplicitHydrogenCount(
         Math.max(newAtom.getImplicitHydrogenCount() - connectedBonds.size(), 0));
 
     atomsToRemove.add(pseudoAtom);
+  }
+
+  /**
+   * Moves the end of a bond from one atom to another, keeping the bond's direction. A wedge's
+   * display is read from its begin atom, so the replacement takes the replaced atom's place at the
+   * same end; putting it at the other end would move the wedge's narrow end to the other atom.
+   *
+   * @param bond the bond to move
+   * @param from the atom the bond leaves
+   * @param to the atom that takes its place
+   */
+  private static void reattach(IBond bond, IAtom from, IAtom to) {
+    IAtom other = bond.getOther(from);
+    bond.setAtoms(from.equals(bond.getBegin()) ? new IAtom[] {to, other} : new IAtom[] {other, to});
   }
 
   /**
@@ -504,7 +518,6 @@ public class FragmentConverter {
       return;
     }
     IBond bondOrigin = originBonds.next();
-    IAtom originAtom = bondOrigin.getOther(pseudoAtom);
     // Find bond inside abbreviation connecting to connection point
     Iterator<IBond> abbrBonds = connectionPoint.bonds().iterator();
     if (!abbrBonds.hasNext()) {
@@ -513,25 +526,16 @@ public class FragmentConverter {
     }
     IBond bondInsideAbbr = abbrBonds.next();
     IAtom atomInsideAbbr = bondInsideAbbr.getOther(connectionPoint);
-    // Reconnect: origin to abbreviation atom
-    IBond newBond;
-    try {
-      newBond = bondOrigin.clone();
-    } catch (CloneNotSupportedException _) {
-      LOGGER.error("Bond could not be cloned.");
-      return;
-    }
-    newBond.setAtoms(new IAtom[] {originAtom, atomInsideAbbr});
-
+    // Reconnect: the origin bond moves to the abbreviation atom. It stays the bond the converter
+    // mapped from the drawing, so stereo perception still finds it by its CDBond.
     atomContainer.add(expandedStructure);
-    atomContainer.addBond(newBond);
+    reattach(bondOrigin, pseudoAtom, atomInsideAbbr);
     for (IAtom expandedAtom : expandedStructure.atoms()) {
       if (expandedAtom != connectionPoint) {
         addedAtoms.add(expandedAtom);
       }
     }
 
-    bondsToRemove.add(bondOrigin);
     bondsToRemove.add(bondInsideAbbr);
     atomsToRemove.add(pseudoAtom);
     atomsToRemove.add(connectionPoint);
