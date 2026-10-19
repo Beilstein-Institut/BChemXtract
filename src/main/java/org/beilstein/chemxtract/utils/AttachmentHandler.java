@@ -104,6 +104,14 @@ public final class AttachmentHandler {
    */
   private static final int MAX_RING_SIZE = 8;
 
+  /**
+   * Atomic numbers of the elements that are not metals: hydrogen, the noble gases, and the p-block
+   * nonmetals and metalloids.
+   */
+  private static final Set<Integer> NONMETALS =
+      Set.of(
+          1, 2, 5, 6, 7, 8, 9, 10, 14, 15, 16, 17, 18, 32, 33, 34, 35, 36, 51, 52, 53, 54, 85, 86);
+
   private AttachmentHandler() {
     // private constructor to hide implicit public one
   }
@@ -206,6 +214,16 @@ public final class AttachmentHandler {
           continue;
         }
         scoped = widenToRing(scaffold, bond, scoped);
+        // A crossing names the atoms its line cuts, whether or not they can bond again; one whose
+        // valences are all used would come out five-bonded, and as a radical. A metal across a
+        // ring is a hapto bond to the whole ring rather than a substituent, and keeps them all.
+        if (!isMetal(attach.equals(bond.getBegin()) ? bond.getEnd() : bond.getBegin())) {
+          scoped =
+              scoped.stream().filter(atom -> hasFreeValence(scaffold, atom, bond, attach)).toList();
+          if (scoped.isEmpty()) {
+            continue;
+          }
+        }
         attach.setNodeType(CDNodeType.VariableAttachment);
         attach.setAttachedAtoms(scoped);
         if (target == null) {
@@ -242,8 +260,10 @@ public final class AttachmentHandler {
    * what they touch. And the unlabelled end must lie inside the ring's own polygon: a bond drawn
    * straight through a ring and out the other side is passing over it, not aimed at it.
    *
-   * <p>The widened set is a union, never a replacement. A crossing may name a ring atom that
-   * already carries a substituent, and that atom is still what the author drew a line across.
+   * <p>The widened set keeps the ring atoms the crossings name, even one that already carries a
+   * substituent, since that atom is still what the author drew a line across. It drops the atoms
+   * off the ring that a crossing also names: a stub drawn in across a substituent bond cuts that
+   * bond on its way, but the ring it points into is where it attaches.
    *
    * @param scaffold the fragment holding the candidates
    * @param bond the position-variation bond crossing the scaffold
@@ -260,7 +280,12 @@ public final class AttachmentHandler {
     if (ring == null) {
       return candidates;
     }
-    List<CDAtom> widened = new ArrayList<>(candidates);
+    List<CDAtom> widened = new ArrayList<>();
+    for (CDAtom atom : candidates) {
+      if (containsIdentical(ring, atom)) {
+        widened.add(atom);
+      }
+    }
     for (CDAtom atom : ring) {
       if (isSubstitutableCarbon(scaffold, atom)) {
         addDistinct(widened, atom);
@@ -302,6 +327,49 @@ public final class AttachmentHandler {
     return atom.getElementNumber() == 6
         && label(atom).isEmpty()
         && incidentBonds(fragment, atom).size() <= 2;
+  }
+
+  /**
+   * Whether the candidate can take the substituent's bond without exceeding its valence. Only an
+   * unlabelled, uncharged atom is judged, which ChemDraw draws as carbon: its drawn bonds, explicit
+   * hydrogens included, and the substituent's bond must fit in four. A labelled atom names its own
+   * hydrogens and charge, which the drawing alone does not tell, and is kept.
+   *
+   * @param fragment the scaffold, with the substituent already merged or not
+   * @param atom the candidate
+   * @param stub the position-variation bond, whose order the candidate must take
+   * @param junction the stub's free end, whose bond is not one of the candidate's own
+   */
+  private static boolean hasFreeValence(
+      CDFragment fragment, CDAtom atom, CDBond stub, CDAtom junction) {
+    if (atom.getElementNumber() != 6 || !label(atom).isEmpty() || atom.getCharge() != 0) {
+      return true;
+    }
+    double used = valence(stub);
+    for (CDBond bond : incidentBonds(fragment, atom)) {
+      if (!junction.equals(bond.getBegin()) && !junction.equals(bond.getEnd())) {
+        used += valence(bond);
+      }
+    }
+    return used <= 4;
+  }
+
+  /**
+   * Whether the atom is a metal: an element other than hydrogen, the noble gases and the p-block
+   * nonmetals and metalloids.
+   */
+  private static boolean isMetal(CDAtom atom) {
+    return atom.getElementNumber() > 0 && !NONMETALS.contains(atom.getElementNumber());
+  }
+
+  /** The valences a bond uses at each end; a delocalised (one-and-a-half) bond counts its half. */
+  private static double valence(CDBond bond) {
+    return switch (bond.getBondOrder()) {
+      case Double -> 2;
+      case Triple -> 3;
+      case OneHalf -> 1.5;
+      default -> 1;
+    };
   }
 
   /**

@@ -33,6 +33,7 @@ import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDText;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
@@ -698,6 +699,115 @@ public class AttachmentHandlerTest {
 
     CDAtom junction = label.getAttachedAtoms() == null ? free : label;
     assertThat(junction.getAttachedAtoms())
+        .containsExactlyInAnyOrder(ring.get(0), ring.get(1), ring.get(4), ring.get(5));
+  }
+
+  /**
+   * A carbon whose drawn bonds already use its four valences cannot take the substituent: bonding
+   * it there would build a five-bonded carbon, which comes out as a radical. Only the other end of
+   * the crossed bond is a position.
+   */
+  @Test
+  public void normalizeDropsCandidatesWithoutAFreeValence() {
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom w = element(0f, -10f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDBond doubleBond = bond(c1, x);
+    doubleBond.setBondOrder(CDBondOrder.Double);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, w, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, doubleBond, bond(c1, w), bond(c2, y))));
+
+    CDAtom attach = element(-3f, 5f);
+    CDAtom substituent = element(5f, 5f);
+    CDBond stub = bond(attach, substituent);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(attach, substituent));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(attach.getAttachedAtoms())
+        .as("c1 carries a double and two single bonds, so only c2 can take the substituent")
+        .containsExactly(c2);
+  }
+
+  /**
+   * A metal drawn bonded across a ring is the hapto bond of a Cp-type ligand, as in the rhenium and
+   * iridium complexes of {@code m12743226-i45.cdx} and {@code m46060452-i5.cdx}, not a substituent
+   * on one of its carbons. Their carbons have no valence to spare, and dropping them for it would
+   * tear the ligand off the metal.
+   */
+  @Test
+  public void normalizeKeepsSaturatedCandidatesOfAMetal() {
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom w = element(0f, -10f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDBond doubleBond = bond(c1, x);
+    doubleBond.setBondOrder(CDBondOrder.Double);
+    CDBond otherDouble = bond(c2, y);
+    otherDouble.setBondOrder(CDBondOrder.Double);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, w, y));
+    scaffold.setBonds(
+        new ArrayList<>(
+            List.of(crossed, doubleBond, otherDouble, bond(c1, w), bond(c2, element(5f, 15f)))));
+
+    CDAtom attach = element(-3f, 5f);
+    CDAtom metal = labelled(5f, 5f, "Re");
+    metal.setElementNumber(75);
+    CDBond stub = bond(attach, metal);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(attach, metal));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    List<CDFragment> result =
+        AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(result).as("the metal stays bonded to its ligand").containsExactly(scaffold);
+    assertThat(attach.getAttachedAtoms()).containsExactlyInAnyOrder(c1, c2);
+  }
+
+  /**
+   * A stub that comes to rest inside a ring means a position on that ring, even where its line also
+   * cuts a bond leaving the ring. The exocyclic atom that bond names is not on the ring the drawing
+   * points at, and is no position.
+   */
+  @Test
+  public void normalizeKeepsOnlyRingPositionsWhenTheStubEndsInTheRing() {
+    CDFragment scaffold = benzoRing();
+    List<CDAtom> ring = List.copyOf(scaffold.getAtoms().subList(0, 6));
+    CDBond ringEdge = scaffold.getBonds().get(0);
+    // An exocyclic bond from c1 down across the stub's line, the way a ring substituent is drawn.
+    CDAtom exocyclic = element(17.32f, -5f);
+    CDBond exocyclicBond = bond(ring.get(0), exocyclic);
+    scaffold.addAtom(exocyclic);
+    scaffold.addBond(exocyclicBond);
+
+    CDAtom residue = residue(20f, 0f);
+    CDAtom free = element(0f, 0f);
+    CDBond stub = bond(residue, free);
+    stub.setCrossingBonds(new HashSet<>(List.of(ringEdge, exocyclicBond)));
+    ringEdge.setCrossingBonds(new HashSet<>(List.of(stub)));
+    exocyclicBond.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(residue, free));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(free.getAttachedAtoms())
+        .as("the ring's positions, not the exocyclic atom the stub also cuts")
         .containsExactlyInAnyOrder(ring.get(0), ring.get(1), ring.get(4), ring.get(5));
   }
 
