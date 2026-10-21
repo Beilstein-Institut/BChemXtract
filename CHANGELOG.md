@@ -2,6 +2,17 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.3](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.2...v1.4.3) (2026-10-21)
+
+
+### Bug Fixes
+
+* drop position-variation candidates that cannot take the substituent ([0dafcc8](https://github.com/Beilstein-Institut/BChemXtract/commit/0dafcc857c36b664b4746fafdcc061d48300a0f5))
+* drop position-variation candidates that cannot take the substituent ([77a7111](https://github.com/Beilstein-Institut/BChemXtract/commit/77a7111aeb806debce3d87bcf7d5abbc83d84e2b))
+* keep wedge direction on expanded abbreviations and apply ChemDraw R/S per centre ([40dcae1](https://github.com/Beilstein-Institut/BChemXtract/commit/40dcae1da7a8667673d577d344efe36adecebf5c))
+* keep wedge direction on expanded abbreviations and apply ChemDraw R/S per centre ([c3e3690](https://github.com/Beilstein-Institut/BChemXtract/commit/c3e36900d097c556956ceec10a7dd369279fa411))
+* read spelled-out ortho/meta/para as ring positions in R-group values ([13333ac](https://github.com/Beilstein-Institut/BChemXtract/commit/13333ac4c675ad5ac83c44000139afc49be9ced3))
+
 ## [1.4.2](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.1...v1.4.2) (2026-10-13)
 
 
