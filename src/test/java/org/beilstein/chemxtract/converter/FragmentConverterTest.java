@@ -28,12 +28,16 @@ import java.util.List;
 import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
+import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint3D;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -91,6 +95,119 @@ public class FragmentConverterTest {
     assertThat(threeD)
         .as("3D coordinates give the configuration of the wedged drawing")
         .isEqualTo(wedged);
+  }
+
+  /**
+   * A wedge keeps its narrow end where it was drawn when the abbreviation at its other end is
+   * expanded. Stored from the label to the centre as {@code WedgeEnd}, it is the same wedge as one
+   * stored from the centre as {@code WedgeBegin}; {@code OH} expands to one atom, {@code OMe} to
+   * several.
+   */
+  @ParameterizedTest
+  @ValueSource(strings = {"OH", "OMe"})
+  public void wedgeStoredFromAnAbbreviationKeepsItsCentre(String label) throws Exception {
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+
+    String fromCentre =
+        smiles.create(converter().convert(wedgedToLabel(label, false, CDBondDisplay.WedgeBegin)));
+    String fromLabel =
+        smiles.create(converter().convert(wedgedToLabel(label, true, CDBondDisplay.WedgeEnd)));
+
+    assertThat(fromCentre).as("the wedged drawing defines a stereocentre").contains("@");
+    assertThat(fromLabel)
+        .as("the narrow end stays on the centre whichever atom the bond was stored from")
+        .isEqualTo(fromCentre);
+  }
+
+  /** A wedge whose narrow end is on the abbreviation defines no centre at the carbon. */
+  @ParameterizedTest
+  @ValueSource(strings = {"OH", "OMe"})
+  public void wedgeNarrowAtAnAbbreviationAddsNoCentre(String label) throws Exception {
+    String smiles =
+        new SmilesGenerator(SmiFlavor.Isomeric)
+            .create(converter().convert(wedgedToLabel(label, true, CDBondDisplay.WedgeBegin)));
+
+    assertThat(smiles).as("the wedge points at the label, not at the carbon").doesNotContain("@");
+  }
+
+  /**
+   * ChemDraw's R/S label settles a centre the drawing leaves without a wedge, centre by centre: a
+   * double bond elsewhere in the fragment, whose E/Z is perceived, must not switch it off.
+   */
+  @Test
+  public void storedLabelSettlesAnUnwedgedCentreBesideAPerceivedDoubleBond() throws Exception {
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+
+    String alone = smiles.create(converter().convert(labelledCentre(false)));
+    String withAlkene = smiles.create(converter().convert(labelledCentre(true)));
+
+    assertThat(alone).as("the stored R settles the unwedged centre").contains("@");
+    assertThat(withAlkene).as("the alkene's E/Z is perceived").containsAnyOf("/", "\\");
+    assertThat(withAlkene)
+        .as("the stored R still settles the centre beside the perceived alkene")
+        .contains("@");
+  }
+
+  private FragmentConverter converter() {
+    return new FragmentConverter(SilentChemObjectBuilder.getInstance());
+  }
+
+  /**
+   * Builds chlorofluoromethane carrying an abbreviation, the bond to which is wedged.
+   *
+   * @param label the abbreviation's text
+   * @param fromLabel {@code true} to store the bond from the label to the carbon
+   * @param display the wedge as stored
+   */
+  private CDFragment wedgedToLabel(String label, boolean fromLabel, CDBondDisplay display) {
+    CDAtom carbon = element(6, 0, 0);
+    CDAtom fluorine = element(9, 0.20f, -0.98f);
+    CDAtom chlorine = element(17, -0.97f, -0.22f);
+    CDAtom abbreviation = new CDAtom();
+    abbreviation.setNodeType(CDNodeType.Unspecified);
+    abbreviation.setLabelText(label);
+    abbreviation.setChemicalWarning("ChemDraw can't interpret this label.");
+    abbreviation.setPosition2D(new CDPoint2D(0.89f, -0.46f));
+    CDBond wedge = fromLabel ? bond(abbreviation, carbon) : bond(carbon, abbreviation);
+    wedge.setBondDisplay(display);
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(new ArrayList<>(List.of(carbon, fluorine, chlorine, abbreviation)));
+    fragment.addBond(bond(carbon, fluorine));
+    fragment.addBond(bond(carbon, chlorine));
+    fragment.addBond(wedge);
+    return fragment;
+  }
+
+  /**
+   * Builds chlorofluoromethanol drawn without a wedge but labelled R by ChemDraw, optionally with a
+   * (E)-but-2-enyl ether on the oxygen.
+   */
+  private CDFragment labelledCentre(boolean withAlkene) {
+    CDAtom carbon = element(6, 0, 0);
+    carbon.setAtomGeometry(CDAtomGeometry.Tetrahedral);
+    carbon.setStereochemistry(CDAtomCIPType.R);
+    CDAtom fluorine = element(9, 0.20f, -0.98f);
+    CDAtom chlorine = element(17, -0.97f, -0.22f);
+    CDAtom oxygen = element(8, 0.89f, 0.46f);
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(new ArrayList<>(List.of(carbon, fluorine, chlorine, oxygen)));
+    fragment.addBond(bond(carbon, fluorine));
+    fragment.addBond(bond(carbon, chlorine));
+    fragment.addBond(bond(carbon, oxygen));
+    if (withAlkene) {
+      CDAtom c1 = element(6, 3, 0);
+      CDAtom c2 = element(6, 3.87f, 0.5f);
+      CDAtom c3 = element(6, 4.73f, 0);
+      CDAtom c4 = element(6, 5.6f, 0.5f);
+      fragment.addAllAtoms(List.of(c1, c2, c3, c4));
+      fragment.addBond(bond(oxygen, c1));
+      fragment.addBond(bond(c1, c2));
+      CDBond doubleBond = bond(c2, c3);
+      doubleBond.setBondOrder(CDBondOrder.Double);
+      fragment.addBond(doubleBond);
+      fragment.addBond(bond(c3, c4));
+    }
+    return fragment;
   }
 
   /**
