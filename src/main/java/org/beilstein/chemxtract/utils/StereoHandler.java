@@ -79,13 +79,13 @@ public class StereoHandler {
         selectFactory(atomContainer)
             .interpretProjections(projections.toArray(Projection[]::new))
             .createAll();
-    if (ChemicalUtils.hasDuplicateCoordinates(atomContainer) || elements.isEmpty()) {
-      Set<Object> perceived =
-          elements.stream().map(IStereoElement::getFocus).collect(Collectors.toSet());
-      getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap).stream()
-          .filter(element -> !perceived.contains(element.getFocus()))
-          .forEach(elements::add);
-    }
+    // Centre by centre: a centre the drawing settled keeps the drawing's reading, and one it left
+    // undefined takes ChemDraw's label, whatever was perceived elsewhere in the fragment.
+    Set<Object> perceived =
+        elements.stream().map(IStereoElement::getFocus).collect(Collectors.toSet());
+    getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap).stream()
+        .filter(element -> !perceived.contains(element.getFocus()))
+        .forEach(elements::add);
     filterWavyBonds(elements, bondMap);
     elements.forEach(atomContainer::addStereoElement);
   }
