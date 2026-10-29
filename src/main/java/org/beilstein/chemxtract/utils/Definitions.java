@@ -75,7 +75,8 @@ public class Definitions {
 
   /**
    * Upper bound on atom count for expensive per-structure operations (InChI generation and 2D
-   * coordinate layout). Larger structures fall back to cheaper handling.
+   * coordinate layout). Larger structures skip the layout and are not extracted as substances,
+   * since they would have no InChI.
    */
   public static final int MAX_ATOM_COUNT = 500;
 

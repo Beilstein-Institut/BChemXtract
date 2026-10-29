@@ -138,15 +138,8 @@ public class MultiAttachmentTest {
       Set.of("PWZMDUBWBDWOMC-UHFFFAOYSA-N", "ZGNNZVBGHLEQSO-UHFFFAOYSA-N");
 
   // R1/R2 stay as pseudo-atoms (no R-group definitions present), so only SMILES is asserted.
-  private static final Set<String> MARKUSH_SMILES =
-      Set.of("C1=CC(=C(C=C1)*)C2CC(=O)C3C(N3)(O2)*", "C1=CC(=CC(=C1)C2CC(=O)C3C(N3)(O2)*)*");
-
   private static Set<String> inchiKeys(List<BCXSubstance> substances) {
     return substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
-  }
-
-  private static Set<String> smiles(List<BCXSubstance> substances) {
-    return substances.stream().map(BCXSubstance::getSmiles).collect(Collectors.toSet());
   }
 
   @Test
@@ -194,17 +187,16 @@ public class MultiAttachmentTest {
   }
 
   @Test
-  public void markushCdxEnumeratesVariableRgroupPosition() throws IOException {
-    // The R-group's attachment position varies over two candidate ring atoms -> two substances.
+  public void markushCdxSkipsUnresolvedVariableRgroupPosition() throws IOException {
+    // The R-group's attachment position varies over two candidate ring atoms, but both placements
+    // keep their undefined R atoms and so have no InChI; neither may be extracted.
     List<BCXSubstance> subs = xtractCdx("markush.cdx");
-    assertEquals(2, subs.size());
-    assertEquals(MARKUSH_SMILES, smiles(subs));
+    assertEquals(0, subs.size());
   }
 
   @Test
-  public void markushCdxmlEnumeratesVariableRgroupPosition() throws IOException {
+  public void markushCdxmlSkipsUnresolvedVariableRgroupPosition() throws IOException {
     List<BCXSubstance> subs = xtractCdxml("markush.cdxml");
-    assertEquals(2, subs.size());
-    assertEquals(MARKUSH_SMILES, smiles(subs));
+    assertEquals(0, subs.size());
   }
 }
