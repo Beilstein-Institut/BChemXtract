@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -37,6 +38,7 @@ import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.model.BCXSubstance;
+import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.junit.jupiter.api.Test;
 
@@ -69,13 +71,46 @@ public class SubstanceXtractorTest {
     return bond;
   }
 
+  private static CDFragment carbonChain(int length) {
+    List<CDAtom> atoms = new ArrayList<>();
+    List<CDBond> bonds = new ArrayList<>();
+    for (int i = 0; i < length; i++) {
+      atoms.add(atomAt(i * 10f, (i % 2) * 5f));
+      if (i > 0) {
+        bonds.add(bond(atoms.get(i - 1), atoms.get(i)));
+      }
+    }
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(atoms);
+    fragment.setBonds(bonds);
+    return fragment;
+  }
+
   /**
-   * A position-variation scaffold whose R-group expansion yields nothing must still emit its
-   * enumerated scaffolds. Reporting the expansion as done regardless of its result suppressed the
-   * unexpanded fallback and dropped the structures entirely.
+   * InChI is only generated up to {@link Definitions#MAX_ATOM_COUNT} atoms. A larger structure
+   * would have no InChI, and every extracted substance must carry one, so it is skipped.
    */
   @Test
-  public void emptyRGroupExpansionStillEmitsScaffold() throws Exception {
+  public void structureAboveAtomLimitIsSkipped() throws Exception {
+    List<BCXSubstance> atLimit =
+        new SubstanceXtractor()
+            .xtractSubstances(carbonChain(Definitions.MAX_ATOM_COUNT), new CDPage(), null);
+    assertThat(atLimit).as("a structure at the limit is extracted").hasSize(1);
+    assertThat(atLimit.getFirst().getInchi()).as("it carries an InChI").isNotBlank();
+
+    List<BCXSubstance> aboveLimit =
+        new SubstanceXtractor()
+            .xtractSubstances(carbonChain(Definitions.MAX_ATOM_COUNT + 1), new CDPage(), null);
+    assertThat(aboveLimit).as("a structure above the limit has no InChI").isEmpty();
+  }
+
+  /**
+   * A position-variation scaffold whose R-group expansion yields nothing keeps its unresolved
+   * R-group, so it has no InChI and must not be emitted. Every extracted substance carries a valid
+   * InChI.
+   */
+  @Test
+  public void unresolvedPositionVariationScaffoldIsSkipped() throws Exception {
     CDAtom c1 = atomAt(0f, 0f);
     CDAtom c2 = atomAt(10f, 0f);
     CDAtom residue = rGroupAt(5f, 20f, "R");
@@ -97,9 +132,6 @@ public class SubstanceXtractorTest {
     List<BCXSubstance> substances =
         new SubstanceXtractor().xtractSubstances(fragment, new CDPage(), handler);
 
-    // Two candidate attachment atoms -> two enumerated scaffolds, both kept despite the R-group
-    // staying unresolved (position-variation scaffolds tolerate a missing InChI).
-    assertThat(substances).hasSize(2);
-    assertThat(substances).allSatisfy(s -> assertThat(s.getSmiles()).isNotEmpty());
+    assertThat(substances).as("unresolved scaffolds have no InChI").isEmpty();
   }
 }
