@@ -341,10 +341,6 @@ public class SubstanceXtractor {
     // Materialise multicenter (haptic) bonds in place before conversion.
     AttachmentHandler.resolveMultiAttachments(fragment);
 
-    // A position-variation scaffold may legitimately retain unresolved R-groups across its
-    // enumerated isomers, so those substances are emitted even when InChI cannot represent them.
-    boolean variablePosition = AttachmentHandler.hasVariableAttachment(fragment);
-
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
     // variable attachment yield the original fragment unchanged. The candidates are converted
@@ -373,7 +369,7 @@ public class SubstanceXtractor {
         // to emitting the unexpanded scaffold below.
         for (IAtomContainer container :
             markushHandler.replaceRGroups(candidates, fragment.getBounds(), new HashSet<>())) {
-          expandedRGroups |= addIfBuilt(substances, container, fragment, variablePosition, true);
+          expandedRGroups |= addIfBuilt(substances, container, fragment, true);
         }
       } catch (IOException | CloneNotSupportedException e) {
         LOGGER.error("R-group replacement failed", e);
@@ -381,7 +377,7 @@ public class SubstanceXtractor {
     }
     if (!expandedRGroups) {
       for (IAtomContainer container : candidates) {
-        addIfBuilt(substances, container, fragment, variablePosition, false);
+        addIfBuilt(substances, container, fragment, false);
       }
     }
     return substances;
@@ -393,8 +389,6 @@ public class SubstanceXtractor {
    *
    * @param atomContainer the CDK atom container for the substance
    * @param fragment the source fragment providing occurrence bounds and abbreviations
-   * @param tolerateMissingInchi when {@code true}, a substance whose unresolved pseudo-atoms
-   *     prevent InChI generation is still produced (carrying SMILES and molecular formula)
    * @param isMarkush when {@code true}, the substance results from Markush R-group replacement
    * @return {@code true} if a substance was built and added, {@code false} if it was skipped
    * @throws IOException if abbreviation resolution fails
@@ -404,10 +398,9 @@ public class SubstanceXtractor {
       List<BCXSubstance> substances,
       IAtomContainer atomContainer,
       CDFragment fragment,
-      boolean tolerateMissingInchi,
       boolean isMarkush)
       throws IOException, CDKException {
-    BCXSubstance substance = buildSubstance(atomContainer, fragment, tolerateMissingInchi);
+    BCXSubstance substance = buildSubstance(atomContainer, fragment);
     if (substance == null) {
       return false;
     }
@@ -416,18 +409,24 @@ public class SubstanceXtractor {
     return true;
   }
 
-  private BCXSubstance buildSubstance(
-      IAtomContainer atomContainer, CDFragment fragment, boolean tolerateMissingInchi)
+  private BCXSubstance buildSubstance(IAtomContainer atomContainer, CDFragment fragment)
       throws IOException, CDKException {
     // A structure that still carries a pseudo-atom is an unresolved R-group or a generic
-    // placeholder (e.g. "Ar", "alkyl") with no definition on the page. Unless this is a
-    // position-variation scaffold (which legitimately keeps pseudo-atoms), it cannot be resolved to
-    // a concrete substance, so it is skipped quietly instead of failing InChI generation.
-    if (!tolerateMissingInchi && containsPseudoAtom(atomContainer)) {
+    // placeholder (e.g. "Ar", "alkyl") with no definition on the page. InChI cannot represent it
+    // and every extracted substance must carry a valid InChI, so it is skipped quietly.
+    if (containsPseudoAtom(atomContainer)) {
       LOGGER.warn("Skipping structure with unresolved pseudo-atom and no applicable definition.");
       return null;
     }
-    BCXSubstance substance = createAndFillBCXSubstance(atomContainer, tolerateMissingInchi);
+    // InChI generation is too expensive above the atom limit, so such a structure has no InChI.
+    if (atomContainer.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
+      LOGGER.warn(
+          "Skipping structure with {} atoms, above the InChI limit of {}.",
+          atomContainer.getAtomCount(),
+          Definitions.MAX_ATOM_COUNT);
+      return null;
+    }
+    BCXSubstance substance = createAndFillBCXSubstance(atomContainer);
     Optional<CDRectangle> boundsOptional = Optional.ofNullable(fragment.getBounds());
     if (boundsOptional.isPresent()) {
       CDRectangle bounds = boundsOptional.get();
@@ -443,14 +442,10 @@ public class SubstanceXtractor {
    * Creates and populates a {@link BCXSubstance} from the given {@link IAtomContainer}.
    *
    * @param atomContainer the CDK atom container
-   * @param tolerateMissingInchi when {@code true}, an InChI failure caused by unresolved
-   *     pseudo-atoms is logged and skipped rather than propagated
    * @return a {@link BCXSubstance}
-   * @throws CDKException if InChI generation fails for a structure without pseudo-atoms, or SMILES
-   *     generation fails
+   * @throws CDKException if InChI or SMILES generation fails
    */
-  private BCXSubstance createAndFillBCXSubstance(
-      IAtomContainer atomContainer, boolean tolerateMissingInchi) throws CDKException {
+  private BCXSubstance createAndFillBCXSubstance(IAtomContainer atomContainer) throws CDKException {
     // create and fill BCXSubtances
     BCXSubstance substance = new BCXSubstance();
     // add AtomContainer
@@ -466,13 +461,9 @@ public class SubstanceXtractor {
     // set SMILES
     String smiles;
     try {
-      if (atomContainer.getAtomCount() > Definitions.MAX_ATOM_COUNT) {
-        smiles = ChemicalUtils.createSmiles(atomContainer, SmiFlavor.Isomeric);
-      } else {
-        smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
-      }
+      smiles = ChemicalUtils.createAbsoluteSmiles(atomContainer);
     } catch (CDKException e) {
-      // Absolute and isomeric SMILES need CDK's InChI-based canonical numbering, which fails on
+      // Absolute SMILES need CDK's InChI-based canonical numbering, which fails on
       // some organometallic structures. The canonical flavour uses graph invariants instead, so it
       // still yields a SMILES for the substance.
       LOGGER.warn("Absolute SMILES generation failed, falling back to canonical.", e);
@@ -485,23 +476,12 @@ public class SubstanceXtractor {
     }
     substance.setSmiles(smiles);
     substance.setExtendedSmiles(ChemicalUtils.createExtendedSmiles(atomContainer));
-    // set InChI, InChIKey and AuxInfo. A structure containing unresolved pseudo-atoms (e.g. an
-    // R-group whose attachment position varies) cannot be represented in InChI, but is still a
-    // valid extraction carrying SMILES and a molecular formula; other InChI failures remain fatal.
-    if (atomContainer.getAtomCount() <= Definitions.MAX_ATOM_COUNT) {
-      try {
-        InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
-        substance.setInchi(gen.getInchi());
-        substance.setInchiKey(gen.getInchiKey());
-        if (gen.getAuxInfo().length() < 4000) {
-          substance.setAuxInfo(gen.getAuxInfo());
-        }
-      } catch (CDKException e) {
-        if (!(tolerateMissingInchi && containsPseudoAtom(atomContainer))) {
-          throw e;
-        }
-        LOGGER.warn("InChI generation skipped for substance with unresolved pseudo-atoms", e);
-      }
+    // set InChI, InChIKey and AuxInfo
+    InChIGenerator gen = ChemicalUtils.getInChI(atomContainer);
+    substance.setInchi(gen.getInchi());
+    substance.setInchiKey(gen.getInchiKey());
+    if (gen.getAuxInfo().length() < 4000) {
+      substance.setAuxInfo(gen.getAuxInfo());
     }
     // set molecular formula
     IMolecularFormula molecularFormula =
