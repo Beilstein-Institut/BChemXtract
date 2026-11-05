@@ -42,6 +42,10 @@ import org.openscience.cdk.smiles.SmilesParser;
  * wedges: three wedged spiro-oxindoles came out with their SMILES inverted against ChemDraw's R/S
  * labels and against their own InChI, and an unwedged one gained a centre the drawing does not
  * define.
+ *
+ * <p>A fifth drawing stores 3D positions for its indanone half only; every other atom sits at z =
+ * 0. Those coordinates contradict the wedges at the indanone spiro centre and invent a
+ * configuration for the unwedged CH next to it.
  */
 class FlatCoordinateStereoTest {
 
@@ -90,5 +94,14 @@ class FlatCoordinateStereoTest {
         .extracting(BCXSubstance::getInchiKey)
         .contains("SKLDVYDFQCXARY-UHFFFAOYSA-N")
         .doesNotContain("SKLDVYDFQCXARY-FQEVSTJZSA-N");
+  }
+
+  @Test
+  void wedgesWinOverPartialThreeDimensionalCoordinates() {
+    assertThat(substances)
+        .as("both wedged spiro centres are S and the unwedged CH stays undefined")
+        .extracting(BCXSubstance::getInchiKey)
+        .contains("UTUGTUIULXVUOF-TWAOCZIPSA-N")
+        .doesNotContain("UTUGTUIULXVUOF-YMSRPXOMSA-N");
   }
 }

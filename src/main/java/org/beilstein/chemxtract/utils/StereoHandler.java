@@ -78,6 +78,7 @@ public class StereoHandler {
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
     Set<Projection> projections = flattenProjectionRings(atomContainer, bondMap);
+    discardIgnoredThreeDimensionalCoordinates(atomContainer, bondMap);
     List<IStereoElement> elements =
         selectFactory(atomContainer)
             .interpretProjections(projections.toArray(Projection[]::new))
@@ -170,17 +171,48 @@ public class StereoHandler {
    * missing points. Every atom placed by {@code AtomConverter} has a 2D position, so the 2D factory
    * is the safe choice for such mixed fragments.
    *
-   * <p>ChemDraw also stores flat 3D positions, one z for every atom, next to a wedged drawing. They
-   * carry no configuration, and the 3D factory would ignore the wedges and read noise instead, so
-   * flat 3D coordinates use the 2D factory too.
-   *
    * @param atomContainer the {@link IAtomContainer} to analyze
    * @return a {@link StereoElementFactory} instance for 2D or 3D
    */
   private static StereoElementFactory selectFactory(IAtomContainer atomContainer) {
-    return GeometryUtil.has3DCoordinates(atomContainer) && !isFlat(atomContainer)
+    return GeometryUtil.has3DCoordinates(atomContainer)
         ? StereoElementFactory.using3DCoordinates(atomContainer)
         : StereoElementFactory.using2DCoordinates(atomContainer);
+  }
+
+  /**
+   * Removes 3D positions that must not decide the configuration, so the stereo factory and the
+   * InChI library, which reads coordinates on its own, both fall back to the 2D drawing.
+   *
+   * <p>ChemDraw stores flat 3D positions, one z for every atom, next to a wedged drawing; they
+   * carry no configuration, and the 3D factory would ignore the wedges and read noise instead. 3D
+   * positions next to wedges can also be partial or stale: in m43214419-1 only one ring carries a
+   * z, and it contradicts the wedges. A wedge is the author's explicit statement of a
+   * configuration, so a fragment with a wedge or hashed wedge is read from its wedges, and 3D
+   * positions decide only in fragments drawn without them. Bold and plain hashed bonds draw
+   * perspective, not configuration, and do not count, although the bond converter gives them a
+   * wedge display. {@code AtomConverter} gives every atom a 2D position as well, so nothing else is
+   * lost.
+   *
+   * @param atomContainer the {@link IAtomContainer} to clean
+   * @param bondMap mapping of {@link CDBond} to {@link IBond} giving each bond's drawn style
+   */
+  private static void discardIgnoredThreeDimensionalCoordinates(
+      IAtomContainer atomContainer, Map<CDBond, IBond> bondMap) {
+    if (!GeometryUtil.has3DCoordinates(atomContainer)) {
+      return;
+    }
+    boolean wedged =
+        !bondsDrawn(
+                bondMap,
+                CDBondDisplay.WedgeBegin,
+                CDBondDisplay.WedgeEnd,
+                CDBondDisplay.WedgedHashBegin,
+                CDBondDisplay.WedgedHashEnd)
+            .isEmpty();
+    if (wedged || isFlat(atomContainer)) {
+      atomContainer.atoms().forEach(atom -> atom.setPoint3d(null));
+    }
   }
 
   /** Whether all atoms share one z coordinate, within {@link #FLAT_Z_TOLERANCE}. */
