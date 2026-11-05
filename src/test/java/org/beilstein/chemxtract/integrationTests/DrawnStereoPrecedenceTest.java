@@ -24,8 +24,14 @@ package org.beilstein.chemxtract.integrationTests;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDVisitor;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
@@ -73,11 +79,54 @@ class DrawnStereoPrecedenceTest {
             "ZNXDVCGREHMNKV-GDVRDXLVSA-N");
   }
 
+  /**
+   * A chair is read from its shape, and every bond at its ring atoms counts as plain, so neither a
+   * bold ring edge nor a wedge at a ring carbon is read as a stereo mark there. The chair of {@code
+   * bond_up_SRSSR.cdx} gets a bold edge from C2 to C3 and a hashed wedge from C2 to its oxygen,
+   * which on its own would invert C2.
+   */
+  @Test
+  void boldBondAndWedgeAtAChairCarbonKeepTheChairReading() throws Exception {
+    CDDocument document = document("/integrationTests/sugars/bond_up_SRSSR.cdx");
+    List<CDFragment> fragments = new ArrayList<>();
+    CDVisitor collector =
+        new CDVisitor() {
+          @Override
+          public void visitFragment(CDFragment fragment) {
+            fragments.add(fragment);
+          }
+        };
+    for (CDPage page : document.getPages()) {
+      page.accept(collector);
+    }
+    assertThat(fragments).as("one chair").hasSize(1);
+    List<CDBond> bonds = fragments.getFirst().getBonds();
+    CDBond ringEdge = bonds.get(1);
+    CDBond toOxygen = bonds.get(8);
+    assertThat(ringEdge.getBegin())
+        .as("both bonds start at the same ring carbon")
+        .isSameAs(toOxygen.getBegin());
+    ringEdge.setBondDisplay(CDBondDisplay.Bold);
+    toOxygen.setBondDisplay(CDBondDisplay.WedgedHashBegin);
+
+    assertThat(inchiKeys(document))
+        .as("the chair reading of the plain fixture")
+        .containsExactly("WQZGKKKJIJFFOK-DVKNGEFBSA-N");
+  }
+
   private List<String> inchiKeys(String resource) throws Exception {
+    return inchiKeys(document(resource));
+  }
+
+  private CDDocument document(String resource) throws Exception {
     InputStream in = DrawnStereoPrecedenceTest.class.getResourceAsStream(resource);
     assertThat(in).as("fixture must be on the classpath").isNotNull();
     CDDocument document = CDXReader.readDocument(in);
     assertThat(document).as("document must parse").isNotNull();
+    return document;
+  }
+
+  private List<String> inchiKeys(CDDocument document) {
     return new SubstanceXtractor(SilentChemObjectBuilder.getInstance())
         .xtractUnique(document, new BCXSubstanceInfo(), false).stream()
             .map(BCXSubstance::getInchiKey)
