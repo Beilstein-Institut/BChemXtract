@@ -342,6 +342,10 @@ public class MarkushHandler {
    * <p>A positional table qualifies too when both columns tabulate the same labels, which the
    * caller checks: every row then sits whole in one column. A table split by label instead, one
    * column per label, parses as two different label sets and is not merged.
+   *
+   * <p>Columns whose lines are lettered and together run on without a break ({@code a}-{@code i}
+   * beside {@code j}-{@code q}) are one legend whatever the gutter, up to a column's width: the
+   * lettering says so more reliably than the geometry does.
    */
   private static boolean sideBySideLegend(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
     CDRectangle ra = a.bounds();
@@ -359,7 +363,27 @@ public class MarkushHandler {
     // overlap.
     // Two scaffolds whose legends happen to sit this close would merge wrongly; the fix then is
     // scaffold-aware association, not a tighter threshold.
-    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= minWidth * 0.5;
+    double gutter = continuousLettering(a, b) ? minWidth : minWidth * 0.5;
+    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= gutter;
+  }
+
+  /**
+   * Whether both blocks are lettered and their letters together make one unbroken run, each letter
+   * once: {@code abc} and {@code def}, but not {@code abc} and {@code abc}, nor {@code abc} and
+   * {@code efg}.
+   */
+  private static boolean continuousLettering(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    if (a.entryLetters().isEmpty() || b.entryLetters().isEmpty()) {
+      return false;
+    }
+    char[] letters = (a.entryLetters() + b.entryLetters()).toCharArray();
+    Arrays.sort(letters);
+    for (int i = 1; i < letters.length; i++) {
+      if (letters[i] != letters[i - 1] + 1) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -375,8 +399,10 @@ public class MarkushHandler {
     float bottom = -Float.MAX_VALUE;
     float right = -Float.MAX_VALUE;
     float lineHeight = 0;
+    StringBuilder letters = new StringBuilder();
     for (RGroupDefinitionBlock block : cluster) {
       lineHeight = Math.max(lineHeight, block.lineHeight());
+      letters.append(block.entryLetters());
       CDRectangle b = block.bounds();
       top = Math.min(top, b.getTop());
       left = Math.min(left, b.getLeft());
@@ -411,7 +437,7 @@ public class MarkushHandler {
     bounds.setBottom(bottom);
     bounds.setRight(right);
     return new RGroupDefinitionBlock(
-        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight);
+        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight, letters.toString());
   }
 
   /**
@@ -472,7 +498,8 @@ public class MarkushHandler {
    * Generates all structures for a scaffold that a position-variation attachment drew as several
    * candidates, resolving its R-groups from the definition block nearest to it. The page-wide union
    * of definitions is used only when no block defines the scaffold's labels; when the nearest block
-   * does but none of its values graft, the scaffold yields nothing.
+   * does but none of its values graft, or it gives the label only as a drawing ({@code a: R =}),
+   * the scaffold yields nothing.
    *
    * <p>The candidates are the same scaffold with one residue bonded to a different atom each. They
    * are enumerated together rather than one after another: the assignments are enumerated once, and
@@ -501,6 +528,11 @@ public class MarkushHandler {
     Set<String> present = presentResidueLabels(candidates.get(0));
     List<Choice> choices = residueChoicesNear(present, scaffoldBounds);
     if (choices.isEmpty()) {
+      if (present.stream().anyMatch(label -> nearestBlockDefining(label, scaffoldBounds) != null)) {
+        // The nearest legend names the label but gives its value as a drawing ("a: R =" beside a
+        // structure), which the text cannot supply. Another legend's values would be wrong here.
+        return List.of();
+      }
       // No legend defines any of this scaffold's labels; defer to the page-wide union.
       return replaceRGroups(candidates, residueLabels, produced);
     }
@@ -2372,9 +2404,16 @@ public class MarkushHandler {
     return row < cost.length && column < cost[0].length ? cost[row][column] : 0;
   }
 
-  /** Whether the block defines every label of the set, by plain definitions or one table. */
+  /**
+   * Whether the block defines every label of the set, by plain definitions with values or one
+   * table. A legend line giving a label only as a drawing ({@code a: R =}) claims no scaffold.
+   */
   private static boolean defines(RGroupDefinitionBlock block, Set<String> labels) {
-    return block.definitions().keySet().containsAll(labels)
+    return labels.stream()
+            .allMatch(
+                label ->
+                    block.definitions().containsKey(label)
+                        && !block.definitions().get(label).isEmpty())
         || block.correlatedGroups().stream()
             .anyMatch(group -> Set.copyOf(group.labels()).equals(labels));
   }

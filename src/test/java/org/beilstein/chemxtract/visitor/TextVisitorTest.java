@@ -262,4 +262,29 @@ public class TextVisitorTest {
         new TextVisitor(pageWithTexts("R = H, 3,4,5-(OMe)3")).getRgroups();
     assertEquals(List.of("H", "3,4,5-(OMe)3"), r.get("R"));
   }
+
+  /**
+   * A legend line whose value is a drawn structure ("a: R =" beside it) defines the label with no
+   * values, so the scaffold beside it is known to have its own legend; the page-wide union gains
+   * nothing from it.
+   */
+  @Test
+  public void labelGivenOnlyAsDrawingIsDefinedWithoutValues() {
+    TextVisitor visitor = new TextVisitor(pageWithTexts("a: R ="));
+    assertEquals(1, visitor.getBlocks().size());
+    assertEquals(Map.of("R", List.of()), visitor.getBlocks().get(0).definitions());
+    assertFalse(visitor.getRgroups().containsKey("R"), "an empty definition adds nothing");
+  }
+
+  /** The letters legend lines open with are kept in order, so lettered columns can be matched. */
+  @Test
+  public void recordsTheLettersLegendLinesOpenWith() {
+    assertEquals(
+        "abc",
+        new TextVisitor(pageWithTexts("a: R = H\rb: R = Me\r(c) R = Et"))
+            .getBlocks()
+            .get(0)
+            .entryLetters());
+    assertEquals("", new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).entryLetters());
+  }
 }

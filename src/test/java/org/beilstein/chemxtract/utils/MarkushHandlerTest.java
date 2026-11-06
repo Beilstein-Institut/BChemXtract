@@ -1155,6 +1155,65 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A legend lettered a-c in one column and d-f in the next is one list even when the gutter is a
+   * little wider than half a column. Geometry mirrors {@code cheminf/bugs/markush/m50167957-13},
+   * where the a-i | j-q columns are 26.3 pt apart against a 25.3 pt limit and each of the two
+   * scaffolds sharing them got only the nearer column.
+   */
+  @Test
+  public void letteredLegendColumnsMergeAcrossAWiderGutter() {
+    CDPage page = new CDPage();
+    page.addText(
+        textAt(rect(190.3f, 87.0f, 241.0f, 181.5f), "a: R = 4-CH3\rb: R = 4-Cl\rc: R = H"));
+    page.addText(
+        textAt(rect(267.3f, 94.8f, 340.9f, 178.8f), "d: R = 3-Cl\re: R = 3-OCH3\rf: R = 2-F"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<String> expected = List.of("4-CH3", "4-Cl", "H", "3-Cl", "3-OCH3", "2-F");
+    assertEquals(expected, handler.residueLabelsNear(rect(88f, 62f, 181f, 151f)).get("R"));
+    assertEquals(expected, handler.residueLabelsNear(rect(362f, 62f, 468f, 163f)).get("R"));
+  }
+
+  /** The same columns unlettered, or lettered without running on, keep the narrower gutter. */
+  @Test
+  public void columnsWithoutContinuousLetteringKeepTheNarrowGutter() {
+    for (String[] texts :
+        List.of(
+            new String[] {"R = 4-CH3, 4-Cl, H", "R = 3-Cl, 3-OCH3, 2-F"},
+            new String[] {"a: R = 4-CH3\rb: R = 4-Cl", "a: R = 3-Cl\rb: R = 3-OCH3"})) {
+      CDPage page = new CDPage();
+      page.addText(textAt(rect(190.3f, 87.0f, 241.0f, 181.5f), texts[0]));
+      page.addText(textAt(rect(267.3f, 94.8f, 340.9f, 178.8f), texts[1]));
+
+      MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+      assertEquals(
+          List.of("4-CH3", "4-Cl", "H").subList(0, texts[0].startsWith("a") ? 2 : 3),
+          handler.residueLabelsNear(rect(88f, 62f, 181f, 151f)).get("R"),
+          "only the near column: " + texts[0]);
+    }
+  }
+
+  /**
+   * A scaffold whose legend gives R as drawings ("a: R =" beside each drawn group) yields nothing
+   * rather than the values of another scheme's legend. Mirrors 72a-c in {@code
+   * cheminf/bugs/markush/m50167957-13}, which took the 69/70 legend's Cl, OMe, Me and F.
+   */
+  @Test
+  public void legendGivingRAsDrawingsDoesNotBorrowAnotherLegend() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(50, 10, 72, 20), "a: R ="));
+    page.addText(textAt(rect(0, -150, 50, -100), "R = Cl, OMe"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+    assertTrue(results.isEmpty(), "the other legend's values must not apply: " + results.size());
+  }
+
+  /**
    * Thioanisole with {@code R} drawn on the meta carbon next to ortho carbon {@code c3}, and the
    * S-methyl moved onto the spot outside {@code c3} where a substituent placed there would go, the
    * way the carbonyl O sits over the ring in 22-9-i2.

@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -152,6 +153,37 @@ public class MarkushBugTest {
             "OYBYVSIIVJJFIL-AATRIKPKSA-N")) { // N-CF3, from 79's 3-CF3
       assertTrue(
           !inchiKeys.contains(borrowed), "scheme 77 took another legend's value: " + borrowed);
+    }
+  }
+
+  /**
+   * In m50167957-13, schemes 69 and 70 share one legend, a-q, drawn as two columns (a-i | j-q)
+   * whose gutter is a little wider than the plain column merge allows; their continuous lettering
+   * makes them one legend, so both scaffolds take all of it. Scheme 72 gives its R as drawings
+   * beside "a: R =", "b: R =", "c: R ="; it must not take the a-q values instead.
+   */
+  @Test
+  public void testLetteredColumnsMergeAndDrawnLegendDoesNotBorrow() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "BJPDPRDMWFFZPV-UHFFFAOYSA-N", // 69j, R = 3-Cl, from the second column
+                "RPLXHRKISWDTOM-UHFFFAOYSA-N")), // 70a, R = 4-CH3, from the first column
+        "69 and 70 must each take both legend columns: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "JKHJZPOBYPJMDS-UHFFFAOYSA-N", // N-Cl
+            "VTAMPPWPAOZORH-UHFFFAOYSA-N", // N-OCH3
+            "JEAZYBAXYCQDSR-UHFFFAOYSA-N", // C-CH3
+            "MBRIKFDTHBFKMZ-UHFFFAOYSA-N", // C-F
+            "OCIXKTFFUHFVNY-UHFFFAOYSA-N")) { // N-CH3
+      assertFalse(
+          inchiKeys.contains(borrowed), "scheme 72 took the a-q legend's value: " + borrowed);
     }
   }
 }
