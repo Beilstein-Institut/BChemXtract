@@ -38,6 +38,12 @@ public class TextVisitor extends CDVisitor {
   /** A ring position, or the several a locant set names: the {@code 5,7} of {@code 5,7-Me2}. */
   private static final String LOCANT_SET = "\\d{1,2}(?:,\\d{1,2})*";
 
+  /**
+   * The letter a legend line opens with when it names its compound by letter: {@code a: R = H},
+   * {@code (b) R = Me}, {@code c) R = Et}.
+   */
+  private static final Pattern ENTRY_LETTER = Pattern.compile("^\\(?([a-z])\\)?\\s*[:.)]\\s*\\S");
+
   private final Map<String, List<String>> rgroups;
   private final List<RGroupDefinitionBlock> blocks;
 
@@ -73,12 +79,16 @@ public class TextVisitor extends CDVisitor {
             cdText.getBounds(),
             parsed.independent(),
             parsed.correlatedGroups(),
-            lineHeight(cdText)));
+            lineHeight(cdText),
+            entryLetters(cdText.getText().getText())));
     // Keep a page-wide union as a fallback; merge rather than drop on label collisions. Correlated
     // values are flattened into the union too so the fallback/guard still see them (the union path
-    // over-enumerates by design; the scoped path preserves the tuples).
+    // over-enumerates by design; the scoped path preserves the tuples). A label defined with no
+    // values adds nothing to it.
     for (Map.Entry<String, List<String>> entry : parsed.independent().entrySet()) {
-      mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      if (!entry.getValue().isEmpty()) {
+        mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      }
     }
     for (CorrelatedGroup group : parsed.correlatedGroups()) {
       for (Map<String, String> tuple : group.tuples()) {
@@ -94,6 +104,18 @@ public class TextVisitor extends CDVisitor {
     }
     int lines = cdText.getText().getText().strip().split("\\r\\n|\\r|\\n", -1).length;
     return Math.abs(cdText.getBounds().getHeight()) / lines;
+  }
+
+  /** The letters the text's lines open with, in order; empty if none is lettered. */
+  private static String entryLetters(String text) {
+    StringBuilder letters = new StringBuilder();
+    for (String line : text.split("[\\r\\n]+")) {
+      Matcher matcher = ENTRY_LETTER.matcher(line.strip());
+      if (matcher.find()) {
+        letters.append(matcher.group(1));
+      }
+    }
+    return letters.toString();
   }
 
   /** Independent per-label lists plus correlated (positional-table) groups from one text node. */
@@ -263,6 +285,14 @@ public class TextVisitor extends CDVisitor {
         result.add(new Assignment(chained, abbreviations));
       }
       chainedLabels.clear();
+    }
+
+    // A line whose only assignment has nothing after it ("a: R =") gives the value as a drawn
+    // structure. The label is still defined there, with no values the text can supply.
+    if (result.isEmpty()) {
+      for (String label : chainedLabels) {
+        result.add(new Assignment(label, List.of()));
+      }
     }
 
     return result;
