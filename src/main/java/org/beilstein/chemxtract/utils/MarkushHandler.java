@@ -1448,7 +1448,12 @@ public class MarkushHandler {
     for (String token : matcher.group(1).split(",")) {
       positions.add(ringPosition(token));
     }
-    String smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
+    // A group that is a name of its own ("CH3", "CF3", "NO2") is not a multiplied one, even when
+    // its last digit happens to match the number of locants: 2,4,6-CH3 is three methyls.
+    String smiles = resolveSmiles(matcher.group(2));
+    if (!ChemicalUtils.isValidSmiles(smiles)) {
+      smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
+    }
     return ChemicalUtils.isValidSmiles(smiles) ? new PositionalValue(positions, smiles) : null;
   }
 
@@ -1568,6 +1573,12 @@ public class MarkushHandler {
       return null;
     }
     IAtom anchor = bonds.next().getOther(residue);
+    if (positions.size() > 1) {
+      List<IAtom> walked = singleRingTargets(container, rings, anchor, residue, positions);
+      if (walked != null) {
+        return walked;
+      }
+    }
     List<IAtom> targets = new ArrayList<>();
     for (int position : positions) {
       IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
@@ -1577,6 +1588,100 @@ public class MarkushHandler {
       targets.add(target);
     }
     return targets;
+  }
+
+  /**
+   * The atoms several positions name on a single ring, numbered round it in one direction from its
+   * attachment atom: 3 and 5 are then the two meta atoms, 2 and 6 the two ortho atoms. The
+   * direction is the one that puts the first position that has two candidates where a value naming
+   * that position alone would go, so a multi-locant value agrees with its single-locant reading.
+   *
+   * @return one atom per position, or {@code null} if the residue's ring is part of a fused system
+   *     (numbered by {@link RingSystemNumbering} instead), has no single attachment atom, or no
+   *     position fixes a direction
+   */
+  private static List<IAtom> singleRingTargets(
+      IAtomContainer container,
+      IRingSet rings,
+      IAtom anchor,
+      IAtom residue,
+      List<Integer> positions) {
+    if (!RingSystemNumbering.locants(container, rings, anchor).isEmpty()) {
+      return null;
+    }
+    IAtomContainer ring = smallestRingContaining(rings, anchor);
+    if (ring == null) {
+      return null;
+    }
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    if (ipso == null) {
+      return null;
+    }
+    int size = ring.getAtomCount();
+    List<IAtom> walk = ringWalk(ring, ipso);
+    if (walk == null) {
+      return null;
+    }
+    Integer reference = null;
+    for (int position : positions) {
+      if (position < 2 || position > size) {
+        return null;
+      }
+      int steps = position - 1;
+      if (reference == null && 2 * steps != size) {
+        reference = position;
+      }
+    }
+    if (reference == null) {
+      return null;
+    }
+    int steps = reference - 1;
+    IAtom named = ringAtomAtDistance(container, ring, ipso, Math.min(steps, size - steps), residue);
+    if (named == null) {
+      return null;
+    }
+    if (walk.get(steps) != named) {
+      // Number the other way round.
+      List<IAtom> reversed = new ArrayList<>(walk.subList(1, size));
+      Collections.reverse(reversed);
+      reversed.add(0, ipso);
+      walk = reversed;
+    }
+    List<IAtom> targets = new ArrayList<>();
+    for (int position : positions) {
+      IAtom target = walk.get(position - 1);
+      if (containsSame(targets, target)) {
+        return null;
+      }
+      targets.add(target);
+    }
+    return targets;
+  }
+
+  /**
+   * The ring's atoms in order round it, starting at the given atom; {@code null} if not a cycle.
+   */
+  private static List<IAtom> ringWalk(IAtomContainer ring, IAtom start) {
+    List<IAtom> walk = new ArrayList<>();
+    walk.add(start);
+    IAtom previous = null;
+    IAtom current = start;
+    while (walk.size() < ring.getAtomCount()) {
+      IAtom next = null;
+      for (IAtom neighbour : ring.getConnectedAtomsList(current)) {
+        if (neighbour != previous && neighbour != start && !containsSame(walk, neighbour)) {
+          next = neighbour;
+          break;
+        }
+      }
+      if (next == null) {
+        return null;
+      }
+      walk.add(next);
+      previous = current;
+      current = next;
+    }
+    return walk;
   }
 
   /** Whether the list already holds this very atom. */
