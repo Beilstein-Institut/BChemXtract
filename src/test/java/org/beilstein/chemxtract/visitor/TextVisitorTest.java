@@ -289,4 +289,26 @@ public class TextVisitorTest {
     assertEquals(
         "", new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().getFirst().entryLetters());
   }
+
+  /**
+   * A lettered line names one compound, so ring substituents listed on it at different positions
+   * ("p: R = 2-CH3, 5-NO2") are one value, not two alternatives.
+   */
+  @Test
+  public void ringSubstituentsOnALetteredLineAreOneValue() {
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("o: R = 2,4,6-CH3\rp: R = 2-CH3, 5-NO2")).getRgroups();
+    assertEquals(List.of("2,4,6-CH3", "2-CH3; 5-NO2"), r.get("R"));
+  }
+
+  /** Without a letter, or when not every value names a ring position, a list stays a list. */
+  @Test
+  public void otherListsStayAlternatives() {
+    assertEquals(
+        List.of("2-CH3", "5-NO2"),
+        new TextVisitor(pageWithTexts("R = 2-CH3, 5-NO2")).getRgroups().get("R"));
+    assertEquals(
+        List.of("H", "4-Me"),
+        new TextVisitor(pageWithTexts("a: R = H, 4-Me")).getRgroups().get("R"));
+  }
 }

@@ -811,6 +811,58 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A value naming different groups at different positions ("2-CH3; 5-NO2", as the legend parser
+   * joins them) puts each group on its own position, counted in one direction round the ring.
+   */
+  @Test
+  public void differentGroupsAtDifferentPositionsGraftTogether() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("2-CH3; 5-NO2")));
+    IAtomContainer scaffold = scaffoldFromSmiles("Clc1ccccc1", "R", 3);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    assertNoPseudoAtoms(results.getFirst());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("Cc1ccc([N+](=O)[O-])cc1Cl")),
+        canonicalSmiles(results.getFirst()),
+        "2-CH3; 5-NO2 must give the 2-methyl-5-nitro ring");
+  }
+
+  /** An unbranched chain written out as CH2 units grafts as that chain, alone or at a position. */
+  @Test
+  public void writtenOutChainGraftsAsAChain() throws Exception {
+    for (Map.Entry<String, String> entry :
+        Map.of(
+                "CH2CH3", "CC(=O)CC",
+                "CH2CH2CH3", "CC(=O)CCC",
+                "(CH2)3CH3", "CC(=O)CCCC")
+            .entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1));
+      assertEquals(1, results.size(), entry.getKey());
+      assertEquals(
+          canonicalSmiles(
+              new SmilesParser(SilentChemObjectBuilder.getInstance())
+                  .parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey());
+    }
+    List<IAtomContainer> ethyl =
+        handlerWith(Map.of("R", List.of("3-CH2CH3")))
+            .replaceRGroups(scaffoldFromSmiles("Clc1ccccc1", "R", 3));
+    assertEquals(1, ethyl.size());
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("CCc1cccc(Cl)c1")),
+        canonicalSmiles(ethyl.getFirst()),
+        "3-CH2CH3 must give 3-ethyl");
+  }
+
+  /**
    * A group whose name ends in a digit is not multiplied by it: 2,4,6-CH3 is three methyls, as in
    * 69o/70o of {@code cheminf/bugs/markush/m50167957-13}, not three "CH".
    */

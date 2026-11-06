@@ -148,6 +148,13 @@ public class MarkushHandler {
    */
   private static final Pattern STRAIGHT_CHAIN_ALKYL = Pattern.compile("n-C(\\d{1,2})H(\\d{1,2})");
 
+  /**
+   * An unbranched alkyl chain written out as CH2 units ending in CH3, {@code CH2CH3} or {@code
+   * (CH2)3CH3}: the number of carbons is the number of CH2 units plus one.
+   */
+  private static final Pattern WRITTEN_OUT_CHAIN =
+      Pattern.compile("((?:CH2)+)CH3|\\(CH2\\)(\\d{1,2})CH3");
+
   /** Label of the phenyl's substituent residue while a substituted phenyl is assembled. */
   private static final String PHENYL_SUBSTITUENT = "#substituent";
 
@@ -1244,6 +1251,16 @@ public class MarkushHandler {
           LOGGER.debug("Alkyl formula {} has no readable counts.", definition);
         }
       }
+      Matcher chain = WRITTEN_OUT_CHAIN.matcher(definition);
+      if (chain.matches()) {
+        int units =
+            chain.group(1) != null
+                ? chain.group(1).length() / "CH2".length()
+                : Integer.parseInt(chain.group(2));
+        if (units > 0) {
+          return "*" + "C".repeat(units + 1);
+        }
+      }
     }
     return definition;
   }
@@ -1329,15 +1346,36 @@ public class MarkushHandler {
     if (positional == null) {
       return false;
     }
-    if (!placeResidues(container, label, positional.positions())) {
+    List<String> groups = positional.smiles().stream().distinct().toList();
+    if (groups.size() == 1) {
+      if (!placeResidues(container, label, positional.positions(), null)) {
+        return false;
+      }
+      replaceRGroup(container, label, groups.getFirst());
+      return true;
+    }
+    // Different groups at different positions: each position's residue carries a label of its
+    // group's own until it is grafted.
+    List<String> labels = new ArrayList<>();
+    for (String smiles : positional.smiles()) {
+      labels.add(label + '#' + groups.indexOf(smiles));
+    }
+    if (!placeResidues(container, label, positional.positions(), labels)) {
       return false;
     }
-    replaceRGroup(container, label, positional.smiles());
+    for (int group = 0; group < groups.size(); group++) {
+      replaceRGroup(container, label + '#' + group, groups.get(group));
+    }
     return true;
   }
 
-  /** A value written in positional notation: the ring positions it names, and its group. */
-  private record PositionalValue(List<Integer> positions, String smiles) {}
+  /**
+   * A value written in positional notation: the ring positions it names, and the group on each.
+   *
+   * @param positions the ring positions, in the order written
+   * @param smiles the group's SMILES for each position, index for index
+   */
+  private record PositionalValue(List<Integer> positions, List<String> smiles) {}
 
   /**
    * Which of a scaffold's candidate attachments an assignment can tell apart.
@@ -1535,6 +1573,20 @@ public class MarkushHandler {
    * @throws IOException if reading SMILES definitions fails
    */
   private PositionalValue parsePositional(String value) throws IOException {
+    if (value.contains(TextVisitor.SUBSTITUENT_JOINER)) {
+      // Several groups of one compound, each at its own positions.
+      List<Integer> positions = new ArrayList<>();
+      List<String> smiles = new ArrayList<>();
+      for (String part : value.split(TextVisitor.SUBSTITUENT_JOINER)) {
+        PositionalValue positional = parsePositional(part);
+        if (positional == null) {
+          return null;
+        }
+        positions.addAll(positional.positions());
+        smiles.addAll(positional.smiles());
+      }
+      return new PositionalValue(positions, smiles);
+    }
     Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
     if (!matcher.matches() || substitutedPhenyl(value) != null) {
       return null;
@@ -1549,7 +1601,9 @@ public class MarkushHandler {
     if (!ChemicalUtils.isValidSmiles(smiles)) {
       smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
     }
-    return ChemicalUtils.isValidSmiles(smiles) ? new PositionalValue(positions, smiles) : null;
+    return ChemicalUtils.isValidSmiles(smiles)
+        ? new PositionalValue(positions, Collections.nCopies(positions.size(), smiles))
+        : null;
   }
 
   /**
@@ -1587,17 +1641,24 @@ public class MarkushHandler {
    * @param container the structure to modify
    * @param label the R-group label
    * @param positions the 1-based ring positions the value names, in the order written
+   * @param labels the label each position's residue carries afterwards, index for index, or {@code
+   *     null} to keep {@code label} on all of them
    * @return {@code true} if every residue now sits on the named positions
    */
   private static boolean placeResidues(
-      IAtomContainer container, String label, List<Integer> positions) {
+      IAtomContainer container, String label, List<Integer> positions, List<String> labels) {
     List<IAtom> residues = residues(container, label);
     if (residues.isEmpty()) {
       return false;
     }
     IRingSet rings = Cycles.mcb(container).toRingSet();
     for (IAtom residue : residues) {
-      if (!placeResidue(container, rings, residue, label, positions)) {
+      if (!placeResidue(
+          container,
+          rings,
+          residue,
+          positions,
+          labels != null ? labels : Collections.nCopies(positions.size(), label))) {
         return false;
       }
     }
@@ -1614,16 +1675,16 @@ public class MarkushHandler {
    * @param container the structure to modify
    * @param rings the ring set of the container
    * @param residue the drawn residue
-   * @param label the R-group label
    * @param positions the 1-based ring positions the value names, in the order written
+   * @param labels the label each position's residue carries, index for index
    * @return {@code true} if the residue and its copies sit on the named positions
    */
   private static boolean placeResidue(
       IAtomContainer container,
       IRingSet rings,
       IAtom residue,
-      String label,
-      List<Integer> positions) {
+      List<Integer> positions,
+      List<String> labels) {
     List<IAtom> targets = residueTargets(container, rings, residue, positions);
     if (targets == null) {
       return false;
@@ -1631,8 +1692,9 @@ public class MarkushHandler {
     if (!moveResidueToAtom(container, residue, targets.getFirst())) {
       return false;
     }
-    for (IAtom target : targets.subList(1, targets.size())) {
-      attachResidue(container, target, label);
+    ((IPseudoAtom) residue).setLabel(labels.getFirst());
+    for (int i = 1; i < targets.size(); i++) {
+      attachResidue(container, targets.get(i), labels.get(i));
     }
     return true;
   }
