@@ -1082,6 +1082,79 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A value such as {@code 4-BrBn} names a substituted benzyl group: the locant counts round the
+   * benzyl's ring, and a CH2 links the ring to the scaffold (m50167957-14, 77a and 78a).
+   */
+  @Test
+  public void substitutedBenzylValueGraftsWithMethyleneLinker() throws Exception {
+    Map<String, String> expected = new LinkedHashMap<>();
+    expected.put("4-BrBn", "CC(=O)Cc1ccc(Br)cc1");
+    expected.put("4-NO2Bn", "CC(=O)Cc1ccc([N+](=O)[O-])cc1");
+    expected.put("2-ClBn", "CC(=O)Cc1ccccc1Cl");
+    expected.put("p-OMe-Bn", "CC(=O)Cc1ccc(OC)cc1");
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+      assertEquals(1, results.size(), entry.getKey() + " must graft on an R off every ring");
+      assertNoPseudoAtoms(results.getFirst());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey() + " must graft as the substituted benzyl it names");
+    }
+  }
+
+  /**
+   * {@code n-C8H17} is a straight-chain alkyl group written as a formula (m50167957-14, 77b). The
+   * hydrogen count must be that of an alkyl group, 2n+1; anything else is not read as a chain.
+   */
+  @Test
+  public void straightChainAlkylFormulaGraftsAsAChain() throws Exception {
+    Map<String, String> expected = new LinkedHashMap<>();
+    expected.put("n-C8H17", "CC(=O)CCCCCCCC");
+    expected.put("n-C12H25", "CC(=O)CCCCCCCCCCCC");
+    expected.put("n-C4H9", "CC(=O)CCCC");
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+      assertEquals(1, results.size(), entry.getKey() + " must graft");
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey() + " must graft as a straight chain");
+    }
+    assertTrue(
+        handlerWith(Map.of("R", List.of("n-C8H15")))
+            .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40))
+            .isEmpty(),
+        "C8H15 is not an alkyl group and must not be read as octyl");
+  }
+
+  /**
+   * When the legend nearest a scaffold defines its R but none of the values resolve, the scaffold
+   * yields nothing. It must not borrow the values of another scheme's legend on the same page
+   * (m50167957-14: scheme 77 picked up 4-CN, 2-OCH3, 3-Cl from the legends of 74, 76 and 79).
+   */
+  @Test
+  public void unresolvedNearestLegendDoesNotBorrowAnotherLegend() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(0, 50, 50, 70), "R = Xyz"));
+    page.addText(textAt(rect(400, 50, 450, 70), "R = Cl"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+    assertTrue(results.isEmpty(), "the far legend's R = Cl must not apply: " + results.size());
+  }
+
+  /**
    * Thioanisole with {@code R} drawn on the meta carbon next to ortho carbon {@code c3}, and the
    * S-methyl moved onto the spot outside {@code c3} where a substituent placed there would go, the
    * way the carbonyl O sits over the ring in 22-9-i2.

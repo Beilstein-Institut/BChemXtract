@@ -117,11 +117,12 @@ public class MarkushHandler {
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
    * or {@code ortho}/{@code meta}/{@code para}, and the phenyl as {@code Ph} or {@code C6H4}
-   * ({@code 4-ClC6H4}). It looks like positional notation but names no position on the scaffold, so
-   * it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
+   * ({@code 4-ClC6H4}). A benzyl written {@code Bn} or {@code CH2C6H4} ({@code 4-BrBn}) is the same
+   * group with a CH2 between ring and scaffold. It looks like positional notation but names no
+   * position on the scaffold, so it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
    */
   private static final Pattern SUBSTITUTED_PHENYL =
-      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(?:Ph|C6H4)-?");
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(Ph|C6H4|Bn|CH2C6H4)-?");
 
   /**
    * The same group with the substituent written after the phenyl, e.g. {@code p-PhNO2}, {@code
@@ -136,6 +137,13 @@ public class MarkushHandler {
    * position, not 4-hydroxyphenyl.
    */
   private static final Set<String> TERMINAL_PHENYL_SUBSTITUENTS = Set.of("F", "Cl", "Br", "I", "C");
+
+  /**
+   * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
+   * the hydrogen count is that of an alkyl group, 2n+1. Without the {@code n-} the formula does not
+   * say which isomer is meant, so it is not read.
+   */
+  private static final Pattern STRAIGHT_CHAIN_ALKYL = Pattern.compile("n-C(\\d{1,2})H(\\d{1,2})");
 
   /** Label of the phenyl's substituent residue while a substituted phenyl is assembled. */
   private static final String PHENYL_SUBSTITUENT = "#substituent";
@@ -462,7 +470,9 @@ public class MarkushHandler {
 
   /**
    * Generates all structures for a scaffold that a position-variation attachment drew as several
-   * candidates, resolving its R-groups from the definition block nearest to it.
+   * candidates, resolving its R-groups from the definition block nearest to it. The page-wide union
+   * of definitions is used only when no block defines the scaffold's labels; when the nearest block
+   * does but none of its values graft, the scaffold yields nothing.
    *
    * <p>The candidates are the same scaffold with one residue bonded to a different atom each. They
    * are enumerated together rather than one after another: the assignments are enumerated once, and
@@ -489,21 +499,18 @@ public class MarkushHandler {
       return List.of();
     }
     Set<String> present = presentResidueLabels(candidates.getFirst());
-    List<Map<String, String>> combinations =
-        viableCombinations(
-            candidates, permittedChoices(candidates, residueChoicesNear(present, scaffoldBounds)));
-    if (combinations.isEmpty()) {
-      // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
-      // page-wide union.
+    List<Choice> choices = residueChoicesNear(present, scaffoldBounds);
+    if (choices.isEmpty()) {
+      // No legend defines any of this scaffold's labels; defer to the page-wide union.
       return replaceRGroups(candidates, residueLabels, produced);
     }
-    List<IAtomContainer> scoped = applyCombinations(candidates, combinations, produced);
-    // Scoping is a refinement: if it narrowed the definitions down to something that produced no
-    // structures, fall back to the page-wide union so scoping never does worse than no scoping.
-    if (scoped.isEmpty()) {
-      return replaceRGroups(candidates, residueLabels, produced);
-    }
-    return scoped;
+    // The nearest legend defines the scaffold's labels. If its values do not graft, the scaffold
+    // yields nothing: the other legends on the page belong to other schemes, and their values
+    // would make structures the page never shows.
+    return applyCombinations(
+        candidates,
+        viableCombinations(candidates, permittedChoices(candidates, choices)),
+        produced);
   }
 
   /** Labels of the pseudo-atoms present in the container (candidate R-groups to resolve). */
@@ -1099,6 +1106,13 @@ public class MarkushHandler {
       if (phenyl != null) {
         return phenyl;
       }
+      Matcher alkyl = STRAIGHT_CHAIN_ALKYL.matcher(definition);
+      if (alkyl.matches()) {
+        int carbons = Integer.parseInt(alkyl.group(1));
+        if (carbons > 0 && Integer.parseInt(alkyl.group(2)) == 2 * carbons + 1) {
+          return "*" + "C".repeat(carbons);
+        }
+      }
     }
     return definition;
   }
@@ -1116,11 +1130,13 @@ public class MarkushHandler {
   private String substitutedPhenyl(String value) throws IOException {
     String locant;
     String named;
+    boolean benzyl = false;
     Matcher matcher = SUBSTITUTED_PHENYL.matcher(value);
     Matcher trailing = PHENYL_THEN_SUBSTITUENT.matcher(value);
     if (matcher.matches()) {
       locant = matcher.group(1);
       named = matcher.group(2);
+      benzyl = matcher.group(3).equals("Bn") || matcher.group(3).equals("CH2C6H4");
     } else if (trailing.matches()) {
       locant = trailing.group(1);
       named = trailing.group(2) != null ? trailing.group(2) : trailing.group(3);
@@ -1140,11 +1156,19 @@ public class MarkushHandler {
           : attachments != 1) {
         return null;
       }
-      // The ipso carbon carries the attachment point, the substituent sits position - 1 bonds on.
+      // The ipso carbon carries the attachment point (through a CH2 for a benzyl), the substituent
+      // sits position - 1 bonds on.
+      String linker = benzyl ? "C" : "";
       IAtomContainer phenyl =
           smilesParser.parseSmiles(
-              "*c1" + "c".repeat(position - 2) + "c(*)" + "c".repeat(5 - position) + "c1");
-      ((IPseudoAtom) phenyl.getAtom(position + 1)).setLabel(PHENYL_SUBSTITUENT);
+              "*"
+                  + linker
+                  + "c1"
+                  + "c".repeat(position - 2)
+                  + "c(*)"
+                  + "c".repeat(5 - position)
+                  + "c1");
+      ((IPseudoAtom) phenyl.getAtom(position + 1 + linker.length())).setLabel(PHENYL_SUBSTITUENT);
       replaceRGroup(phenyl, PHENYL_SUBSTITUENT, substituent);
       return new SmilesGenerator(SmiFlavor.Default).create(phenyl);
     } catch (CDKException | CloneNotSupportedException e) {

@@ -63,8 +63,11 @@ class MixedCoordinateStereoTest {
     // an unresolved R-group, and the C6H4 spelling of a substituted phenyl adds its 2-FC6H4 ones.
     // An eighth, a position-variation scaffold with undefined R-groups, has no InChI and is
     // skipped.
+    // Five since the nearest legend no longer falls back to the page's other legends: two of the
+    // seven were the CPA-15 catalyst with 116a's 2-FC6H4 and 4-BrC6H4 in place of its own
+    // Ar = 9-phenanthryl, which does not resolve.
     // The three keys below are what this test is actually about.
-    assertThat(substances).as("every structure on the page must survive").hasSize(7);
+    assertThat(substances).as("every structure on the page must survive").hasSize(5);
     assertThat(substances)
         .as("the allene stereochemistry of the mixed-coordinate fragments must be perceived")
         .extracting(BCXSubstance::getInchiKey)

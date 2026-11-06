@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,5 +121,37 @@ public class MarkushBugTest {
             "ZRWNRAJCPNLYAK-UHFFFAOYSA-N"), // 4-bromobenzamide (p-Br)
         inchiKeys,
         "o-/m-/p- must name ring positions 2/3/4");
+  }
+
+  /**
+   * Scheme 77 of m50167957-14 lists its R as 4-BrBn, n-C8H17 and n-C11H25. The first two resolve as
+   * 4-bromobenzyl and n-octyl; n-C11H25 is no alkyl formula (undecyl is C11H23) and stays
+   * unresolved. The scaffold must not take the values of the other legends on the page (4-CN,
+   * 2-OCH3, 3-Cl, ...), which used to put a nitrile or a chlorine on the triazole N.
+   */
+  @Test
+  public void testUnresolvedLegendDoesNotBorrowOtherSchemesValues() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-14.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "JFRLSXWVNRAAJJ-MDZDMXLPSA-N", // 77a, R = 4-bromobenzyl
+                "IMYUECJCIFBZLN-OUKQBFOZSA-N")), // 77b, R = n-octyl
+        "77a and 77b must be extracted: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "AMDYKOHIXBLWCN-AATRIKPKSA-N", // N-CN, from 74's 4-CN
+            "IPJHTVAMXZXVLD-AATRIKPKSA-N", // N-H, from 76's H
+            "HLQKYOYKEZIKTF-VOTSOKGWSA-N", // C-OCH3, from 76's 2-OCH3
+            "PDHDCFQEZDSGNN-AATRIKPKSA-N", // C-OH, from 76's 2-OH
+            "OOCBJXBLLKHESZ-AATRIKPKSA-N", // N-Cl, from 79's 3-Cl
+            "OYBYVSIIVJJFIL-AATRIKPKSA-N")) { // N-CF3, from 79's 3-CF3
+      assertTrue(
+          !inchiKeys.contains(borrowed), "scheme 77 took another legend's value: " + borrowed);
+    }
   }
 }
