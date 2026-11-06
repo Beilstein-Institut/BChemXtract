@@ -1108,9 +1108,13 @@ public class MarkushHandler {
       }
       Matcher alkyl = STRAIGHT_CHAIN_ALKYL.matcher(definition);
       if (alkyl.matches()) {
-        int carbons = Integer.parseInt(alkyl.group(1));
-        if (carbons > 0 && Integer.parseInt(alkyl.group(2)) == 2 * carbons + 1) {
-          return "*" + "C".repeat(carbons);
+        try {
+          int carbons = Integer.parseInt(alkyl.group(1));
+          if (carbons > 0 && Integer.parseInt(alkyl.group(2)) == 2 * carbons + 1) {
+            return "*" + "C".repeat(carbons);
+          }
+        } catch (NumberFormatException e) {
+          LOGGER.debug("Alkyl formula {} has no readable counts.", definition);
         }
       }
     }
