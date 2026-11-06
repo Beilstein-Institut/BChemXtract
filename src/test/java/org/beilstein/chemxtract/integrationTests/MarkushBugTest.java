@@ -217,4 +217,26 @@ public class MarkushBugTest {
       assertFalse(inchiKeys.contains(drawing), "a drawn R value was extracted: " + drawing);
     }
   }
+
+  /**
+   * Entries p and q of the a-q legend in m50167957-13: "p: R = 2-CH3, 5-NO2" names one compound
+   * with both groups on the ring, and "q: R = 3-CH2CH3" is a written-out ethyl. Both apply to
+   * schemes 69 and 70.
+   */
+  @Test
+  public void testOneCompoundsRingSubstituentsAndWrittenOutChain() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "GYXRWPZWRLTDGJ-UHFFFAOYSA-N", // 69p, 2-methyl-5-nitrophenyl
+                "WLXSFHKTZSAWTO-UHFFFAOYSA-N", // 69q, 3-ethylphenyl
+                "WIZFPTRAYBRGSJ-UHFFFAOYSA-N", // 70p, 2-methyl-5-nitrophenyl
+                "LOWFXIMCKAUZEY-UHFFFAOYSA-N")), // 70q, 3-ethylphenyl
+        "69p/q and 70p/q must be extracted: " + inchiKeys);
+  }
 }
