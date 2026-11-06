@@ -22,7 +22,9 @@
 package org.beilstein.chemxtract.integrationTests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,5 +122,121 @@ public class MarkushBugTest {
             "ZRWNRAJCPNLYAK-UHFFFAOYSA-N"), // 4-bromobenzamide (p-Br)
         inchiKeys,
         "o-/m-/p- must name ring positions 2/3/4");
+  }
+
+  /**
+   * Scheme 77 of m50167957-14 lists its R as 4-BrBn, n-C8H17 and n-C11H25. The first two resolve as
+   * 4-bromobenzyl and n-octyl; n-C11H25 is no alkyl formula (undecyl is C11H23) and stays
+   * unresolved. The scaffold must not take the values of the other legends on the page (4-CN,
+   * 2-OCH3, 3-Cl, ...), which used to put a nitrile or a chlorine on the triazole N.
+   */
+  @Test
+  public void testUnresolvedLegendDoesNotBorrowOtherSchemesValues() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-14.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "JFRLSXWVNRAAJJ-MDZDMXLPSA-N", // 77a, R = 4-bromobenzyl
+                "IMYUECJCIFBZLN-OUKQBFOZSA-N")), // 77b, R = n-octyl
+        "77a and 77b must be extracted: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "AMDYKOHIXBLWCN-AATRIKPKSA-N", // N-CN, from 74's 4-CN
+            "IPJHTVAMXZXVLD-AATRIKPKSA-N", // N-H, from 76's H
+            "HLQKYOYKEZIKTF-VOTSOKGWSA-N", // C-OCH3, from 76's 2-OCH3
+            "PDHDCFQEZDSGNN-AATRIKPKSA-N", // C-OH, from 76's 2-OH
+            "OOCBJXBLLKHESZ-AATRIKPKSA-N", // N-Cl, from 79's 3-Cl
+            "OYBYVSIIVJJFIL-AATRIKPKSA-N")) { // N-CF3, from 79's 3-CF3
+      assertTrue(
+          !inchiKeys.contains(borrowed), "scheme 77 took another legend's value: " + borrowed);
+    }
+  }
+
+  /**
+   * In m50167957-13, schemes 69 and 70 share one legend, a-q, drawn as two columns (a-i | j-q)
+   * whose gutter is a little wider than the plain column merge allows; their continuous lettering
+   * makes them one legend, so both scaffolds take all of it. Scheme 72 gives its R as drawings
+   * beside "a: R =", "b: R =", "c: R ="; it must not take the a-q values instead.
+   */
+  @Test
+  public void testLetteredColumnsMergeAndDrawnLegendDoesNotBorrow() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "BJPDPRDMWFFZPV-UHFFFAOYSA-N", // 69j, R = 3-Cl, from the second column
+                "RPLXHRKISWDTOM-UHFFFAOYSA-N")), // 70a, R = 4-CH3, from the first column
+        "69 and 70 must each take both legend columns: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "JKHJZPOBYPJMDS-UHFFFAOYSA-N", // N-Cl
+            "VTAMPPWPAOZORH-UHFFFAOYSA-N", // N-OCH3
+            "JEAZYBAXYCQDSR-UHFFFAOYSA-N", // C-CH3
+            "MBRIKFDTHBFKMZ-UHFFFAOYSA-N", // C-F
+            "OCIXKTFFUHFVNY-UHFFFAOYSA-N")) { // N-CH3
+      assertFalse(
+          inchiKeys.contains(borrowed), "scheme 72 took the a-q legend's value: " + borrowed);
+    }
+  }
+
+  /**
+   * Scheme 72 of m50167957-13 gives R as drawings: "a: R =", "b: R =" and "c: R =", each followed
+   * by a group whose free bond ends at a wavy line. The groups are R's values (4-sulfamoylphenyl,
+   * 1-naphthyl, 4-nitrophenyl), not substances; their end atoms are the attachment, not methyls,
+   * and the wavy lines are not ethane. The scaffold's ring-fusion bond is drawn single in the
+   * source, which the keys keep.
+   */
+  @Test
+  public void testDrawnLegendValuesGraftAndAreNotSubstances() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "MNACKBPSVHGIFK-UHFFFAOYSA-N", // 72a, R = 4-sulfamoylphenyl
+                "NHUTVENUAYNHAF-UHFFFAOYSA-N", // 72b, R = 1-naphthyl
+                "OYGKJLXVXXRMML-UHFFFAOYSA-N")), // 72c, R = 4-nitrophenyl
+        "72a-c must be extracted: " + inchiKeys);
+    for (String drawing :
+        List.of(
+            "LMYRWZFENFIFIT-UHFFFAOYSA-N", // p-toluenesulfonamide, the 72a drawing
+            "QPUYECUOLPXSFR-UHFFFAOYSA-N", // 1-methylnaphthalene, the 72b drawing
+            "ZPTVNYMJQHSSEA-UHFFFAOYSA-N", // 4-nitrotoluene, the 72c drawing
+            "OTMSDBZUPAUEDD-UHFFFAOYSA-N")) { // ethane, a wavy line
+      assertFalse(inchiKeys.contains(drawing), "a drawn R value was extracted: " + drawing);
+    }
+  }
+
+  /**
+   * Entries p and q of the a-q legend in m50167957-13: "p: R = 2-CH3, 5-NO2" names one compound
+   * with both groups on the ring, and "q: R = 3-CH2CH3" is a written-out ethyl. Both apply to
+   * schemes 69 and 70.
+   */
+  @Test
+  public void testOneCompoundsRingSubstituentsAndWrittenOutChain() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "GYXRWPZWRLTDGJ-UHFFFAOYSA-N", // 69p, 2-methyl-5-nitrophenyl
+                "WLXSFHKTZSAWTO-UHFFFAOYSA-N", // 69q, 3-ethylphenyl
+                "WIZFPTRAYBRGSJ-UHFFFAOYSA-N", // 70p, 2-methyl-5-nitrophenyl
+                "LOWFXIMCKAUZEY-UHFFFAOYSA-N")), // 70q, 3-ethylphenyl
+        "69p/q and 70p/q must be extracted: " + inchiKeys);
   }
 }

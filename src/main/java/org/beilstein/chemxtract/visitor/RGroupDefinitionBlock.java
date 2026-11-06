@@ -30,14 +30,39 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
  * that text on the page. The position lets callers associate a block with the scaffold it belongs
  * to when several scaffolds on the same page reuse the same R-group labels.
  *
+ * <p>A label may be defined with no values: a legend line such as {@code a: R =} whose value is a
+ * drawn structure rather than text. Such a block still claims the label for the scaffold it sits
+ * next to.
+ *
  * @param bounds the bounding box of the source text ({@code null} if the text had no position)
  * @param definitions independent per-label substituent lists (each label varies on its own)
  * @param correlatedGroups positional tables whose labels vary together as fixed row-tuples
  * @param lineHeight height of one line of the source text: its bounds' height over its number of
  *     lines ({@code 0} if the text had no position)
+ * @param entryLetters the letters the text's lines open with, in order, e.g. {@code "abc"} for a
+ *     legend of lines {@code a: R = ...}, {@code b: R = ...}, {@code c: R = ...}; empty if its
+ *     lines are not lettered
  */
 public record RGroupDefinitionBlock(
     CDRectangle bounds,
     Map<String, List<String>> definitions,
     List<CorrelatedGroup> correlatedGroups,
-    float lineHeight) {}
+    float lineHeight,
+    String entryLetters) {
+
+  /**
+   * A block whose lines are not lettered.
+   *
+   * @param bounds the bounding box of the source text
+   * @param definitions independent per-label substituent lists
+   * @param correlatedGroups positional tables whose labels vary together
+   * @param lineHeight height of one line of the source text
+   */
+  public RGroupDefinitionBlock(
+      CDRectangle bounds,
+      Map<String, List<String>> definitions,
+      List<CorrelatedGroup> correlatedGroups,
+      float lineHeight) {
+    this(bounds, definitions, correlatedGroups, lineHeight, "");
+  }
+}
