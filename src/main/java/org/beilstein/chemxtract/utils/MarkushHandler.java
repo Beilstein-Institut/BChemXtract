@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,8 +42,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
+import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.cheminf.RingSystemNumbering;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
@@ -157,7 +160,9 @@ public class MarkushHandler {
 
   private final Map<String, List<String>> residueLabels;
   private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
+  private final List<RGroupDefinitionBlock> textBlocks;
   private final List<RGroupDefinitionBlock> blocks;
+  private final IChemObjectBuilder builder;
   private final SmilesParser smilesParser;
 
   /**
@@ -210,7 +215,9 @@ public class MarkushHandler {
   public MarkushHandler(CDPage page, IChemObjectBuilder builder, boolean unrestricted) {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
-    blocks = mergeColumnBlocks(textVisitor.getBlocks());
+    textBlocks = textVisitor.getBlocks();
+    blocks = mergeColumnBlocks(textBlocks, Set.of());
+    this.builder = builder;
     smilesParser = new SmilesParser(builder);
     this.unrestricted = unrestricted;
   }
@@ -254,10 +261,16 @@ public class MarkushHandler {
    * rows, and the table is their union. Legends that sit far apart (one per scaffold) stay
    * separate, so nearest-block scoping keeps disambiguating those.
    *
+   * <p>Lines that give their values as drawings ({@code a: R =}, {@code b: R =}, each followed by a
+   * drawn group) are spaced by the drawings rather than by the text, so they are merged when they
+   * share a column and their lettering runs on, however far apart they sit.
+   *
    * @param blocks the per-text-node blocks from {@link TextVisitor}
+   * @param drawn the blocks whose values were taken from drawings
    * @return the blocks with same-label runs of one legend merged into one block each
    */
-  private static List<RGroupDefinitionBlock> mergeColumnBlocks(List<RGroupDefinitionBlock> blocks) {
+  private static List<RGroupDefinitionBlock> mergeColumnBlocks(
+      List<RGroupDefinitionBlock> blocks, Set<RGroupDefinitionBlock> drawn) {
     List<RGroupDefinitionBlock> result = new ArrayList<>();
     boolean[] merged = new boolean[blocks.size()];
     for (int i = 0; i < blocks.size(); i++) {
@@ -293,7 +306,8 @@ public class MarkushHandler {
               .anyMatch(
                   member ->
                       sameColumnAdjacent(member, candidate)
-                          || sideBySideLegend(member, candidate))) {
+                          || sideBySideLegend(member, candidate)
+                          || drawnLegendColumn(member, candidate, drawn))) {
             cluster.add(candidate);
             merged[j] = true;
             grew = true;
@@ -331,6 +345,87 @@ public class MarkushHandler {
         Math.max(0, Math.max(ra.getTop() - rb.getBottom(), rb.getTop() - ra.getBottom()));
     double lineHeight = Math.max(a.lineHeight(), b.lineHeight());
     return verticalGap <= lineHeight * 1.5;
+  }
+
+  /**
+   * Whether two blocks are lines of one legend that gives its values as drawings: both took their
+   * values from drawings, they share a column, and their lettering runs on.
+   */
+  private static boolean drawnLegendColumn(
+      RGroupDefinitionBlock a, RGroupDefinitionBlock b, Set<RGroupDefinitionBlock> drawn) {
+    if (!drawn.contains(a) || !drawn.contains(b)) {
+      return false;
+    }
+    CDRectangle ra = a.bounds();
+    CDRectangle rb = b.bounds();
+    double horizontalOverlap =
+        Math.min(ra.getRight(), rb.getRight()) - Math.max(ra.getLeft(), rb.getLeft());
+    return horizontalOverlap > 0 && continuousLettering(a, b);
+  }
+
+  /**
+   * Takes the values of legend lines that give them as drawings ({@code a: R =} followed by a drawn
+   * group ending at a wavy line) from those drawings. A drawing belongs to the line it sits beside:
+   * its attachment end level with the line and a few line heights to the right of it.
+   *
+   * @param fragments the page's fragments
+   * @return the fragments taken as values, drawn groups and their wavy lines, which are not
+   *     substances of their own
+   */
+  public Set<CDFragment> adoptDrawnValues(List<CDFragment> fragments) {
+    Set<CDFragment> consumed = Collections.newSetFromMap(new IdentityHashMap<>());
+    List<DrawnRGroupValues.Drawing> drawings = new ArrayList<>(DrawnRGroupValues.find(fragments));
+    if (drawings.isEmpty()) {
+      return consumed;
+    }
+    Set<RGroupDefinitionBlock> drawn = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (RGroupDefinitionBlock block : textBlocks) {
+      if (block.bounds() == null || block.definitions().size() != 1) {
+        continue;
+      }
+      Map.Entry<String, List<String>> definition = block.definitions().entrySet().iterator().next();
+      if (!definition.getValue().isEmpty()) {
+        continue;
+      }
+      List<DrawnRGroupValues.Drawing> beside =
+          drawings.stream()
+              .filter(drawing -> besideLine(block, drawing.end().getPosition2D()))
+              .sorted(Comparator.comparingDouble(drawing -> drawing.end().getPosition2D().getY()))
+              .toList();
+      List<String> values = new ArrayList<>();
+      for (DrawnRGroupValues.Drawing drawing : beside) {
+        String smiles = DrawnRGroupValues.smiles(drawing, builder);
+        if (smiles != null) {
+          values.add(smiles);
+          drawings.remove(drawing);
+          consumed.add(drawing.group());
+          consumed.add(drawing.cut());
+        }
+      }
+      if (!values.isEmpty()) {
+        block.definitions().put(definition.getKey(), values);
+        residueLabels.computeIfAbsent(definition.getKey(), _ -> new ArrayList<>()).addAll(values);
+        drawn.add(block);
+      }
+    }
+    if (!drawn.isEmpty()) {
+      List<RGroupDefinitionBlock> merged = mergeColumnBlocks(textBlocks, drawn);
+      blocks.clear();
+      blocks.addAll(merged);
+      owners.clear();
+    }
+    return consumed;
+  }
+
+  /** Whether a point is level with a text block and a little to its right. */
+  private static boolean besideLine(RGroupDefinitionBlock block, CDPoint2D point) {
+    CDRectangle bounds = block.bounds();
+    float line = block.lineHeight() > 0 ? block.lineHeight() : bounds.getBottom() - bounds.getTop();
+    double right = point.getX() - bounds.getRight();
+    return point.getY() >= bounds.getTop() - line / 2
+        && point.getY() <= bounds.getBottom() + line / 2
+        && right >= 0
+        && right <= 3 * line;
   }
 
   /**

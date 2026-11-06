@@ -186,4 +186,35 @@ public class MarkushBugTest {
           inchiKeys.contains(borrowed), "scheme 72 took the a-q legend's value: " + borrowed);
     }
   }
+
+  /**
+   * Scheme 72 of m50167957-13 gives R as drawings: "a: R =", "b: R =" and "c: R =", each followed
+   * by a group whose free bond ends at a wavy line. The groups are R's values (4-sulfamoylphenyl,
+   * 1-naphthyl, 4-nitrophenyl), not substances; their end atoms are the attachment, not methyls,
+   * and the wavy lines are not ethane. The scaffold's ring-fusion bond is drawn single in the
+   * source, which the keys keep.
+   */
+  @Test
+  public void testDrawnLegendValuesGraftAndAreNotSubstances() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-13.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "MNACKBPSVHGIFK-UHFFFAOYSA-N", // 72a, R = 4-sulfamoylphenyl
+                "NHUTVENUAYNHAF-UHFFFAOYSA-N", // 72b, R = 1-naphthyl
+                "OYGKJLXVXXRMML-UHFFFAOYSA-N")), // 72c, R = 4-nitrophenyl
+        "72a-c must be extracted: " + inchiKeys);
+    for (String drawing :
+        List.of(
+            "LMYRWZFENFIFIT-UHFFFAOYSA-N", // p-toluenesulfonamide, the 72a drawing
+            "QPUYECUOLPXSFR-UHFFFAOYSA-N", // 1-methylnaphthalene, the 72b drawing
+            "ZPTVNYMJQHSSEA-UHFFFAOYSA-N", // 4-nitrotoluene, the 72c drawing
+            "OTMSDBZUPAUEDD-UHFFFAOYSA-N")) { // ethane, a wavy line
+      assertFalse(inchiKeys.contains(drawing), "a drawn R value was extracted: " + drawing);
+    }
+  }
 }
