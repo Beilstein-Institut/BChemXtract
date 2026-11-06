@@ -790,16 +790,45 @@ public class MarkushHandlerTest {
   }
 
   /**
-   * Counted from its attachment atom, a single ring cannot tell position 3 from position 5 — both
-   * are two bonds away. Rather than stack both methyls on the one atom it picks, the value is
-   * dropped.
+   * Positions 3 and 5 are both two bonds from a single ring's attachment atom, but numbered round
+   * the ring in one direction they are its two different meta atoms: 3,5-Me2 puts a methyl on each.
    */
   @Test
-  public void indistinguishablePositionsOnOneRingDropTheValue() throws Exception {
+  public void mirrorPositionsOnOneRingAreDifferentAtoms() throws Exception {
     MarkushHandler handler = handlerWith(Map.of("R", List.of("3,5-Me2")));
     IAtomContainer scaffold = scaffoldFromSmiles("Clc1ccccc1", "R", 3);
 
-    assertTrue(handler.replaceRGroups(scaffold).isEmpty(), "an ambiguous position must not graft");
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    assertNoPseudoAtoms(results.get(0));
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("Cc1cc(C)cc(Cl)c1")),
+        canonicalSmiles(results.get(0)),
+        "3,5-Me2 must give the 3,5-dimethyl ring");
+  }
+
+  /**
+   * A group whose name ends in a digit is not multiplied by it: 2,4,6-CH3 is three methyls, as in
+   * 69o/70o of {@code cheminf/bugs/markush/m50167957-13}, not three "CH".
+   */
+  @Test
+  public void groupNameEndingInADigitIsNotAMultiplier() throws Exception {
+    MarkushHandler handler = handlerWith(Map.of("R", List.of("2,4,6-CH3")));
+    IAtomContainer scaffold = scaffoldFromSmiles("Clc1ccccc1", "R", 3);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold);
+
+    assertEquals(1, results.size());
+    assertNoPseudoAtoms(results.get(0));
+    assertEquals(
+        canonicalSmiles(
+            new SmilesParser(SilentChemObjectBuilder.getInstance())
+                .parseSmiles("Cc1cc(C)c(Cl)c(C)c1")),
+        canonicalSmiles(results.get(0)),
+        "2,4,6-CH3 must give the 2,4,6-trimethyl ring");
   }
 
   /**
