@@ -98,6 +98,72 @@ public class FragmentConverterTest {
   }
 
   /**
+   * ChemDraw can store a flat 3D position (one z for every atom) next to a 2D drawing. Flat
+   * coordinates carry no configuration, so the wedges of the drawing still decide it.
+   */
+  @Test
+  public void flatThreeDimensionalCoordinatesKeepTheWedges() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+    CDFragment flat = halomethane(false);
+    flat.getAtoms()
+        .forEach(
+            atom ->
+                atom.setPosition3D(
+                    new CDPoint3D(
+                        atom.getPosition2D().getX(), atom.getPosition2D().getY(), -0.0005f)));
+
+    String wedged = smiles.create(converter.convert(halomethane(false)));
+
+    assertThat(smiles.create(converter.convert(flat)))
+        .as("flat 3D coordinates keep the configuration of the wedges")
+        .isEqualTo(wedged);
+  }
+
+  /**
+   * A bold bond is read as a wedge from its first atom, but next to a real wedge at that atom it is
+   * a perspective edge: ChemDraw ignores it, and reading it as a second wedge inverts the centre.
+   */
+  @Test
+  public void boldBondAtAWedgedCentreIsNotAStereoMark() throws Exception {
+    FragmentConverter converter = new FragmentConverter(SilentChemObjectBuilder.getInstance());
+    SmilesGenerator smiles = new SmilesGenerator(SmiFlavor.Isomeric);
+
+    String wedged = smiles.create(converter.convert(crowdedCentre(CDBondDisplay.Solid)));
+    String perspective = smiles.create(converter.convert(crowdedCentre(CDBondDisplay.Bold)));
+
+    assertThat(wedged).as("the wedged drawing defines a stereocentre").contains("@");
+    assertThat(perspective)
+        .as("the bold bond to bromine does not change the configuration of the wedge")
+        .isEqualTo(wedged);
+  }
+
+  /**
+   * Builds bromochlorofluoromethane with its three substituents within 140 degrees of each other,
+   * fluorine wedged towards the viewer, as at a ring fusion drawn in perspective (the geometry is
+   * taken from {@code m25422595-i8.cdx}).
+   *
+   * @param toBromine the display of the bond from carbon to bromine
+   * @return the assembled {@link CDFragment}
+   */
+  private CDFragment crowdedCentre(CDBondDisplay toBromine) {
+    CDAtom carbon = element(6, 0, 0);
+    CDAtom fluorine = element(9, 0.20f, -0.98f);
+    CDAtom bromine = element(35, 0.89f, -0.46f);
+    CDAtom chlorine = element(17, -0.97f, -0.22f);
+    CDBond wedge = bond(carbon, fluorine);
+    wedge.setBondDisplay(CDBondDisplay.WedgeBegin);
+    CDBond bold = bond(carbon, bromine);
+    bold.setBondDisplay(toBromine);
+    CDFragment fragment = new CDFragment();
+    fragment.setAtoms(new ArrayList<>(List.of(carbon, fluorine, bromine, chlorine)));
+    fragment.addBond(wedge);
+    fragment.addBond(bold);
+    fragment.addBond(bond(carbon, chlorine));
+    return fragment;
+  }
+
+  /**
    * A wedge keeps its narrow end where it was drawn when the abbreviation at its other end is
    * expanded. Stored from the label to the centre as {@code WedgeEnd}, it is the same wedge as one
    * stored from the centre as {@code WedgeBegin}; {@code OH} expands to one atom, {@code OMe} to
