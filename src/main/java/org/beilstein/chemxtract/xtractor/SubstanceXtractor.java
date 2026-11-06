@@ -166,6 +166,12 @@ public class SubstanceXtractor {
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder, unrestrictedMarkush);
         markushHandler.addResidueDefinitions(resolveAltGroupDefinitions(page));
+        // Groups drawn as a legend's values ("a: R =" and a drawing ending at a wavy line) become
+        // R values; they and their wavy lines are no substances of their own.
+        Set<CDFragment> drawnValues = markushHandler.adoptDrawnValues(fragments);
+        if (!drawnValues.isEmpty()) {
+          fragments = fragments.stream().filter(f -> !drawnValues.contains(f)).toList();
+        }
         for (CDFragment fragment : fragments) {
           markushHandler.addScaffold(fragment.getBounds(), fragment.getRGroupLabels());
         }

@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,8 +42,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
+import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDRectangle;
+import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.cheminf.RingSystemNumbering;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
@@ -117,11 +120,12 @@ public class MarkushHandler {
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
    * or {@code ortho}/{@code meta}/{@code para}, and the phenyl as {@code Ph} or {@code C6H4}
-   * ({@code 4-ClC6H4}). It looks like positional notation but names no position on the scaffold, so
-   * it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
+   * ({@code 4-ClC6H4}). A benzyl written {@code Bn} or {@code CH2C6H4} ({@code 4-BrBn}) is the same
+   * group with a CH2 between ring and scaffold. It looks like positional notation but names no
+   * position on the scaffold, so it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
    */
   private static final Pattern SUBSTITUTED_PHENYL =
-      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(?:Ph|C6H4)-?");
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(Ph|C6H4|Bn|CH2C6H4)-?");
 
   /**
    * The same group with the substituent written after the phenyl, e.g. {@code p-PhNO2}, {@code
@@ -137,6 +141,20 @@ public class MarkushHandler {
    */
   private static final Set<String> TERMINAL_PHENYL_SUBSTITUENTS = Set.of("F", "Cl", "Br", "I", "C");
 
+  /**
+   * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
+   * the hydrogen count is that of an alkyl group, 2n+1. Without the {@code n-} the formula does not
+   * say which isomer is meant, so it is not read.
+   */
+  private static final Pattern STRAIGHT_CHAIN_ALKYL = Pattern.compile("n-C(\\d{1,2})H(\\d{1,2})");
+
+  /**
+   * An unbranched alkyl chain written out as CH2 units ending in CH3, {@code CH2CH3} or {@code
+   * (CH2)3CH3}: the number of carbons is the number of CH2 units plus one.
+   */
+  private static final Pattern WRITTEN_OUT_CHAIN =
+      Pattern.compile("((?:CH2)+)CH3|\\(CH2\\)(\\d{1,2})CH3");
+
   /** Label of the phenyl's substituent residue while a substituted phenyl is assembled. */
   private static final String PHENYL_SUBSTITUENT = "#substituent";
 
@@ -149,7 +167,9 @@ public class MarkushHandler {
 
   private final Map<String, List<String>> residueLabels;
   private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
+  private final List<RGroupDefinitionBlock> textBlocks;
   private final List<RGroupDefinitionBlock> blocks;
+  private final IChemObjectBuilder builder;
   private final SmilesParser smilesParser;
 
   /**
@@ -202,7 +222,9 @@ public class MarkushHandler {
   public MarkushHandler(CDPage page, IChemObjectBuilder builder, boolean unrestricted) {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
-    blocks = mergeColumnBlocks(textVisitor.getBlocks());
+    textBlocks = textVisitor.getBlocks();
+    blocks = mergeColumnBlocks(textBlocks, Set.of());
+    this.builder = builder;
     smilesParser = new SmilesParser(builder);
     this.unrestricted = unrestricted;
   }
@@ -246,10 +268,16 @@ public class MarkushHandler {
    * rows, and the table is their union. Legends that sit far apart (one per scaffold) stay
    * separate, so nearest-block scoping keeps disambiguating those.
    *
+   * <p>Lines that give their values as drawings ({@code a: R =}, {@code b: R =}, each followed by a
+   * drawn group) are spaced by the drawings rather than by the text, so they are merged when they
+   * share a column and their lettering runs on, however far apart they sit.
+   *
    * @param blocks the per-text-node blocks from {@link TextVisitor}
+   * @param drawn the blocks whose values were taken from drawings
    * @return the blocks with same-label runs of one legend merged into one block each
    */
-  private static List<RGroupDefinitionBlock> mergeColumnBlocks(List<RGroupDefinitionBlock> blocks) {
+  private static List<RGroupDefinitionBlock> mergeColumnBlocks(
+      List<RGroupDefinitionBlock> blocks, Set<RGroupDefinitionBlock> drawn) {
     List<RGroupDefinitionBlock> result = new ArrayList<>();
     boolean[] merged = new boolean[blocks.size()];
     for (int i = 0; i < blocks.size(); i++) {
@@ -285,7 +313,8 @@ public class MarkushHandler {
               .anyMatch(
                   member ->
                       sameColumnAdjacent(member, candidate)
-                          || sideBySideLegend(member, candidate))) {
+                          || sideBySideLegend(member, candidate)
+                          || drawnLegendColumn(member, candidate, drawn))) {
             cluster.add(candidate);
             merged[j] = true;
             grew = true;
@@ -326,6 +355,87 @@ public class MarkushHandler {
   }
 
   /**
+   * Whether two blocks are lines of one legend that gives its values as drawings: both took their
+   * values from drawings, they share a column, and their lettering runs on.
+   */
+  private static boolean drawnLegendColumn(
+      RGroupDefinitionBlock a, RGroupDefinitionBlock b, Set<RGroupDefinitionBlock> drawn) {
+    if (!drawn.contains(a) || !drawn.contains(b)) {
+      return false;
+    }
+    CDRectangle ra = a.bounds();
+    CDRectangle rb = b.bounds();
+    double horizontalOverlap =
+        Math.min(ra.getRight(), rb.getRight()) - Math.max(ra.getLeft(), rb.getLeft());
+    return horizontalOverlap > 0 && continuousLettering(a, b);
+  }
+
+  /**
+   * Takes the values of legend lines that give them as drawings ({@code a: R =} followed by a drawn
+   * group ending at a wavy line) from those drawings. A drawing belongs to the line it sits beside:
+   * its attachment end level with the line and a few line heights to the right of it.
+   *
+   * @param fragments the page's fragments
+   * @return the fragments taken as values, drawn groups and their wavy lines, which are not
+   *     substances of their own
+   */
+  public Set<CDFragment> adoptDrawnValues(List<CDFragment> fragments) {
+    Set<CDFragment> consumed = Collections.newSetFromMap(new IdentityHashMap<>());
+    List<DrawnRGroupValues.Drawing> drawings = new ArrayList<>(DrawnRGroupValues.find(fragments));
+    if (drawings.isEmpty()) {
+      return consumed;
+    }
+    Set<RGroupDefinitionBlock> drawn = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (RGroupDefinitionBlock block : textBlocks) {
+      if (block.bounds() == null || block.definitions().size() != 1) {
+        continue;
+      }
+      Map.Entry<String, List<String>> definition = block.definitions().entrySet().iterator().next();
+      if (!definition.getValue().isEmpty()) {
+        continue;
+      }
+      List<DrawnRGroupValues.Drawing> beside =
+          drawings.stream()
+              .filter(drawing -> besideLine(block, drawing.end().getPosition2D()))
+              .sorted(Comparator.comparingDouble(drawing -> drawing.end().getPosition2D().getY()))
+              .toList();
+      List<String> values = new ArrayList<>();
+      for (DrawnRGroupValues.Drawing drawing : beside) {
+        String smiles = DrawnRGroupValues.smiles(drawing, builder);
+        if (smiles != null) {
+          values.add(smiles);
+          drawings.remove(drawing);
+          consumed.add(drawing.group());
+          consumed.add(drawing.cut());
+        }
+      }
+      if (!values.isEmpty()) {
+        block.definitions().put(definition.getKey(), values);
+        residueLabels.computeIfAbsent(definition.getKey(), _ -> new ArrayList<>()).addAll(values);
+        drawn.add(block);
+      }
+    }
+    if (!drawn.isEmpty()) {
+      List<RGroupDefinitionBlock> merged = mergeColumnBlocks(textBlocks, drawn);
+      blocks.clear();
+      blocks.addAll(merged);
+      owners.clear();
+    }
+    return consumed;
+  }
+
+  /** Whether a point is level with a text block and a little to its right. */
+  private static boolean besideLine(RGroupDefinitionBlock block, CDPoint2D point) {
+    CDRectangle bounds = block.bounds();
+    float line = block.lineHeight() > 0 ? block.lineHeight() : bounds.getBottom() - bounds.getTop();
+    double right = point.getX() - bounds.getRight();
+    return point.getY() >= bounds.getTop() - line / 2
+        && point.getY() <= bounds.getBottom() + line / 2
+        && right >= 0
+        && right <= 3 * line;
+  }
+
+  /**
    * Whether two blocks are the two columns of one legend: no horizontal overlap, spanning
    * essentially the same rows, and separated by a gutter narrow relative to the columns themselves.
    * A substrate scope listing 11 substituents as two adjacent columns is one legend for the
@@ -334,6 +444,10 @@ public class MarkushHandler {
    * <p>A positional table qualifies too when both columns tabulate the same labels, which the
    * caller checks: every row then sits whole in one column. A table split by label instead, one
    * column per label, parses as two different label sets and is not merged.
+   *
+   * <p>Columns whose lines are lettered and together run on without a break ({@code a}-{@code i}
+   * beside {@code j}-{@code q}) are one legend whatever the gutter, up to a column's width: the
+   * lettering says so more reliably than the geometry does.
    */
   private static boolean sideBySideLegend(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
     CDRectangle ra = a.bounds();
@@ -351,7 +465,27 @@ public class MarkushHandler {
     // overlap.
     // Two scaffolds whose legends happen to sit this close would merge wrongly; the fix then is
     // scaffold-aware association, not a tighter threshold.
-    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= minWidth * 0.5;
+    double gutter = continuousLettering(a, b) ? minWidth : minWidth * 0.5;
+    return verticalOverlap >= minHeight * 0.6 && horizontalGap <= gutter;
+  }
+
+  /**
+   * Whether both blocks are lettered and their letters together make one unbroken run, each letter
+   * once: {@code abc} and {@code def}, but not {@code abc} and {@code abc}, nor {@code abc} and
+   * {@code efg}.
+   */
+  private static boolean continuousLettering(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    if (a.entryLetters().isEmpty() || b.entryLetters().isEmpty()) {
+      return false;
+    }
+    char[] letters = (a.entryLetters() + b.entryLetters()).toCharArray();
+    Arrays.sort(letters);
+    for (int i = 1; i < letters.length; i++) {
+      if (letters[i] != letters[i - 1] + 1) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -367,8 +501,10 @@ public class MarkushHandler {
     float bottom = -Float.MAX_VALUE;
     float right = -Float.MAX_VALUE;
     float lineHeight = 0;
+    StringBuilder letters = new StringBuilder();
     for (RGroupDefinitionBlock block : cluster) {
       lineHeight = Math.max(lineHeight, block.lineHeight());
+      letters.append(block.entryLetters());
       CDRectangle b = block.bounds();
       top = Math.min(top, b.getTop());
       left = Math.min(left, b.getLeft());
@@ -403,7 +539,7 @@ public class MarkushHandler {
     bounds.setBottom(bottom);
     bounds.setRight(right);
     return new RGroupDefinitionBlock(
-        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight);
+        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight, letters.toString());
   }
 
   /**
@@ -462,7 +598,10 @@ public class MarkushHandler {
 
   /**
    * Generates all structures for a scaffold that a position-variation attachment drew as several
-   * candidates, resolving its R-groups from the definition block nearest to it.
+   * candidates, resolving its R-groups from the definition block nearest to it. The page-wide union
+   * of definitions is used only when no block defines the scaffold's labels; when the nearest block
+   * does but none of its values graft, or it gives the label only as a drawing ({@code a: R =}),
+   * the scaffold yields nothing.
    *
    * <p>The candidates are the same scaffold with one residue bonded to a different atom each. They
    * are enumerated together rather than one after another: the assignments are enumerated once, and
@@ -489,21 +628,23 @@ public class MarkushHandler {
       return List.of();
     }
     Set<String> present = presentResidueLabels(candidates.getFirst());
-    List<Map<String, String>> combinations =
-        viableCombinations(
-            candidates, permittedChoices(candidates, residueChoicesNear(present, scaffoldBounds)));
-    if (combinations.isEmpty()) {
-      // No scoped definitions apply to this scaffold, or none of them resolved; defer to the
-      // page-wide union.
+    List<Choice> choices = residueChoicesNear(present, scaffoldBounds);
+    if (choices.isEmpty()) {
+      if (present.stream().anyMatch(label -> nearestBlockDefining(label, scaffoldBounds) != null)) {
+        // The nearest legend names the label but gives its value as a drawing ("a: R =" beside a
+        // structure), which the text cannot supply. Another legend's values would be wrong here.
+        return List.of();
+      }
+      // No legend defines any of this scaffold's labels; defer to the page-wide union.
       return replaceRGroups(candidates, residueLabels, produced);
     }
-    List<IAtomContainer> scoped = applyCombinations(candidates, combinations, produced);
-    // Scoping is a refinement: if it narrowed the definitions down to something that produced no
-    // structures, fall back to the page-wide union so scoping never does worse than no scoping.
-    if (scoped.isEmpty()) {
-      return replaceRGroups(candidates, residueLabels, produced);
-    }
-    return scoped;
+    // The nearest legend defines the scaffold's labels. If its values do not graft, the scaffold
+    // yields nothing: the other legends on the page belong to other schemes, and their values
+    // would make structures the page never shows.
+    return applyCombinations(
+        candidates,
+        viableCombinations(candidates, permittedChoices(candidates, choices)),
+        produced);
   }
 
   /** Labels of the pseudo-atoms present in the container (candidate R-groups to resolve). */
@@ -1099,6 +1240,27 @@ public class MarkushHandler {
       if (phenyl != null) {
         return phenyl;
       }
+      Matcher alkyl = STRAIGHT_CHAIN_ALKYL.matcher(definition);
+      if (alkyl.matches()) {
+        try {
+          int carbons = Integer.parseInt(alkyl.group(1));
+          if (carbons > 0 && Integer.parseInt(alkyl.group(2)) == 2 * carbons + 1) {
+            return "*" + "C".repeat(carbons);
+          }
+        } catch (NumberFormatException e) {
+          LOGGER.debug("Alkyl formula {} has no readable counts.", definition);
+        }
+      }
+      Matcher chain = WRITTEN_OUT_CHAIN.matcher(definition);
+      if (chain.matches()) {
+        int units =
+            chain.group(1) != null
+                ? chain.group(1).length() / "CH2".length()
+                : Integer.parseInt(chain.group(2));
+        if (units > 0) {
+          return "*" + "C".repeat(units + 1);
+        }
+      }
     }
     return definition;
   }
@@ -1116,11 +1278,13 @@ public class MarkushHandler {
   private String substitutedPhenyl(String value) throws IOException {
     String locant;
     String named;
+    boolean benzyl = false;
     Matcher matcher = SUBSTITUTED_PHENYL.matcher(value);
     Matcher trailing = PHENYL_THEN_SUBSTITUENT.matcher(value);
     if (matcher.matches()) {
       locant = matcher.group(1);
       named = matcher.group(2);
+      benzyl = matcher.group(3).equals("Bn") || matcher.group(3).equals("CH2C6H4");
     } else if (trailing.matches()) {
       locant = trailing.group(1);
       named = trailing.group(2) != null ? trailing.group(2) : trailing.group(3);
@@ -1140,11 +1304,19 @@ public class MarkushHandler {
           : attachments != 1) {
         return null;
       }
-      // The ipso carbon carries the attachment point, the substituent sits position - 1 bonds on.
+      // The ipso carbon carries the attachment point (through a CH2 for a benzyl), the substituent
+      // sits position - 1 bonds on.
+      String linker = benzyl ? "C" : "";
       IAtomContainer phenyl =
           smilesParser.parseSmiles(
-              "*c1" + "c".repeat(position - 2) + "c(*)" + "c".repeat(5 - position) + "c1");
-      ((IPseudoAtom) phenyl.getAtom(position + 1)).setLabel(PHENYL_SUBSTITUENT);
+              "*"
+                  + linker
+                  + "c1"
+                  + "c".repeat(position - 2)
+                  + "c(*)"
+                  + "c".repeat(5 - position)
+                  + "c1");
+      ((IPseudoAtom) phenyl.getAtom(position + 1 + linker.length())).setLabel(PHENYL_SUBSTITUENT);
       replaceRGroup(phenyl, PHENYL_SUBSTITUENT, substituent);
       return new SmilesGenerator(SmiFlavor.Default).create(phenyl);
     } catch (CDKException | CloneNotSupportedException e) {
@@ -1174,15 +1346,36 @@ public class MarkushHandler {
     if (positional == null) {
       return false;
     }
-    if (!placeResidues(container, label, positional.positions())) {
+    List<String> groups = positional.smiles().stream().distinct().toList();
+    if (groups.size() == 1) {
+      if (!placeResidues(container, label, positional.positions(), null)) {
+        return false;
+      }
+      replaceRGroup(container, label, groups.getFirst());
+      return true;
+    }
+    // Different groups at different positions: each position's residue carries a label of its
+    // group's own until it is grafted.
+    List<String> labels = new ArrayList<>();
+    for (String smiles : positional.smiles()) {
+      labels.add(label + '#' + groups.indexOf(smiles));
+    }
+    if (!placeResidues(container, label, positional.positions(), labels)) {
       return false;
     }
-    replaceRGroup(container, label, positional.smiles());
+    for (int group = 0; group < groups.size(); group++) {
+      replaceRGroup(container, label + '#' + group, groups.get(group));
+    }
     return true;
   }
 
-  /** A value written in positional notation: the ring positions it names, and its group. */
-  private record PositionalValue(List<Integer> positions, String smiles) {}
+  /**
+   * A value written in positional notation: the ring positions it names, and the group on each.
+   *
+   * @param positions the ring positions, in the order written
+   * @param smiles the group's SMILES for each position, index for index
+   */
+  private record PositionalValue(List<Integer> positions, List<String> smiles) {}
 
   /**
    * Which of a scaffold's candidate attachments an assignment can tell apart.
@@ -1380,6 +1573,20 @@ public class MarkushHandler {
    * @throws IOException if reading SMILES definitions fails
    */
   private PositionalValue parsePositional(String value) throws IOException {
+    if (value.contains(TextVisitor.SUBSTITUENT_JOINER)) {
+      // Several groups of one compound, each at its own positions.
+      List<Integer> positions = new ArrayList<>();
+      List<String> smiles = new ArrayList<>();
+      for (String part : value.split(TextVisitor.SUBSTITUENT_JOINER)) {
+        PositionalValue positional = parsePositional(part);
+        if (positional == null) {
+          return null;
+        }
+        positions.addAll(positional.positions());
+        smiles.addAll(positional.smiles());
+      }
+      return new PositionalValue(positions, smiles);
+    }
     Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
     if (!matcher.matches() || substitutedPhenyl(value) != null) {
       return null;
@@ -1388,8 +1595,15 @@ public class MarkushHandler {
     for (String token : matcher.group(1).split(",")) {
       positions.add(ringPosition(token));
     }
-    String smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
-    return ChemicalUtils.isValidSmiles(smiles) ? new PositionalValue(positions, smiles) : null;
+    // A group that is a name of its own ("CH3", "CF3", "NO2") is not a multiplied one, even when
+    // its last digit happens to match the number of locants: 2,4,6-CH3 is three methyls.
+    String smiles = resolveSmiles(matcher.group(2));
+    if (!ChemicalUtils.isValidSmiles(smiles)) {
+      smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
+    }
+    return ChemicalUtils.isValidSmiles(smiles)
+        ? new PositionalValue(positions, Collections.nCopies(positions.size(), smiles))
+        : null;
   }
 
   /**
@@ -1427,17 +1641,24 @@ public class MarkushHandler {
    * @param container the structure to modify
    * @param label the R-group label
    * @param positions the 1-based ring positions the value names, in the order written
+   * @param labels the label each position's residue carries afterwards, index for index, or {@code
+   *     null} to keep {@code label} on all of them
    * @return {@code true} if every residue now sits on the named positions
    */
   private static boolean placeResidues(
-      IAtomContainer container, String label, List<Integer> positions) {
+      IAtomContainer container, String label, List<Integer> positions, List<String> labels) {
     List<IAtom> residues = residues(container, label);
     if (residues.isEmpty()) {
       return false;
     }
     IRingSet rings = Cycles.mcb(container).toRingSet();
     for (IAtom residue : residues) {
-      if (!placeResidue(container, rings, residue, label, positions)) {
+      if (!placeResidue(
+          container,
+          rings,
+          residue,
+          positions,
+          labels != null ? labels : Collections.nCopies(positions.size(), label))) {
         return false;
       }
     }
@@ -1454,16 +1675,16 @@ public class MarkushHandler {
    * @param container the structure to modify
    * @param rings the ring set of the container
    * @param residue the drawn residue
-   * @param label the R-group label
    * @param positions the 1-based ring positions the value names, in the order written
+   * @param labels the label each position's residue carries, index for index
    * @return {@code true} if the residue and its copies sit on the named positions
    */
   private static boolean placeResidue(
       IAtomContainer container,
       IRingSet rings,
       IAtom residue,
-      String label,
-      List<Integer> positions) {
+      List<Integer> positions,
+      List<String> labels) {
     List<IAtom> targets = residueTargets(container, rings, residue, positions);
     if (targets == null) {
       return false;
@@ -1471,8 +1692,9 @@ public class MarkushHandler {
     if (!moveResidueToAtom(container, residue, targets.getFirst())) {
       return false;
     }
-    for (IAtom target : targets.subList(1, targets.size())) {
-      attachResidue(container, target, label);
+    ((IPseudoAtom) residue).setLabel(labels.getFirst());
+    for (int i = 1; i < targets.size(); i++) {
+      attachResidue(container, targets.get(i), labels.get(i));
     }
     return true;
   }
@@ -1508,6 +1730,12 @@ public class MarkushHandler {
       return null;
     }
     IAtom anchor = bonds.next().getOther(residue);
+    if (positions.size() > 1) {
+      List<IAtom> walked = singleRingTargets(container, rings, anchor, residue, positions);
+      if (walked != null) {
+        return walked;
+      }
+    }
     List<IAtom> targets = new ArrayList<>();
     for (int position : positions) {
       IAtom target = ringPositionAtom(container, rings, anchor, residue, position);
@@ -1517,6 +1745,100 @@ public class MarkushHandler {
       targets.add(target);
     }
     return targets;
+  }
+
+  /**
+   * The atoms several positions name on a single ring, numbered round it in one direction from its
+   * attachment atom: 3 and 5 are then the two meta atoms, 2 and 6 the two ortho atoms. The
+   * direction is the one that puts the first position that has two candidates where a value naming
+   * that position alone would go, so a multi-locant value agrees with its single-locant reading.
+   *
+   * @return one atom per position, or {@code null} if the residue's ring is part of a fused system
+   *     (numbered by {@link RingSystemNumbering} instead), has no single attachment atom, or no
+   *     position fixes a direction
+   */
+  private static List<IAtom> singleRingTargets(
+      IAtomContainer container,
+      IRingSet rings,
+      IAtom anchor,
+      IAtom residue,
+      List<Integer> positions) {
+    if (!RingSystemNumbering.locants(container, rings, anchor).isEmpty()) {
+      return null;
+    }
+    IAtomContainer ring = smallestRingContaining(rings, anchor);
+    if (ring == null) {
+      return null;
+    }
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    if (ipso == null) {
+      return null;
+    }
+    int size = ring.getAtomCount();
+    List<IAtom> walk = ringWalk(ring, ipso);
+    if (walk == null) {
+      return null;
+    }
+    Integer reference = null;
+    for (int position : positions) {
+      if (position < 2 || position > size) {
+        return null;
+      }
+      int steps = position - 1;
+      if (reference == null && 2 * steps != size) {
+        reference = position;
+      }
+    }
+    if (reference == null) {
+      return null;
+    }
+    int steps = reference - 1;
+    IAtom named = ringAtomAtDistance(container, ring, ipso, Math.min(steps, size - steps), residue);
+    if (named == null) {
+      return null;
+    }
+    if (walk.get(steps) != named) {
+      // Number the other way round.
+      List<IAtom> reversed = new ArrayList<>(walk.subList(1, size));
+      Collections.reverse(reversed);
+      reversed.add(0, ipso);
+      walk = reversed;
+    }
+    List<IAtom> targets = new ArrayList<>();
+    for (int position : positions) {
+      IAtom target = walk.get(position - 1);
+      if (containsSame(targets, target)) {
+        return null;
+      }
+      targets.add(target);
+    }
+    return targets;
+  }
+
+  /**
+   * The ring's atoms in order round it, starting at the given atom; {@code null} if not a cycle.
+   */
+  private static List<IAtom> ringWalk(IAtomContainer ring, IAtom start) {
+    List<IAtom> walk = new ArrayList<>();
+    walk.add(start);
+    IAtom previous = null;
+    IAtom current = start;
+    while (walk.size() < ring.getAtomCount()) {
+      IAtom next = null;
+      for (IAtom neighbour : ring.getConnectedAtomsList(current)) {
+        if (neighbour != previous && neighbour != start && !containsSame(walk, neighbour)) {
+          next = neighbour;
+          break;
+        }
+      }
+      if (next == null) {
+        return null;
+      }
+      walk.add(next);
+      previous = current;
+      current = next;
+    }
+    return walk;
   }
 
   /** Whether the list already holds this very atom. */
@@ -2344,9 +2666,16 @@ public class MarkushHandler {
     return row < cost.length && column < cost[0].length ? cost[row][column] : 0;
   }
 
-  /** Whether the block defines every label of the set, by plain definitions or one table. */
+  /**
+   * Whether the block defines every label of the set, by plain definitions with values or one
+   * table. A legend line giving a label only as a drawing ({@code a: R =}) claims no scaffold.
+   */
   private static boolean defines(RGroupDefinitionBlock block, Set<String> labels) {
-    return block.definitions().keySet().containsAll(labels)
+    return labels.stream()
+            .allMatch(
+                label ->
+                    block.definitions().containsKey(label)
+                        && !block.definitions().get(label).isEmpty())
         || block.correlatedGroups().stream()
             .anyMatch(group -> Set.copyOf(group.labels()).equals(labels));
   }

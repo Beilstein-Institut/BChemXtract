@@ -22,9 +22,11 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDPage;
@@ -37,6 +39,22 @@ public class TextVisitor extends CDVisitor {
 
   /** A ring position, or the several a locant set names: the {@code 5,7} of {@code 5,7-Me2}. */
   private static final String LOCANT_SET = "\\d{1,2}(?:,\\d{1,2})*";
+
+  /**
+   * The letter a legend line opens with when it names its compound by letter: {@code a: R = H},
+   * {@code (b) R = Me}, {@code c) R = Et}.
+   */
+  /** A ring substituent named by number: {@code 2-CH3}, {@code 3,5-Me2}. */
+  private static final Pattern RING_SUBSTITUENT = Pattern.compile("(" + LOCANT_SET + ")-.+");
+
+  /**
+   * What several ring substituents of one compound are joined with into one value. A list separator
+   * never survives value splitting, so the joined value cannot be mistaken for anything a legend
+   * wrote.
+   */
+  public static final String SUBSTITUENT_JOINER = "; ";
+
+  private static final Pattern ENTRY_LETTER = Pattern.compile("^\\(?([a-z])\\)?\\s*[:.)]\\s*\\S");
 
   private final Map<String, List<String>> rgroups;
   private final List<RGroupDefinitionBlock> blocks;
@@ -73,12 +91,16 @@ public class TextVisitor extends CDVisitor {
             cdText.getBounds(),
             parsed.independent(),
             parsed.correlatedGroups(),
-            lineHeight(cdText)));
+            lineHeight(cdText),
+            entryLetters(cdText.getText().getText())));
     // Keep a page-wide union as a fallback; merge rather than drop on label collisions. Correlated
     // values are flattened into the union too so the fallback/guard still see them (the union path
-    // over-enumerates by design; the scoped path preserves the tuples).
+    // over-enumerates by design; the scoped path preserves the tuples). A label defined with no
+    // values adds nothing to it.
     for (Map.Entry<String, List<String>> entry : parsed.independent().entrySet()) {
-      mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      if (!entry.getValue().isEmpty()) {
+        mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      }
     }
     for (CorrelatedGroup group : parsed.correlatedGroups()) {
       for (Map<String, String> tuple : group.tuples()) {
@@ -94,6 +116,18 @@ public class TextVisitor extends CDVisitor {
     }
     int lines = cdText.getText().getText().strip().split("\\r\\n|\\r|\\n", -1).length;
     return Math.abs(cdText.getBounds().getHeight()) / lines;
+  }
+
+  /** The letters the text's lines open with, in order; empty if none is lettered. */
+  private static String entryLetters(String text) {
+    StringBuilder letters = new StringBuilder();
+    for (String line : text.split("[\\r\\n]+")) {
+      Matcher matcher = ENTRY_LETTER.matcher(line.strip());
+      if (matcher.find()) {
+        letters.append(matcher.group(1));
+      }
+    }
+    return letters.toString();
   }
 
   /** Independent per-label lists plus correlated (positional-table) groups from one text node. */
@@ -138,6 +172,9 @@ public class TextVisitor extends CDVisitor {
 
     for (String row : toLogicalRows(input)) {
       List<Assignment> assignments = parseAssignments(row);
+      if (ENTRY_LETTER.matcher(row).find()) {
+        assignments = assignments.stream().map(TextVisitor::oneCompound).toList();
+      }
       if (assignments.isEmpty()) {
         continue;
       }
@@ -167,6 +204,31 @@ public class TextVisitor extends CDVisitor {
     List<CorrelatedGroup> groups = new ArrayList<>();
     tables.forEach((labels, tuples) -> groups.add(new CorrelatedGroup(labels, tuples)));
     return new ParsedDefinitions(independent, groups);
+  }
+
+  /**
+   * The values of a lettered line, which names one compound: ring substituents listed at different
+   * positions ({@code 2-CH3, 5-NO2}) are all on that compound, so they make one value. Any other
+   * list is left as alternatives.
+   */
+  private static Assignment oneCompound(Assignment assignment) {
+    List<String> values = assignment.values();
+    if (values.size() < 2) {
+      return assignment;
+    }
+    Set<String> positions = new HashSet<>();
+    for (String value : values) {
+      Matcher matcher = RING_SUBSTITUENT.matcher(value);
+      if (!matcher.matches()) {
+        return assignment;
+      }
+      for (String position : matcher.group(1).split(",")) {
+        if (!positions.add(position)) {
+          return assignment;
+        }
+      }
+    }
+    return new Assignment(assignment.label(), List.of(String.join(SUBSTITUENT_JOINER, values)));
   }
 
   /**
@@ -263,6 +325,14 @@ public class TextVisitor extends CDVisitor {
         result.add(new Assignment(chained, abbreviations));
       }
       chainedLabels.clear();
+    }
+
+    // A line whose only assignment has nothing after it ("a: R =") gives the value as a drawn
+    // structure. The label is still defined there, with no values the text can supply.
+    if (result.isEmpty()) {
+      for (String label : chainedLabels) {
+        result.add(new Assignment(label, List.of()));
+      }
     }
 
     return result;
