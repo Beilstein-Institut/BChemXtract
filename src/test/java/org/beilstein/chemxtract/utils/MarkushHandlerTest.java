@@ -953,6 +953,34 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A scaffold captioned "43" takes the legend numbered 43, not the 42 legend that touches its
+   * bounds as well. Scaffolds 44 and 45 also carry R, from tables of their own, and without the
+   * numbers the pairing gave them the 43 legend. Geometry from 42-45 of {@code
+   * cheminf/bugs/markush/m50167957-10}.
+   */
+  @Test
+  public void captionTiesAScaffoldToItsNumberedLegend() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(80, 83, 100, 92), "42a–l"));
+    page.addText(textAt(rect(4, 111, 109, 174), "42a: R = 4-BrC6H4\r42b: R = C6H5"));
+    page.addText(textAt(rect(111, 111, 217, 174), "42g: R = 4-IC6H4"));
+    page.addText(textAt(rect(237, 151, 246, 160), "43"));
+    page.addText(textAt(rect(256, 69, 327, 195), "43a: R = H\r43b: R = 4-bromo"));
+    page.addText(textAt(rect(380, 65, 389, 74), "44"));
+    page.addText(textAt(rect(338, 79, 438, 131), "44a: X = NH, R = CH3\r44e: X = S, R = H"));
+    page.addText(textAt(rect(75, 271, 84, 281), "45"));
+    page.addText(textAt(rect(99, 251, 226, 296), "45a: R = H, R1 = allyl"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+    CDRectangle scaffold43 = rect(195, 21, 291, 144);
+    handler.addScaffold(rect(17, 28, 145, 84), Set.of("R"));
+    handler.addScaffold(scaffold43, Set.of("R"));
+    handler.addScaffold(rect(334, 14, 410, 74), Set.of("R", "X"));
+    handler.addScaffold(rect(17, 182, 191, 283), Set.of("R", "R1"));
+
+    assertEquals(List.of("H", "4-bromo"), handler.residueLabelsNear(scaffold43).get("R"));
+  }
+
+  /**
    * A caption fixing R1 per series ("40a–m: R1 = H", "41a–e: R1 = OMe") takes R for each series
    * from the legend numbered with it, even when another scheme's legend sits nearer the scaffold.
    * Geometry from 38-41 of {@code cheminf/bugs/markush/m50167957-9}.
