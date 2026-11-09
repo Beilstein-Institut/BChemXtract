@@ -874,7 +874,8 @@ public class MarkushHandlerTest {
         Map.of(
                 "2,4-Me2C6H3", "CC(=O)c1ccc(C)cc1C",
                 "2,6-Me2C6H3", "CC(=O)c1c(C)cccc1C",
-                "4-OH, 3-MeOC6H3", "CC(=O)c1ccc(O)c(OC)c1")
+                "4-OH, 3-MeOC6H3", "CC(=O)c1ccc(O)c(OC)c1",
+                "2,4-diBr-6-NO2C6H2", "CC(=O)c1c(Br)cc(Br)cc1[N+](=O)[O-]")
             .entrySet()) {
       List<IAtomContainer> results =
           handlerWith(Map.of("R", List.of(entry.getKey())))
@@ -1084,6 +1085,36 @@ public class MarkushHandlerTest {
                 .parseSmiles("Cc1cc(C)c(Cl)c(C)c1")),
         canonicalSmiles(results.getFirst()),
         "2,4,6-CH3 must give the 2,4,6-trimethyl ring");
+  }
+
+  /**
+   * A multiplier written in front of the group counts it as well as one written after it: 3,5-diMe
+   * is two methyls, 3,5-diNO2 two nitro groups and 3,4,5-triOMe three methoxys (47c/f/i of {@code
+   * cheminf/bugs/markush/m50167957-10}). One that disagrees with the locants is not read.
+   */
+  @Test
+  public void leadingMultiplierCountsTheGroup() throws Exception {
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry :
+        Map.of(
+                "3,5-diMe", "Cc1cc(C)cc(Cl)c1",
+                "3,5-diNO2", "O=[N+]([O-])c1cc(Cl)cc([N+](=O)[O-])c1",
+                "3,4,5-triOMe", "COc1cc(Cl)cc(OC)c1OC")
+            .entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("Clc1ccccc1", "R", 3));
+      assertEquals(1, results.size(), entry.getKey());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey());
+    }
+    assertTrue(
+        handlerWith(Map.of("R", List.of("3,5-triMe")))
+            .replaceRGroups(scaffoldFromSmiles("Clc1ccccc1", "R", 3))
+            .isEmpty(),
+        "tri on two positions");
   }
 
   /**

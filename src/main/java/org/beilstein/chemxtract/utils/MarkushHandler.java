@@ -171,6 +171,13 @@ public class MarkushHandler {
    */
   private static final Pattern GROUP_MULTIPLIER = Pattern.compile("\\(?(.+?)\\)?(\\d+)");
 
+  /**
+   * A multiplier written in front of an abbreviation or formula: the {@code di} of {@code diMe},
+   * the {@code tri} of {@code triOMe}. The group starts upper case or with a bracket, so a name
+   * such as {@code dimethoxy} is not taken apart here.
+   */
+  private static final Pattern LEADING_MULTIPLIER = Pattern.compile("(di|tri)([A-Z(].*)");
+
   private final Map<String, List<String>> residueLabels;
   private final Map<String, List<String>> structuralDefinitions = new LinkedHashMap<>();
   private final List<RGroupDefinitionBlock> textBlocks;
@@ -1583,7 +1590,9 @@ public class MarkushHandler {
       return null;
     }
     Map<Integer, String> substituents = new TreeMap<>();
-    for (String part : matcher.group(1).split(",\\s+|;\\s*")) {
+    // Substituents are separated by a comma, a semicolon, or a hyphen before the next locants:
+    // 4-OH, 3-MeO; 2,4-diBr-6-NO2.
+    for (String part : matcher.group(1).split(",\\s+|;\\s*|-(?=\\d(?:,\\d)*-)")) {
       Matcher positional = POSITIONAL_SUBSTITUENT.matcher(part.strip());
       if (!positional.matches()) {
         return null;
@@ -1972,9 +1981,9 @@ public class MarkushHandler {
 
   /**
    * The group of a multi-locant value, without the multiplier that states how often it appears:
-   * {@code Me2} on two locants is two methyls, {@code (OMe)3} on three is three methoxys. A
-   * multiplier that disagrees with the number of locants is not one — the digit belongs to the
-   * group's own name — and the group is left as written.
+   * {@code Me2} or {@code diMe} on two locants is two methyls, {@code (OMe)3} or {@code triOMe} on
+   * three is three methoxys. A multiplier that disagrees with the number of locants is not one —
+   * the digit belongs to the group's own name — and the group is left as written.
    *
    * @param group the group part of a positional value
    * @param locants how many positions the value names
@@ -1983,6 +1992,11 @@ public class MarkushHandler {
   private static String stripMultiplier(String group, int locants) {
     if (locants < 2) {
       return group;
+    }
+    // Checked first: the trailing digit of diNO2 belongs to NO2.
+    Matcher leading = LEADING_MULTIPLIER.matcher(group);
+    if (leading.matches()) {
+      return (leading.group(1).equals("di") ? 2 : 3) == locants ? leading.group(2) : group;
     }
     Matcher matcher = GROUP_MULTIPLIER.matcher(group);
     if (matcher.matches()) {
