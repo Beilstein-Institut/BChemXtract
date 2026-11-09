@@ -28,7 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.Test;
@@ -332,6 +335,31 @@ public class TextVisitorTest {
     assertTrue(legend.seriesAssignments().isEmpty(), "single compounds fix nothing per series");
     assertTrue(
         new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).compoundNumbers().isEmpty());
+  }
+
+  /**
+   * A text that is a compound number alone is the caption of a drawn structure ("43", "42a–l"); an
+   * atom's label is part of its drawing, whatever it reads.
+   */
+  @Test
+  public void readsCaptionsButNotAtomLabels() {
+    CDPage page = pageWithTexts("43", "42a–l", "43a: R = H");
+    for (CDText text : page.getTexts()) {
+      text.setBounds(new CDRectangle());
+    }
+    CDText label = page.getTexts().get(0);
+    CDAtom atom = new CDAtom();
+    CDText atomLabel = new CDText();
+    atomLabel.setText(label.getText());
+    atomLabel.setBounds(new CDRectangle());
+    atom.setText(atomLabel);
+    CDFragment fragment = new CDFragment();
+    fragment.addAtom(atom);
+    page.addFragment(fragment);
+
+    assertEquals(
+        List.of("43", "42"),
+        new TextVisitor(page).getCaptions().stream().map(TextVisitor.Caption::number).toList());
   }
 
   /**

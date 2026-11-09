@@ -22,7 +22,9 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,7 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDObjectTag;
 import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.utils.Definitions;
@@ -72,8 +77,27 @@ public class TextVisitor extends CDVisitor {
       Pattern.compile(
           "^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?([a-z]))?)?\\)?\\s*[:.)]\\s*\\S");
 
+  /**
+   * A text that is a compound number alone, the caption under a drawn structure: {@code 43}, {@code
+   * 42a–l}, {@code (12)}. Group 1 is the number.
+   */
+  private static final Pattern CAPTION =
+      Pattern.compile("^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?[a-z])?)?\\)?$");
+
+  /**
+   * A compound number standing alone as the caption of a drawn structure.
+   *
+   * @param bounds the bounding box of the caption text
+   * @param number the compound number, without letters, e.g. {@code 42} for {@code 42a–l}
+   */
+  public record Caption(CDRectangle bounds, String number) {}
+
   private final Map<String, List<String>> rgroups;
   private final List<RGroupDefinitionBlock> blocks;
+  private final List<Caption> captions;
+
+  /** Texts that belong to a drawing rather than the page: atom labels and object tags. */
+  private final Set<CDText> drawingTexts = Collections.newSetFromMap(new IdentityHashMap<>());
 
   /**
    * Constructs a {@code TextVisitor} and traverses the given page to collect R-group definitions.
@@ -83,7 +107,31 @@ public class TextVisitor extends CDVisitor {
   public TextVisitor(CDPage page) {
     rgroups = new LinkedHashMap<>();
     blocks = new ArrayList<>();
+    captions = new ArrayList<>();
     page.accept(this);
+  }
+
+  /**
+   * Notes the atom's label as part of its drawing: a number on an atom is no caption. An atom is
+   * visited before its label.
+   *
+   * @param atom the atom being visited
+   */
+  @Override
+  public void visitAtom(CDAtom atom) {
+    if (atom.getText() != null) {
+      drawingTexts.add(atom.getText());
+    }
+  }
+
+  /**
+   * Notes the tag's texts as part of the drawing, e.g. the repeat count of a bracket.
+   *
+   * @param tag the object tag being visited
+   */
+  @Override
+  public void visitObjectTag(CDObjectTag tag) {
+    drawingTexts.addAll(tag.getTexts());
   }
 
   /**
@@ -96,6 +144,13 @@ public class TextVisitor extends CDVisitor {
   @Override
   public void visitText(CDText cdText) {
     if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
+      return;
+    }
+    Matcher caption = CAPTION.matcher(cdText.getText().getText().strip());
+    if (caption.matches()) {
+      if (cdText.getBounds() != null && !drawingTexts.contains(cdText)) {
+        captions.add(new Caption(cdText.getBounds(), caption.group(1)));
+      }
       return;
     }
     ParsedDefinitions parsed = extractDefinitions(cdText.getText().getText());
@@ -511,5 +566,14 @@ public class TextVisitor extends CDVisitor {
    */
   public List<RGroupDefinitionBlock> getBlocks() {
     return blocks;
+  }
+
+  /**
+   * Returns the compound numbers that stand alone on the page, the captions of drawn structures.
+   *
+   * @return the captions, in page order
+   */
+  public List<Caption> getCaptions() {
+    return captions;
   }
 }

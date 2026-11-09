@@ -194,6 +194,24 @@ public class MarkushHandler {
   /** The scaffolds on the page, for telling which scaffold a definition block was drawn for. */
   private final List<Scaffold> scaffolds = new ArrayList<>();
 
+  /** Every structure drawn on the page, labelled or not, for pairing captions with structures. */
+  private final List<CDRectangle> drawn = new ArrayList<>();
+
+  /** The compound numbers standing alone on the page; see {@link #compoundNumber}. */
+  private final List<TextVisitor.Caption> captions;
+
+  /**
+   * The compound number of each drawn structure that has a caption; see {@link #compoundNumber}.
+   */
+  private Map<CDRectangle, String> compoundNumbers;
+
+  /**
+   * The cost of pairing a scaffold with a block numbered for other compounds in {@link #owners}:
+   * more than any distance on a page, so the pairing is made only when nothing else is left, and
+   * then dropped.
+   */
+  private static final double UNPAIRABLE = 1e9;
+
   /** Per label set, the scaffold each block defining it was drawn for; see {@link #owners}. */
   private final Map<Set<String>, Map<RGroupDefinitionBlock, Scaffold>> owners = new HashMap<>();
 
@@ -229,6 +247,7 @@ public class MarkushHandler {
     TextVisitor textVisitor = new TextVisitor(page);
     residueLabels = textVisitor.getRgroups();
     textBlocks = textVisitor.getBlocks();
+    captions = textVisitor.getCaptions();
     blocks = mergeColumnBlocks(textBlocks, Set.of());
     this.builder = builder;
     smilesParser = new SmilesParser(builder);
@@ -242,15 +261,82 @@ public class MarkushHandler {
    * scaffolds, often nearer to the scaffold after it than that scaffold's own table is;
    * nearest-block scoping alone would give both scaffolds the same table.
    *
+   * <p>Every structure on the page is registered, labelled or not, so that each caption ({@code
+   * 43}, {@code 42a–l}) goes to the structure it was written under; see {@link #compoundNumber}.
+   *
    * @param bounds bounding box of the scaffold, the same object later passed to {@code
    *     replaceRGroups}
    * @param labels the R-group labels drawn on the scaffold
    */
   public void addScaffold(CDRectangle bounds, Set<String> labels) {
-    if (bounds != null && !labels.isEmpty()) {
-      scaffolds.add(new Scaffold(bounds, Set.copyOf(labels)));
-      owners.clear();
+    if (bounds == null) {
+      return;
     }
+    drawn.add(bounds);
+    compoundNumbers = null;
+    if (!labels.isEmpty()) {
+      scaffolds.add(new Scaffold(bounds, Set.copyOf(labels)));
+    }
+    owners.clear();
+  }
+
+  /**
+   * The compound number of a drawn structure, from the caption written under or beside it. The
+   * captions are paired with the structures on the page, one caption per structure and one
+   * structure per caption, so that the paired distances add up to the least, as legends are paired
+   * in {@link #owners}. A number that lies within a structure's bounds numbers its atoms rather
+   * than the compound, and is not a caption; nor is one no legend on the page names.
+   *
+   * @param bounds bounding box of the structure
+   * @return its compound number, or {@code null} if no caption was paired with it
+   */
+  private String compoundNumber(CDRectangle bounds) {
+    if (compoundNumbers == null) {
+      compoundNumbers = new IdentityHashMap<>();
+      Set<String> named = new HashSet<>();
+      blocks.forEach(block -> named.addAll(block.compoundNumbers()));
+      List<TextVisitor.Caption> captions =
+          this.captions.stream()
+              .filter(caption -> named.contains(caption.number()))
+              .filter(
+                  caption ->
+                      drawn.stream()
+                          .allMatch(
+                              structure -> rectangleDistance(structure, caption.bounds()) > 0))
+              .toList();
+      if (!drawn.isEmpty() && !captions.isEmpty()) {
+        double[][] cost = new double[drawn.size()][captions.size()];
+        for (int i = 0; i < drawn.size(); i++) {
+          for (int j = 0; j < captions.size(); j++) {
+            cost[i][j] = rectangleDistance(drawn.get(i), captions.get(j).bounds());
+          }
+        }
+        int[] assigned = leastCostAssignment(cost);
+        for (int i = 0; i < drawn.size(); i++) {
+          if (assigned[i] >= 0) {
+            compoundNumbers.put(drawn.get(i), captions.get(assigned[i]).number());
+          }
+        }
+      }
+    }
+    return compoundNumbers.get(bounds);
+  }
+
+  /**
+   * Whether a block may define labels for a structure: unless both carry compound numbers and the
+   * block's lines do not name the structure's. A legend whose lines read {@code 42a: R = ...} is
+   * not the legend of the structure captioned {@code 43}, however near it is.
+   *
+   * @param bounds bounding box of the structure
+   * @param block the definition block
+   * @return {@code false} if the block names other compounds only
+   */
+  private boolean numberedFor(CDRectangle bounds, RGroupDefinitionBlock block) {
+    if (block.compoundNumbers().isEmpty()) {
+      return true;
+    }
+    String number = compoundNumber(bounds);
+    return number == null || block.compoundNumbers().contains(number);
   }
 
   /**
@@ -996,6 +1082,7 @@ public class MarkushHandler {
     for (RGroupDefinitionBlock block : blocks) {
       for (CorrelatedGroup group : block.correlatedGroups()) {
         if (!present.containsAll(group.labels())
+            || !numberedFor(scaffoldBounds, block)
             || belongsToAnother(scaffoldBounds, block, group.labels())) {
           continue;
         }
@@ -2785,6 +2872,7 @@ public class MarkushHandler {
     for (RGroupDefinitionBlock block : blocks) {
       if (block.bounds() == null
           || !block.definitions().containsKey(label)
+          || !numberedFor(scaffoldBounds, block)
           || belongsToAnother(scaffoldBounds, block, List.of(label))) {
         continue;
       }
@@ -2840,12 +2928,15 @@ public class MarkushHandler {
           double[][] cost = new double[carrying.size()][defining.size()];
           for (int i = 0; i < carrying.size(); i++) {
             for (int j = 0; j < defining.size(); j++) {
-              cost[i][j] = rectangleDistance(carrying.get(i).bounds(), defining.get(j).bounds());
+              cost[i][j] =
+                  numberedFor(carrying.get(i).bounds(), defining.get(j))
+                      ? rectangleDistance(carrying.get(i).bounds(), defining.get(j).bounds())
+                      : UNPAIRABLE;
             }
           }
           int[] assigned = leastCostAssignment(cost);
           for (int i = 0; i < carrying.size(); i++) {
-            if (assigned[i] >= 0) {
+            if (assigned[i] >= 0 && cost[i][assigned[i]] < UNPAIRABLE) {
               owner.put(defining.get(assigned[i]), carrying.get(i));
             }
           }
