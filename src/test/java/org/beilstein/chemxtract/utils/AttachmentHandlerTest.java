@@ -525,6 +525,37 @@ public class AttachmentHandlerTest {
     }
   }
 
+  /**
+   * A labelled group ({@code OMe}) drawn as a stub across a ring bond keeps its label when its end
+   * sits nearer the crossed bond than the bare end does; the bare end is the attachment. Ring B of
+   * schemes 20/21 in {@code cheminf/bugs/markush/m50167957-7} came out as a methyl.
+   */
+  @Test
+  public void normalizeKeepsAGroupLabelWhenItSitsOnTheCrossedBond() {
+    CDAtom c1 = element(0f, 0f);
+    CDAtom c2 = element(0f, 10f);
+    CDAtom x = element(-10f, 0f);
+    CDAtom y = element(-10f, 10f);
+    CDBond crossed = bond(c1, c2);
+    CDFragment scaffold = new CDFragment();
+    scaffold.setAtoms(List.of(c1, c2, x, y));
+    scaffold.setBonds(new ArrayList<>(List.of(crossed, bond(c1, x), bond(c2, y))));
+
+    CDAtom methoxy = labelled(-3f, 5f, "OMe");
+    CDAtom bare = element(5f, 5f);
+    CDBond stub = bond(methoxy, bare);
+    stub.setCrossingBonds(new HashSet<>(List.of(crossed)));
+    crossed.setCrossingBonds(new HashSet<>(List.of(stub)));
+    CDFragment sub = new CDFragment();
+    sub.setAtoms(List.of(methoxy, bare));
+    sub.setBonds(new ArrayList<>(List.of(stub)));
+
+    AttachmentHandler.normalizeVariableAttachmentBonds(new ArrayList<>(List.of(scaffold, sub)));
+
+    assertThat(bare.getNodeType()).isEqualTo(CDNodeType.VariableAttachment);
+    assertThat(methoxy.getNodeType()).isNotEqualTo(CDNodeType.VariableAttachment);
+  }
+
   private static CDAtom residue(float x, float y) {
     CDStyledString styled = new CDStyledString();
     styled.addChunk(new CDStyledString.CDXChunk(null, 10f, null, null, "R"));

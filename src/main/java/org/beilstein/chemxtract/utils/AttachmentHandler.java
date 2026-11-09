@@ -527,9 +527,10 @@ public final class AttachmentHandler {
   /**
    * Picks the stub endpoint to turn into the synthetic variable-attachment junction: the one
    * nearest the crossed bond, except when that endpoint is a residue (R-group) node and the other
-   * is not. The junction is deleted during expansion and its neighbour is bonded to the chosen
-   * candidate atom, so making the residue the junction would discard the very label the legend
-   * defines — authors draw the stub from either end, and both spellings have to survive.
+   * is not, or carries a label ({@code OMe}) and the other is a bare carbon. The junction is
+   * deleted during expansion and its neighbour is bonded to the chosen candidate atom, so making
+   * the labelled end the junction would discard the very group the stub draws — authors draw the
+   * stub from either end, and both spellings have to survive.
    *
    * @param bond the position-variation bond crossing the scaffold
    * @param candidates the endpoints of the crossed bond(s)
@@ -538,7 +539,9 @@ public final class AttachmentHandler {
   private static CDAtom junctionEnd(CDBond bond, List<CDAtom> candidates) {
     CDAtom nearest = nearestEndpoint(bond, candidates);
     CDAtom other = nearest == bond.getBegin() ? bond.getEnd() : bond.getBegin();
-    if (other != null && isResidue(nearest) && !isResidue(other)) {
+    if (other != null
+        && ((isResidue(nearest) && !isResidue(other))
+            || (!label(nearest).isBlank() && label(other).isBlank()))) {
       return other;
     }
     return nearest;
