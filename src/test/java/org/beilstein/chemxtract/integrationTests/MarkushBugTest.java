@@ -393,4 +393,25 @@ public class MarkushBugTest {
       assertFalse(inchiKeys.contains(drawing), "a drawn R value was extracted: " + drawing);
     }
   }
+
+  /**
+   * Scheme 80 of m50167957-15 draws its Ar values in a row below "Ar =", each cut off at a wavy
+   * line, where no legend line takes them. They are substituents all the same, and were extracted
+   * with their end atom and wavy line read as an ethyl group.
+   */
+  @Test
+  public void testGroupsAtAWavyLineAreNotSubstances() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-15.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    for (String drawing :
+        List.of(
+            "BLDNWXVISIXWKZ-UHFFFAOYSA-N", // 4-ethylfluorobenzene, the 80b drawing
+            "HLPIHRDZBHXTFJ-UHFFFAOYSA-N", // 2-ethylfuran, the 80c drawing
+            "KLQNCSLBKKYPET-UHFFFAOYSA-N")) { // 4-ethyl-N,N-dimethylaniline, the 80a drawing
+      assertFalse(inchiKeys.contains(drawing), "a drawn group was extracted: " + drawing);
+    }
+  }
 }
