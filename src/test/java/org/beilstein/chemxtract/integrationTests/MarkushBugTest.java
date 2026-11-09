@@ -326,10 +326,11 @@ public class MarkushBugTest {
 
   /**
    * m50167957-10: the 43 scaffold is captioned "43" and takes the legend numbered 43, not the 42
-   * legend that touches it too.
+   * legend that touches it too; series 49 and 50 ("49a–n: R1 = H / 50a–n: R1 = F") share the
+   * lettered R2 legend, which names no compounds.
    */
   @Test
-  public void testCaptionsTieScaffoldsToTheirLegends() throws IOException {
+  public void testCaptionsAndSharedSeriesLegend() throws IOException {
     Set<String> inchiKeys =
         xtract("m50167957-10.cdx").stream()
             .map(BCXSubstance::getInchiKey)
@@ -340,7 +341,9 @@ public class MarkushBugTest {
             Set.of(
                 "MRWCGIKQTYUHIZ-UHFFFAOYSA-N", // 43a, R = H
                 "PAYKMJZOLNJHTI-UHFFFAOYSA-N", // 43b, R = 4-bromo
-                "VCTGPSWNOZSEFL-UHFFFAOYSA-N")), // 43f, R = 2-methoxy
-        "43a-l must be extracted: " + inchiKeys);
+                "VCTGPSWNOZSEFL-UHFFFAOYSA-N", // 43f, R = 2-methoxy
+                "DPSGCNWEQKOKPX-ZHZULCJRSA-N", // 49b, R1 = H, R2 = 2-CH3-C6H4
+                "BJSDFJONOHASER-NVMNQCDNSA-N")), // 50n, R1 = F, R2 = 3-CF3, 4-Cl-C6H3
+        "43a-l and 49/50 must be extracted: " + inchiKeys);
   }
 }
