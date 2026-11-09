@@ -94,6 +94,13 @@ public class TextVisitor extends CDVisitor {
    */
   private static final Pattern LETTER_RUN = Pattern.compile("(?:^|\\s)([a-z](?:\\s+[a-z])+)\\s*$");
 
+  /** The label of a bracket's repeat count, as legend lines give it: {@code 26g: n = 2, R = H}. */
+  public static final String REPEAT = "n";
+
+  /** A repeat count {@code n = 2} in a legend line; group 1 is the count. */
+  private static final Pattern REPEAT_COUNT =
+      Pattern.compile("(?:^|[\\s,;:(])n\\s*=\\s*(\\d{1,2})(?![\\d.,–-]*\\d)");
+
   private static final Pattern CAPTION =
       Pattern.compile("^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?[a-z])?)?\\)?$");
 
@@ -359,6 +366,20 @@ public class TextVisitor extends CDVisitor {
     for (String row : toLogicalRows(input)) {
       List<Assignment> assignments =
           parseAssignments(row).stream().map(TextVisitor::oneRing).toList();
+      if (ENTRY_LETTER.matcher(row).find() || COMPOUND_NUMBER.matcher(row).find()) {
+        // "26g: n = 2, R = H": the repeat count of the scaffold's bracket varies with the entry.
+        // Lines giving only n run on into one row, so each n found is an entry of its own.
+        Matcher repeat = REPEAT_COUNT.matcher(row);
+        List<Assignment> counts = new ArrayList<>();
+        while (repeat.find()) {
+          counts.add(new Assignment(REPEAT, List.of(repeat.group(1))));
+        }
+        if (!counts.isEmpty()
+            && assignments.stream().noneMatch(assignment -> assignment.label().equals(REPEAT))) {
+          assignments = new ArrayList<>(assignments);
+          assignments.addAll(counts);
+        }
+      }
       Matcher number = COMPOUND_NUMBER.matcher(row);
       if (number.find()
           && number.group(2) != null

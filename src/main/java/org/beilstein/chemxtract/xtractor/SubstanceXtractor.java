@@ -49,9 +49,11 @@ import org.beilstein.chemxtract.utils.AttachmentHandler;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
+import org.beilstein.chemxtract.utils.RepeatUnit;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
+import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtom;
@@ -353,6 +355,47 @@ public class SubstanceXtractor {
     // Materialise multicenter (haptic) bonds in place before conversion.
     AttachmentHandler.resolveMultiAttachments(fragment);
 
+    // A bracket whose repeat count the legend gives per entry ("26g: n = 2") is built once per
+    // count, smallest first, each time with the bracketed atom repeated that often.
+    RepeatUnit repeatUnit = markushHandler == null ? null : RepeatUnit.find(fragment, page);
+    List<String> counts =
+        repeatUnit == null ? List.of() : markushHandler.repeatCounts(fragment.getBounds());
+    if (counts.isEmpty()) {
+      return buildSubstances(fragment, markushHandler, Map.of());
+    }
+    List<Integer> ordered = new ArrayList<>();
+    for (String count : counts) {
+      try {
+        ordered.add(Integer.parseInt(count));
+      } catch (NumberFormatException e) {
+        LOGGER.debug("Repeat count {} is not a number.", count);
+      }
+    }
+    ordered.sort(null);
+    for (int count : ordered) {
+      if (repeatUnit.repeat(count)) {
+        substances.addAll(
+            buildSubstances(
+                fragment, markushHandler, Map.of(TextVisitor.REPEAT, String.valueOf(count))));
+      }
+    }
+    return substances;
+  }
+
+  /**
+   * Converts a prepared fragment, one structure per position-variation candidate, and resolves its
+   * R-groups when the page defines them.
+   *
+   * @param fragment the fragment, its brackets and multicenter bonds already applied
+   * @param markushHandler the handler resolving R-groups, or {@code null}
+   * @param fixed labels whose value the fragment already carries, e.g. the repeat count it was
+   *     built with
+   * @return the substances built
+   */
+  private List<BCXSubstance> buildSubstances(
+      CDFragment fragment, MarkushHandler markushHandler, Map<String, String> fixed)
+      throws IOException, CDKException {
+    List<BCXSubstance> substances = new ArrayList<>();
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
     // variable attachment yield the original fragment unchanged. The candidates are converted
@@ -381,7 +424,8 @@ public class SubstanceXtractor {
         // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
         // to emitting the unexpanded scaffold below.
         for (IAtomContainer container :
-            markushHandler.replaceRGroups(candidates, fragment.getBounds(), new HashSet<>())) {
+            markushHandler.replaceRGroups(
+                candidates, fragment.getBounds(), new HashSet<>(), fixed)) {
           expandedRGroups |= addIfBuilt(substances, container, fragment, true);
         }
       } catch (IOException | CloneNotSupportedException e) {
