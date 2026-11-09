@@ -337,6 +337,24 @@ public class TextVisitorTest {
         new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).compoundNumbers().isEmpty());
   }
 
+  /** A line naming one compound by number and letter ("64a: R1 = ...") counts its letter. */
+  @Test
+  public void numberedEntriesCountTheirLetters() {
+    assertEquals(
+        "ab",
+        new TextVisitor(pageWithTexts("64a: R1 = H\r64b: R1 = Me"))
+            .getBlocks()
+            .get(0)
+            .entryLetters());
+    assertEquals(
+        "",
+        new TextVisitor(pageWithTexts("40a–m: R1 = H\r41a–e: R1 = OMe"))
+            .getBlocks()
+            .get(0)
+            .entryLetters(),
+        "a range names no single entry");
+  }
+
   /**
    * A text that is a compound number alone is the caption of a drawn structure ("43", "42a–l"); an
    * atom's label is part of its drawing, whatever it reads.

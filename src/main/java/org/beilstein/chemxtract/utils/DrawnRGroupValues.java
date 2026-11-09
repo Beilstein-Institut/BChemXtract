@@ -37,6 +37,7 @@ import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.smiles.SmiFlavor;
@@ -46,9 +47,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Substituents drawn as R-group values: a legend line such as {@code a: R =} followed by a drawn
  * group whose free bond ends at a wavy line, the usual way of marking where a group attaches. The
- * wavy line is a fragment of its own, a single wavy bond between two unlabelled carbons, and the
- * group's bond ends on an unlabelled carbon lying on it. That end atom stands for the scaffold atom
- * the group is bonded to, not for a carbon of the group.
+ * wavy line is a single wavy bond between two unlabelled carbons, and the group's bond ends on an
+ * unlabelled carbon lying on it. That end atom stands for the scaffold atom the group is bonded to,
+ * not for a carbon of the group. The wavy line is usually a fragment of its own; when the author
+ * grouped it with the group, it is the fragment's one wavy bond standing apart from the rest.
  */
 final class DrawnRGroupValues {
 
@@ -61,10 +63,20 @@ final class DrawnRGroupValues {
    * A drawn substituent and the wavy line its attachment end lies on.
    *
    * @param group the drawn group, end atom included
-   * @param cut the wavy-line fragment
+   * @param cut the wavy line
    * @param end the group's end atom on the wavy line, where the scaffold attaches
+   * @param drawn the page fragments the drawing consists of: the group's and the wavy line's, or
+   *     the one fragment holding both
    */
-  record Drawing(CDFragment group, CDFragment cut, CDAtom end) {}
+  record Drawing(CDFragment group, CDFragment cut, CDAtom end, Set<CDFragment> drawn) {}
+
+  /**
+   * A group or wavy line, and the page fragment it was drawn in.
+   *
+   * @param fragment the group or wavy line on its own
+   * @param source the page fragment
+   */
+  private record Part(CDFragment fragment, CDFragment source) {}
 
   private DrawnRGroupValues() {}
 
@@ -77,37 +89,93 @@ final class DrawnRGroupValues {
    * @return the drawings, in fragment order
    */
   static List<Drawing> find(List<CDFragment> fragments) {
-    List<CDFragment> cuts = fragments.stream().filter(DrawnRGroupValues::isWavyLine).toList();
+    List<Part> cuts = new ArrayList<>();
+    List<Part> groups = new ArrayList<>();
+    for (CDFragment fragment : fragments) {
+      if (isWavyLine(fragment)) {
+        cuts.add(new Part(fragment, fragment));
+        continue;
+      }
+      CDBond wavy = separateWavyBond(fragment);
+      if (wavy == null) {
+        groups.add(new Part(fragment, fragment));
+        continue;
+      }
+      List<CDAtom> line = List.of(wavy.getBegin(), wavy.getEnd());
+      cuts.add(new Part(part(line, List.of(wavy)), fragment));
+      List<CDAtom> rest = new ArrayList<>(fragment.getAtoms());
+      rest.removeAll(line);
+      List<CDBond> restBonds = new ArrayList<>(fragment.getBonds());
+      restBonds.remove(wavy);
+      groups.add(new Part(part(rest, restBonds), fragment));
+    }
     if (cuts.isEmpty()) {
       return List.of();
     }
-    Set<CDFragment> usedCuts = Collections.newSetFromMap(new IdentityHashMap<>());
+    Set<Part> usedCuts = Collections.newSetFromMap(new IdentityHashMap<>());
     List<Drawing> drawings = new ArrayList<>();
-    for (CDFragment fragment : fragments) {
-      if (cuts.contains(fragment) || fragment.getAtoms().size() < 3) {
+    for (Part group : groups) {
+      CDFragment fragment = group.fragment();
+      if (fragment.getAtoms().size() < 3) {
         continue;
       }
       Drawing found = null;
+      Part foundCut = null;
       for (CDAtom atom : fragment.getAtoms()) {
-        if (!isBareCarbon(atom) || degree(fragment, atom) != 1) {
+        if (!isEnd(atom) || degree(fragment, atom) != 1) {
           continue;
         }
-        for (CDFragment cut : cuts) {
-          if (!usedCuts.contains(cut) && liesOn(atom, cut)) {
+        for (Part cut : cuts) {
+          if (!usedCuts.contains(cut) && liesOn(atom, cut.fragment())) {
             if (found != null) {
               found = null; // two ends on wavy lines: not a single substituent
               break;
             }
-            found = new Drawing(fragment, cut, atom);
+            Set<CDFragment> drawn = Collections.newSetFromMap(new IdentityHashMap<>());
+            drawn.add(group.source());
+            drawn.add(cut.source());
+            found = new Drawing(fragment, cut.fragment(), atom, drawn);
+            foundCut = cut;
           }
         }
       }
       if (found != null) {
-        usedCuts.add(found.cut());
+        usedCuts.add(foundCut);
         drawings.add(found);
       }
     }
     return drawings;
+  }
+
+  /**
+   * The fragment's wavy bond that stands apart from the rest of it: a single wavy bond between two
+   * unlabelled carbons bonded to nothing else, beside a drawing of at least three atoms.
+   *
+   * @return the bond, or {@code null} if the fragment has none or more than one
+   */
+  private static CDBond separateWavyBond(CDFragment fragment) {
+    CDBond found = null;
+    for (CDBond bond : fragment.getBonds()) {
+      if (bond.getBondDisplay() == CDBondDisplay.Wavy
+          && isBareCarbon(bond.getBegin())
+          && isBareCarbon(bond.getEnd())
+          && degree(fragment, bond.getBegin()) == 1
+          && degree(fragment, bond.getEnd()) == 1) {
+        if (found != null) {
+          return null;
+        }
+        found = bond;
+      }
+    }
+    return found != null && fragment.getAtoms().size() >= 5 ? found : null;
+  }
+
+  /** A fragment of the given atoms and bonds, taken from a larger one. */
+  private static CDFragment part(List<CDAtom> atoms, List<CDBond> bonds) {
+    CDFragment part = new CDFragment();
+    part.addAllAtoms(atoms);
+    bonds.forEach(part::addBond);
+    return part;
   }
 
   /**
@@ -120,24 +188,31 @@ final class DrawnRGroupValues {
   static String smiles(Drawing drawing, IChemObjectBuilder builder) {
     try {
       IAtomContainer group = new FragmentConverter(builder).convert(drawing.group());
-      // The converter keeps ChemDraw's coordinates with y flipped, which identifies the end atom.
-      CDPoint2D end = drawing.end().getPosition2D();
-      IAtom attachment = null;
-      for (IAtom atom : group.atoms()) {
-        Point2d point = atom.getPoint2d();
-        if (point != null
-            && Math.abs(point.x - end.getX()) < 1e-3
-            && Math.abs(point.y + end.getY()) < 1e-3) {
-          attachment = atom;
-        }
-      }
-      if (attachment == null || group.getConnectedBondsCount(attachment) != 1) {
-        return null;
-      }
       IPseudoAtom star = builder.newInstance(IPseudoAtom.class, "*");
-      star.setPoint2d(attachment.getPoint2d());
       star.setImplicitHydrogenCount(0);
-      group.setAtom(group.indexOf(attachment), star);
+      IAtom attachment = atomAt(group, drawing.end());
+      if (attachment != null) {
+        if (group.getConnectedBondsCount(attachment) != 1) {
+          return null;
+        }
+        star.setPoint2d(attachment.getPoint2d());
+        group.setAtom(group.indexOf(attachment), star);
+      } else {
+        // The converter leaves out an attachment point node and its bond: bond the * to the atom
+        // the node was bonded to.
+        IAtom bonded = atomAt(group, neighbour(drawing.group(), drawing.end()));
+        if (bonded == null) {
+          return null;
+        }
+        star.setPoint2d(drawing.end().getPosition2D() == null ? null : flipped(drawing.end()));
+        group.addAtom(star);
+        group.addBond(group.indexOf(bonded), group.indexOf(star), IBond.Order.SINGLE);
+        Integer hydrogens = bonded.getImplicitHydrogenCount();
+        if (hydrogens == null || hydrogens < 1) {
+          return null;
+        }
+        bonded.setImplicitHydrogenCount(hydrogens - 1);
+      }
       String smiles = ChemicalUtils.createSmiles(group, SmiFlavor.Canonical);
       return smiles != null && smiles.chars().filter(c -> c == '*').count() == 1 ? smiles : null;
     } catch (CDKException | RuntimeException e) {
@@ -146,12 +221,58 @@ final class DrawnRGroupValues {
     }
   }
 
+  /**
+   * The converted atom drawn at a ChemDraw atom's position; the converter keeps ChemDraw's
+   * coordinates with y flipped.
+   */
+  private static IAtom atomAt(IAtomContainer group, CDAtom drawn) {
+    if (drawn == null || drawn.getPosition2D() == null) {
+      return null;
+    }
+    Point2d at = flipped(drawn);
+    for (IAtom atom : group.atoms()) {
+      Point2d point = atom.getPoint2d();
+      if (point != null && Math.abs(point.x - at.x) < 1e-3 && Math.abs(point.y - at.y) < 1e-3) {
+        return atom;
+      }
+    }
+    return null;
+  }
+
+  private static Point2d flipped(CDAtom atom) {
+    CDPoint2D position = atom.getPosition2D();
+    return new Point2d(position.getX(), -position.getY());
+  }
+
+  /** The one atom bonded to the given one in the fragment, or {@code null}. */
+  private static CDAtom neighbour(CDFragment fragment, CDAtom atom) {
+    for (CDBond bond : fragment.getBonds()) {
+      if (bond.getBegin() == atom) {
+        return bond.getEnd();
+      }
+      if (bond.getEnd() == atom) {
+        return bond.getBegin();
+      }
+    }
+    return null;
+  }
+
   /** A single wavy bond between two unlabelled carbons. */
   private static boolean isWavyLine(CDFragment fragment) {
     return fragment.getAtoms().size() == 2
         && fragment.getBonds().size() == 1
         && fragment.getBonds().get(0).getBondDisplay() == CDBondDisplay.Wavy
         && fragment.getAtoms().stream().allMatch(DrawnRGroupValues::isBareCarbon);
+  }
+
+  /**
+   * Whether the atom can be the group's end on a wavy line: an unlabelled carbon, or an attachment
+   * point node drawn there instead.
+   */
+  private static boolean isEnd(CDAtom atom) {
+    return isBareCarbon(atom)
+        || (CDNodeType.VariableAttachment.equals(atom.getNodeType())
+            && atom.getPosition2D() != null);
   }
 
   /** An element carbon drawn without a label. */

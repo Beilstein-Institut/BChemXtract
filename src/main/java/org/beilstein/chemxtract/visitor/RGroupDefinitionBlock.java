@@ -41,8 +41,8 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
  * @param lineHeight height of one line of the source text: its bounds' height over its number of
  *     lines ({@code 0} if the text had no position)
  * @param entryLetters the letters the text's lines open with, in order, e.g. {@code "abc"} for a
- *     legend of lines {@code a: R = ...}, {@code b: R = ...}, {@code c: R = ...}; empty if its
- *     lines are not lettered
+ *     legend of lines {@code a: R = ...}, {@code b: R = ...}, {@code c: R = ...}, or {@code 64a: R1
+ *     = ...}, {@code 64b: R1 = ...}; empty if its lines are not lettered
  * @param compoundNumbers the compound numbers the text's lines open with, e.g. {@code 36} for a
  *     legend of lines {@code 36a: Ar = ...}, {@code 36b: Ar = ...}; empty if no line opens with one
  * @param seriesAssignments per compound number, the single values a line naming a range of that

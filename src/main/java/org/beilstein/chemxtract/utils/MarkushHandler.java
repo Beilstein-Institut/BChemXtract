@@ -516,8 +516,7 @@ public class MarkushHandler {
         if (smiles != null) {
           values.add(smiles);
           drawings.remove(drawing);
-          consumed.add(drawing.group());
-          consumed.add(drawing.cut());
+          consumed.addAll(drawing.drawn());
         }
       }
       if (!values.isEmpty()) {

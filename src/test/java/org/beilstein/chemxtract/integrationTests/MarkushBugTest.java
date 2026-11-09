@@ -367,4 +367,30 @@ public class MarkushBugTest {
                 "JZOKHJZSIWEXFO-UHFFFAOYSA-N")), // 47f, R = 3,4,5-triOMe
         "42c, 45a-d and 47c/f/i must be extracted: " + inchiKeys);
   }
+
+  /**
+   * 64a/b of m50167957-12 give R1 as drawings ("64a: R1 =", "64b: R1 ="), each grouped with its
+   * wavy line into one fragment and attached through an attachment point node rather than a carbon.
+   * The groups are R1's values, Boc-azetidin-3-yl and Boc-piperidin-4-yl, not substances.
+   */
+  @Test
+  public void testDrawnValueGroupedWithItsWavyLine() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-12.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "JCNNZMFADDRDOO-UHFFFAOYSA-N", // 64a, R1 = 1-Boc-azetidin-3-yl
+                "CBRAVKAOQFEQMN-UHFFFAOYSA-N")), // 64b, R1 = 1-Boc-piperidin-4-yl
+        "64a-b must be extracted: " + inchiKeys);
+    for (String drawing :
+        List.of(
+            "BXRALUJTLUIVSG-UHFFFAOYSA-N", // the 64a drawing read as 3-ethyl-1-Boc-azetidine
+            "DZEKXNZRIOWTHG-UHFFFAOYSA-N")) { // the 64b drawing read as 4-ethyl-1-Boc-piperidine
+      assertFalse(inchiKeys.contains(drawing), "a drawn R value was extracted: " + drawing);
+    }
+  }
 }
