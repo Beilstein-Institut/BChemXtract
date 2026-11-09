@@ -894,6 +894,44 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Substituents written as names graft like their formulas: a named benzyl or phenyl, a bare
+   * prefix, and a prefix at ring positions (35a-r of {@code cheminf/bugs/markush/m50167957-9}, the
+   * 43 legend of m50167957-10).
+   */
+  @Test
+  public void namedSubstituentsGraft() throws Exception {
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry :
+        Map.of(
+                "4-chlorobenzyl", "CC(=O)Cc1ccc(Cl)cc1",
+                "3,4-dichlorobenzyl", "CC(=O)Cc1ccc(Cl)c(Cl)c1",
+                "4-chloro-3-methylphenyl", "CC(=O)c1ccc(Cl)c(C)c1",
+                "methyl", "CC(C)=O",
+                "methoxy", "COC(C)=O")
+            .entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1));
+      assertEquals(1, results.size(), entry.getKey());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.get(0)),
+          entry.getKey());
+    }
+    for (Map.Entry<String, String> entry :
+        Map.of("3-methoxy", "COc1cccc(Cl)c1", "3,5-dimethoxy", "COc1cc(Cl)cc(OC)c1").entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("Clc1ccccc1", "R", 3));
+      assertEquals(1, results.size(), entry.getKey());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.get(0)),
+          entry.getKey());
+    }
+  }
+
+  /**
    * Two legends side by side whose lines name different compounds (36a-c, 37a-c) are two schemes'
    * legends, not two columns of one: each scaffold keeps its own. Geometry from {@code
    * cheminf/bugs/markush/m50167957-9}.
@@ -941,6 +979,34 @@ public class MarkushHandlerTest {
       actual.add(canonicalSmiles(AtomContainerManipulator.copyAndSuppressedHydrogens(product)));
     }
     assertEquals(expected, actual);
+  }
+
+  /**
+   * A scaffold whose labels a positional table gives keeps that table, even when a series caption
+   * elsewhere on the page also defines one of its labels: 35 of {@code
+   * cheminf/bugs/markush/m50167957-9} took R1 from the "40a–m: R1 = H" caption.
+   */
+  @Test
+  public void positionalTableWinsOverASeriesCaption() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(76, 84, 249, 106), "35a: R = Cl, R1 = Br\r35b: R = F, R1 = Br"));
+    page.addText(textAt(rect(222, 455, 284, 477), "40a–m: R1 = H\r41a–e: R1 = OMe"));
+    page.addText(textAt(rect(92, 354, 172, 490), "40a: R = I"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(residueScaffold(Map.of("R", 0, "R1", 3)), rect(176, 14, 321, 67));
+
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    Set<String> actual = new HashSet<>();
+    for (IAtomContainer product : results) {
+      actual.add(canonicalSmiles(product));
+    }
+    assertEquals(
+        Set.of(
+            canonicalSmiles(parser.parseSmiles("Clc1ccc(Br)cc1")),
+            canonicalSmiles(parser.parseSmiles("Fc1ccc(Br)cc1"))),
+        actual);
   }
 
   /**
