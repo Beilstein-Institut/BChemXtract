@@ -1377,12 +1377,16 @@ public class MarkushHandler {
       }
       Matcher chain = WRITTEN_OUT_CHAIN.matcher(definition);
       if (chain.matches()) {
-        int units =
-            chain.group(1) != null
-                ? chain.group(1).length() / "CH2".length()
-                : Integer.parseInt(chain.group(2));
-        if (units > 0) {
-          return "*" + "C".repeat(units + 1);
+        try {
+          int units =
+              chain.group(1) != null
+                  ? chain.group(1).length() / "CH2".length()
+                  : Integer.parseInt(chain.group(2));
+          if (units > 0) {
+            return "*" + "C".repeat(units + 1);
+          }
+        } catch (NumberFormatException e) {
+          LOGGER.debug("Chain {} has no readable count.", definition);
         }
       }
     }
@@ -1475,7 +1479,8 @@ public class MarkushHandler {
         }
       }
     }
-    if (substituents.size() != 5 - Integer.parseInt(matcher.group(2))) {
+    // The pattern admits a single digit 0-3 only.
+    if (substituents.size() != 5 - Character.digit(matcher.group(2).charAt(0), 10)) {
       return null;
     }
     return assemblePhenyl(value, false, substituents);

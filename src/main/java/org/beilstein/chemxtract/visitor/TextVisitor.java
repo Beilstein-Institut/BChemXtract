@@ -265,7 +265,11 @@ public class TextVisitor extends CDVisitor {
     for (String value : assignment.values()) {
       Matcher formula = RING_FORMULA.matcher(value);
       if (formula.matches()) {
-        int others = 5 - Integer.parseInt(formula.group(2)) - formula.group(1).split(",").length;
+        // The pattern admits a single digit 0-3 only.
+        int others =
+            5
+                - Character.digit(formula.group(2).charAt(0), 10)
+                - formula.group(1).split(",").length;
         int from = values.size() - others;
         if (others > 0
             && from >= 0
