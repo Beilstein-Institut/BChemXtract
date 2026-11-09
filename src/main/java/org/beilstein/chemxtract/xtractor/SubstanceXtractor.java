@@ -392,6 +392,17 @@ public class SubstanceXtractor {
       throws IOException, CDKException {
     List<BCXSubstance> substances = new ArrayList<>();
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
+    // A scaffold whose lettered rings carry its position-variation groups, placed per compound by
+    // a ring table ("A ring   B ring"), is built once per line rather than at every position.
+    if (markushHandler != null && !fragment.hasRGroup()) {
+      List<IAtomContainer> rows = markushHandler.ringTableStructures(fragment, fragmentConverter);
+      if (rows != null) {
+        for (IAtomContainer row : rows) {
+          addIfBuilt(substances, row, fragment, true);
+        }
+        return substances;
+      }
+    }
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
     // variable attachment yield the original fragment unchanged. The candidates are converted
     // together and expanded in one go: a legend that gives a substituent by ring position moves the

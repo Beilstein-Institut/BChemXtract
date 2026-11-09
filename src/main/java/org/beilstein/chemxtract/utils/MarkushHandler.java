@@ -48,8 +48,10 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.datatypes.CDPoint2D;
 import org.beilstein.chemxtract.cheminf.AbbreviationLayout;
 import org.beilstein.chemxtract.cheminf.RingSystemNumbering;
+import org.beilstein.chemxtract.converter.FragmentConverter;
 import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.visitor.CorrelatedGroup;
+import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.beilstein.chemxtract.visitor.RGroupDefinitionBlock;
 import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.Bond;
@@ -204,6 +206,12 @@ public class MarkushHandler {
   /** Every structure drawn on the page, labelled or not, for pairing captions with structures. */
   private final List<CDRectangle> drawn = new ArrayList<>();
 
+  /** The tables placing each lettered ring's group; see {@link #ringTableStructures}. */
+  private final List<TextVisitor.RingTable> ringTables;
+
+  /** The ring letters drawn on the page; see {@link #ringTableStructures}. */
+  private final List<RingLetterTable.Letter> ringLetters;
+
   /** The lines of entry letters under rows of drawn values; see {@link #adoptDrawnTable}. */
   private final List<TextVisitor.LetterRow> letterRows;
 
@@ -259,6 +267,8 @@ public class MarkushHandler {
     textBlocks = textVisitor.getBlocks();
     captions = textVisitor.getCaptions();
     letterRows = textVisitor.getLetterRows();
+    ringTables = textVisitor.getRingTables();
+    ringLetters = RingLetterTable.letters(new FragmentVisitor(page).getFragments());
     blocks = mergeColumnBlocks(textBlocks, Set.of());
     this.builder = builder;
     smilesParser = new SmilesParser(builder);
@@ -991,6 +1001,41 @@ public class MarkushHandler {
       }
     }
     return result;
+  }
+
+  /**
+   * Builds the compounds of the ring table nearest a scaffold whose lettered rings carry its
+   * position-variation groups ({@code A ring B ring}, {@code 20a: 3-triazolyl 3,4-diOMe}): one
+   * structure per line, each group where the line puts it. A table whose lines name other compounds
+   * than the scaffold's caption is not used.
+   *
+   * @param fragment the scaffold, its position-variation groups folded in
+   * @param converter converter for the built fragments
+   * @return the structures, or {@code null} if no ring table applies to the scaffold
+   */
+  public List<IAtomContainer> ringTableStructures(
+      CDFragment fragment, FragmentConverter converter) {
+    if (ringTables.isEmpty() || fragment.getBounds() == null) {
+      return null;
+    }
+    String number = compoundNumber(fragment.getBounds());
+    TextVisitor.RingTable nearest = null;
+    for (TextVisitor.RingTable table : ringTables) {
+      boolean numbered =
+          number == null
+              || table.rows().stream().allMatch(row -> !row.entry().matches("\\d+.*"))
+              || table.rows().stream()
+                  .anyMatch(row -> row.entry().replaceAll("\\D", "").equals(number));
+      if (numbered
+          && (nearest == null
+              || blockDistance(fragment.getBounds(), table.bounds())
+                  < blockDistance(fragment.getBounds(), nearest.bounds()))) {
+        nearest = table;
+      }
+    }
+    return nearest == null
+        ? null
+        : RingLetterTable.build(fragment, nearest, ringLetters, converter);
   }
 
   /**
