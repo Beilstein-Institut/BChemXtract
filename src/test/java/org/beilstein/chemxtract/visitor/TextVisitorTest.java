@@ -363,6 +363,27 @@ public class TextVisitorTest {
             .reduce("", String::concat));
   }
 
+  /** A repeat count in a numbered or lettered line is the label n, with R or on its own. */
+  @Test
+  public void readsRepeatCountsOfLegendLines() {
+    List<CorrelatedGroup> withR =
+        new TextVisitor(pageWithTexts("26a: n = 1, R = H\r26g: n = 2, R = F"))
+            .getBlocks()
+            .get(0)
+            .correlatedGroups();
+    assertEquals(
+        List.of(Map.of("R", "H", "n", "1"), Map.of("R", "F", "n", "2")), withR.get(0).tuples());
+    List<CorrelatedGroup> alone =
+        new TextVisitor(pageWithTexts("32a: n = 6\r32b: n = 4"))
+            .getBlocks()
+            .get(0)
+            .correlatedGroups();
+    assertEquals(List.of(Map.of("n", "6"), Map.of("n", "4")), alone.get(0).tuples());
+    assertTrue(
+        new TextVisitor(pageWithTexts("yield, n = 3")).getBlocks().isEmpty(),
+        "an n outside a legend line is no entry");
+  }
+
   /** A line naming one compound by number and letter ("64a: R1 = ...") counts its letter. */
   @Test
   public void numberedEntriesCountTheirLetters() {

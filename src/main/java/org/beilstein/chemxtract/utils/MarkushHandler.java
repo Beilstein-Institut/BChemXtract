@@ -904,15 +904,42 @@ public class MarkushHandler {
   public List<IAtomContainer> replaceRGroups(
       List<IAtomContainer> candidates, CDRectangle scaffoldBounds, Set<String> produced)
       throws CloneNotSupportedException, IOException, CDKException {
+    return replaceRGroups(candidates, scaffoldBounds, produced, Map.of());
+  }
+
+  /**
+   * Generates the structures for a scaffold built for one value of a label it does not carry as an
+   * atom: the repeat count {@code n} of a bracket, which the caller has already applied. Only the
+   * legend's entries with that value are taken, and the label itself is not grafted.
+   *
+   * @param candidates the scaffold as built, one per candidate attachment atom
+   * @param scaffoldBounds bounding box of the scaffold, used to pick the nearest definition block
+   * @param produced keys of the structures already produced for this fragment, added to
+   * @param fixed the values already applied, by label, e.g. {@code n -> 2}
+   * @return list of all substituted atom containers not already in {@code produced}
+   * @throws CloneNotSupportedException if atom container cloning fails
+   * @throws IOException if reading SMILES definitions fails
+   * @throws CDKException if a SMILES string is invalid
+   */
+  public List<IAtomContainer> replaceRGroups(
+      List<IAtomContainer> candidates,
+      CDRectangle scaffoldBounds,
+      Set<String> produced,
+      Map<String, String> fixed)
+      throws CloneNotSupportedException, IOException, CDKException {
     if (candidates.isEmpty()) {
       return List.of();
     }
-    Set<String> present = presentResidueLabels(candidates.get(0));
+    Set<String> present = new HashSet<>(presentResidueLabels(candidates.get(0)));
+    present.addAll(fixed.keySet());
     RGroupDefinitionBlock caption = nearestSeriesCaption(present, scaffoldBounds);
     if (caption != null) {
       return replaceBySeries(candidates, scaffoldBounds, present, caption, produced);
     }
-    List<Choice> choices = residueChoicesNear(present, scaffoldBounds);
+    List<Choice> choices = withFixed(residueChoicesNear(present, scaffoldBounds), fixed);
+    if (choices == null) {
+      return List.of();
+    }
     if (choices.isEmpty()) {
       if (present.stream().anyMatch(label -> nearestBlockDefining(label, scaffoldBounds) != null)) {
         // The nearest legend names the label but gives its value as a drawing ("a: R =" beside a
@@ -929,6 +956,75 @@ public class MarkushHandler {
         candidates,
         viableCombinations(candidates, permittedChoices(candidates, choices)),
         produced);
+  }
+
+  /**
+   * The choices left once some labels have fixed values: options that give a fixed label another
+   * value are dropped, the fixed labels are taken out of the rest, and a choice left with nothing
+   * to vary is dropped.
+   *
+   * @return the choices, or {@code null} if a choice has no option agreeing with the fixed values
+   */
+  private static List<Choice> withFixed(List<Choice> choices, Map<String, String> fixed) {
+    if (fixed.isEmpty()) {
+      return choices;
+    }
+    List<Choice> result = new ArrayList<>();
+    for (Choice choice : choices) {
+      List<Map<String, String>> options = new ArrayList<>();
+      for (Map<String, String> option : choice.options()) {
+        if (fixed.entrySet().stream()
+            .allMatch(
+                entry ->
+                    !option.containsKey(entry.getKey())
+                        || option.get(entry.getKey()).equals(entry.getValue()))) {
+          Map<String, String> rest = new LinkedHashMap<>(option);
+          rest.keySet().removeAll(fixed.keySet());
+          options.add(rest);
+        }
+      }
+      if (options.isEmpty()) {
+        return null;
+      }
+      if (options.stream().anyMatch(option -> !option.isEmpty())) {
+        result.add(new Choice(options.stream().filter(option -> !option.isEmpty()).toList()));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * The values a legend gives the repeat count {@code n} of a scaffold's bracket: those of the
+   * nearest block defining {@code n}, alone or in a table, in the order listed.
+   *
+   * @param scaffoldBounds bounding box of the scaffold
+   * @return the counts, empty if no block near the scaffold defines {@code n}
+   */
+  public List<String> repeatCounts(CDRectangle scaffoldBounds) {
+    if (scaffoldBounds == null) {
+      return List.of();
+    }
+    RGroupDefinitionBlock best = null;
+    for (RGroupDefinitionBlock block : blocks) {
+      if (block.bounds() != null
+          && !repeatCountsOf(block).isEmpty()
+          && numberedFor(scaffoldBounds, block)
+          && (best == null || isNearer(scaffoldBounds, block, best))) {
+        best = block;
+      }
+    }
+    return best == null ? List.of() : repeatCountsOf(best);
+  }
+
+  private static List<String> repeatCountsOf(RGroupDefinitionBlock block) {
+    Set<String> counts =
+        new LinkedHashSet<>(block.definitions().getOrDefault(TextVisitor.REPEAT, List.of()));
+    for (CorrelatedGroup group : block.correlatedGroups()) {
+      if (group.labels().contains(TextVisitor.REPEAT)) {
+        group.tuples().forEach(tuple -> counts.add(tuple.get(TextVisitor.REPEAT)));
+      }
+    }
+    return List.copyOf(counts);
   }
 
   /**

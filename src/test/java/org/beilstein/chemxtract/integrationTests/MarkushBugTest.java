@@ -440,4 +440,47 @@ public class MarkushBugTest {
         inchiKeys.contains("RPLCVSQNTHFTFI-ONNFQVAWSA-N"), // f's drawing with R = NO2
         "the NO2 line has no letter under the sixth drawing");
   }
+
+  /**
+   * The linker of scheme 26 in m50167957-7 is a bracketed CH2 with repeat count n, which the legend
+   * gives with R ("26g: n = 2, R = H"). Each n is built with the CH2 repeated that often, taking R
+   * from the entries with that n.
+   */
+  @Test
+  public void testRepeatCountFromTheLegend() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-7.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "FWCALDQWDFRQOR-UHFFFAOYSA-N", // 26b, n = 1, R = F
+                "RXGJODRZHCDDPK-UHFFFAOYSA-N", // 26g, n = 2, R = H
+                "FVPARRRAMFSXTE-UHFFFAOYSA-N", // 26k, n = 3, R = H
+                "BHAZHQYFDXRQEX-UHFFFAOYSA-N")), // 26m, n = 3, R = Cl
+        "26a-m must be extracted: " + inchiKeys);
+  }
+
+  /**
+   * Schemes 32-34 of m50167957-8 give only n ("32a: n = 6", "32b: n = 4"); the scaffold has no R
+   * and is built once per n instead of with the one CH2 drawn.
+   */
+  @Test
+  public void testRepeatCountWithoutRGroups() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-8.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "XWEFUSDSVPPVHJ-UHFFFAOYSA-N", // 32a, n = 6
+                "KPZRTSZGLDBHRP-UHFFFAOYSA-N")), // 32b, n = 4
+        "32a-b must be extracted: " + inchiKeys);
+    assertFalse(
+        inchiKeys.contains("RDJQXOXMVXYRMJ-UHFFFAOYSA-N"), "32 as drawn, with n = 1, is no entry");
+  }
 }
