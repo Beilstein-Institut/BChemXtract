@@ -369,6 +369,25 @@ public class TextVisitorTest {
             .reduce("", String::concat));
   }
 
+  /** A ring table gives one value per lettered ring and line; a line that does not is no table. */
+  @Test
+  public void readsRingTables() {
+    CDPage page =
+        pageWithTexts(
+            "   A ring        B ring\r20a: 3-triazolyl     3,4-diOMe\r20c: 4-triazolyl     2,3-diOMe",
+            "   A ring        B ring\r21a: 3-triazolyl");
+    page.getTexts().forEach(text -> text.setBounds(new CDRectangle()));
+    List<TextVisitor.RingTable> tables = new TextVisitor(page).getRingTables();
+
+    assertEquals(1, tables.size(), "a line with one value for two rings is no table");
+    assertEquals(List.of("A", "B"), tables.get(0).rings());
+    assertEquals(
+        List.of(
+            new TextVisitor.RingRow("20a", List.of("3-triazolyl", "3,4-diOMe")),
+            new TextVisitor.RingRow("20c", List.of("4-triazolyl", "2,3-diOMe"))),
+        tables.get(0).rows());
+  }
+
   /** A repeat count in a numbered or lettered line is the label n, with R or on its own. */
   @Test
   public void readsRepeatCountsOfLegendLines() {

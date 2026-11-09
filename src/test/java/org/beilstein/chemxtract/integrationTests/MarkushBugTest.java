@@ -483,4 +483,30 @@ public class MarkushBugTest {
     assertFalse(
         inchiKeys.contains("RDJQXOXMVXYRMJ-UHFFFAOYSA-N"), "32 as drawn, with n = 1, is no entry");
   }
+
+  /**
+   * Schemes 20 and 21 of m50167957-7 letter their chalcone rings A and B in the drawing, with the
+   * triazole and an OMe drawn across them as position variation, and give per compound where each
+   * goes ("A ring B ring", "20a: 3-triazolyl 3,4-diOMe"). Each line is built once, instead of one
+   * OMe at every position combined with every triazole position.
+   */
+  @Test
+  public void testRingTablePlacesEachRingsGroup() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-7.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "WUHVEXZNAMRPKL-IZZDOVSWSA-N", // 20a, A: 3-triazolyl, B: 3,4-diOMe
+                "TXCKVPNEJNLISB-NTEUORMPSA-N", // 20c, A: 4-triazolyl, B: 2,3-diOMe
+                "GASHLVRXZIPQLU-ACCUITESSA-N", // 21c, A: 3-triazolyl, B: 2,3,4-triOMe
+                "XJAAYLPYUDNMMY-GXDHUFHOSA-N")), // 21d, A: 4-triazolyl, B: 2,3,4-triOMe
+        "20a-c and 21a-d must be extracted: " + inchiKeys);
+    assertFalse(
+        inchiKeys.contains("AAWUKLHFPLSCEP-NTEUORMPSA-N"), // one 2-OMe, 4-triazolyl
+        "the position variation is not enumerated beside the table");
+  }
 }

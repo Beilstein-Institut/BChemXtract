@@ -22,6 +22,7 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -101,6 +102,16 @@ public class TextVisitor extends CDVisitor {
   private static final Pattern REPEAT_COUNT =
       Pattern.compile("(?:^|[\\s,;:(])n\\s*=\\s*(\\d{1,2})(?![\\d.,–-]*\\d)");
 
+  /** One ring letter of a {@link RingTable} header: {@code A ring}, {@code B-ring}. */
+  private static final Pattern RING_LETTER = Pattern.compile("\\b([A-Z])\\s*-?\\s*ring\\b");
+
+  /** A {@link RingTable} header: ring letters and nothing else. */
+  private static final Pattern RING_HEADER = Pattern.compile("\\s*(?:[A-Z]\\s*-?\\s*ring\\s*)+");
+
+  /** A compound line of a {@link RingTable}: {@code 20a: 3-triazolyl 3,4-diOMe}. */
+  private static final Pattern RING_ROW =
+      Pattern.compile("\\(?(\\d{1,4}[a-z]?)\\)?\\s*[:.)]\\s*(\\S.*)");
+
   private static final Pattern CAPTION =
       Pattern.compile("^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?[a-z])?)?\\)?$");
 
@@ -128,6 +139,27 @@ public class TextVisitor extends CDVisitor {
    * @param x the estimated x of its centre on the page
    */
   public record Letter(char letter, double x) {}
+
+  /**
+   * A table naming, per compound, where each lettered ring of the scaffold carries its variable
+   * group: a header of ring letters ({@code A ring B ring}) and one line per compound giving a
+   * value per ring ({@code 20a: 3-triazolyl 3,4-diOMe}).
+   *
+   * @param bounds the bounding box of the text
+   * @param rings the ring letters, in column order
+   * @param rows the compound lines, in order
+   */
+  public record RingTable(CDRectangle bounds, List<String> rings, List<RingRow> rows) {}
+
+  /**
+   * A compound line of a {@link RingTable}.
+   *
+   * @param entry the compound, e.g. {@code 20a}
+   * @param values one value per ring, in column order
+   */
+  public record RingRow(String entry, List<String> values) {}
+
+  private final List<RingTable> ringTables = new ArrayList<>();
 
   private final Map<String, List<String>> rgroups;
   private final List<LetterRow> letterRows = new ArrayList<>();
@@ -187,6 +219,11 @@ public class TextVisitor extends CDVisitor {
     LetterRow row = letterRow(cdText);
     if (row != null) {
       letterRows.add(row);
+    }
+    RingTable ringTable = ringTable(cdText);
+    if (ringTable != null) {
+      ringTables.add(ringTable);
+      return;
     }
     Matcher caption = CAPTION.matcher(cdText.getText().getText().strip());
     if (caption.matches()) {
@@ -262,6 +299,41 @@ public class TextVisitor extends CDVisitor {
       letters.add(new Letter(text.charAt(position), bounds.getLeft() + width * centre / total));
     }
     return new LetterRow(bounds, List.copyOf(letters));
+  }
+
+  /**
+   * Reads a {@link RingTable}: a header line of ring letters followed by compound lines with one
+   * value per ring, the columns set apart by two or more spaces.
+   */
+  private static RingTable ringTable(CDText cdText) {
+    if (cdText.getBounds() == null) {
+      return null;
+    }
+    List<String> lines =
+        Arrays.stream(cdText.getText().getText().split("\\r\\n|\\r|\\n"))
+            .filter(line -> !line.isBlank())
+            .toList();
+    if (lines.size() < 2 || !RING_HEADER.matcher(lines.get(0)).matches()) {
+      return null;
+    }
+    List<String> rings = new ArrayList<>();
+    Matcher letter = RING_LETTER.matcher(lines.get(0));
+    while (letter.find()) {
+      rings.add(letter.group(1));
+    }
+    List<RingRow> rows = new ArrayList<>();
+    for (String line : lines.subList(1, lines.size())) {
+      Matcher matcher = RING_ROW.matcher(line.strip());
+      if (!matcher.matches()) {
+        return null;
+      }
+      List<String> values = List.of(matcher.group(2).strip().split("\\s{2,}"));
+      if (values.size() != rings.size()) {
+        return null;
+      }
+      rows.add(new RingRow(matcher.group(1), values));
+    }
+    return new RingTable(cdText.getBounds(), List.copyOf(rings), List.copyOf(rows));
   }
 
   /**
@@ -700,5 +772,14 @@ public class TextVisitor extends CDVisitor {
    */
   public List<LetterRow> getLetterRows() {
     return letterRows;
+  }
+
+  /**
+   * Returns the tables naming where each lettered ring carries its variable group.
+   *
+   * @return the ring tables, in page order
+   */
+  public List<RingTable> getRingTables() {
+    return ringTables;
   }
 }
