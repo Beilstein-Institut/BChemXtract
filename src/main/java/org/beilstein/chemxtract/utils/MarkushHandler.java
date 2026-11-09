@@ -486,9 +486,12 @@ public class MarkushHandler {
    * group ending at a wavy line) from those drawings. A drawing belongs to the line it sits beside:
    * its attachment end level with the line and a few line heights to the right of it.
    *
+   * <p>A drawing no line takes is still no substance: a group cut off at a wavy line is a
+   * substituent, and its end atom and wavy line would be read as an ethyl group.
+   *
    * @param fragments the page's fragments
-   * @return the fragments taken as values, drawn groups and their wavy lines, which are not
-   *     substances of their own
+   * @return the fragments of every drawing, taken as a value or not: drawn groups and their wavy
+   *     lines, which are not substances of their own
    */
   public Set<CDFragment> adoptDrawnValues(List<CDFragment> fragments) {
     Set<CDFragment> consumed = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -524,6 +527,12 @@ public class MarkushHandler {
         residueLabels.computeIfAbsent(definition.getKey(), key -> new ArrayList<>()).addAll(values);
         drawn.add(block);
       }
+    }
+    for (DrawnRGroupValues.Drawing drawing : drawings) {
+      LOGGER.debug(
+          "A group drawn at a wavy line at {} is no legend's value.",
+          drawing.end().getPosition2D());
+      consumed.addAll(drawing.drawn());
     }
     if (!drawn.isEmpty()) {
       List<RGroupDefinitionBlock> merged = mergeColumnBlocks(textBlocks, drawn);
