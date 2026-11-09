@@ -685,10 +685,16 @@ public class MarkushHandler {
 
   /**
    * The nearest block defining one of the scaffold's labels, if it assigns values per series
-   * ({@code 40a–m: R1 = H}, {@code 41a–e: R1 = OMe}).
+   * ({@code 40a–m: R1 = H}, {@code 41a–e: R1 = OMe}). A label a positional table already gives the
+   * scaffold is not looked up: that table names the scaffold's compounds itself.
    */
   private RGroupDefinitionBlock nearestSeriesCaption(Set<String> present, CDRectangle bounds) {
+    Set<String> tabulated = new HashSet<>();
+    nearestCorrelatedGroups(present, bounds).forEach(group -> tabulated.addAll(group.labels()));
     for (String label : present) {
+      if (tabulated.contains(label)) {
+        continue;
+      }
       RGroupDefinitionBlock block = nearestBlockDefining(label, bounds);
       if (block != null && !block.seriesAssignments().isEmpty()) {
         return block;
@@ -1364,6 +1370,10 @@ public class MarkushHandler {
       if (phenyl != null) {
         return phenyl;
       }
+      String named = SubstituentNames.group(definition, 1);
+      if (named != null) {
+        return named;
+      }
       Matcher alkyl = STRAIGHT_CHAIN_ALKYL.matcher(definition);
       if (alkyl.matches()) {
         try {
@@ -1427,8 +1437,9 @@ public class MarkushHandler {
   }
 
   /**
-   * A substituted phenyl group of either notation: one substituent ({@link #substitutedPhenyl}), or
-   * several on a ring written as its formula ({@link #polySubstitutedPhenyl}).
+   * A substituted phenyl group in any of its notations: one substituent ({@link
+   * #substitutedPhenyl}), several on a ring written as its formula ({@link
+   * #polySubstitutedPhenyl}), or a name ({@code 3,4-dichlorobenzyl}, see {@link SubstituentNames}).
    *
    * @param value the raw legend value
    * @return the SMILES of the phenyl group with one attachment point, or {@code null} if the value
@@ -1437,7 +1448,16 @@ public class MarkushHandler {
    */
   private String phenylGroup(String value) throws IOException {
     String phenyl = substitutedPhenyl(value);
-    return phenyl != null ? phenyl : polySubstitutedPhenyl(value);
+    if (phenyl == null) {
+      phenyl = polySubstitutedPhenyl(value);
+    }
+    if (phenyl == null) {
+      SubstituentNames.Ring named = SubstituentNames.ring(value);
+      if (named != null) {
+        phenyl = assemblePhenyl(value, named.benzyl(), named.substituents());
+      }
+    }
+    return phenyl;
   }
 
   /**
@@ -1832,6 +1852,11 @@ public class MarkushHandler {
     String smiles = resolveSmiles(matcher.group(2));
     if (!ChemicalUtils.isValidSmiles(smiles)) {
       smiles = resolveSmiles(stripMultiplier(matcher.group(2), positions.size()));
+    }
+    if (!ChemicalUtils.isValidSmiles(smiles)) {
+      // A named group carries its multiplier in front: 3,4-dimethoxy.
+      String named = SubstituentNames.group(matcher.group(2), positions.size());
+      smiles = named != null ? named : smiles;
     }
     return ChemicalUtils.isValidSmiles(smiles)
         ? new PositionalValue(positions, Collections.nCopies(positions.size(), smiles))

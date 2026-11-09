@@ -288,4 +288,39 @@ public class MarkushBugTest {
                 "NSANRXXFOLBNPO-UHFFFAOYSA-N")), // 41e, 4-MeC6H4
         "40b-m with R1 = H and 41b-e with R1 = OMe must be extracted: " + inchiKeys);
   }
+
+  /**
+   * 35a-r of m50167957-9 give R as names: methyl, 4-chlorobenzyl, 3,4-dichlorobenzyl. Read from the
+   * name table, all 18 rows of the positional table are extracted.
+   */
+  @Test
+  public void testNamedSubstituentsResolve() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-9.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "QMOVTOKHCWUOGR-UHFFFAOYSA-N", // 35a, methyl
+                "ODWFNZSLMMIJNP-UHFFFAOYSA-N", // 35b, 4-chlorobenzyl
+                "ITCNXOKSNSYPOP-UHFFFAOYSA-N", // 35c, 4-bromobenzyl
+                "IRAHZKYNKNCHSE-UHFFFAOYSA-N", // 35d, 3-bromobenzyl
+                "YUSCBGIKGXUJNK-UHFFFAOYSA-N", // 35e, 2-bromobenzyl
+                "QXHUFXLFUOVCFO-UHFFFAOYSA-N", // 35f, 3,4-dichlorobenzyl
+                "CNSWOQSQACRCFZ-UHFFFAOYSA-N", // 35g
+                "NMXHQKXSEATSIB-UHFFFAOYSA-N", // 35h
+                "RBPMLTLQRDMHLF-UHFFFAOYSA-N", // 35i
+                "UPROICUELGFOSZ-UHFFFAOYSA-N", // 35j
+                "FYNVCALUIYIVMH-UHFFFAOYSA-N", // 35k
+                "QAZHVDXUTCDBFT-UHFFFAOYSA-N", // 35l
+                "NYZNWUOYBKBSLQ-UHFFFAOYSA-N", // 35m
+                "FVBCUANCDBIGQI-UHFFFAOYSA-N", // 35n
+                "AXWYTBUXWCKXNB-UHFFFAOYSA-N", // 35o
+                "LLEADQLKRZTUNK-UHFFFAOYSA-N", // 35p
+                "JJSKJZCMXJKMGC-UHFFFAOYSA-N", // 35q
+                "OUWXKJYJBUNLLY-UHFFFAOYSA-N")), // 35r
+        "35a-r must be extracted: " + inchiKeys);
+  }
 }
