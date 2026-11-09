@@ -70,6 +70,13 @@ public class TextVisitor extends CDVisitor {
   private static final Pattern ENTRY_LETTER = Pattern.compile("^\\(?([a-z])\\)?\\s*[:.)]\\s*\\S");
 
   /**
+   * The letter of a legend line that names one compound by number and letter: the {@code a} of
+   * {@code 64a: R1 = ...}. A line naming a range ({@code 40a–m}) has none.
+   */
+  private static final Pattern NUMBERED_ENTRY_LETTER =
+      Pattern.compile("^\\(?\\d{1,4}([a-z])\\)?\\s*[:.)]\\s*\\S");
+
+  /**
    * The compound number a legend line opens with: the {@code 36} of {@code 36a: Ar = ...}, or of a
    * line naming a range of the series, {@code 40a–m: R1 = H}. Group 2 is the range's last letter.
    */
@@ -191,14 +198,21 @@ public class TextVisitor extends CDVisitor {
     return Math.abs(cdText.getBounds().getHeight()) / lines;
   }
 
-  /** The letters the text's lines open with, in order; empty if none is lettered. */
+  /**
+   * The letters the text's lines open with, in order, also after a compound number ({@code 64a:});
+   * empty if none is lettered.
+   */
   private static String entryLetters(String text) {
     StringBuilder letters = new StringBuilder();
     for (String line : text.split("[\\r\\n]+")) {
       Matcher matcher = ENTRY_LETTER.matcher(line.strip());
-      if (matcher.find()) {
-        letters.append(matcher.group(1));
+      if (!matcher.find()) {
+        matcher = NUMBERED_ENTRY_LETTER.matcher(line.strip());
+        if (!matcher.find()) {
+          continue;
+        }
       }
+      letters.append(matcher.group(1));
     }
     return letters.toString();
   }
