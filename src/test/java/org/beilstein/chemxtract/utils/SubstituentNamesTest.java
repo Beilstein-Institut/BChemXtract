@@ -41,6 +41,9 @@ public class SubstituentNamesTest {
     assertNull(SubstituentNames.group("dimethoxy", 1), "di on one position");
     assertNull(SubstituentNames.group("methoxy", 2), "no multiplier on two positions");
     assertNull(SubstituentNames.group("ethoxy", 1), "not a known prefix");
+    assertEquals("*CC=C", SubstituentNames.group("allyl", 1));
+    assertEquals("*CC#C", SubstituentNames.group("propargyl", 1));
+    assertNull(SubstituentNames.group("allyl", 2), "a whole group on two positions");
   }
 
   /** A named phenyl or benzyl group carries each prefix at its positions. */

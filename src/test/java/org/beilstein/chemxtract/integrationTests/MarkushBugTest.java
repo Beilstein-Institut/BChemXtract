@@ -346,4 +346,25 @@ public class MarkushBugTest {
                 "BJSDFJONOHASER-NVMNQCDNSA-N")), // 50n, R1 = F, R2 = 3-CF3, 4-Cl-C6H3
         "43a-l and 49/50 must be extracted: " + inchiKeys);
   }
+
+  /**
+   * m50167957-10 writes multipliers in front of the group (47c 3,5-diMe, 42c 2,4-diBr-6-NO2C6H2)
+   * and names R1 of 45a-d "allyl".
+   */
+  @Test
+  public void testLeadingMultipliersAndAllyl() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-10.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "YUMIFMLHNFWFRO-UHFFFAOYSA-N", // 42c, R = 2,4-diBr-6-NO2C6H2
+                "DMXKOIYBKXVHMX-LICLKQGHSA-N", // 45b, R = 4-methoxy, R1 = allyl
+                "DLPBVSQJBJTJPC-UHFFFAOYSA-N", // 47c, R = 3,5-diMe
+                "JZOKHJZSIWEXFO-UHFFFAOYSA-N")), // 47f, R = 3,4,5-triOMe
+        "42c, 45a-d and 47c/f/i must be extracted: " + inchiKeys);
+  }
 }
