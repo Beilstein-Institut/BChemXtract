@@ -981,6 +981,34 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Series without a legend of their own ("49a–n: R1 = H", "50a–n: R1 = F") share the lettered
+   * legend that names no compounds ("a: R = Cl"), but never borrow another compound's numbered
+   * legend. Geometry from 47-50 of {@code cheminf/bugs/markush/m50167957-10}.
+   */
+  @Test
+  public void seriesShareALegendThatNamesNoCompounds() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(72, 531, 123, 554), "49a–n: R1 = H\r50a–n: R1 = F"));
+    page.addText(textAt(rect(188, 457, 370, 547), "a: R = Cl\rb: R = Br"));
+    page.addText(textAt(rect(22, 381, 111, 423), "47a: R = I"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(residueScaffold(Map.of("R", 0, "R1", 3)), rect(39, 456, 167, 519));
+
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    Set<String> expected = new HashSet<>();
+    for (String smiles : List.of("Clc1ccccc1", "Brc1ccccc1", "Fc1ccc(Cl)cc1", "Fc1ccc(Br)cc1")) {
+      expected.add(canonicalSmiles(parser.parseSmiles(smiles)));
+    }
+    Set<String> actual = new HashSet<>();
+    for (IAtomContainer product : results) {
+      actual.add(canonicalSmiles(AtomContainerManipulator.copyAndSuppressedHydrogens(product)));
+    }
+    assertEquals(expected, actual);
+  }
+
+  /**
    * A caption fixing R1 per series ("40a–m: R1 = H", "41a–e: R1 = OMe") takes R for each series
    * from the legend numbered with it, even when another scheme's legend sits nearer the scaffold.
    * Geometry from 38-41 of {@code cheminf/bugs/markush/m50167957-9}.

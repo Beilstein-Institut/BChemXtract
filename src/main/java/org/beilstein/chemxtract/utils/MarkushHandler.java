@@ -844,23 +844,43 @@ public class MarkushHandler {
 
   /**
    * The values the legend of one series lists for a label: the block whose lines are numbered with
-   * that series alone, the nearest one if there are several.
+   * that series alone, the nearest one if there are several. Without one, the series share the
+   * nearest legend whose lines name no compound numbers ({@code a: R2 = ...}), which lists the
+   * label once for all of them; a legend numbered for other compounds is never borrowed.
    */
   private List<String> seriesValues(String number, String label, CDRectangle scaffoldBounds) {
-    RGroupDefinitionBlock best = null;
+    RGroupDefinitionBlock numbered = null;
+    RGroupDefinitionBlock shared = null;
     for (RGroupDefinitionBlock block : blocks) {
-      List<String> values = block.definitions().get(label);
-      if (block.bounds() == null
-          || values == null
-          || values.isEmpty()
-          || !block.compoundNumbers().equals(Set.of(number))) {
+      if (block.bounds() == null || listedValues(block, label).isEmpty()) {
         continue;
       }
-      if (best == null || isNearer(scaffoldBounds, block, best)) {
-        best = block;
+      if (block.compoundNumbers().equals(Set.of(number))) {
+        if (numbered == null || isNearer(scaffoldBounds, block, numbered)) {
+          numbered = block;
+        }
+      } else if (block.compoundNumbers().isEmpty()
+          && !belongsToAnother(scaffoldBounds, block, List.of(label))
+          && (shared == null || isNearer(scaffoldBounds, block, shared))) {
+        shared = block;
       }
     }
-    return best == null ? List.of() : best.definitions().get(label);
+    RGroupDefinitionBlock best = numbered != null ? numbered : shared;
+    return best == null ? List.of() : listedValues(best, label);
+  }
+
+  /**
+   * Every value a block lists for one label: its plain definitions and the rows of a table over
+   * that label alone, as a lettered legend set in two columns is read.
+   */
+  private static List<String> listedValues(RGroupDefinitionBlock block, String label) {
+    Set<String> values = new LinkedHashSet<>(block.definitions().getOrDefault(label, List.of()));
+    for (CorrelatedGroup group : block.correlatedGroups()) {
+      if (group.labels().equals(List.of(label))) {
+        group.tuples().forEach(tuple -> values.add(tuple.get(label)));
+      }
+    }
+    return List.copyOf(values);
   }
 
   /** Labels of the pseudo-atoms present in the container (candidate R-groups to resolve). */
