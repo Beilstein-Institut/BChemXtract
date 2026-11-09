@@ -28,9 +28,9 @@ import java.util.regex.Pattern;
 
 /**
  * Substituents written as names rather than formulas or abbreviations: {@code methoxy}, {@code
- * 4-chlorobenzyl}, {@code 3,4-dichlorophenyl}, {@code 4-chloro-3-methylphenyl}. Only a fixed set of
- * prefixes is known, on a phenyl or benzyl parent; anything else is not read, so a name is either
- * resolved exactly or left alone.
+ * 4-chlorobenzyl}, {@code 3,4-dichlorophenyl}, {@code 4-chloro-3-methylphenyl}, {@code allyl}. Only
+ * a fixed set of prefixes is known, on a phenyl or benzyl parent; anything else is not read, so a
+ * name is either resolved exactly or left alone.
  */
 final class SubstituentNames {
 
@@ -48,6 +48,9 @@ final class SubstituentNames {
           "methoxy", "*OC",
           "hydroxy", "*O",
           "nitro", "*[N+](=O)[O-]");
+
+  /** Groups named as a whole, not as a prefix, and the SMILES of each with its attachment. */
+  private static final Map<String, String> GROUPS = Map.of("allyl", "*CC=C", "propargyl", "*CC#C");
 
   private static final String PREFIX = "(fluoro|chloro|bromo|iodo|methyl|methoxy|hydroxy|nitro)";
 
@@ -76,7 +79,8 @@ final class SubstituentNames {
 
   /**
    * The group a prefix names, as many times as there are locants: {@code methoxy} for one, {@code
-   * dimethoxy} for two, {@code trimethoxy} for three.
+   * dimethoxy} for two, {@code trimethoxy} for three. A group named as a whole ({@code allyl},
+   * {@code propargyl}) is read for one position.
    *
    * @param name the prefix as written
    * @param count how many positions it is put on
@@ -84,6 +88,9 @@ final class SubstituentNames {
    *     does not match the count
    */
   static String group(String name, int count) {
+    if (GROUPS.containsKey(name)) {
+      return count == 1 ? GROUPS.get(name) : null;
+    }
     Matcher matcher = MULTIPLIED.matcher(name);
     if (!matcher.matches() || multiplier(matcher.group(1)) != count) {
       return null;
