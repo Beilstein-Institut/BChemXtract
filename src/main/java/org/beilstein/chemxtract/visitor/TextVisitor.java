@@ -88,6 +88,12 @@ public class TextVisitor extends CDVisitor {
    * A text that is a compound number alone, the caption under a drawn structure: {@code 43}, {@code
    * 42a–l}, {@code (12)}. Group 1 is the number.
    */
+  /**
+   * The run of single letters a {@link LetterRow} ends with, each set apart by spaces; group 1
+   * starts at its first letter.
+   */
+  private static final Pattern LETTER_RUN = Pattern.compile("(?:^|\\s)([a-z](?:\\s+[a-z])+)\\s*$");
+
   private static final Pattern CAPTION =
       Pattern.compile("^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?[a-z])?)?\\)?$");
 
@@ -99,7 +105,25 @@ public class TextVisitor extends CDVisitor {
    */
   public record Caption(CDRectangle bounds, String number) {}
 
+  /**
+   * One line of entry letters set out under a row of drawings, e.g. {@code a b c}, possibly after
+   * the definition that holds for its entries ({@code R = NO2 g h i}).
+   *
+   * @param bounds the bounding box of the text
+   * @param letters each letter with the estimated x of its centre, from left to right
+   */
+  public record LetterRow(CDRectangle bounds, List<Letter> letters) {}
+
+  /**
+   * A letter of a {@link LetterRow}.
+   *
+   * @param letter the entry letter
+   * @param x the estimated x of its centre on the page
+   */
+  public record Letter(char letter, double x) {}
+
   private final Map<String, List<String>> rgroups;
+  private final List<LetterRow> letterRows = new ArrayList<>();
   private final List<RGroupDefinitionBlock> blocks;
   private final List<Caption> captions;
 
@@ -153,6 +177,10 @@ public class TextVisitor extends CDVisitor {
     if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
       return;
     }
+    LetterRow row = letterRow(cdText);
+    if (row != null) {
+      letterRows.add(row);
+    }
     Matcher caption = CAPTION.matcher(cdText.getText().getText().strip());
     if (caption.matches()) {
       if (cdText.getBounds() != null && !drawingTexts.contains(cdText)) {
@@ -187,6 +215,59 @@ public class TextVisitor extends CDVisitor {
         tuple.forEach((label, value) -> mergeSubstituents(rgroups, label, List.of(value)));
       }
     }
+  }
+
+  /**
+   * Reads a single-line text ending in two or more consecutive entry letters set apart by spaces.
+   * Where each letter sits is estimated from the advance widths of the characters before it, scaled
+   * to the text's width: the page gives the bounds of a text, not of its characters.
+   */
+  private static LetterRow letterRow(CDText cdText) {
+    String text = cdText.getText().getText();
+    if (cdText.getBounds() == null || text.contains("\r") || text.contains("\n")) {
+      return null;
+    }
+    Matcher matcher = LETTER_RUN.matcher(text);
+    if (!matcher.find()) {
+      return null;
+    }
+    List<Integer> positions = new ArrayList<>();
+    for (int i = matcher.start(1); i < text.length(); i++) {
+      if (!Character.isWhitespace(text.charAt(i))) {
+        positions.add(i);
+      }
+    }
+    for (int i = 1; i < positions.size(); i++) {
+      if (text.charAt(positions.get(i)) != text.charAt(positions.get(i - 1)) + 1) {
+        return null;
+      }
+    }
+    double total = advance(text, text.length());
+    CDRectangle bounds = cdText.getBounds();
+    double width = bounds.getRight() - bounds.getLeft();
+    if (total <= 0 || width <= 0) {
+      return null;
+    }
+    List<Letter> letters = new ArrayList<>();
+    for (int position : positions) {
+      double centre =
+          advance(text, position) + advance(text.substring(position, position + 1), 1) / 2;
+      letters.add(new Letter(text.charAt(position), bounds.getLeft() + width * centre / total));
+    }
+    return new LetterRow(bounds, List.copyOf(letters));
+  }
+
+  /**
+   * The estimated advance width of the first {@code end} characters, in ems: a space is narrow, a
+   * capital wide, anything else average. Only the proportions matter.
+   */
+  private static double advance(String text, int end) {
+    double advance = 0;
+    for (int i = 0; i < end; i++) {
+      char c = text.charAt(i);
+      advance += Character.isWhitespace(c) ? 0.278 : Character.isUpperCase(c) ? 0.667 : 0.556;
+    }
+    return advance;
   }
 
   /** Height of one line of the text: its bounds' height over its number of lines. */
@@ -589,5 +670,14 @@ public class TextVisitor extends CDVisitor {
    */
   public List<Caption> getCaptions() {
     return captions;
+  }
+
+  /**
+   * Returns the lines of entry letters set out under rows of drawings.
+   *
+   * @return the letter rows, in page order
+   */
+  public List<LetterRow> getLetterRows() {
+    return letterRows;
   }
 }
