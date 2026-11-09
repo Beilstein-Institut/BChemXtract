@@ -239,4 +239,53 @@ public class MarkushBugTest {
                 "LOWFXIMCKAUZEY-UHFFFAOYSA-N")), // 70q, 3-ethylphenyl
         "69p/q and 70p/q must be extracted: " + inchiKeys);
   }
+
+  /**
+   * m50167957-9 names its compounds by number. The 36a-c and 37a-c legends sit side by side and
+   * stay two legends, and "36c: Ar = 4-OH, 3-MeOC6H3" is one aryl group. The caption "40a–m: R1 =
+   * H, 41a–e: R1 = OMe" pairs each series with the legend numbered 40 or 41, though the R legend of
+   * 38 sits nearer the scaffold. 35a-r (R given as names), 37c, 40a and 41a (lookup gaps) are not
+   * covered here.
+   */
+  @Test
+  public void testCompoundNumbersTieLegendsToTheirScheme() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-9.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "LGPZCDCSEHZTPT-RGVLZGJSSA-N", // 36a, 4-hydroxyphenyl
+                "WBVPXBMFSONTKP-CIAFOILYSA-N", // 36b, 4-methoxyphenyl
+                "LGUZZZBOBXRRBP-SRZZPIQSSA-N", // 36c, 4-hydroxy-3-methoxyphenyl
+                "SJEKVJZPAXMSSB-UHFFFAOYSA-N", // 37a, 4-hydroxyphenyl
+                "FJSMUQHUSCMUGE-UHFFFAOYSA-N", // 37b, 4-chlorophenyl
+                "ROBZSMHGNGUOCR-UHFFFAOYSA-N", // 38a
+                "PNTBIXNRJZQREZ-UHFFFAOYSA-N", // 38b
+                "QPNYFQNYVKEIQJ-UHFFFAOYSA-N", // 39a
+                "VVNREYAIYSKNFT-UHFFFAOYSA-N")), // 39b
+        "36a-c, 37a-b and 38/39 must be extracted: " + inchiKeys);
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "OGWPQDPLDCFVOG-UHFFFAOYSA-N", // 40b, 2-ClC6H4
+                "QSCAEXWQYBMEIR-UHFFFAOYSA-N", // 40c, 3-ClC6H4
+                "XKDDXZYQYUGJBG-UHFFFAOYSA-N", // 40d, 4-ClC6H4
+                "VRGZHJNCDMTPIJ-UHFFFAOYSA-N", // 40e, 4-FC6H4
+                "COJRETFVDXXNSG-UHFFFAOYSA-N", // 40f, 3-BrC6H4
+                "UNIZKAODHJACIS-UHFFFAOYSA-N", // 40g, 4-BrC6H4
+                "VAQQCLRPWYNQAM-UHFFFAOYSA-N", // 40h, 2-MeC6H4
+                "NLVQLSQYIHBQIZ-UHFFFAOYSA-N", // 40i, 3-MeC6H4
+                "BYYGUCGDZIGFGT-UHFFFAOYSA-N", // 40j, 4-MeC6H4
+                "JXFGEKNTHRSPKZ-UHFFFAOYSA-N", // 40k, 2,4-Me2C6H3
+                "SQXKZMHYSQUNQM-UHFFFAOYSA-N", // 40l, 2,6-Me2C6H3
+                "NNLOQZPRIKSEQD-UHFFFAOYSA-N", // 40m, 4-OMeC6H4
+                "NNMYJYLPDAIOPI-UHFFFAOYSA-N", // 41b, 2-ClC6H4
+                "RODYGUNLZSJSLK-UHFFFAOYSA-N", // 41c, 4-ClC6H4
+                "GNCMWYFTVOLURY-UHFFFAOYSA-N", // 41d, 4-FC6H4
+                "NSANRXXFOLBNPO-UHFFFAOYSA-N")), // 41e, 4-MeC6H4
+        "40b-m with R1 = H and 41b-e with R1 = OMe must be extracted: " + inchiKeys);
+  }
 }

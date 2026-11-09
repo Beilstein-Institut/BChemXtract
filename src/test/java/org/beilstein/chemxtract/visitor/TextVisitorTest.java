@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
@@ -310,5 +311,52 @@ public class TextVisitorTest {
     assertEquals(
         List.of("H", "4-Me"),
         new TextVisitor(pageWithTexts("a: R = H, 4-Me")).getRgroups().get("R"));
+  }
+
+  /**
+   * The compound numbers legend lines open with are recorded, and a line naming a range of a series
+   * ("40a–m: R1 = H") records the value it fixes for that series, as in 40/41 of {@code
+   * cheminf/bugs/markush/m50167957-9}.
+   */
+  @Test
+  public void recordsCompoundNumbersAndWhatASeriesRangeFixes() {
+    RGroupDefinitionBlock caption =
+        new TextVisitor(pageWithTexts("40a–m: R1 = H\r41a–e: R1 = OMe")).getBlocks().getFirst();
+    assertEquals(Set.of("40", "41"), caption.compoundNumbers());
+    assertEquals(
+        Map.of("40", Map.of("R1", "H"), "41", Map.of("R1", "OMe")), caption.seriesAssignments());
+
+    RGroupDefinitionBlock legend =
+        new TextVisitor(pageWithTexts("36a: Ar = 4-OHC6H4\r36b: Ar = 4-MeOC6H4"))
+            .getBlocks()
+            .getFirst();
+    assertEquals(Set.of("36"), legend.compoundNumbers());
+    assertTrue(legend.seriesAssignments().isEmpty(), "single compounds fix nothing per series");
+    assertTrue(
+        new TextVisitor(pageWithTexts("R = H, Me"))
+            .getBlocks()
+            .getFirst()
+            .compoundNumbers()
+            .isEmpty());
+  }
+
+  /**
+   * A ring formula with room for more substituents than its own takes the ring substituents written
+   * before it: "4-OH, 3-MeOC6H3" is one 4-hydroxy-3-methoxyphenyl (36c of {@code
+   * cheminf/bugs/markush/m50167957-9}). A full C6H4 ring takes none.
+   */
+  @Test
+  public void ringFormulaKeepsItsSubstituentsTogether() {
+    assertEquals(
+        List.of("4-OHC6H4", "4-OH, 3-MeOC6H3"),
+        new TextVisitor(pageWithTexts("36a: Ar = 4-OHC6H4\r36c: Ar = 4-OH, 3-MeOC6H3"))
+            .getRgroups()
+            .get("Ar"));
+    assertEquals(
+        List.of("2-OMe, 4-CHO-C6H3", "2,4-Me2C6H3"),
+        new TextVisitor(pageWithTexts("R = 2-OMe,4-CHO-C6H3, 2,4-Me2C6H3")).getRgroups().get("R"));
+    assertEquals(
+        List.of("4-OH", "4-MeOC6H4"),
+        new TextVisitor(pageWithTexts("R = 4-OH, 4-MeOC6H4")).getRgroups().get("R"));
   }
 }

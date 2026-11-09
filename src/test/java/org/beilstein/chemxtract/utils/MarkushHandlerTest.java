@@ -863,6 +863,87 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * A benzene ring written as its formula carries every substituent written before it, each at its
+   * position: 2,4-Me2C6H3, 2,6-Me2C6H3 (40k, 40l of {@code cheminf/bugs/markush/m50167957-9}) and
+   * 4-OH, 3-MeOC6H3 (36c). A formula whose hydrogens leave no room for them does not resolve.
+   */
+  @Test
+  public void ringFormulaCarriesEverySubstituentItNames() throws Exception {
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (Map.Entry<String, String> entry :
+        Map.of(
+                "2,4-Me2C6H3", "CC(=O)c1ccc(C)cc1C",
+                "2,6-Me2C6H3", "CC(=O)c1c(C)cccc1C",
+                "4-OH, 3-MeOC6H3", "CC(=O)c1ccc(O)c(OC)c1")
+            .entrySet()) {
+      List<IAtomContainer> results =
+          handlerWith(Map.of("R", List.of(entry.getKey())))
+              .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1));
+      assertEquals(1, results.size(), entry.getKey());
+      assertEquals(
+          canonicalSmiles(parser.parseSmiles(entry.getValue())),
+          canonicalSmiles(results.getFirst()),
+          entry.getKey());
+    }
+    assertTrue(
+        handlerWith(Map.of("R", List.of("2,4-Me2C6H4")))
+            .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1))
+            .stream()
+            .allMatch(product -> product.getAtomCount() == 4),
+        "C6H4 has room for one substituent, not two");
+  }
+
+  /**
+   * Two legends side by side whose lines name different compounds (36a-c, 37a-c) are two schemes'
+   * legends, not two columns of one: each scaffold keeps its own. Geometry from {@code
+   * cheminf/bugs/markush/m50167957-9}.
+   */
+  @Test
+  public void legendsOfDifferentCompoundsDoNotMerge() {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(70, 295, 171, 326), "36a: Ar = 4-OHC6H4\r36b: Ar = 4-MeOC6H4"));
+    page.addText(textAt(rect(187, 298, 277, 329), "37a: Ar = 4-ClC6H4\r37b: Ar = 4-BrC6H4"));
+
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    assertEquals(
+        List.of("4-OHC6H4", "4-MeOC6H4"),
+        handler.residueLabelsNear(rect(72, 214, 139, 286)).get("Ar"));
+    assertEquals(
+        List.of("4-ClC6H4", "4-BrC6H4"),
+        handler.residueLabelsNear(rect(189, 193, 256, 289)).get("Ar"));
+  }
+
+  /**
+   * A caption fixing R1 per series ("40a–m: R1 = H", "41a–e: R1 = OMe") takes R for each series
+   * from the legend numbered with it, even when another scheme's legend sits nearer the scaffold.
+   * Geometry from 38-41 of {@code cheminf/bugs/markush/m50167957-9}.
+   */
+  @Test
+  public void seriesCaptionTakesEachSeriesFromItsOwnLegend() throws Exception {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(222, 455, 284, 477), "40a–m: R1 = H\r41a–e: R1 = OMe"));
+    page.addText(textAt(rect(92, 354, 172, 490), "40a: R = Cl\r40b: R = Br"));
+    page.addText(textAt(rect(365, 374, 435, 427), "41a: R = F"));
+    page.addText(textAt(rect(299, 300, 349, 319), "38a: R = OH\r38b: R = OMe"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    List<IAtomContainer> results =
+        handler.replaceRGroups(residueScaffold(Map.of("R", 0, "R1", 3)), rect(215, 355, 319, 452));
+
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    Set<String> expected = new HashSet<>();
+    for (String smiles : List.of("Clc1ccccc1", "Brc1ccccc1", "COc1ccc(F)cc1")) {
+      expected.add(canonicalSmiles(parser.parseSmiles(smiles)));
+    }
+    Set<String> actual = new HashSet<>();
+    for (IAtomContainer product : results) {
+      actual.add(canonicalSmiles(AtomContainerManipulator.copyAndSuppressedHydrogens(product)));
+    }
+    assertEquals(expected, actual);
+  }
+
+  /**
    * A group whose name ends in a digit is not multiplied by it: 2,4,6-CH3 is three methyls, as in
    * 69o/70o of {@code cheminf/bugs/markush/m50167957-13}, not three "CH".
    */

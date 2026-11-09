@@ -24,6 +24,7 @@ package org.beilstein.chemxtract.visitor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,12 +41,15 @@ public class TextVisitor extends CDVisitor {
   /** A ring position, or the several a locant set names: the {@code 5,7} of {@code 5,7-Me2}. */
   private static final String LOCANT_SET = "\\d{1,2}(?:,\\d{1,2})*";
 
-  /**
-   * The letter a legend line opens with when it names its compound by letter: {@code a: R = H},
-   * {@code (b) R = Me}, {@code c) R = Et}.
-   */
   /** A ring substituent named by number: {@code 2-CH3}, {@code 3,5-Me2}. */
   private static final Pattern RING_SUBSTITUENT = Pattern.compile("(" + LOCANT_SET + ")-.+");
+
+  /**
+   * A ring substituent ending in the formula of a benzene ring with fewer than four hydrogens,
+   * which therefore carries more substituents than this one: the {@code 3-MeOC6H3} of {@code 4-OH,
+   * 3-MeOC6H3}. Group 2 is the ring's hydrogen count.
+   */
+  private static final Pattern RING_FORMULA = Pattern.compile("(" + LOCANT_SET + ")-.*?C6H([0-3])");
 
   /**
    * What several ring substituents of one compound are joined with into one value. A list separator
@@ -54,7 +58,19 @@ public class TextVisitor extends CDVisitor {
    */
   public static final String SUBSTITUENT_JOINER = "; ";
 
+  /**
+   * The letter a legend line opens with when it names its compound by letter: {@code a: R = H},
+   * {@code (b) R = Me}, {@code c) R = Et}.
+   */
   private static final Pattern ENTRY_LETTER = Pattern.compile("^\\(?([a-z])\\)?\\s*[:.)]\\s*\\S");
+
+  /**
+   * The compound number a legend line opens with: the {@code 36} of {@code 36a: Ar = ...}, or of a
+   * line naming a range of the series, {@code 40a–m: R1 = H}. Group 2 is the range's last letter.
+   */
+  private static final Pattern COMPOUND_NUMBER =
+      Pattern.compile(
+          "^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?([a-z]))?)?\\)?\\s*[:.)]\\s*\\S");
 
   private final Map<String, List<String>> rgroups;
   private final List<RGroupDefinitionBlock> blocks;
@@ -92,7 +108,9 @@ public class TextVisitor extends CDVisitor {
             parsed.independent(),
             parsed.correlatedGroups(),
             lineHeight(cdText),
-            entryLetters(cdText.getText().getText())));
+            entryLetters(cdText.getText().getText()),
+            compoundNumbers(cdText.getText().getText()),
+            parsed.seriesAssignments()));
     // Keep a page-wide union as a fallback; merge rather than drop on label collisions. Correlated
     // values are flattened into the union too so the fallback/guard still see them (the union path
     // over-enumerates by design; the scoped path preserves the tuples). A label defined with no
@@ -130,9 +148,26 @@ public class TextVisitor extends CDVisitor {
     return letters.toString();
   }
 
-  /** Independent per-label lists plus correlated (positional-table) groups from one text node. */
+  /** The compound numbers the text's lines open with, in order of first appearance. */
+  private static Set<String> compoundNumbers(String text) {
+    Set<String> numbers = new LinkedHashSet<>();
+    for (String line : text.split("[\\r\\n]+")) {
+      Matcher matcher = COMPOUND_NUMBER.matcher(line.strip());
+      if (matcher.find()) {
+        numbers.add(matcher.group(1));
+      }
+    }
+    return numbers;
+  }
+
+  /**
+   * Independent per-label lists, correlated (positional-table) groups, and the values lines naming
+   * a range of a series assign to it, from one text node.
+   */
   private record ParsedDefinitions(
-      Map<String, List<String>> independent, List<CorrelatedGroup> correlatedGroups) {}
+      Map<String, List<String>> independent,
+      List<CorrelatedGroup> correlatedGroups,
+      Map<String, Map<String, String>> seriesAssignments) {}
 
   /** One {@code label = values} assignment, kept in source order (repeats preserved). */
   private record Assignment(String label, List<String> values) {}
@@ -169,9 +204,22 @@ public class TextVisitor extends CDVisitor {
     Map<String, List<String>> independent = new LinkedHashMap<>();
     // Correlated rows keyed by their (sorted) label set, so rows of the same table accumulate.
     Map<List<String>, List<Map<String, String>>> tables = new LinkedHashMap<>();
+    Map<String, Map<String, String>> series = new LinkedHashMap<>();
 
     for (String row : toLogicalRows(input)) {
-      List<Assignment> assignments = parseAssignments(row);
+      List<Assignment> assignments =
+          parseAssignments(row).stream().map(TextVisitor::oneRing).toList();
+      Matcher number = COMPOUND_NUMBER.matcher(row);
+      if (number.find()
+          && number.group(2) != null
+          && !assignments.isEmpty()
+          && assignments.stream().allMatch(assignment -> assignment.values().size() == 1)) {
+        // "40a–m: R1 = H": every compound of the series 40 has R1 = H.
+        Map<String, String> fixed =
+            series.computeIfAbsent(number.group(1), _ -> new LinkedHashMap<>());
+        assignments.forEach(
+            assignment -> fixed.put(assignment.label(), assignment.values().getFirst()));
+      }
       if (ENTRY_LETTER.matcher(row).find()) {
         assignments = assignments.stream().map(TextVisitor::oneCompound).toList();
       }
@@ -203,7 +251,39 @@ public class TextVisitor extends CDVisitor {
 
     List<CorrelatedGroup> groups = new ArrayList<>();
     tables.forEach((labels, tuples) -> groups.add(new CorrelatedGroup(labels, tuples)));
-    return new ParsedDefinitions(independent, groups);
+    return new ParsedDefinitions(independent, groups, series);
+  }
+
+  /**
+   * Rejoins the substituents of one benzene ring that the value split separated. A value whose ring
+   * formula has fewer hydrogens than its own substituents leave ({@code 3-MeOC6H3} has room for one
+   * more) takes as many of the ring substituents just before it: {@code 4-OH, 3-MeOC6H3} is one
+   * 4-hydroxy-3-methoxyphenyl, not two values.
+   */
+  private static Assignment oneRing(Assignment assignment) {
+    List<String> values = new ArrayList<>();
+    for (String value : assignment.values()) {
+      Matcher formula = RING_FORMULA.matcher(value);
+      if (formula.matches()) {
+        int others = 5 - Integer.parseInt(formula.group(2)) - formula.group(1).split(",").length;
+        int from = values.size() - others;
+        if (others > 0
+            && from >= 0
+            && values.subList(from, values.size()).stream()
+                .allMatch(
+                    other -> RING_SUBSTITUENT.matcher(other).matches() && !other.contains("C6H"))) {
+          List<String> parts = new ArrayList<>(values.subList(from, values.size()));
+          parts.add(value);
+          values.subList(from, values.size()).clear();
+          values.add(String.join(", ", parts));
+          continue;
+        }
+      }
+      values.add(value);
+    }
+    return values.equals(assignment.values())
+        ? assignment
+        : new Assignment(assignment.label(), List.copyOf(values));
   }
 
   /**

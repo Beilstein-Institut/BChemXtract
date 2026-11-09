@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.visitor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.beilstein.chemxtract.cdx.CDRectangle;
 
 /**
@@ -42,13 +43,38 @@ import org.beilstein.chemxtract.cdx.CDRectangle;
  * @param entryLetters the letters the text's lines open with, in order, e.g. {@code "abc"} for a
  *     legend of lines {@code a: R = ...}, {@code b: R = ...}, {@code c: R = ...}; empty if its
  *     lines are not lettered
+ * @param compoundNumbers the compound numbers the text's lines open with, e.g. {@code 36} for a
+ *     legend of lines {@code 36a: Ar = ...}, {@code 36b: Ar = ...}; empty if no line opens with one
+ * @param seriesAssignments per compound number, the single values a line naming a range of that
+ *     series assigns, e.g. {@code 40 -> {R1 = H}} for {@code 40a–m: R1 = H}; the series' other
+ *     labels are listed by the block numbered {@code 40}
  */
 public record RGroupDefinitionBlock(
     CDRectangle bounds,
     Map<String, List<String>> definitions,
     List<CorrelatedGroup> correlatedGroups,
     float lineHeight,
-    String entryLetters) {
+    String entryLetters,
+    Set<String> compoundNumbers,
+    Map<String, Map<String, String>> seriesAssignments) {
+
+  /**
+   * A block whose lines name no compound numbers.
+   *
+   * @param bounds the bounding box of the source text
+   * @param definitions independent per-label substituent lists
+   * @param correlatedGroups positional tables whose labels vary together
+   * @param lineHeight height of one line of the source text
+   * @param entryLetters the letters the text's lines open with
+   */
+  public RGroupDefinitionBlock(
+      CDRectangle bounds,
+      Map<String, List<String>> definitions,
+      List<CorrelatedGroup> correlatedGroups,
+      float lineHeight,
+      String entryLetters) {
+    this(bounds, definitions, correlatedGroups, lineHeight, entryLetters, Set.of(), Map.of());
+  }
 
   /**
    * A block whose lines are not lettered.

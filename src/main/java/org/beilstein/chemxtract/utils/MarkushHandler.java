@@ -159,6 +159,12 @@ public class MarkushHandler {
   private static final String PHENYL_SUBSTITUENT = "#substituent";
 
   /**
+   * A benzene ring written as its formula with several substituents before it: {@code 2,4-Me2C6H3},
+   * {@code 4-OH, 3-MeOC6H3}. Group 1 is the substituents, group 2 the ring's hydrogen count.
+   */
+  private static final Pattern RING_FORMULA = Pattern.compile("(.+?)-?C6H([0-3])");
+
+  /**
    * The multiplier a multi-locant value carries on its group: the {@code 2} of {@code Me2}, or the
    * brackets and {@code 3} of {@code (OMe)3}. It states how often the group appears and is only
    * stripped when it agrees with the number of locants.
@@ -306,7 +312,8 @@ public class MarkushHandler {
           RGroupDefinitionBlock candidate = blocks.get(j);
           if (candidate.bounds() == null
               || !candidate.definitions().keySet().equals(base.definitions().keySet())
-              || !correlatedLabels(candidate).equals(correlatedLabels(base))) {
+              || !correlatedLabels(candidate).equals(correlatedLabels(base))
+              || differentCompounds(base, candidate)) {
             continue;
           }
           if (cluster.stream()
@@ -324,6 +331,17 @@ public class MarkushHandler {
       result.add(cluster.size() == 1 ? base : mergeCluster(cluster));
     }
     return result;
+  }
+
+  /**
+   * Whether the two blocks list different compounds: both number their lines, and by no number in
+   * common. Legends of {@code 36a}-{@code c} and {@code 37a}-{@code c} side by side are two
+   * schemes' legends, however close they sit.
+   */
+  private static boolean differentCompounds(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
+    return !a.compoundNumbers().isEmpty()
+        && !b.compoundNumbers().isEmpty()
+        && Collections.disjoint(a.compoundNumbers(), b.compoundNumbers());
   }
 
   /** The label sets of a block's positional tables, which blocks must share to be merged. */
@@ -502,9 +520,17 @@ public class MarkushHandler {
     float right = -Float.MAX_VALUE;
     float lineHeight = 0;
     StringBuilder letters = new StringBuilder();
+    Set<String> numbers = new LinkedHashSet<>();
+    Map<String, Map<String, String>> series = new LinkedHashMap<>();
     for (RGroupDefinitionBlock block : cluster) {
       lineHeight = Math.max(lineHeight, block.lineHeight());
       letters.append(block.entryLetters());
+      numbers.addAll(block.compoundNumbers());
+      block
+          .seriesAssignments()
+          .forEach(
+              (number, fixed) ->
+                  series.computeIfAbsent(number, _ -> new LinkedHashMap<>()).putAll(fixed));
       CDRectangle b = block.bounds();
       top = Math.min(top, b.getTop());
       left = Math.min(left, b.getLeft());
@@ -539,7 +565,13 @@ public class MarkushHandler {
     bounds.setBottom(bottom);
     bounds.setRight(right);
     return new RGroupDefinitionBlock(
-        bounds, definitions, new ArrayList<>(correlated.values()), lineHeight, letters.toString());
+        bounds,
+        definitions,
+        new ArrayList<>(correlated.values()),
+        lineHeight,
+        letters.toString(),
+        numbers,
+        series);
   }
 
   /**
@@ -628,6 +660,10 @@ public class MarkushHandler {
       return List.of();
     }
     Set<String> present = presentResidueLabels(candidates.getFirst());
+    RGroupDefinitionBlock caption = nearestSeriesCaption(present, scaffoldBounds);
+    if (caption != null) {
+      return replaceBySeries(candidates, scaffoldBounds, present, caption, produced);
+    }
     List<Choice> choices = residueChoicesNear(present, scaffoldBounds);
     if (choices.isEmpty()) {
       if (present.stream().anyMatch(label -> nearestBlockDefining(label, scaffoldBounds) != null)) {
@@ -645,6 +681,94 @@ public class MarkushHandler {
         candidates,
         viableCombinations(candidates, permittedChoices(candidates, choices)),
         produced);
+  }
+
+  /**
+   * The nearest block defining one of the scaffold's labels, if it assigns values per series
+   * ({@code 40a–m: R1 = H}, {@code 41a–e: R1 = OMe}).
+   */
+  private RGroupDefinitionBlock nearestSeriesCaption(Set<String> present, CDRectangle bounds) {
+    for (String label : present) {
+      RGroupDefinitionBlock block = nearestBlockDefining(label, bounds);
+      if (block != null && !block.seriesAssignments().isEmpty()) {
+        return block;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Generates a scaffold's structures series by series, for a caption that fixes some labels per
+   * series ({@code 40a–m: R1 = H}) and leaves the others to each series' own legend, the block
+   * whose lines are numbered {@code 40}. The compound numbers tie the legend to the caption, so it
+   * is used wherever it sits, nearer another scaffold or not. A series without a legend of its own
+   * yields nothing.
+   *
+   * @param candidates the scaffold as drawn, one per candidate attachment atom
+   * @param scaffoldBounds bounding box of the scaffold
+   * @param present the scaffold's labels
+   * @param caption the block assigning values per series
+   * @param produced keys of the structures already produced for this fragment
+   * @return the structures of every series
+   */
+  private List<IAtomContainer> replaceBySeries(
+      List<IAtomContainer> candidates,
+      CDRectangle scaffoldBounds,
+      Set<String> present,
+      RGroupDefinitionBlock caption,
+      Set<String> produced)
+      throws CloneNotSupportedException, IOException, CDKException {
+    List<IAtomContainer> result = new ArrayList<>();
+    for (Map.Entry<String, Map<String, String>> series : caption.seriesAssignments().entrySet()) {
+      Map<String, String> fixed = new LinkedHashMap<>(series.getValue());
+      fixed.keySet().retainAll(present);
+      List<Choice> choices = new ArrayList<>();
+      if (!fixed.isEmpty()) {
+        choices.add(new Choice(List.of(fixed)));
+      }
+      for (String label : present) {
+        if (fixed.containsKey(label)) {
+          continue;
+        }
+        List<String> values = seriesValues(series.getKey(), label, scaffoldBounds);
+        if (values.isEmpty()) {
+          LOGGER.debug("Series {} lists no values for {}.", series.getKey(), label);
+          continue;
+        }
+        List<Map<String, String>> options = new ArrayList<>(values.size());
+        for (String value : values) {
+          options.add(Map.of(label, value));
+        }
+        choices.add(new Choice(options));
+      }
+      result.addAll(
+          applyCombinations(
+              candidates,
+              viableCombinations(candidates, permittedChoices(candidates, choices)),
+              produced));
+    }
+    return result;
+  }
+
+  /**
+   * The values the legend of one series lists for a label: the block whose lines are numbered with
+   * that series alone, the nearest one if there are several.
+   */
+  private List<String> seriesValues(String number, String label, CDRectangle scaffoldBounds) {
+    RGroupDefinitionBlock best = null;
+    for (RGroupDefinitionBlock block : blocks) {
+      List<String> values = block.definitions().get(label);
+      if (block.bounds() == null
+          || values == null
+          || values.isEmpty()
+          || !block.compoundNumbers().equals(Set.of(number))) {
+        continue;
+      }
+      if (best == null || isNearer(scaffoldBounds, block, best)) {
+        best = block;
+      }
+    }
+    return best == null ? List.of() : best.definitions().get(label);
   }
 
   /** Labels of the pseudo-atoms present in the container (candidate R-groups to resolve). */
@@ -1236,7 +1360,7 @@ public class MarkushHandler {
       return "[" + definition + "]";
     }
     if (!ChemicalUtils.isValidSmiles(definition)) {
-      String phenyl = substitutedPhenyl(definition);
+      String phenyl = phenylGroup(definition);
       if (phenyl != null) {
         return phenyl;
       }
@@ -1291,33 +1415,136 @@ public class MarkushHandler {
     } else {
       return null;
     }
+    String substituent = phenylSubstituent(named);
+    if (substituent == null) {
+      return null;
+    }
+    return assemblePhenyl(value, benzyl, Map.of(ringPosition(locant), substituent));
+  }
+
+  /**
+   * A substituted phenyl group of either notation: one substituent ({@link #substitutedPhenyl}), or
+   * several on a ring written as its formula ({@link #polySubstitutedPhenyl}).
+   *
+   * @param value the raw legend value
+   * @return the SMILES of the phenyl group with one attachment point, or {@code null} if the value
+   *     names none
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private String phenylGroup(String value) throws IOException {
+    String phenyl = substitutedPhenyl(value);
+    return phenyl != null ? phenyl : polySubstitutedPhenyl(value);
+  }
+
+  /**
+   * Resolves a benzene ring written as its formula with its substituents before it: {@code
+   * 2,4-Me2C6H3}, {@code 4-OH, 3-MeOC6H3}. The formula's hydrogens must leave room for exactly the
+   * substituents named, each at its own position of 2 to 6, the attachment being position 1.
+   *
+   * @param value the raw legend value
+   * @return the SMILES of the phenyl group with one attachment point, or {@code null} if the value
+   *     is not such a ring or a substituent does not resolve
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private String polySubstitutedPhenyl(String value) throws IOException {
+    Matcher matcher = RING_FORMULA.matcher(value);
+    if (!matcher.matches()) {
+      return null;
+    }
+    Map<Integer, String> substituents = new TreeMap<>();
+    for (String part : matcher.group(1).split(",\\s+|;\\s*")) {
+      Matcher positional = POSITIONAL_SUBSTITUENT.matcher(part.strip());
+      if (!positional.matches()) {
+        return null;
+      }
+      List<Integer> positions = new ArrayList<>();
+      for (String token : positional.group(1).split(",")) {
+        positions.add(ringPosition(token));
+      }
+      String group = positional.group(2);
+      String substituent = phenylSubstituent(group);
+      if (substituent == null) {
+        substituent = phenylSubstituent(stripMultiplier(group, positions.size()));
+      }
+      if (substituent == null) {
+        return null;
+      }
+      for (int position : positions) {
+        if (position < 2 || position > 6 || substituents.put(position, substituent) != null) {
+          return null;
+        }
+      }
+    }
+    if (substituents.size() != 5 - Integer.parseInt(matcher.group(2))) {
+      return null;
+    }
+    return assemblePhenyl(value, false, substituents);
+  }
+
+  /**
+   * The SMILES of a group named as a phenyl substituent: a halogen or methyl, or a group with one
+   * attachment point.
+   *
+   * @param named the substituent as written
+   * @return its SMILES, or {@code null} if it does not resolve to such a group
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private String phenylSubstituent(String named) throws IOException {
     String substituent = resolveSmiles(named);
     if (!ChemicalUtils.isValidSmiles(substituent)) {
       return null;
     }
-    int position = ringPosition(locant);
     try {
       IAtomContainer group = smilesParser.parseSmiles(substituent);
       long attachments = substituent.chars().filter(c -> '*' == c).count();
-      if (group.getAtomCount() == 1
-          ? !TERMINAL_PHENYL_SUBSTITUENTS.contains(group.getAtom(0).getSymbol())
-          : attachments != 1) {
-        return null;
+      boolean usable =
+          group.getAtomCount() == 1
+              ? TERMINAL_PHENYL_SUBSTITUENTS.contains(group.getAtom(0).getSymbol())
+              : attachments == 1;
+      return usable ? substituent : null;
+    } catch (CDKException e) {
+      LOGGER.debug("Phenyl substituent {} does not parse: {}", named, e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Builds a phenyl group, attached at position 1 (through a CH2 for a benzyl), carrying the given
+   * substituents.
+   *
+   * @param value the legend value, for the log
+   * @param benzyl whether the ring is attached through a CH2
+   * @param substituents the SMILES of each substituent by ring position, 2 to 6
+   * @return the group's SMILES with one attachment point, or {@code null} if it does not assemble
+   */
+  private String assemblePhenyl(String value, boolean benzyl, Map<Integer, String> substituents) {
+    StringBuilder smiles = new StringBuilder("*").append(benzyl ? "C" : "").append("c1");
+    for (int position = 2; position <= 6; position++) {
+      smiles.append(position == 6 ? "c1" : "c");
+      if (substituents.containsKey(position)) {
+        smiles.append("(*)");
       }
-      // The ipso carbon carries the attachment point (through a CH2 for a benzyl), the substituent
-      // sits position - 1 bonds on.
-      String linker = benzyl ? "C" : "";
-      IAtomContainer phenyl =
-          smilesParser.parseSmiles(
-              "*"
-                  + linker
-                  + "c1"
-                  + "c".repeat(position - 2)
-                  + "c(*)"
-                  + "c".repeat(5 - position)
-                  + "c1");
-      ((IPseudoAtom) phenyl.getAtom(position + 1 + linker.length())).setLabel(PHENYL_SUBSTITUENT);
-      replaceRGroup(phenyl, PHENYL_SUBSTITUENT, substituent);
+    }
+    try {
+      IAtomContainer phenyl = smilesParser.parseSmiles(smiles.toString());
+      // The pseudo-atoms after the attachment point stand for the substituents, in ring order.
+      Iterator<String> groups = new TreeMap<>(substituents).values().iterator();
+      List<String> labels = new ArrayList<>();
+      boolean attachment = true;
+      for (IAtom atom : phenyl.atoms()) {
+        if (atom instanceof IPseudoAtom pseudo) {
+          if (attachment) {
+            attachment = false;
+            continue;
+          }
+          String label = PHENYL_SUBSTITUENT + labels.size();
+          pseudo.setLabel(label);
+          labels.add(label);
+        }
+      }
+      for (String label : labels) {
+        replaceRGroup(phenyl, label, groups.next());
+      }
       return new SmilesGenerator(SmiFlavor.Default).create(phenyl);
     } catch (CDKException | CloneNotSupportedException e) {
       LOGGER.debug("Substituted phenyl {} could not be assembled: {}", value, e.getMessage());
@@ -1588,7 +1815,7 @@ public class MarkushHandler {
       return new PositionalValue(positions, smiles);
     }
     Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
-    if (!matcher.matches() || substitutedPhenyl(value) != null) {
+    if (!matcher.matches() || phenylGroup(value) != null) {
       return null;
     }
     List<Integer> positions = new ArrayList<>();
