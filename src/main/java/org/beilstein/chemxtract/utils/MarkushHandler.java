@@ -204,6 +204,9 @@ public class MarkushHandler {
   /** Every structure drawn on the page, labelled or not, for pairing captions with structures. */
   private final List<CDRectangle> drawn = new ArrayList<>();
 
+  /** The lines of entry letters under rows of drawn values; see {@link #adoptDrawnTable}. */
+  private final List<TextVisitor.LetterRow> letterRows;
+
   /** The compound numbers standing alone on the page; see {@link #compoundNumber}. */
   private final List<TextVisitor.Caption> captions;
 
@@ -255,6 +258,7 @@ public class MarkushHandler {
     residueLabels = textVisitor.getRgroups();
     textBlocks = textVisitor.getBlocks();
     captions = textVisitor.getCaptions();
+    letterRows = textVisitor.getLetterRows();
     blocks = mergeColumnBlocks(textBlocks, Set.of());
     this.builder = builder;
     smilesParser = new SmilesParser(builder);
@@ -528,6 +532,12 @@ public class MarkushHandler {
         drawn.add(block);
       }
     }
+    for (RGroupDefinitionBlock block : List.copyOf(textBlocks)) {
+      RGroupDefinitionBlock table = adoptDrawnTable(block, drawings, consumed);
+      if (table != null) {
+        drawn.add(table);
+      }
+    }
     for (DrawnRGroupValues.Drawing drawing : drawings) {
       LOGGER.debug(
           "A group drawn at a wavy line at {} is no legend's value.",
@@ -541,6 +551,143 @@ public class MarkushHandler {
       owners.clear();
     }
     return consumed;
+  }
+
+  /**
+   * Reads a table of drawn values: a line such as {@code Ar =} followed by a row of drawings, one
+   * per column, with lines of entry letters under them, each letter under the drawing it takes and
+   * each line opening with what holds for its entries ({@code R = Cl a b c}, {@code R = NO2 d e}).
+   * Each letter becomes one row of a positional table over both labels. The table replaces the line
+   * and the lines' definitions.
+   *
+   * @param block a legend line giving one label without values
+   * @param drawings the drawings no line has taken yet; those taken are removed
+   * @param consumed the fragments taken as values, added to
+   * @return the block holding the table, or {@code null} if the line heads no such table
+   */
+  private RGroupDefinitionBlock adoptDrawnTable(
+      RGroupDefinitionBlock block,
+      List<DrawnRGroupValues.Drawing> drawings,
+      Set<CDFragment> consumed) {
+    if (block.bounds() == null
+        || block.definitions().size() != 1
+        || !block.definitions().values().iterator().next().isEmpty()) {
+      return null;
+    }
+    String label = block.definitions().keySet().iterator().next();
+    CDRectangle bounds = block.bounds();
+    float line = block.lineHeight() > 0 ? block.lineHeight() : bounds.getBottom() - bounds.getTop();
+    List<DrawnRGroupValues.Drawing> row =
+        drawings.stream()
+            .filter(
+                drawing -> {
+                  CDPoint2D end = drawing.end().getPosition2D();
+                  return end.getX() > bounds.getRight()
+                      && end.getY() >= bounds.getTop() - line
+                      && end.getY() <= bounds.getBottom() + line;
+                })
+            .sorted(Comparator.comparingDouble(DrawnRGroupValues::centreX))
+            .toList();
+    if (row.size() < 2) {
+      return null;
+    }
+    double spacing = Double.MAX_VALUE;
+    for (int i = 1; i < row.size(); i++) {
+      spacing =
+          Math.min(
+              spacing,
+              DrawnRGroupValues.centreX(row.get(i)) - DrawnRGroupValues.centreX(row.get(i - 1)));
+    }
+    double bottom = row.stream().mapToDouble(DrawnRGroupValues::bottom).max().orElse(0);
+    List<String> values = new ArrayList<>();
+    for (DrawnRGroupValues.Drawing drawing : row) {
+      String smiles = DrawnRGroupValues.smiles(drawing, builder);
+      if (smiles == null) {
+        return null;
+      }
+      values.add(smiles);
+    }
+    Map<Character, Map<String, String>> entries = new TreeMap<>();
+    Set<RGroupDefinitionBlock> rowLabels = Collections.newSetFromMap(new IdentityHashMap<>());
+    // The letter lines stack under the drawings, each within two lines of the one above.
+    double limit = bottom + 2 * line;
+    List<TextVisitor.LetterRow> stacked =
+        letterRows.stream()
+            .filter(letters -> letters.bounds().getTop() >= bounds.getBottom())
+            .sorted(Comparator.comparingDouble(letters -> letters.bounds().getTop()))
+            .toList();
+    for (TextVisitor.LetterRow letters : stacked) {
+      CDRectangle at = letters.bounds();
+      if (at.getTop() > limit) {
+        break;
+      }
+      limit = at.getBottom() + 2 * line;
+      RGroupDefinitionBlock rowLabel = rowLabel(letters);
+      if (rowLabel == null) {
+        return null;
+      }
+      rowLabels.add(rowLabel);
+      Map.Entry<String, List<String>> holds = rowLabel.definitions().entrySet().iterator().next();
+      for (TextVisitor.Letter letter : letters.letters()) {
+        int column = -1;
+        for (int i = 0; i < row.size(); i++) {
+          if (Math.abs(letter.x() - DrawnRGroupValues.centreX(row.get(i))) < spacing / 2) {
+            column = i;
+          }
+        }
+        if (column < 0
+            || entries.put(
+                    letter.letter(),
+                    Map.of(label, values.get(column), holds.getKey(), holds.getValue().get(0)))
+                != null) {
+          return null;
+        }
+      }
+    }
+    if (entries.isEmpty()) {
+      return null;
+    }
+    List<String> labels = List.copyOf(entries.values().iterator().next().keySet());
+    if (entries.values().stream().anyMatch(entry -> !entry.keySet().equals(Set.copyOf(labels)))) {
+      return null;
+    }
+    for (DrawnRGroupValues.Drawing drawing : row) {
+      drawings.remove(drawing);
+      consumed.addAll(drawing.drawn());
+    }
+    RGroupDefinitionBlock table =
+        new RGroupDefinitionBlock(
+            bounds,
+            new LinkedHashMap<>(),
+            List.of(new CorrelatedGroup(labels, List.copyOf(entries.values()))),
+            block.lineHeight(),
+            entries.keySet().stream().map(String::valueOf).reduce("", String::concat));
+    textBlocks.replaceAll(candidate -> candidate == block ? table : candidate);
+    textBlocks.removeAll(rowLabels);
+    LOGGER.debug("Drawn table of {} read for {} entries.", label, entries.size());
+    return table;
+  }
+
+  /**
+   * The definition that holds for a line of entry letters: a block giving one label one value, on
+   * the same line and ending before the first letter, or the line's own text.
+   */
+  private RGroupDefinitionBlock rowLabel(TextVisitor.LetterRow letters) {
+    CDRectangle at = letters.bounds();
+    double middle = (at.getTop() + at.getBottom()) / 2;
+    for (RGroupDefinitionBlock candidate : textBlocks) {
+      CDRectangle bounds = candidate.bounds();
+      if (bounds != null
+          && candidate.definitions().size() == 1
+          && candidate.correlatedGroups().isEmpty()
+          && candidate.definitions().values().iterator().next().size() == 1
+          && middle >= bounds.getTop()
+          && middle <= bounds.getBottom()
+          && bounds.getLeft() < letters.letters().get(0).x()) {
+        return candidate;
+      }
+    }
+    return null;
   }
 
   /** Whether a point is level with a text block and a little to its right. */

@@ -337,6 +337,32 @@ public class TextVisitorTest {
         new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).compoundNumbers().isEmpty());
   }
 
+  /**
+   * A line of entry letters under a row of drawings is read with each letter's estimated place,
+   * also after the definition that holds for its entries; letters out of sequence are not.
+   */
+  @Test
+  public void readsLetterRowsUnderDrawings() {
+    CDPage page = pageWithTexts("   a        b        c", "R = NO2   g   h", "a  c", "R = H");
+    page.getTexts().forEach(text -> text.setBounds(new CDRectangle()));
+    page.getTexts().get(0).getBounds().setRight(100);
+    page.getTexts().get(1).getBounds().setRight(80);
+    List<TextVisitor.LetterRow> rows = new TextVisitor(page).getLetterRows();
+
+    assertEquals(2, rows.size(), "a c skips b, R = H has no letters");
+    List<TextVisitor.Letter> first = rows.get(0).letters();
+    assertEquals(
+        "abc",
+        first.stream().map(letter -> String.valueOf(letter.letter())).reduce("", String::concat));
+    assertTrue(first.get(0).x() < first.get(1).x() && first.get(1).x() < first.get(2).x());
+    assertTrue(first.get(2).x() > 90 && first.get(2).x() < 100, "c ends the text");
+    assertEquals(
+        "gh",
+        rows.get(1).letters().stream()
+            .map(letter -> String.valueOf(letter.letter()))
+            .reduce("", String::concat));
+  }
+
   /** A line naming one compound by number and letter ("64a: R1 = ...") counts its letter. */
   @Test
   public void numberedEntriesCountTheirLetters() {

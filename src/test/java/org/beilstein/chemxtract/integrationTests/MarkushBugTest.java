@@ -414,4 +414,30 @@ public class MarkushBugTest {
       assertFalse(inchiKeys.contains(drawing), "a drawn group was extracted: " + drawing);
     }
   }
+
+  /**
+   * Scheme 80 of m50167957-15 is a table of drawings: "Ar =" followed by six drawn groups, with the
+   * letter lines "R = Cl a b c d e f" and "R = NO2 g h i j k" under them. Each letter takes the
+   * drawing above it and its line's R; f has no NO2 partner.
+   */
+  @Test
+  public void testDrawnTableTakesEachLetterFromItsColumn() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-15.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "OMVKAIFNRGTEKS-AWNIVKPZSA-N", // 80a, Ar = 4-(dimethylamino)phenyl, R = Cl
+                "ISIGLMAPJCTJMQ-AWNIVKPZSA-N", // 80g, Ar = 4-(dimethylamino)phenyl, R = NO2
+                "RPESPARQKUWFLG-CMDGGOBGSA-N", // 80c, Ar = 2-furyl, R = Cl
+                "JHXPBBHAAXELGW-YCRREMRBSA-N", // 80k, Ar = 3-hydroxy-4-methoxyphenyl, R = NO2
+                "NVBQPCDWKVJNQZ-ONNFQVAWSA-N")), // 80f, Ar = 4-hydroxy-3-methoxyphenyl, R = Cl
+        "80a-k must be extracted: " + inchiKeys);
+    assertFalse(
+        inchiKeys.contains("RPLCVSQNTHFTFI-ONNFQVAWSA-N"), // f's drawing with R = NO2
+        "the NO2 line has no letter under the sixth drawing");
+  }
 }

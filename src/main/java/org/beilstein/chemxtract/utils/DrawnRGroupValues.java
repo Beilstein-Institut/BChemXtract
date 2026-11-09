@@ -257,6 +257,30 @@ final class DrawnRGroupValues {
     return null;
   }
 
+  /** The x of the middle of the drawn group, between its leftmost and rightmost atoms. */
+  static double centreX(Drawing drawing) {
+    double min = Double.MAX_VALUE;
+    double max = -Double.MAX_VALUE;
+    for (CDAtom atom : drawing.group().getAtoms()) {
+      if (atom.getPosition2D() != null) {
+        min = Math.min(min, atom.getPosition2D().getX());
+        max = Math.max(max, atom.getPosition2D().getX());
+      }
+    }
+    return (min + max) / 2;
+  }
+
+  /** The y of the drawn group's lowest atom. */
+  static double bottom(Drawing drawing) {
+    double max = -Double.MAX_VALUE;
+    for (CDAtom atom : drawing.group().getAtoms()) {
+      if (atom.getPosition2D() != null) {
+        max = Math.max(max, atom.getPosition2D().getY());
+      }
+    }
+    return max;
+  }
+
   /** A single wavy bond between two unlabelled carbons. */
   private static boolean isWavyLine(CDFragment fragment) {
     return fragment.getAtoms().size() == 2
