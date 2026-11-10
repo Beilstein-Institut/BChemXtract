@@ -35,6 +35,7 @@ import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomCIPType;
 import org.beilstein.chemxtract.cdx.datatypes.CDAtomGeometry;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondDisplay;
+import org.beilstein.chemxtract.cdx.datatypes.CDColor;
 import org.beilstein.chemxtract.cheminf.SugarProjectionDetector;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.geometry.GeometryUtil;
@@ -74,6 +75,7 @@ public class StereoHandler {
    */
   public static void setStereo(
       IAtomContainer atomContainer, Map<CDBond, IBond> bondMap, Map<CDAtom, IAtom> atomMap) {
+    Set<CDAtom> highlightedCentres = flattenHighlightedBoldBonds(bondMap);
     Set<Projection> projections = flattenProjectionRings(atomContainer, bondMap);
     List<IStereoElement> elements =
         selectFactory(atomContainer)
@@ -83,11 +85,66 @@ public class StereoHandler {
     // undefined takes ChemDraw's label, whatever was perceived elsewhere in the fragment.
     Set<Object> perceived =
         elements.stream().map(IStereoElement::getFocus).collect(Collectors.toSet());
+    // ChemDraw reads a bold bond as a wedge too, so a centre whose only stereo was a highlight
+    // carries a label from it.
+    Set<IAtom> highlighted =
+        highlightedCentres.stream()
+            .map(atomMap::get)
+            .filter(atom -> atom != null)
+            .collect(Collectors.toSet());
     getTetrahedralStereoByCDAtomCIPType(atomContainer, atomMap).stream()
         .filter(element -> !perceived.contains(element.getFocus()))
+        .filter(element -> !highlighted.contains(element.getFocus()))
         .forEach(elements::add);
     filterWavyBonds(elements, bondMap);
     elements.forEach(atomContainer::addStereoElement);
+  }
+
+  /**
+   * Draws a bold bond as a plain bond when it is coloured apart from the plain bonds next to it.
+   * Schemes mark the bond a reaction forms, or the bonds a mechanism step changes, with a red or
+   * blue bold bond among black ones; that is a highlight, not a wedge. A bold bond in the colour of
+   * a neighbour, as in a fragment drawn all in one colour, or with no plain neighbour, keeps its
+   * reading. An uncoloured bond counts as black.
+   *
+   * @param bondMap mapping of {@link CDBond} to {@link IBond} giving each bond's drawn style
+   * @return the atoms of the bonds drawn plain, which may carry a label ChemDraw derived from them
+   */
+  private static Set<CDAtom> flattenHighlightedBoldBonds(Map<CDBond, IBond> bondMap) {
+    Set<CDAtom> centres = new HashSet<>();
+    bondMap.forEach(
+        (cdBond, bond) -> {
+          if (cdBond.getBondDisplay() != CDBondDisplay.Bold) {
+            return;
+          }
+          CDColor colour = colourOf(cdBond);
+          if (colour.equals(CDColor.BLACK)) {
+            return;
+          }
+          List<CDBond> plainNeighbours =
+              bondMap.keySet().stream()
+                  .filter(other -> other != cdBond && other.getBondDisplay() != CDBondDisplay.Bold)
+                  .filter(other -> sharesAtom(cdBond, other))
+                  .toList();
+          if (!plainNeighbours.isEmpty()
+              && plainNeighbours.stream().noneMatch(other -> colourOf(other).equals(colour))) {
+            bond.setDisplay(IBond.Display.Solid);
+            centres.add(cdBond.getBegin());
+            centres.add(cdBond.getEnd());
+          }
+        });
+    return centres;
+  }
+
+  private static CDColor colourOf(CDBond bond) {
+    return bond.getColor() != null ? bond.getColor() : CDColor.BLACK;
+  }
+
+  private static boolean sharesAtom(CDBond bond, CDBond other) {
+    return other.getBegin() == bond.getBegin()
+        || other.getEnd() == bond.getBegin()
+        || other.getBegin() == bond.getEnd()
+        || other.getEnd() == bond.getEnd();
   }
 
   /**

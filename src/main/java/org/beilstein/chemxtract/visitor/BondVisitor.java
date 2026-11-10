@@ -32,6 +32,7 @@ import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.CDVisitor;
+import org.beilstein.chemxtract.cdx.datatypes.CDBondOrder;
 import org.beilstein.chemxtract.cdx.datatypes.CDNodeType;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.beilstein.chemxtract.lookups.UnwantedAbbreviations;
@@ -44,6 +45,7 @@ public class BondVisitor extends CDVisitor {
 
   private final List<CDBond> bonds;
   private final Set<CDBond> skip;
+  private final Set<CDFragment> labelsChecked = new HashSet<>();
   private static final Logger LOGGER = LoggerFactory.getLogger(BondVisitor.class);
   private boolean rawMode;
 
@@ -110,6 +112,11 @@ public class BondVisitor extends CDVisitor {
                                   + " atoms"));
 
           CDAtom conAtom = resolveConnectionAtom(fragment, extCon);
+          CDAtom holder =
+              !bond.getBegin().getFragments().isEmpty() ? bond.getBegin() : bond.getEnd();
+          if (labelsChecked.add(fragment)) {
+            bondTrailingLabel(holder, fragment, extCon, conAtom);
+          }
           if (!bond.getBegin().getFragments().isEmpty()) {
             bond.setBegin(conAtom);
           } else {
@@ -175,6 +182,91 @@ public class BondVisitor extends CDVisitor {
                 .getText()
                 .getText()
                 .matches(Definitions.RGROUP_LABEL_STRING));
+  }
+
+  /**
+   * Bonds an R-group label that ends a label to the rest of it. ChemDraw cannot interpret labels
+   * such as {@code SAr} or {@code OAr}; it stores the S (or O) bonded to the connection point and
+   * the {@code Ar} unbonded, as argon, so the aryl never reached the structure. The label atom is
+   * bonded to the free end of the chain the connection point starts, and only when the label text
+   * ends with it ({@code X[Ni]}, a ligand written before its metal, is left alone).
+   *
+   * @param holder the atom whose label the nested fragment expands
+   * @param fragment the nested fragment
+   * @param external the fragment's external connection point
+   * @param connection the fragment atom bonded to the external connection point
+   */
+  private void bondTrailingLabel(
+      CDAtom holder, CDFragment fragment, CDAtom external, CDAtom connection) {
+    String text = textOf(holder);
+    if (text == null) {
+      return;
+    }
+    List<CDAtom> unbonded =
+        fragment.getAtoms().stream()
+            .filter(atom -> atom != external && neighbours(fragment, atom).isEmpty())
+            .toList();
+    if (unbonded.size() != 1) {
+      return;
+    }
+    CDAtom label = unbonded.get(0);
+    String labelText = textOf(label);
+    if (labelText == null
+        || !labelText.matches(Definitions.RGROUP_LABEL_STRING)
+        || !text.endsWith(labelText)
+        || text.equals(labelText)) {
+      return;
+    }
+    CDAtom end = chainEnd(fragment, external, connection);
+    if (end == null) {
+      return;
+    }
+    CDBond added = new CDBond();
+    added.setBegin(end);
+    added.setEnd(label);
+    added.setBondOrder(CDBondOrder.Single);
+    bonds.add(added);
+  }
+
+  /**
+   * The free end of the unbranched chain that starts at the connection atom, or {@code null} if the
+   * chain branches.
+   */
+  private static CDAtom chainEnd(CDFragment fragment, CDAtom external, CDAtom connection) {
+    CDAtom previous = external;
+    CDAtom current = connection;
+    while (true) {
+      CDAtom from = previous;
+      List<CDAtom> onward =
+          neighbours(fragment, current).stream().filter(atom -> atom != from).toList();
+      if (onward.isEmpty()) {
+        return current;
+      }
+      if (onward.size() > 1) {
+        return null;
+      }
+      previous = current;
+      current = onward.get(0);
+    }
+  }
+
+  private static List<CDAtom> neighbours(CDFragment fragment, CDAtom atom) {
+    List<CDAtom> result = new ArrayList<>();
+    for (CDBond bond : fragment.getBonds()) {
+      if (bond.getBegin() == atom) {
+        result.add(bond.getEnd());
+      } else if (bond.getEnd() == atom) {
+        result.add(bond.getBegin());
+      }
+    }
+    return result;
+  }
+
+  private static String textOf(CDAtom atom) {
+    return Optional.ofNullable(atom.getText())
+        .map(CDText::getText)
+        .map(CDStyledString::getText)
+        .orElseGet(atom::getLabelText);
   }
 
   /**

@@ -27,7 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDFragment;
 import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.datatypes.CDStyledString;
 import org.junit.jupiter.api.Test;
@@ -261,5 +265,208 @@ public class TextVisitorTest {
     Map<String, List<String>> r =
         new TextVisitor(pageWithTexts("R = H, 3,4,5-(OMe)3")).getRgroups();
     assertEquals(List.of("H", "3,4,5-(OMe)3"), r.get("R"));
+  }
+
+  /**
+   * A legend line whose value is a drawn structure ("a: R =" beside it) defines the label with no
+   * values, so the scaffold beside it is known to have its own legend; the page-wide union gains
+   * nothing from it.
+   */
+  @Test
+  public void labelGivenOnlyAsDrawingIsDefinedWithoutValues() {
+    TextVisitor visitor = new TextVisitor(pageWithTexts("a: R ="));
+    assertEquals(1, visitor.getBlocks().size());
+    assertEquals(Map.of("R", List.of()), visitor.getBlocks().get(0).definitions());
+    assertFalse(visitor.getRgroups().containsKey("R"), "an empty definition adds nothing");
+  }
+
+  /** The letters legend lines open with are kept in order, so lettered columns can be matched. */
+  @Test
+  public void recordsTheLettersLegendLinesOpenWith() {
+    assertEquals(
+        "abc",
+        new TextVisitor(pageWithTexts("a: R = H\rb: R = Me\r(c) R = Et"))
+            .getBlocks()
+            .get(0)
+            .entryLetters());
+    assertEquals("", new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).entryLetters());
+  }
+
+  /**
+   * A lettered line names one compound, so ring substituents listed on it at different positions
+   * ("p: R = 2-CH3, 5-NO2") are one value, not two alternatives.
+   */
+  @Test
+  public void ringSubstituentsOnALetteredLineAreOneValue() {
+    Map<String, List<String>> r =
+        new TextVisitor(pageWithTexts("o: R = 2,4,6-CH3\rp: R = 2-CH3, 5-NO2")).getRgroups();
+    assertEquals(List.of("2,4,6-CH3", "2-CH3; 5-NO2"), r.get("R"));
+    assertEquals(
+        List.of("H", "2-NO2; 4-Cl"),
+        new TextVisitor(pageWithTexts("30a: R = H\r30f: R = 2-NO2, 4-Cl")).getRgroups().get("R"),
+        "a line numbered with its compound (30f, m50167957-8) names one compound too");
+  }
+
+  /** Without a letter, or when not every value names a ring position, a list stays a list. */
+  @Test
+  public void otherListsStayAlternatives() {
+    assertEquals(
+        List.of("2-CH3", "5-NO2"),
+        new TextVisitor(pageWithTexts("R = 2-CH3, 5-NO2")).getRgroups().get("R"));
+    assertEquals(
+        List.of("H", "4-Me"),
+        new TextVisitor(pageWithTexts("a: R = H, 4-Me")).getRgroups().get("R"));
+  }
+
+  /**
+   * The compound numbers legend lines open with are recorded, and a line naming a range of a series
+   * ("40a–m: R1 = H") records the value it fixes for that series, as in 40/41 of {@code
+   * cheminf/bugs/markush/m50167957-9}.
+   */
+  @Test
+  public void recordsCompoundNumbersAndWhatASeriesRangeFixes() {
+    RGroupDefinitionBlock caption =
+        new TextVisitor(pageWithTexts("40a–m: R1 = H\r41a–e: R1 = OMe")).getBlocks().get(0);
+    assertEquals(Set.of("40", "41"), caption.compoundNumbers());
+    assertEquals(
+        Map.of("40", Map.of("R1", "H"), "41", Map.of("R1", "OMe")), caption.seriesAssignments());
+
+    RGroupDefinitionBlock legend =
+        new TextVisitor(pageWithTexts("36a: Ar = 4-OHC6H4\r36b: Ar = 4-MeOC6H4"))
+            .getBlocks()
+            .get(0);
+    assertEquals(Set.of("36"), legend.compoundNumbers());
+    assertTrue(legend.seriesAssignments().isEmpty(), "single compounds fix nothing per series");
+    assertTrue(
+        new TextVisitor(pageWithTexts("R = H, Me")).getBlocks().get(0).compoundNumbers().isEmpty());
+  }
+
+  /**
+   * A line of entry letters under a row of drawings is read with each letter's estimated place,
+   * also after the definition that holds for its entries; letters out of sequence are not.
+   */
+  @Test
+  public void readsLetterRowsUnderDrawings() {
+    CDPage page = pageWithTexts("   a        b        c", "R = NO2   g   h", "a  c", "R = H");
+    page.getTexts().forEach(text -> text.setBounds(new CDRectangle()));
+    page.getTexts().get(0).getBounds().setRight(100);
+    page.getTexts().get(1).getBounds().setRight(80);
+    List<TextVisitor.LetterRow> rows = new TextVisitor(page).getLetterRows();
+
+    assertEquals(2, rows.size(), "a c skips b, R = H has no letters");
+    List<TextVisitor.Letter> first = rows.get(0).letters();
+    assertEquals(
+        "abc",
+        first.stream().map(letter -> String.valueOf(letter.letter())).reduce("", String::concat));
+    assertTrue(first.get(0).x() < first.get(1).x() && first.get(1).x() < first.get(2).x());
+    assertTrue(first.get(2).x() > 90 && first.get(2).x() < 100, "c ends the text");
+    assertEquals(
+        "gh",
+        rows.get(1).letters().stream()
+            .map(letter -> String.valueOf(letter.letter()))
+            .reduce("", String::concat));
+  }
+
+  /** A ring table gives one value per lettered ring and line; a line that does not is no table. */
+  @Test
+  public void readsRingTables() {
+    CDPage page =
+        pageWithTexts(
+            "   A ring        B ring\r20a: 3-triazolyl     3,4-diOMe\r20c: 4-triazolyl     2,3-diOMe",
+            "   A ring        B ring\r21a: 3-triazolyl");
+    page.getTexts().forEach(text -> text.setBounds(new CDRectangle()));
+    List<TextVisitor.RingTable> tables = new TextVisitor(page).getRingTables();
+
+    assertEquals(1, tables.size(), "a line with one value for two rings is no table");
+    assertEquals(List.of("A", "B"), tables.get(0).rings());
+    assertEquals(
+        List.of(
+            new TextVisitor.RingRow("20a", List.of("3-triazolyl", "3,4-diOMe")),
+            new TextVisitor.RingRow("20c", List.of("4-triazolyl", "2,3-diOMe"))),
+        tables.get(0).rows());
+  }
+
+  /** A repeat count in a numbered or lettered line is the label n, with R or on its own. */
+  @Test
+  public void readsRepeatCountsOfLegendLines() {
+    List<CorrelatedGroup> withR =
+        new TextVisitor(pageWithTexts("26a: n = 1, R = H\r26g: n = 2, R = F"))
+            .getBlocks()
+            .get(0)
+            .correlatedGroups();
+    assertEquals(
+        List.of(Map.of("R", "H", "n", "1"), Map.of("R", "F", "n", "2")), withR.get(0).tuples());
+    List<CorrelatedGroup> alone =
+        new TextVisitor(pageWithTexts("32a: n = 6\r32b: n = 4"))
+            .getBlocks()
+            .get(0)
+            .correlatedGroups();
+    assertEquals(List.of(Map.of("n", "6"), Map.of("n", "4")), alone.get(0).tuples());
+    assertTrue(
+        new TextVisitor(pageWithTexts("yield, n = 3")).getBlocks().isEmpty(),
+        "an n outside a legend line is no entry");
+  }
+
+  /** A line naming one compound by number and letter ("64a: R1 = ...") counts its letter. */
+  @Test
+  public void numberedEntriesCountTheirLetters() {
+    assertEquals(
+        "ab",
+        new TextVisitor(pageWithTexts("64a: R1 = H\r64b: R1 = Me"))
+            .getBlocks()
+            .get(0)
+            .entryLetters());
+    assertEquals(
+        "",
+        new TextVisitor(pageWithTexts("40a–m: R1 = H\r41a–e: R1 = OMe"))
+            .getBlocks()
+            .get(0)
+            .entryLetters(),
+        "a range names no single entry");
+  }
+
+  /**
+   * A text that is a compound number alone is the caption of a drawn structure ("43", "42a–l"); an
+   * atom's label is part of its drawing, whatever it reads.
+   */
+  @Test
+  public void readsCaptionsButNotAtomLabels() {
+    CDPage page = pageWithTexts("43", "42a–l", "43a: R = H");
+    for (CDText text : page.getTexts()) {
+      text.setBounds(new CDRectangle());
+    }
+    CDText label = page.getTexts().get(0);
+    CDAtom atom = new CDAtom();
+    CDText atomLabel = new CDText();
+    atomLabel.setText(label.getText());
+    atomLabel.setBounds(new CDRectangle());
+    atom.setText(atomLabel);
+    CDFragment fragment = new CDFragment();
+    fragment.addAtom(atom);
+    page.addFragment(fragment);
+
+    assertEquals(
+        List.of("43", "42"),
+        new TextVisitor(page).getCaptions().stream().map(TextVisitor.Caption::number).toList());
+  }
+
+  /**
+   * A ring formula with room for more substituents than its own takes the ring substituents written
+   * before it: "4-OH, 3-MeOC6H3" is one 4-hydroxy-3-methoxyphenyl (36c of {@code
+   * cheminf/bugs/markush/m50167957-9}). A full C6H4 ring takes none.
+   */
+  @Test
+  public void ringFormulaKeepsItsSubstituentsTogether() {
+    assertEquals(
+        List.of("4-OHC6H4", "4-OH, 3-MeOC6H3"),
+        new TextVisitor(pageWithTexts("36a: Ar = 4-OHC6H4\r36c: Ar = 4-OH, 3-MeOC6H3"))
+            .getRgroups()
+            .get("Ar"));
+    assertEquals(
+        List.of("2-OMe, 4-CHO-C6H3", "2,4-Me2C6H3"),
+        new TextVisitor(pageWithTexts("R = 2-OMe,4-CHO-C6H3, 2,4-Me2C6H3")).getRgroups().get("R"));
+    assertEquals(
+        List.of("4-OH", "4-MeOC6H4"),
+        new TextVisitor(pageWithTexts("R = 4-OH, 4-MeOC6H4")).getRgroups().get("R"));
   }
 }
