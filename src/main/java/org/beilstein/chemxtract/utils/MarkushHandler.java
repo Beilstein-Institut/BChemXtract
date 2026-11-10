@@ -230,6 +230,10 @@ public class MarkushHandler {
    */
   private static final double UNPAIRABLE = 1e9;
 
+  /** Blocks whose values are drawings; see {@link #adoptDrawnValues}. */
+  private final Set<RGroupDefinitionBlock> drawnBlocks =
+      Collections.newSetFromMap(new IdentityHashMap<>());
+
   /** Per label set, the scaffold each block defining it was drawn for; see {@link #owners}. */
   private final Map<Set<String>, Map<RGroupDefinitionBlock, Scaffold>> owners = new HashMap<>();
 
@@ -269,7 +273,7 @@ public class MarkushHandler {
     letterRows = textVisitor.getLetterRows();
     ringTables = textVisitor.getRingTables();
     ringLetters = RingLetterTable.letters(new FragmentVisitor(page).getFragments());
-    blocks = mergeColumnBlocks(textBlocks, Set.of());
+    blocks = mergeColumnBlocks(textBlocks, Set.of(), List.of());
     this.builder = builder;
     smilesParser = new SmilesParser(builder);
     this.unrestricted = unrestricted;
@@ -297,8 +301,61 @@ public class MarkushHandler {
     compoundNumbers = null;
     if (!labels.isEmpty()) {
       scaffolds.add(new Scaffold(bounds, Set.copyOf(labels)));
+      remerge();
     }
     owners.clear();
+  }
+
+  /** Merges the legend columns again, now knowing the drawn values and scaffolds. */
+  private void remerge() {
+    List<RGroupDefinitionBlock> merged = mergeColumnBlocks(textBlocks, drawnBlocks, scaffolds);
+    blocks.clear();
+    blocks.addAll(merged);
+    owners.clear();
+  }
+
+  /**
+   * Whether two legend columns side by side each sit under a scaffold of their own: a different
+   * registered scaffold carrying one of their labels spans the middle of each. Three schemes in a
+   * row with a legend under each are three legends, not one legend set in columns. Columns whose
+   * lettering runs on are one legend whatever lies above them.
+   */
+  private static boolean underDifferentScaffolds(
+      RGroupDefinitionBlock a, RGroupDefinitionBlock b, List<Scaffold> scaffolds) {
+    if (continuousLettering(a, b)) {
+      return false;
+    }
+    Scaffold above = scaffoldOver(a, scaffolds);
+    Scaffold other = scaffoldOver(b, scaffolds);
+    return above != null && other != null && above != other;
+  }
+
+  /**
+   * The scaffold a legend column sits under or over: the nearest one in vertical distance whose
+   * horizontal extent spans the column's middle and that carries one of its labels.
+   */
+  private static Scaffold scaffoldOver(RGroupDefinitionBlock block, List<Scaffold> scaffolds) {
+    CDRectangle bounds = block.bounds();
+    double middle = (bounds.getLeft() + bounds.getRight()) / 2;
+    Set<String> labels = new HashSet<>(block.definitions().keySet());
+    block.correlatedGroups().forEach(group -> labels.addAll(group.labels()));
+    Scaffold best = null;
+    double bestGap = Double.MAX_VALUE;
+    for (Scaffold scaffold : scaffolds) {
+      CDRectangle at = scaffold.bounds();
+      if (middle < at.getLeft()
+          || middle > at.getRight()
+          || scaffold.labels().stream().noneMatch(labels::contains)) {
+        continue;
+      }
+      double gap =
+          Math.max(0, Math.max(at.getTop() - bounds.getBottom(), bounds.getTop() - at.getBottom()));
+      if (gap < bestGap) {
+        best = scaffold;
+        bestGap = gap;
+      }
+    }
+    return best;
   }
 
   /**
@@ -390,7 +447,9 @@ public class MarkushHandler {
    * @return the blocks with same-label runs of one legend merged into one block each
    */
   private static List<RGroupDefinitionBlock> mergeColumnBlocks(
-      List<RGroupDefinitionBlock> blocks, Set<RGroupDefinitionBlock> drawn) {
+      List<RGroupDefinitionBlock> blocks,
+      Set<RGroupDefinitionBlock> drawn,
+      List<Scaffold> scaffolds) {
     List<RGroupDefinitionBlock> result = new ArrayList<>();
     boolean[] merged = new boolean[blocks.size()];
     for (int i = 0; i < blocks.size(); i++) {
@@ -427,7 +486,8 @@ public class MarkushHandler {
               .anyMatch(
                   member ->
                       sameColumnAdjacent(member, candidate)
-                          || sideBySideLegend(member, candidate)
+                          || (sideBySideLegend(member, candidate)
+                              && !underDifferentScaffolds(member, candidate, scaffolds))
                           || drawnLegendColumn(member, candidate, drawn))) {
             cluster.add(candidate);
             merged[j] = true;
@@ -554,11 +614,9 @@ public class MarkushHandler {
           drawing.end().getPosition2D());
       consumed.addAll(drawing.drawn());
     }
+    drawnBlocks.addAll(drawn);
     if (!drawn.isEmpty()) {
-      List<RGroupDefinitionBlock> merged = mergeColumnBlocks(textBlocks, drawn);
-      blocks.clear();
-      blocks.addAll(merged);
-      owners.clear();
+      remerge();
     }
     return consumed;
   }

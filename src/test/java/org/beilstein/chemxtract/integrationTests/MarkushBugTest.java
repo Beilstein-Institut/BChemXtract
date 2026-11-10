@@ -554,4 +554,31 @@ public class MarkushBugTest {
         smiles.stream().anyMatch(smi -> smi.contains("[CH]")),
         "a radical was extracted: " + smiles);
   }
+
+  /**
+   * m50848776-i11 sets three schemes in a row, ortho-, para- and meta-R, each with its legend under
+   * it. Side by side, the legends were merged as columns of one, and each scaffold took every
+   * value. Each now keeps its own.
+   */
+  @Test
+  public void testLegendsUnderTheirOwnScaffoldsStaySeparate() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50848776-i11.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "VCYNMKHKCLKODE-UHFFFAOYSA-N", // ortho, R = F
+                "JUKGOVSNHDRQSS-UHFFFAOYSA-N")), // meta, R = F
+        "own values must be extracted: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "GPWYRDPTGJYJNL-UHFFFAOYSA-N", // ortho with the para legend's Cl
+            "WIQLLVBXSMNLAI-UHFFFAOYSA-N", // meta with the para legend's OMe
+            "MIQATMAUOFDNCO-UHFFFAOYSA-N")) { // para with the ortho legend's F
+      assertFalse(inchiKeys.contains(borrowed), "a neighbour's value was taken: " + borrowed);
+    }
+  }
 }
