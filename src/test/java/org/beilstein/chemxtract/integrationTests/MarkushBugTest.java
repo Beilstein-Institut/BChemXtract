@@ -615,4 +615,29 @@ public class MarkushBugTest {
       assertFalse(substance.getSmiles().contains("@"), "defined centre: " + substance.getSmiles());
     }
   }
+
+  /**
+   * m50966958-i14 writes the aryl of three scaffolds into the label, SAr and OAr. ChemDraw cannot
+   * interpret those labels and stores S (or O) and Ar unbonded, so Ar never reached the scaffold
+   * and none of the scaffolds' legend values was grafted. The skeletons below are computed from
+   * hand-written SMILES; the E/Z layer is left out.
+   */
+  @Test
+  public void testArylWrittenIntoTheLabelIsSubstituted() throws IOException {
+    Set<String> skeletons =
+        xtract("m50966958-i14.cdx").stream()
+            .map(substance -> substance.getInchiKey().substring(0, 14))
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        skeletons.containsAll(
+            Set.of(
+                "WWZSINBEUHVOOJ", // N-Ts scaffold, SAr, Ar = Ph
+                "ITBGDISPURENFG", // N-Ts scaffold, SAr, Ar = 4-MeOC6H4
+                "GQNLLCGRGJUEHU", // OAr, Ar = 4-MeC6H4
+                "LLWRTOYZVGRIEF", // OAr, Ar = 4-BrC6H4
+                "GURSDJOEKSYBON", // benzoxazolyl scaffold, SAr, Ar = Ph
+                "JXVLWTFMOQJDNA")), // benzoxazolyl scaffold, SAr, Ar = 4-BrC6H4
+        "aryl values must be grafted: " + skeletons);
+  }
 }

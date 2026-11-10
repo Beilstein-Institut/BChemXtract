@@ -66,13 +66,17 @@ class MixedCoordinateStereoTest {
     // Five since the nearest legend no longer falls back to the page's other legends: two of the
     // seven were the CPA-15 catalyst with 116a's 2-FC6H4 and 4-BrC6H4 in place of its own
     // Ar = 9-phenanthryl, which does not resolve.
+    // The CO2R scaffold now takes its own legend's R = Me (WCUSLZ...), where the 6-R scaffold used
+    // to
+    // borrow that Me (REPJKD..., ethyl ester with a 6-methyl); both are allenes with defined
+    // stereo.
     // The three keys below are what this test is actually about.
     assertThat(substances).as("every structure on the page must survive").hasSize(5);
     assertThat(substances)
         .as("the allene stereochemistry of the mixed-coordinate fragments must be perceived")
         .extracting(BCXSubstance::getInchiKey)
         .contains(
-            "REPJKDCMLXUTEI-RBSBEOHCSA-N",
+            "WCUSLZNXDOZEBE-CBZJRKILSA-N",
             "GIODLUBQGIBAIW-FKEHTHLJSA-N",
             "VFBGGYOYGOJEQA-YMGMXPECSA-N");
   }

@@ -265,10 +265,25 @@ public class CDFragment extends CDObject {
   }
 
   public boolean hasRGroup() {
-    return atoms.stream()
-        .map(a -> a.getText() != null ? a.getText().getText().getText() : null)
-        .filter(Objects::nonNull)
+    return labelledAtoms().stream()
+        .map(a -> a.getText().getText().getText())
         .anyMatch(text -> Definitions.RGROUP_LABEL_PATTERN.matcher(text).find());
+  }
+
+  /**
+   * The atoms whose labels may name an R-group: the fragment's own, and the atoms a label such as
+   * {@code SAr} expands to, which carry the {@code Ar}.
+   */
+  private List<CDAtom> labelledAtoms() {
+    List<CDAtom> labelled = new ArrayList<>();
+    for (CDAtom atom : atoms) {
+      labelled.add(atom);
+      for (CDFragment nested : atom.getFragments()) {
+        labelled.addAll(nested.getAtoms());
+      }
+    }
+    labelled.removeIf(atom -> atom.getText() == null || atom.getText().getText() == null);
+    return labelled;
   }
 
   /**
@@ -279,13 +294,11 @@ public class CDFragment extends CDObject {
    */
   public Set<String> getRGroupLabels() {
     Set<String> labels = new LinkedHashSet<>();
-    for (CDAtom atom : atoms) {
-      if (atom.getText() != null) {
-        Matcher matcher =
-            Definitions.RGROUP_LABEL_PATTERN.matcher(atom.getText().getText().getText());
-        if (matcher.find()) {
-          labels.add(matcher.group(1));
-        }
+    for (CDAtom atom : labelledAtoms()) {
+      Matcher matcher =
+          Definitions.RGROUP_LABEL_PATTERN.matcher(atom.getText().getText().getText());
+      if (matcher.find()) {
+        labels.add(matcher.group(1));
       }
     }
     return labels;
