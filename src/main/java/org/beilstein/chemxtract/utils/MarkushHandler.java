@@ -522,12 +522,18 @@ public class MarkushHandler {
   }
 
   /**
-   * Whether the two blocks list different compounds: both number their lines, and by no number in
-   * common. Legends of {@code 36a}-{@code c} and {@code 37a}-{@code c} side by side are two
-   * schemes' legends, however close they sit.
+   * Whether the two blocks list different compounds: both number their lines, by no number in
+   * common, and either letter them as members of a series or give several labels a value. Legends
+   * of {@code 36a}-{@code c} and {@code 37a}-{@code c} side by side are two schemes' legends,
+   * however close they sit, and a line {@code 39 : Y = NTs; R1 = Ph; R2 = H} is one compound whose
+   * values do not combine with the next line's. Lines {@code 60 : R = CH3}, {@code 61 : R = H}
+   * giving one label each are the values of one legend, a different number on each.
    */
   private static boolean differentCompounds(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
-    return !a.compoundNumbers().isEmpty()
+    boolean series = !a.entryLetters().isEmpty() && !b.entryLetters().isEmpty();
+    boolean wholeCompounds = a.definitions().size() > 1 || b.definitions().size() > 1;
+    return (series || wholeCompounds)
+        && !a.compoundNumbers().isEmpty()
         && !b.compoundNumbers().isEmpty()
         && Collections.disjoint(a.compoundNumbers(), b.compoundNumbers());
   }
