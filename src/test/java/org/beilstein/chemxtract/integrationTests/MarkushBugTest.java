@@ -595,4 +595,24 @@ public class MarkushBugTest {
           substance.getSmiles().contains("[Ts]"), "tennessine atom: " + substance.getSmiles());
     }
   }
+
+  /**
+   * m50848776-i14 marks the ring bond each reaction forms with a red bold bond, against black
+   * bonds. A bold bond is otherwise read as a wedge, which made the CH(Ar) centre of most products
+   * one enantiomer, depending on the direction the bond was drawn in. A bold bond coloured apart
+   * from its neighbours is a highlight and carries no stereo.
+   */
+  @Test
+  public void testHighlightedBoldBondIsNotAWedge() throws IOException {
+    List<BCXSubstance> substances = xtract("m50848776-i14.cdx");
+
+    Set<String> inchiKeys =
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    assertTrue(
+        inchiKeys.contains("YJMQFVNLHSNHTG-UHFFFAOYSA-N"),
+        "4-F, N-Ts product must have no defined centre: " + inchiKeys);
+    for (BCXSubstance substance : substances) {
+      assertFalse(substance.getSmiles().contains("@"), "defined centre: " + substance.getSmiles());
+    }
+  }
 }
