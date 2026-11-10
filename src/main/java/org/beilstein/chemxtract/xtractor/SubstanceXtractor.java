@@ -353,8 +353,10 @@ public class SubstanceXtractor {
     // A bracket whose repeat count the legend gives per entry ("26g: n = 2") is built once per
     // count, smallest first, each time with the bracketed atom repeated that often.
     RepeatUnit repeatUnit = markushHandler == null ? null : RepeatUnit.find(fragment, page);
-    List<String> counts =
-        repeatUnit == null ? List.of() : markushHandler.repeatCounts(fragment.getBounds());
+    if (repeatUnit == null) {
+      return buildSubstances(fragment, markushHandler, Map.of());
+    }
+    List<String> counts = markushHandler.repeatCounts(fragment.getBounds());
     if (counts.isEmpty()) {
       return buildSubstances(fragment, markushHandler, Map.of());
     }
