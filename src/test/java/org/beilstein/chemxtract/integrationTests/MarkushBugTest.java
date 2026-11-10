@@ -518,4 +518,22 @@ public class MarkushBugTest {
         inchiKeys.contains("AAWUKLHFPLSCEP-NTEUORMPSA-N"), // one 2-OMe, 4-triazolyl
         "the position variation is not enumerated beside the table");
   }
+
+  /**
+   * The mechanism of m50848776-i4 numbers its intermediates III, IV, V and VI with the structure
+   * tool: III also lies on the page as three bonded iodine atoms, IV and VI as nodes expanding to
+   * iodine and vanadium, and V as a vanadium atom. None of them is a compound.
+   */
+  @Test
+  public void testRomanNumeralsAreNoCompounds() throws IOException {
+    Set<String> smiles =
+        xtract("m50848776-i4.cdx").stream()
+            .map(BCXSubstance::getSmiles)
+            .collect(Collectors.toSet());
+
+    for (String numeral : List.of("III", "I[V]", "[V]")) {
+      assertFalse(smiles.contains(numeral), "a Roman numeral was extracted: " + numeral);
+    }
+    assertEquals(30, smiles.size(), "27 scope entries, 11, 11' and the HFIP drawing: " + smiles);
+  }
 }
