@@ -144,6 +144,13 @@ public class MarkushHandler {
   private static final Set<String> TERMINAL_PHENYL_SUBSTITUENTS = Set.of("F", "Cl", "Br", "I", "C");
 
   /**
+   * Legend values that spell an element symbol but name a group: {@code Ts} is tosyl, not
+   * tennessine. Such a value is never put on the scaffold as that element; it resolves through the
+   * abbreviation table or not at all.
+   */
+  private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS = Set.of("Ts");
+
+  /**
    * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
    * the hydrogen count is that of an alkyl group, 2n+1. Without the {@code n-} the formula does not
    * say which isomer is meant, so it is not read.
@@ -1830,6 +1837,7 @@ public class MarkushHandler {
     // A bare element symbol outside the SMILES organic subset (Se, Te, Si, ...) is not valid SMILES
     // on its own; wrap it in brackets so it parses as that atom.
     if (!ChemicalUtils.isValidSmiles(definition)
+        && !ABBREVIATIONS_NOT_ELEMENTS.contains(definition)
         && Elements.ofString(definition) != Elements.Unknown) {
       return "[" + definition + "]";
     }
