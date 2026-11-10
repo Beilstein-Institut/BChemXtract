@@ -353,11 +353,24 @@ public class MarkushHandler {
 
   /**
    * The scaffold a legend column sits under or over: the nearest one in vertical distance whose
-   * horizontal extent spans the column's middle and that carries one of its labels.
+   * horizontal extent spans the column's middle and that carries one of its labels. A legend is
+   * written under its structure, so a scaffold above the column wins over a nearer one below it,
+   * such as a mechanism drawing with the same label further down the page.
    */
   private static Scaffold scaffoldOver(RGroupDefinitionBlock block, List<Scaffold> scaffolds) {
+    Scaffold above = nearestScaffoldSpanning(block, scaffolds, true);
+    return above != null ? above : nearestScaffoldSpanning(block, scaffolds, false);
+  }
+
+  /**
+   * The nearest scaffold in vertical distance whose horizontal extent spans the column's middle and
+   * that carries one of its labels, among those above the column or those below it.
+   */
+  private static Scaffold nearestScaffoldSpanning(
+      RGroupDefinitionBlock block, List<Scaffold> scaffolds, boolean above) {
     CDRectangle bounds = block.bounds();
     double middle = (bounds.getLeft() + bounds.getRight()) / 2;
+    double centre = (bounds.getTop() + bounds.getBottom()) / 2;
     Set<String> labels = new HashSet<>(block.definitions().keySet());
     block.correlatedGroups().forEach(group -> labels.addAll(group.labels()));
     Scaffold best = null;
@@ -366,6 +379,7 @@ public class MarkushHandler {
       CDRectangle at = scaffold.bounds();
       if (middle < at.getLeft()
           || middle > at.getRight()
+          || ((at.getTop() + at.getBottom()) / 2 < centre) != above
           || scaffold.labels().stream().noneMatch(labels::contains)) {
         continue;
       }
