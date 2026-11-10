@@ -536,4 +536,22 @@ public class MarkushBugTest {
     }
     assertEquals(30, smiles.size(), "27 scope entries, 11, 11' and the HFIP drawing: " + smiles);
   }
+
+  /**
+   * Reagent 26 of m50848776-i9 is a benzene ring drawn with aromatic (order 1.5) bonds, which
+   * ChemDraw stores with no hydrogens on the ring carbons. Its SMILES was a hexaradical; the ring
+   * now gets its double bonds.
+   */
+  @Test
+  public void testAromaticBondsGetDoubleBonds() throws IOException {
+    Set<String> smiles =
+        xtract("m50848776-i9.cdx").stream()
+            .map(BCXSubstance::getSmiles)
+            .collect(Collectors.toSet());
+
+    assertTrue(smiles.contains("C1=CC(=C(C=C1)N)N"), "o-phenylenediamine: " + smiles);
+    assertFalse(
+        smiles.stream().anyMatch(smi -> smi.contains("[CH]")),
+        "a radical was extracted: " + smiles);
+  }
 }
