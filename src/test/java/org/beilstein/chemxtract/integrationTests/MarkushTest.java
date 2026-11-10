@@ -23,6 +23,7 @@ package org.beilstein.chemxtract.integrationTests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,6 +60,8 @@ public class MarkushTest {
     List<BCXSubstance> substances = xtractor.xtractUnique(document, info, true);
     for (BCXSubstance substance : substances) {
       IO.println("extracted: " + substance.getMolecularFormula());
+      // "R = Ar" names any aryl; it must not be put on the NHR scaffold as argon.
+      assertFalse(substance.getSmiles().contains("[Ar]"), "argon atom: " + substance.getSmiles());
     }
   }
 
