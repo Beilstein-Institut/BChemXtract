@@ -480,6 +480,15 @@ public class MarkushBugTest {
                 "XWEFUSDSVPPVHJ-UHFFFAOYSA-N", // 32a, n = 6
                 "KPZRTSZGLDBHRP-UHFFFAOYSA-N")), // 32b, n = 4
         "32a-b must be extracted: " + inchiKeys);
+    assertTrue(
+        inchiKeys.contains("WVYWMCQVKOVNDH-UHFFFAOYSA-N"), // 30f, R = 2-NO2, 4-Cl
+        "30f is one compound with both groups: " + inchiKeys);
+    for (String split :
+        List.of(
+            "BRZGLCWDCAMAOC-UHFFFAOYSA-N", // 2-NO2 alone
+            "NBLMEZPMDULSAW-UHFFFAOYSA-N")) { // 4-Cl alone
+      assertFalse(inchiKeys.contains(split), "30f was split into two compounds: " + split);
+    }
     assertFalse(
         inchiKeys.contains("RDJQXOXMVXYRMJ-UHFFFAOYSA-N"), "32 as drawn, with n = 1, is no entry");
   }
