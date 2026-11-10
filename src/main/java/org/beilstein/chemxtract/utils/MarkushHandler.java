@@ -325,16 +325,30 @@ public class MarkushHandler {
    * Whether two legend columns side by side each sit under a scaffold of their own: a different
    * registered scaffold carrying one of their labels spans the middle of each. Three schemes in a
    * row with a legend under each are three legends, not one legend set in columns. Columns whose
-   * lettering runs on are one legend whatever lies above them.
+   * lettering runs on are one legend whatever lies above them, unless their lines carry compound
+   * numbers and each sits right under its scaffold: {@code 49a-f | 49g-m} then names each compound
+   * once, one series split over two scaffolds.
    */
   private static boolean underDifferentScaffolds(
       RGroupDefinitionBlock a, RGroupDefinitionBlock b, List<Scaffold> scaffolds) {
-    if (continuousLettering(a, b)) {
-      return false;
-    }
     Scaffold above = scaffoldOver(a, scaffolds);
     Scaffold other = scaffoldOver(b, scaffolds);
-    return above != null && other != null && above != other;
+    if (above == null || other == null || above == other) {
+      return false;
+    }
+    if (!continuousLettering(a, b)) {
+      return true;
+    }
+    return !a.compoundNumbers().isEmpty()
+        && !b.compoundNumbers().isEmpty()
+        && rightUnder(a, above)
+        && rightUnder(b, other);
+  }
+
+  /** Whether the block starts within two of its lines below the scaffold. */
+  private static boolean rightUnder(RGroupDefinitionBlock block, Scaffold scaffold) {
+    double gap = block.bounds().getTop() - scaffold.bounds().getBottom();
+    return gap >= 0 && gap <= 2 * block.lineHeight();
   }
 
   /**
