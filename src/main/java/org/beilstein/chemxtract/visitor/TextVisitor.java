@@ -464,7 +464,8 @@ public class TextVisitor extends CDVisitor {
         assignments.forEach(
             assignment -> fixed.put(assignment.label(), assignment.values().get(0)));
       }
-      if (ENTRY_LETTER.matcher(row).find()) {
+      // A lettered line names one compound, with or without its number ("f:", "30f:").
+      if (ENTRY_LETTER.matcher(row).find() || NUMBERED_ENTRY_LETTER.matcher(row).find()) {
         assignments = assignments.stream().map(TextVisitor::oneCompound).toList();
       }
       if (assignments.isEmpty()) {

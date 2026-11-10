@@ -301,6 +301,10 @@ public class TextVisitorTest {
     Map<String, List<String>> r =
         new TextVisitor(pageWithTexts("o: R = 2,4,6-CH3\rp: R = 2-CH3, 5-NO2")).getRgroups();
     assertEquals(List.of("2,4,6-CH3", "2-CH3; 5-NO2"), r.get("R"));
+    assertEquals(
+        List.of("H", "2-NO2; 4-Cl"),
+        new TextVisitor(pageWithTexts("30a: R = H\r30f: R = 2-NO2, 4-Cl")).getRgroups().get("R"),
+        "a line numbered with its compound (30f, m50167957-8) names one compound too");
   }
 
   /** Without a letter, or when not every value names a ring position, a list stays a list. */
