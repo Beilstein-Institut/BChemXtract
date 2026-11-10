@@ -103,10 +103,11 @@ public class TextVisitor extends CDVisitor {
       Pattern.compile("(?:^|[\\s,;:(])n\\s*=\\s*(\\d{1,2})(?![\\d.,–-]*\\d)");
 
   /** One ring letter of a {@link RingTable} header: {@code A ring}, {@code B-ring}. */
-  private static final Pattern RING_LETTER = Pattern.compile("\\b([A-Z])\\s*-?\\s*ring\\b");
+  private static final Pattern RING_LETTER = Pattern.compile("\\b([A-Z])(?:\\s*-\\s*|\\s+)ring\\b");
 
   /** A {@link RingTable} header: ring letters and nothing else. */
-  private static final Pattern RING_HEADER = Pattern.compile("\\s*(?:[A-Z]\\s*-?\\s*ring\\s*)+");
+  private static final Pattern RING_HEADER =
+      Pattern.compile("\\s*[A-Z](?:\\s*-\\s*|\\s+)ring(?:\\s+[A-Z](?:\\s*-\\s*|\\s+)ring)*\\s*");
 
   /** A compound line of a {@link RingTable}: {@code 20a: 3-triazolyl 3,4-diOMe}. */
   private static final Pattern RING_ROW =

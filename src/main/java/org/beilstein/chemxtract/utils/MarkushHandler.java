@@ -316,8 +316,8 @@ public class MarkushHandler {
       compoundNumbers = new IdentityHashMap<>();
       Set<String> named = new HashSet<>();
       blocks.forEach(block -> named.addAll(block.compoundNumbers()));
-      List<TextVisitor.Caption> captions =
-          this.captions.stream()
+      List<TextVisitor.Caption> placed =
+          captions.stream()
               .filter(caption -> named.contains(caption.number()))
               .filter(
                   caption ->
@@ -325,17 +325,17 @@ public class MarkushHandler {
                           .allMatch(
                               structure -> rectangleDistance(structure, caption.bounds()) > 0))
               .toList();
-      if (!drawn.isEmpty() && !captions.isEmpty()) {
-        double[][] cost = new double[drawn.size()][captions.size()];
+      if (!drawn.isEmpty() && !placed.isEmpty()) {
+        double[][] cost = new double[drawn.size()][placed.size()];
         for (int i = 0; i < drawn.size(); i++) {
-          for (int j = 0; j < captions.size(); j++) {
-            cost[i][j] = rectangleDistance(drawn.get(i), captions.get(j).bounds());
+          for (int j = 0; j < placed.size(); j++) {
+            cost[i][j] = rectangleDistance(drawn.get(i), placed.get(j).bounds());
           }
         }
         int[] assigned = leastCostAssignment(cost);
         for (int i = 0; i < drawn.size(); i++) {
           if (assigned[i] >= 0) {
-            compoundNumbers.put(drawn.get(i), captions.get(assigned[i]).number());
+            compoundNumbers.put(drawn.get(i), placed.get(assigned[i]).number());
           }
         }
       }
