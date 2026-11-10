@@ -640,4 +640,30 @@ public class MarkushBugTest {
                 "JXVLWTFMOQJDNA")), // benzoxazolyl scaffold, SAr, Ar = 4-BrC6H4
         "aryl values must be grafted: " + skeletons);
   }
+
+  /**
+   * m50966958-i16 splits one series over two scaffolds: 49a-f under Ph-NH-C6H4-R and 49g-m under
+   * R-C6H4-NH-tolyl. The lettering runs on, but each line names its compound (49a, 49g), so each
+   * letter is one compound and the columns are two legends, not one set in columns.
+   */
+  @Test
+  public void testNumberedRunOnLegendsStayWithTheirScaffolds() throws IOException {
+    List<BCXSubstance> substances = xtract("m50966958-i16.cdx");
+    Set<String> inchiKeys =
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "CASDLXCHUTYPAO-UHFFFAOYSA-N", // 49e, Ph-NH-C6H4-2-Cl
+                "CUOBXBGOURGGON-UHFFFAOYSA-N")), // 49g, 2-Me-C6H4-NH-tolyl
+        "own values must be extracted: " + inchiKeys);
+    for (String borrowed :
+        List.of(
+            "JTMODJXOTWYBOZ-UHFFFAOYSA-N", // Ph-NH-C6H4-2-Me, 49g on the 49a-f scaffold
+            "YOBSWLIPRRHPJF-UHFFFAOYSA-N")) { // 2-Cl-C6H4-NH-tolyl, 49e on the 49g-m scaffold
+      assertFalse(inchiKeys.contains(borrowed), "the other column's value was taken: " + borrowed);
+    }
+    assertEquals(16, substances.size(), "6 + 7 legend products, 2 drawn amines, triflate");
+  }
 }
