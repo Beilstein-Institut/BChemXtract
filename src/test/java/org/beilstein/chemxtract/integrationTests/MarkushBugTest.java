@@ -581,4 +581,18 @@ public class MarkushBugTest {
       assertFalse(inchiKeys.contains(borrowed), "a neighbour's value was taken: " + borrowed);
     }
   }
+
+  /**
+   * "R = Ts" in m50848776-i14 means tosyl. Ts is also the symbol of tennessine, and a value the
+   * abbreviation table does not hold was put on the scaffold as that element.
+   */
+  @Test
+  public void testTosylValueIsNotTennessine() throws IOException {
+    List<BCXSubstance> substances = xtract("m50848776-i14.cdx");
+
+    for (BCXSubstance substance : substances) {
+      assertFalse(
+          substance.getSmiles().contains("[Ts]"), "tennessine atom: " + substance.getSmiles());
+    }
+  }
 }
