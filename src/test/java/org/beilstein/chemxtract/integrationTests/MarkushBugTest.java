@@ -723,4 +723,26 @@ public class MarkushBugTest {
                 "XCRKAXWZVHTFNF-UHFFFAOYSA-N")), // 63, R = Ph, starting material
         "every line of the legend must reach both scaffolds: " + inchiKeys);
   }
+
+  /**
+   * m30810289-i26 sets the legend of product 73 in four columns in a row under products 72 and 73.
+   * A mechanism drawing with the same R lies 1 pt nearer below one column than product 73 above it,
+   * which split the legend so that its last column (R = CF3, CN) reached no scaffold. A legend
+   * belongs to the structure above it.
+   */
+  @Test
+  public void testLegendColumnBelongsToTheScaffoldAboveIt() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m30810289-i26.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "QRNCQWPDWGHURQ-UHFFFAOYSA-N", // 73, R = CF3
+                "XJAINSGUJFLKAL-UHFFFAOYSA-N", // 73, R = CN
+                "CUINWIDXCKNPQP-UHFFFAOYSA-N")), // 73, R = NO2
+        "the last legend column must reach product 73: " + inchiKeys);
+  }
 }
