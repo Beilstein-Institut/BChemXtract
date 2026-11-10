@@ -49,6 +49,7 @@ import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
 import org.beilstein.chemxtract.utils.RepeatUnit;
+import org.beilstein.chemxtract.utils.RomanNumeralLabels;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
@@ -159,6 +160,8 @@ public class SubstanceXtractor {
       // variable-attachment expansion below sees them.
       List<CDFragment> fragments =
           AttachmentHandler.normalizeVariableAttachmentBonds(fragmentVisitor.getFragments());
+      // Roman numerals typed with the structure tool ("III", "IV") are labels, not compounds.
+      fragments = RomanNumeralLabels.without(fragments, page);
       MarkushHandler markushHandler = null;
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder, unrestrictedMarkush);
