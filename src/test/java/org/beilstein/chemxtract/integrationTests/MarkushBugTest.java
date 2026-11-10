@@ -28,7 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.beilstein.chemxtract.cdx.CDDocument;
@@ -665,5 +667,34 @@ public class MarkushBugTest {
       assertFalse(inchiKeys.contains(borrowed), "the other column's value was taken: " + borrowed);
     }
     assertEquals(16, substances.size(), "6 + 7 legend products, 2 drawn amines, triflate");
+  }
+
+  /**
+   * Legend values that resolve only through BChemLookup's abbreviations.smi, one per fixture. Each
+   * one left its structure with an unresolved R-group, so the structure was skipped. Skeletons
+   * (InChIKey first block) keep coordinate-dependent stereo out of the assertion.
+   */
+  @Test
+  public void testLegendValuesFromTheLookupTableResolve() throws IOException {
+    Map<String, String> expected = new LinkedHashMap<>();
+    expected.put("m50167957-8.cdx", "MBVRTBYGZBSHMP"); // CH2OAc
+    expected.put("m50167957-9.cdx", "RBUAIXDSNOWRNA"); // 4-H2NSO2C6H4
+    expected.put("m50167957-10.cdx", "KSKVFJZUPIPVLJ"); // COC6H5
+    expected.put("m50167957-12.cdx", "GSJMMRBZOXIRSE"); // thiophen-2-yl
+    expected.put("m50167957-14.cdx", "ZMEOULWJVHLOSW"); // 4-(diethylamino)phenyl
+    expected.put("m50848776-i10.cdx", "OMSNJSAFDZXWFM"); // R1 = OCF3
+    expected.put("m50848776-i14.cdx", "GPRNRFHXOGQXSD"); // R = Ts on the carbazole N
+    expected.put("m50848776-i18.cdx", "BEQXOEJOKGKNNW"); // 1-naph
+    expected.put("m50966958-i14.cdx", "KCUGABUAJCLBTM"); // 3-NH2C6H4
+
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      Set<String> skeletons =
+          xtract(entry.getKey()).stream()
+              .map(substance -> substance.getInchiKey().substring(0, 14))
+              .collect(Collectors.toSet());
+      assertTrue(
+          skeletons.contains(entry.getValue()),
+          entry.getKey() + " must yield " + entry.getValue() + ": " + skeletons);
+    }
   }
 }
