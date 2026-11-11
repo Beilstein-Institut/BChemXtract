@@ -2546,6 +2546,12 @@ public class MarkushHandler {
       return null;
     }
     IAtom anchor = bonds.next().getOther(residue);
+    if (RingSystemNumbering.locants(container, rings, anchor).isEmpty()) {
+      IAtomContainer ring = smallestRingContaining(rings, anchor);
+      if (ring != null && heteroatom(ring) != null) {
+        return heteroRingTargets(container, ring, residue, positions);
+      }
+    }
     if (positions.size() > 1) {
       List<IAtom> walked = singleRingTargets(container, rings, anchor, residue, positions);
       if (walked != null) {
@@ -2624,6 +2630,77 @@ public class MarkushHandler {
     for (int position : positions) {
       IAtom target = walk.get(position - 1);
       if (containsSame(targets, target)) {
+        return null;
+      }
+      targets.add(target);
+    }
+    return targets;
+  }
+
+  /** The ring's one atom that is not a carbon, the first found if there are several. */
+  private static IAtom heteroatom(IAtomContainer ring) {
+    for (IAtom atom : ring.atoms()) {
+      if (!"C".equals(atom.getSymbol())) {
+        return atom;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * The atoms positions name on a single ring with a heteroatom, numbered the way the ring is
+   * named: from the heteroatom, position 1, in the direction that gives the ring's attachment the
+   * lower locant. A pyridine drawn with the H that reacts at C2 has 3-F next to that carbon, and a
+   * pyridin-2-yl scaffold has 4-Me two bonds from its attachment, not three. Where both directions
+   * give the attachment the same locant, the side the residue is drawn on decides.
+   *
+   * @param container the structure the residue belongs to
+   * @param ring the residue's ring, not part of a fused system
+   * @param residue the drawn residue
+   * @param positions the 1-based ring positions the value names, in the order written
+   * @return one atom per position, or {@code null} if the ring has more than one heteroatom (its
+   *     numbering depends on which ranks first), a position is outside the ring or names the
+   *     attachment, or two positions land on the same atom
+   */
+  private static List<IAtom> heteroRingTargets(
+      IAtomContainer container, IAtomContainer ring, IAtom residue, List<Integer> positions) {
+    IAtom hetero = heteroatom(ring);
+    for (IAtom atom : ring.atoms()) {
+      if (atom != hetero && !"C".equals(atom.getSymbol())) {
+        return null;
+      }
+    }
+    List<IAtom> walk = ringWalk(ring, hetero);
+    if (walk == null) {
+      return null;
+    }
+    List<IAtom> reversed = new ArrayList<>(walk.subList(1, walk.size()));
+    Collections.reverse(reversed);
+    reversed.add(0, hetero);
+    IAtom ipso = soleAttachmentAtom(container, ring);
+    int forward = ipso == null ? 0 : walk.indexOf(ipso);
+    int backward = ipso == null ? 0 : reversed.indexOf(ipso);
+    List<IAtom> numbering = forward <= backward ? walk : reversed;
+    if (forward == backward) {
+      for (int position : positions) {
+        if (position >= 2 && position <= walk.size()) {
+          IAtom one = walk.get(position - 1);
+          IAtom other = reversed.get(position - 1);
+          if (one != other) {
+            numbering =
+                nearestTo(List.of(one, other), residue.getPoint2d()) == one ? walk : reversed;
+            break;
+          }
+        }
+      }
+    }
+    List<IAtom> targets = new ArrayList<>();
+    for (int position : positions) {
+      if (position < 2 || position > numbering.size()) {
+        return null;
+      }
+      IAtom target = numbering.get(position - 1);
+      if (target == ipso || containsSame(targets, target)) {
         return null;
       }
       targets.add(target);

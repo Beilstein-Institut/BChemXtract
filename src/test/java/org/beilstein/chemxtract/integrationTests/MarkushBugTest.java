@@ -774,4 +774,32 @@ public class MarkushBugTest {
                 "PSGUJSJDWDBPPG-UHFFFAOYSA-N")), // 63j, 2-NO2-4-F
         "63i and 63j must be extracted: " + inchiKeys);
   }
+
+  /**
+   * m26579870-i14 puts its R values on a pyridine drawn with the H that reacts at C2. A pyridine is
+   * numbered from its nitrogen, not from that drawn H: R = 3-F is 3-fluoropyridine, not
+   * 2-fluoropyridine. The keys are computed from hand-written SMILES.
+   */
+  @Test
+  public void testPyridinePositionsCountFromTheNitrogen() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m26579870-i14.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "CELKOWQJPVJKIL-UHFFFAOYSA-N", // R = 3-F, 3-fluoropyridine
+                "HWWYDZCSSYKIAD-UHFFFAOYSA-N", // R = 3,5-diMe, 3,5-lutidine
+                "WUPLOZFIOAEYMG-UHFFFAOYSA-N")), // 69d, R = 3-NO2-6-OMe
+        "pyridine positions must count from N: " + inchiKeys);
+    for (String wrong :
+        List.of(
+            "MTAODLNXWYIKSO-UHFFFAOYSA-N", // 2-fluoropyridine
+            "JYYNAJVZFGKDEQ-UHFFFAOYSA-N", // 2,4-lutidine
+            "MWQMHHLIYVQKNM-UHFFFAOYSA-N")) { // 5-methoxy-2-nitropyridine
+      assertFalse(inchiKeys.contains(wrong), "counted from the drawn H: " + wrong);
+    }
+  }
 }
