@@ -254,7 +254,9 @@
 				<version>3.11.0</version>
 				<configuration>
 					<java>
-						<googleJavaFormat/>
+						<googleJavaFormat>
+							<version>1.36.1</version>
+						</googleJavaFormat>
 						<licenseHeader>
 							<file>${project.basedir}/doc/license-header/License-header.txt</file>
 						</licenseHeader>
