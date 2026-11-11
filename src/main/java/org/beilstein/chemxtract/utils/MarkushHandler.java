@@ -128,12 +128,13 @@ public class MarkushHandler {
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
    * or {@code ortho}/{@code meta}/{@code para}, and the phenyl as {@code Ph} or {@code C6H4}
-   * ({@code 4-ClC6H4}). A benzyl written {@code Bn} or {@code CH2C6H4} ({@code 4-BrBn}) is the same
-   * group with a CH2 between ring and scaffold. It looks like positional notation but names no
+   * ({@code 4-ClC6H4}). A benzyl written {@code Bn} ({@code 4-BrBn}) is the same group with a CH2
+   * between ring and scaffold. {@code 4-BrCH2C6H4} is not a benzyl: it names a
+   * 4-(bromomethyl)phenyl, so it is not read here. It looks like positional notation but names no
    * position on the scaffold, so it is read before {@link #POSITIONAL_SUBSTITUENT} is tried.
    */
   private static final Pattern SUBSTITUTED_PHENYL =
-      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(Ph|C6H4|Bn|CH2C6H4)-?");
+      Pattern.compile("(ortho|meta|para|[omp2-4])-(.+?)-?(Ph|C6H4|Bn)-?");
 
   /**
    * The same group with the substituent written after the phenyl, e.g. {@code p-PhNO2}, {@code
@@ -1940,7 +1941,7 @@ public class MarkushHandler {
     if (matcher.matches()) {
       locant = matcher.group(1);
       named = matcher.group(2);
-      benzyl = matcher.group(3).equals("Bn") || matcher.group(3).equals("CH2C6H4");
+      benzyl = matcher.group(3).equals("Bn");
     } else if (trailing.matches()) {
       locant = trailing.group(1);
       named = trailing.group(2) != null ? trailing.group(2) : trailing.group(3);
