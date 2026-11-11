@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -60,12 +61,10 @@ final class RingLetterTable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RingLetterTable.class);
 
   /**
-   * A value of a ring column: positions, an optional multiplier, the group's name. A multiplier
-   * stands before a capital or a bracket ({@code diOMe}), so the {@code tri} of {@code triazolyl}
-   * is part of the name.
+   * A value of a ring column: positions, then the group with any multiplier ({@code 3-triazolyl},
+   * {@code 3,4-diOMe}, {@code 3,4-(OMe)2}); see {@link MarkushHandler#stripMultiplier}.
    */
-  private static final Pattern VALUE =
-      Pattern.compile("(\\d(?:,\\d)*)-(?:(di|tri)(?=[A-Z(]))?(.+)");
+  private static final Pattern VALUE = Pattern.compile("(\\d(?:,\\d)*)-(.+)");
 
   /**
    * A ring letter drawn inside a ring.
@@ -97,7 +96,7 @@ final class RingLetterTable {
     for (CDFragment fragment : fragments) {
       if (fragment.getAtoms().size() == 1) {
         CDAtom atom = fragment.getAtoms().get(0);
-        String label = label(atom);
+        String label = AttachmentHandler.label(atom);
         if (label.matches("[A-Z]") && atom.getPosition2D() != null) {
           letters.add(new Letter(label, atom.getPosition2D()));
         }
@@ -135,6 +134,13 @@ final class RingLetterTable {
     if (rings.size() != nodes.size()) {
       return null; // a variable group the table does not place
     }
+    for (int i = 0; i < table.rings().size(); i++) {
+      if (!namesOneGroup(
+          table.rows(), i, AttachmentHandler.label(rings.get(table.rings().get(i)).group()))) {
+        LOGGER.debug("Ring table column {} names more than the drawn group.", i);
+        return null;
+      }
+    }
     List<IAtomContainer> structures = new ArrayList<>();
     for (TextVisitor.RingRow row : table.rows()) {
       Map<CDAtom, CDAtom> targets = new IdentityHashMap<>();
@@ -154,7 +160,11 @@ final class RingLetterTable {
         for (Map.Entry<LetteredRing, List<CDAtom>> copy : copies.entrySet()) {
           for (CDAtom extra : copy.getValue()) {
             if (!copyGroup(
-                structure, copy.getKey().positions(), targets.get(copy.getKey().node()), extra)) {
+                converter,
+                structure,
+                copy.getKey().positions(),
+                targets.get(copy.getKey().node()),
+                extra)) {
               return null;
             }
           }
@@ -166,6 +176,33 @@ final class RingLetterTable {
       }
     }
     return structures;
+  }
+
+  /**
+   * Whether a column's values all name the one group drawn on its ring: each names the drawn
+   * group's label ({@code OMe} of {@code 3,4-diOMe}), or every value names the same group ({@code
+   * triazolyl} of {@code 3-triazolyl} and {@code 4-triazolyl}). A column that names two different
+   * groups ({@code 3-triazolyl}, {@code 3-imidazolyl}) says which group sits on the ring, which the
+   * drawing does not show.
+   *
+   * @param rows the table's compound lines
+   * @param column the column's index
+   * @param drawnLabel the label of the drawn group's atom bonded to the ring, empty if unlabelled
+   * @return whether the values name one group
+   */
+  static boolean namesOneGroup(List<TextVisitor.RingRow> rows, int column, String drawnLabel) {
+    Set<String> names = new HashSet<>();
+    for (TextVisitor.RingRow row : rows) {
+      Matcher matcher = VALUE.matcher(row.values().get(column).strip());
+      if (!matcher.matches()) {
+        return false;
+      }
+      String name = groupName(matcher).toLowerCase(Locale.ROOT);
+      if (!name.equals(drawnLabel.toLowerCase(Locale.ROOT))) {
+        names.add(name);
+      }
+    }
+    return names.size() <= 1;
   }
 
   /** The ring the letter is drawn in, if one of the variable groups attaches to it. */
@@ -182,7 +219,7 @@ final class RingLetterTable {
           if (found != null) {
             return null;
           }
-          List<CDBond> incident = incident(fragment, node);
+          List<CDBond> incident = AttachmentHandler.incidentBonds(fragment, node);
           if (incident.size() != 1) {
             return null;
           }
@@ -274,15 +311,11 @@ final class RingLetterTable {
       return null;
     }
     String[] locants = matcher.group(1).split(",");
-    int multiplier = matcher.group(2) == null ? 1 : matcher.group(2).equals("di") ? 2 : 3;
-    if (locants.length != multiplier) {
-      return null;
-    }
-    if (multiplier > 1
-        && !label(ring.group())
-            .toLowerCase(Locale.ROOT)
-            .equals(matcher.group(3).strip().toLowerCase(Locale.ROOT))) {
-      return null;
+    String name = groupName(matcher);
+    if (locants.length > 1
+        && (name.equals(matcher.group(2).strip())
+            || !AttachmentHandler.label(ring.group()).equalsIgnoreCase(name))) {
+      return null; // copies need a multiplier matching the positions, of the drawn group
     }
     List<CDAtom> atoms = new ArrayList<>();
     for (String locant : locants) {
@@ -293,6 +326,21 @@ final class RingLetterTable {
       atoms.add(ring.positions().get(position - 1));
     }
     return atoms;
+  }
+
+  /**
+   * The group a {@link #VALUE} names, without the multiplier its positions account for: {@code OMe}
+   * for {@code 3,4-diOMe} and {@code 3,4-(OMe)2}, {@code triazolyl} for {@code 3-triazolyl}.
+   */
+  static String groupName(Matcher value) {
+    return MarkushHandler.stripMultiplier(value.group(2).strip(), value.group(1).split(",").length)
+        .strip();
+  }
+
+  /** The matched {@link #VALUE}, or {@code null} if the text is not one. */
+  static Matcher value(String text) {
+    Matcher matcher = VALUE.matcher(text.strip());
+    return matcher.matches() ? matcher : null;
   }
 
   /** The fragment with each variable group bonded to its target, the nodes left out. */
@@ -329,12 +377,16 @@ final class RingLetterTable {
    * reached from the first ring atom's substituent without passing back through the ring.
    */
   private static boolean copyGroup(
-      IAtomContainer structure, List<CDAtom> ring, CDAtom from, CDAtom to) {
-    IAtom source = atomAt(structure, from);
-    IAtom target = atomAt(structure, to);
+      FragmentConverter converter,
+      IAtomContainer structure,
+      List<CDAtom> ring,
+      CDAtom from,
+      CDAtom to) {
+    IAtom source = converter.convertedAtom(structure, from);
+    IAtom target = converter.convertedAtom(structure, to);
     List<IAtom> ringAtoms = new ArrayList<>();
     for (CDAtom atom : ring) {
-      ringAtoms.add(atomAt(structure, atom));
+      ringAtoms.add(converter.convertedAtom(structure, atom));
     }
     if (source == null || target == null || ringAtoms.contains(null)) {
       return false;
@@ -395,19 +447,6 @@ final class RingLetterTable {
     return true;
   }
 
-  private static IAtom atomAt(IAtomContainer structure, CDAtom drawn) {
-    CDPoint2D at = drawn.getPosition2D();
-    for (IAtom atom : structure.atoms()) {
-      Point2d point = atom.getPoint2d();
-      if (point != null
-          && Math.abs(point.x - at.getX()) < 1e-3
-          && Math.abs(point.y + at.getY()) < 1e-3) {
-        return atom;
-      }
-    }
-    return null;
-  }
-
   private static List<CDAtom> neighbours(CDFragment fragment, CDAtom atom, Set<CDAtom> within) {
     List<CDAtom> neighbours = new ArrayList<>();
     for (CDBond bond : fragment.getBonds()) {
@@ -418,18 +457,5 @@ final class RingLetterTable {
       }
     }
     return neighbours;
-  }
-
-  private static List<CDBond> incident(CDFragment fragment, CDAtom atom) {
-    return fragment.getBonds().stream()
-        .filter(bond -> bond.getBegin() == atom || bond.getEnd() == atom)
-        .toList();
-  }
-
-  private static String label(CDAtom atom) {
-    if (atom == null || atom.getText() == null || atom.getText().getText() == null) {
-      return "";
-    }
-    return atom.getText().getText().getText().strip();
   }
 }

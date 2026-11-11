@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
+import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -434,6 +435,7 @@ public class SubstanceXtractor {
     boolean expandedRGroups = false;
     if (markushHandler != null
         && fragment.hasRGroup()
+        && !isLoneLabel(fragment)
         && !markushHandler.getResidueLabels().isEmpty()) {
       try {
         // Expansion counts as done only if it actually yielded a substance: an empty result, or
@@ -456,6 +458,21 @@ public class SubstanceXtractor {
       }
     }
     return variablePosition ? withoutDoubleBondStereoTwins(substances) : substances;
+  }
+
+  /**
+   * Whether the fragment is one atom labelled with nothing but an R-group label: a table heading
+   * {@code X} or a label written on its own. It names no structure, so a legend's {@code X = O}
+   * does not make it water.
+   */
+  private static boolean isLoneLabel(CDFragment fragment) {
+    if (fragment.getAtoms().size() != 1) {
+      return false;
+    }
+    CDAtom atom = fragment.getAtoms().get(0);
+    return atom.getText() != null
+        && atom.getText().getText() != null
+        && fragment.getRGroupLabels().contains(atom.getText().getText().getText().strip());
   }
 
   /**
