@@ -87,6 +87,10 @@ public class FragmentConverter {
   private final IChemObjectBuilder builder;
   private final IChemObjectReader.Mode mode;
   private final SmilesParser smilesParser;
+
+  /** The atoms of the fragment converted last, by the ChemDraw atom each was converted from. */
+  private Map<CDAtom, IAtom> atomMap = Map.of();
+
   private static final Logger LOGGER = LoggerFactory.getLogger(FragmentConverter.class);
 
   /** Matches an atom-numbering label such as {@code P1}, {@code C3} or {@code Fe2}. */
@@ -167,6 +171,7 @@ public class FragmentConverter {
     // Convert CDBonds to IBonds, holding coordination (haptic) bonds aside. They are added only
     // after hydrogen perception so that each ligand atom keeps the valence of the free ligand
     // (CDK's atom typing treats a metal sigma-bond inconsistently across ligand types).
+    atomMap = atomConverter.getAtomMap();
     BondConverter bondConverter = new BondConverter(builder, atomConverter.getAtomMap());
     List<IBond> structuralBonds = new ArrayList<>(cdBonds.size());
     List<IBond> coordinationBonds = new ArrayList<>();
@@ -205,6 +210,19 @@ public class FragmentConverter {
       LOGGER.warn("Abbreviation layout failed; keeping collapsed coordinates.", e);
     }
     return atomContainer;
+  }
+
+  /**
+   * The atom a ChemDraw atom of the fragment converted last became in the converted structure.
+   *
+   * @param structure the structure that conversion returned
+   * @param atom a ChemDraw atom of the converted fragment
+   * @return the converted atom, or {@code null} if the converter left the atom out of the structure
+   *     (an attachment point node, an expanded abbreviation)
+   */
+  public IAtom convertedAtom(IAtomContainer structure, CDAtom atom) {
+    IAtom converted = atomMap.get(atom);
+    return converted != null && structure.contains(converted) ? converted : null;
   }
 
   /**
