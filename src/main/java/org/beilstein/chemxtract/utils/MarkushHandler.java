@@ -118,6 +118,12 @@ public class MarkushHandler {
       Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|ortho|meta|para|[omp])-(.+)");
 
   /**
+   * The hyphen between two positional groups of one value, before the next group's locants: the
+   * second hyphen of {@code 2-NO2-5-F}.
+   */
+  private static final String HYPHEN_BEFORE_LOCANTS = "-(?=\\d{1,2}(?:,\\d{1,2})*-)";
+
+  /**
    * A substituted phenyl group named by its substituent's ring position, e.g. {@code o-Cl-Ph-},
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
@@ -145,10 +151,12 @@ public class MarkushHandler {
 
   /**
    * Legend values that spell an element symbol but name a group: {@code Ts} is tosyl, not
-   * tennessine, and {@code Ar} is any aryl, not argon. Such a value is never put on the scaffold as
-   * that element; it resolves through the abbreviation table or not at all.
+   * tennessine, {@code Ar} is any aryl, not argon, {@code Ac} is acetyl, {@code Pr} propyl and
+   * {@code Np} naphthyl or neopentyl. Such a value is never put on the scaffold as that element; it
+   * resolves through the abbreviation table or not at all.
    */
-  private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS = Set.of("Ts", "Ar");
+  private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS =
+      Set.of("Ts", "Ar", "Ac", "Pr", "Np");
 
   /**
    * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
@@ -353,11 +361,24 @@ public class MarkushHandler {
 
   /**
    * The scaffold a legend column sits under or over: the nearest one in vertical distance whose
-   * horizontal extent spans the column's middle and that carries one of its labels.
+   * horizontal extent spans the column's middle and that carries one of its labels. A legend is
+   * written under its structure, so a scaffold above the column wins over a nearer one below it,
+   * such as a mechanism drawing with the same label further down the page.
    */
   private static Scaffold scaffoldOver(RGroupDefinitionBlock block, List<Scaffold> scaffolds) {
+    Scaffold above = nearestScaffoldSpanning(block, scaffolds, true);
+    return above != null ? above : nearestScaffoldSpanning(block, scaffolds, false);
+  }
+
+  /**
+   * The nearest scaffold in vertical distance whose horizontal extent spans the column's middle and
+   * that carries one of its labels, among those above the column or those below it.
+   */
+  private static Scaffold nearestScaffoldSpanning(
+      RGroupDefinitionBlock block, List<Scaffold> scaffolds, boolean above) {
     CDRectangle bounds = block.bounds();
     double middle = (bounds.getLeft() + bounds.getRight()) / 2;
+    double centre = (bounds.getTop() + bounds.getBottom()) / 2;
     Set<String> labels = new HashSet<>(block.definitions().keySet());
     block.correlatedGroups().forEach(group -> labels.addAll(group.labels()));
     Scaffold best = null;
@@ -366,6 +387,7 @@ public class MarkushHandler {
       CDRectangle at = scaffold.bounds();
       if (middle < at.getLeft()
           || middle > at.getRight()
+          || ((at.getTop() + at.getBottom()) / 2 < centre) != above
           || scaffold.labels().stream().noneMatch(labels::contains)) {
         continue;
       }
@@ -522,12 +544,18 @@ public class MarkushHandler {
   }
 
   /**
-   * Whether the two blocks list different compounds: both number their lines, and by no number in
-   * common. Legends of {@code 36a}-{@code c} and {@code 37a}-{@code c} side by side are two
-   * schemes' legends, however close they sit.
+   * Whether the two blocks list different compounds: both number their lines, by no number in
+   * common, and either letter them as members of a series or give several labels a value. Legends
+   * of {@code 36a}-{@code c} and {@code 37a}-{@code c} side by side are two schemes' legends,
+   * however close they sit, and a line {@code 39 : Y = NTs; R1 = Ph; R2 = H} is one compound whose
+   * values do not combine with the next line's. Lines {@code 60 : R = CH3}, {@code 61 : R = H}
+   * giving one label each are the values of one legend, a different number on each.
    */
   private static boolean differentCompounds(RGroupDefinitionBlock a, RGroupDefinitionBlock b) {
-    return !a.compoundNumbers().isEmpty()
+    boolean series = !a.entryLetters().isEmpty() && !b.entryLetters().isEmpty();
+    boolean wholeCompounds = a.definitions().size() > 1 || b.definitions().size() > 1;
+    return (series || wholeCompounds)
+        && !a.compoundNumbers().isEmpty()
         && !b.compoundNumbers().isEmpty()
         && Collections.disjoint(a.compoundNumbers(), b.compoundNumbers());
   }
@@ -2335,6 +2363,37 @@ public class MarkushHandler {
     if (!matcher.matches() || phenylGroup(value) != null) {
       return null;
     }
+    PositionalValue single = parseSinglePositional(matcher);
+    if (single != null) {
+      return single;
+    }
+    // Several groups joined by a hyphen before the next locants, 2-NO2-5-F, as the comma joins
+    // them in 2-NO2, 4-Cl.
+    String[] parts = value.split(HYPHEN_BEFORE_LOCANTS);
+    if (parts.length < 2) {
+      return null;
+    }
+    List<Integer> positions = new ArrayList<>();
+    List<String> smiles = new ArrayList<>();
+    for (String part : parts) {
+      PositionalValue positional = parsePositional(part);
+      if (positional == null) {
+        return null;
+      }
+      positions.addAll(positional.positions());
+      smiles.addAll(positional.smiles());
+    }
+    return new PositionalValue(positions, smiles);
+  }
+
+  /**
+   * One group at one or more positions, {@code 2-NO2} or {@code 3,4-OMe}.
+   *
+   * @param matcher a {@link #POSITIONAL_SUBSTITUENT} match of the whole value
+   * @return the positions and their group, or {@code null} if the group does not resolve
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private PositionalValue parseSinglePositional(Matcher matcher) throws IOException {
     List<Integer> positions = new ArrayList<>();
     for (String token : matcher.group(1).split(",")) {
       positions.add(ringPosition(token));

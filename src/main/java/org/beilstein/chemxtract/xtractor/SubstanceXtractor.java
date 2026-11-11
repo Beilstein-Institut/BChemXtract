@@ -443,8 +443,10 @@ public class SubstanceXtractor {
       }
     }
     if (!expandedRGroups) {
+      // A structure built with a value the legend gives, such as a repeat count, is a Markush
+      // entry even without R-groups to replace.
       for (IAtomContainer container : candidates) {
-        addIfBuilt(substances, container, fragment, false);
+        addIfBuilt(substances, container, fragment, !fixed.isEmpty());
       }
     }
     return substances;
@@ -456,7 +458,8 @@ public class SubstanceXtractor {
    *
    * @param atomContainer the CDK atom container for the substance
    * @param fragment the source fragment providing occurrence bounds and abbreviations
-   * @param isMarkush when {@code true}, the substance results from Markush R-group replacement
+   * @param isMarkush when {@code true}, the substance results from Markush R-group replacement or
+   *     was built with a value the legend gives, such as a repeat count
    * @return {@code true} if a substance was built and added, {@code false} if it was skipped
    * @throws IOException if abbreviation resolution fails
    * @throws CDKException if InChI generation or nested fragment conversion fails

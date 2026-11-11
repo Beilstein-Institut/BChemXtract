@@ -76,7 +76,10 @@ public class BCXSubstance implements Serializable {
    */
   private Map<String, String> abbreviations = new HashMap<String, String>();
 
-  /** True if this substance was enumerated from a Markush structure by R-group replacement. */
+  /**
+   * True if this substance was enumerated from a Markush structure: by R-group replacement, or
+   * built with a repeat count its legend gives.
+   */
   private boolean isMarkush = false;
 
   public BCXSubstance() {

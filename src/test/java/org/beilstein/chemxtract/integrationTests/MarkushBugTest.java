@@ -471,10 +471,19 @@ public class MarkushBugTest {
    */
   @Test
   public void testRepeatCountWithoutRGroups() throws IOException {
+    List<BCXSubstance> substances = xtract("m50167957-8.cdx");
     Set<String> inchiKeys =
-        xtract("m50167957-8.cdx").stream()
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    Set<String> markushKeys =
+        substances.stream()
+            .filter(BCXSubstance::isMarkush)
             .map(BCXSubstance::getInchiKey)
             .collect(Collectors.toSet());
+    assertTrue(
+        markushKeys.containsAll(
+            Set.of("XWEFUSDSVPPVHJ-UHFFFAOYSA-N", "KPZRTSZGLDBHRP-UHFFFAOYSA-N")),
+        "32a-b are built from the legend's repeat counts and must count as Markush: "
+            + markushKeys);
 
     assertTrue(
         inchiKeys.containsAll(
@@ -696,5 +705,73 @@ public class MarkushBugTest {
           skeletons.contains(entry.getValue()),
           entry.getKey() + " must yield " + entry.getValue() + ": " + skeletons);
     }
+  }
+
+  /**
+   * m19546377-i17 lists one compound per line, each with its own number ("60 : R = CH3", "61 : R =
+   * H", ...), under a scheme whose two scaffolds carry no number. Lines numbered with different
+   * compounds are one legend here, not the legends of different schemes, and both scaffolds take
+   * all its values.
+   */
+  @Test
+  public void testLegendOfSingleNumberedCompoundsStaysOneLegend() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m19546377-i17.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "GNOBSDSRABCCJJ-UHFFFAOYSA-N", // 60, R = CH3, product
+                "MHPLKEREIIYDRC-UHFFFAOYSA-N", // 61, R = H, product
+                "UUAOOWVRBQEFDF-UHFFFAOYSA-N", // 62, R = i-Pr, product
+                "BJLBKTKCAVWISZ-UHFFFAOYSA-N", // 63, R = Ph, product
+                "TZLPCFCHSCFMPF-UHFFFAOYSA-N", // 65, R = p-CNC6H4, product
+                "UOEIZWUERCGHMI-UHFFFAOYSA-N", // 67, R = p-CF3C6H4, product
+                "XCRKAXWZVHTFNF-UHFFFAOYSA-N")), // 63, R = Ph, starting material
+        "every line of the legend must reach both scaffolds: " + inchiKeys);
+  }
+
+  /**
+   * m30810289-i26 sets the legend of product 73 in four columns in a row under products 72 and 73.
+   * A mechanism drawing with the same R lies 1 pt nearer below one column than product 73 above it,
+   * which split the legend so that its last column (R = CF3, CN) reached no scaffold. A legend
+   * belongs to the structure above it.
+   */
+  @Test
+  public void testLegendColumnBelongsToTheScaffoldAboveIt() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m30810289-i26.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "QRNCQWPDWGHURQ-UHFFFAOYSA-N", // 73, R = CF3
+                "XJAINSGUJFLKAL-UHFFFAOYSA-N", // 73, R = CN
+                "CUINWIDXCKNPQP-UHFFFAOYSA-N")), // 73, R = NO2
+        "the last legend column must reach product 73: " + inchiKeys);
+  }
+
+  /**
+   * 63i and 63j of m50167957-12 write two ring substituents in one value joined by a hyphen, "R =
+   * 2-NO2-5-F", where other legends use a comma ("2-NO2, 4-Cl"). Both groups go on the ring at
+   * their own positions. The keys are computed from hand-written SMILES.
+   */
+  @Test
+  public void testTwoSubstituentsJoinedByAHyphen() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-12.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "MBROATSVDAZAKS-UHFFFAOYSA-N", // 63i, 2-NO2-5-F
+                "PSGUJSJDWDBPPG-UHFFFAOYSA-N")), // 63j, 2-NO2-4-F
+        "63i and 63j must be extracted: " + inchiKeys);
   }
 }
