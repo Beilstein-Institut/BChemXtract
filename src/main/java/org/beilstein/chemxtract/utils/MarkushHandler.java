@@ -2461,14 +2461,14 @@ public class MarkushHandler {
    * @param locants how many positions the value names
    * @return the group without its multiplier
    */
-  private static String stripMultiplier(String group, int locants) {
+  static String stripMultiplier(String group, int locants) {
     if (locants < 2) {
       return group;
     }
     // Checked first: the trailing digit of diNO2 belongs to NO2.
     Matcher leading = LEADING_MULTIPLIER.matcher(group);
     if (leading.matches()) {
-      return (leading.group(1).equals("di") ? 2 : 3) == locants ? leading.group(2) : group;
+      return SubstituentNames.multiplier(leading.group(1)) == locants ? leading.group(2) : group;
     }
     Matcher matcher = GROUP_MULTIPLIER.matcher(group);
     if (matcher.matches()) {
