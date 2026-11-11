@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -135,6 +136,12 @@ final class RingLetterTable {
     if (rings.size() != nodes.size()) {
       return null; // a variable group the table does not place
     }
+    for (int i = 0; i < table.rings().size(); i++) {
+      if (!namesOneGroup(table.rows(), i, label(rings.get(table.rings().get(i)).group()))) {
+        LOGGER.debug("Ring table column {} names more than the drawn group.", i);
+        return null;
+      }
+    }
     List<IAtomContainer> structures = new ArrayList<>();
     for (TextVisitor.RingRow row : table.rows()) {
       Map<CDAtom, CDAtom> targets = new IdentityHashMap<>();
@@ -166,6 +173,33 @@ final class RingLetterTable {
       }
     }
     return structures;
+  }
+
+  /**
+   * Whether a column's values all name the one group drawn on its ring: each names the drawn
+   * group's label ({@code OMe} of {@code 3,4-diOMe}), or every value names the same group ({@code
+   * triazolyl} of {@code 3-triazolyl} and {@code 4-triazolyl}). A column that names two different
+   * groups ({@code 3-triazolyl}, {@code 3-imidazolyl}) says which group sits on the ring, which the
+   * drawing does not show.
+   *
+   * @param rows the table's compound lines
+   * @param column the column's index
+   * @param drawnLabel the label of the drawn group's atom bonded to the ring, empty if unlabelled
+   * @return whether the values name one group
+   */
+  static boolean namesOneGroup(List<TextVisitor.RingRow> rows, int column, String drawnLabel) {
+    Set<String> names = new HashSet<>();
+    for (TextVisitor.RingRow row : rows) {
+      Matcher matcher = VALUE.matcher(row.values().get(column).strip());
+      if (!matcher.matches()) {
+        return false;
+      }
+      String name = matcher.group(3).strip().toLowerCase(Locale.ROOT);
+      if (!name.equals(drawnLabel.toLowerCase(Locale.ROOT))) {
+        names.add(name);
+      }
+    }
+    return names.size() <= 1;
   }
 
   /** The ring the letter is drawn in, if one of the variable groups attaches to it. */
