@@ -287,7 +287,8 @@ public class MarkushHandlerTest {
             "Pr, Np or Ac read as an element: " + atom.getSymbol());
       }
     }
-    assertEquals(2, results.size(), "Me and Ac (acetyl) resolve; Pr and Np are not in the table");
+    // Pr and Np resolve only once the abbreviation table, fetched from BChemLookup, lists them.
+    assertTrue(results.size() >= 2, "Me and Ac (acetyl) must resolve: " + results.size());
   }
 
   /**
