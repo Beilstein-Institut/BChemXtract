@@ -152,12 +152,14 @@ public class MarkushHandler {
 
   /**
    * Legend values that spell an element symbol but name a group: {@code Ts} is tosyl, not
-   * tennessine, {@code Ar} is any aryl, not argon, {@code Ac} is acetyl, {@code Pr} propyl and
-   * {@code Np} naphthyl or neopentyl. Such a value is never put on the scaffold as that element; it
-   * resolves through the abbreviation table or not at all.
+   * tennessine, {@code Ar} is any aryl, not argon, {@code Ac} is acetyl, {@code Pr} propyl, {@code
+   * Np} naphthyl or neopentyl, {@code Th} thienyl, {@code Am} amyl and {@code Fl} fluorenyl. {@code
+   * Ra}, {@code Rb}, {@code Rf} and {@code Rg} are R-group names (another group of the legend, a
+   * perfluoroalkyl), not radium, rubidium, rutherfordium or roentgenium. Such a value is never put
+   * on the scaffold as that element; it resolves through the abbreviation table or not at all.
    */
   private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS =
-      Set.of("Ts", "Ar", "Ac", "Pr", "Np");
+      Set.of("Ts", "Ar", "Ac", "Pr", "Np", "Th", "Am", "Fl", "Ra", "Rb", "Rf", "Rg");
 
   /**
    * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
@@ -1881,7 +1883,7 @@ public class MarkushHandler {
     // on its own; wrap it in brackets so it parses as that atom.
     if (!ChemicalUtils.isValidSmiles(definition)
         && !ABBREVIATIONS_NOT_ELEMENTS.contains(definition)
-        && Elements.ofString(definition) != Elements.Unknown) {
+        && Elements.ofString(definition).symbol().equals(definition)) {
       return "[" + definition + "]";
     }
     if (!ChemicalUtils.isValidSmiles(definition)) {
