@@ -292,6 +292,30 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Th (thienyl), Am (amyl), Fl (fluorenyl) and the R-group names Ra, Rb, Rf and Rg spell element
+   * symbols, and AR spells argon in the wrong case. None of them is put on the scaffold as an
+   * element, alone or inside a positional value such as {@code 5-Me-2-Th}.
+   */
+  @Test
+  public void groupNamesSpellingElementsAreNotElements() throws Exception {
+    Set<Integer> traps = Set.of(90, 95, 114, 88, 37, 104, 111, 18);
+    List<String> values =
+        List.of("Th", "Am", "Fl", "Ra", "Rb", "Rf", "Rg", "AR", "5-Me-2-Th", "Me");
+    List<IAtomContainer> results =
+        handlerWith(Map.of("R", values))
+            .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+    for (IAtomContainer product : results) {
+      for (IAtom atom : product.atoms()) {
+        assertFalse(
+            atom.getAtomicNumber() != null && traps.contains(atom.getAtomicNumber()),
+            "group name read as an element: " + atom.getSymbol());
+      }
+    }
+    assertFalse(results.isEmpty(), "Me must still resolve");
+  }
+
+  /**
    * A substrate-scope legend split into two adjacent columns is one list for the scaffold. Geometry
    * mirrors {@code volumeTest/markush/mantis11158/20-14-i2}: two blocks spanning the same rows, a
    * gutter narrow relative to the columns, 6 + 5 values.
