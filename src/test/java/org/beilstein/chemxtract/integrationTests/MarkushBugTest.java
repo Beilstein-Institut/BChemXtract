@@ -715,44 +715,79 @@ public class MarkushBugTest {
    */
   @Test
   public void testLegendOfSingleNumberedCompoundsStaysOneLegend() throws IOException {
-    Set<String> inchiKeys =
-        xtract("m19546377-i17.cdx").stream()
-            .map(BCXSubstance::getInchiKey)
-            .collect(Collectors.toSet());
-
-    assertTrue(
-        inchiKeys.containsAll(
-            Set.of(
-                "GNOBSDSRABCCJJ-UHFFFAOYSA-N", // 60, R = CH3, product
-                "MHPLKEREIIYDRC-UHFFFAOYSA-N", // 61, R = H, product
-                "UUAOOWVRBQEFDF-UHFFFAOYSA-N", // 62, R = i-Pr, product
-                "BJLBKTKCAVWISZ-UHFFFAOYSA-N", // 63, R = Ph, product
-                "TZLPCFCHSCFMPF-UHFFFAOYSA-N", // 65, R = p-CNC6H4, product
-                "UOEIZWUERCGHMI-UHFFFAOYSA-N", // 67, R = p-CF3C6H4, product
-                "XCRKAXWZVHTFNF-UHFFFAOYSA-N")), // 63, R = Ph, starting material
-        "every line of the legend must reach both scaffolds: " + inchiKeys);
+    assertEquals(
+        Set.of(
+            "QUHOIGLGSORZDD-UHFFFAOYSA-N", // 60, R = CH3, starting material
+            "DVAOKAXLOOTUEB-UHFFFAOYSA-N", // 61, R = H
+            "WUODYPVVGQSEFW-UHFFFAOYSA-N", // 62, R = i-Pr
+            "XCRKAXWZVHTFNF-UHFFFAOYSA-N", // 63, R = Ph
+            "VMOJVZHPPAADFO-UHFFFAOYSA-N", // 64, R = p-CH3OC6H4
+            "BICHKGYNVODKKT-UHFFFAOYSA-N", // 65, R = p-CNC6H4
+            "WYPHMBCYXSXAQY-UHFFFAOYSA-N", // 67, R = p-CF3C6H4
+            "GNOBSDSRABCCJJ-UHFFFAOYSA-N", // 60, R = CH3, product
+            "MHPLKEREIIYDRC-UHFFFAOYSA-N", // 61, R = H
+            "UUAOOWVRBQEFDF-UHFFFAOYSA-N", // 62, R = i-Pr
+            "BJLBKTKCAVWISZ-UHFFFAOYSA-N", // 63, R = Ph
+            "CGSKCMAFFTZTFE-UHFFFAOYSA-N", // 64, R = p-CH3OC6H4
+            "TZLPCFCHSCFMPF-UHFFFAOYSA-N", // 65, R = p-CNC6H4
+            "UOEIZWUERCGHMI-UHFFFAOYSA-N"), // 67, R = p-CF3C6H4
+        markushKeys("m19546377-i17.cdx"),
+        "every line of the legend must reach both scaffolds, and nothing else");
   }
 
   /**
    * m30810289-i26 sets the legend of product 73 in four columns in a row under products 72 and 73.
    * A mechanism drawing with the same R lies 1 pt nearer below one column than product 73 above it,
    * which split the legend so that its last column (R = CF3, CN) reached no scaffold. A legend
-   * belongs to the structure above it.
+   * belongs to the structure above it. The mechanism drawings below the legend use R for the whole
+   * N-aryl group and take none of its values.
    */
   @Test
   public void testLegendColumnBelongsToTheScaffoldAboveIt() throws IOException {
-    Set<String> inchiKeys =
-        xtract("m30810289-i26.cdx").stream()
-            .map(BCXSubstance::getInchiKey)
-            .collect(Collectors.toSet());
+    assertEquals(
+        Set.of(
+            "ONQBUHWENXKHHP-UHFFFAOYSA-N", // 72, R = H
+            "NCGNJJRGLWENIQ-UHFFFAOYSA-N", // 72, R = Br
+            "OTWGSFCKTHTQIP-UHFFFAOYSA-N", // 72, R = SF5
+            "AUINWHFNCUUISO-UHFFFAOYSA-N", // 72, R = NO2
+            "GNVXOIRECQQWBJ-UHFFFAOYSA-N", // 72, R = OMe
+            "XDGKEQYJMZFKAZ-UHFFFAOYSA-N", // 72, R = Me
+            "ZLHKWIRYBGFXCN-UHFFFAOYSA-N", // 72, R = CF3
+            "ULJBGEGYQGIJMJ-UHFFFAOYSA-N", // 72, R = CN
+            "GIYSQRQZNXRMEJ-UHFFFAOYSA-N", // 73, R = H
+            "JVOXSSDBKAAMDI-UHFFFAOYSA-N", // 73, R = Br
+            "JIXDOEYXALVJJB-UHFFFAOYSA-N", // 73, R = SF5
+            "CUINWIDXCKNPQP-UHFFFAOYSA-N", // 73, R = NO2
+            "UNFQNAZJMCNXNI-UHFFFAOYSA-N", // 73, R = OMe
+            "ZJLUZNPKQDILOV-UHFFFAOYSA-N", // 73, R = Me
+            "QRNCQWPDWGHURQ-UHFFFAOYSA-N", // 73, R = CF3
+            "XJAINSGUJFLKAL-UHFFFAOYSA-N"), // 73, R = CN
+        markushKeys("m30810289-i26.cdx"),
+        "the legend must reach products 72 and 73 and no mechanism drawing");
+  }
 
-    assertTrue(
-        inchiKeys.containsAll(
-            Set.of(
-                "QRNCQWPDWGHURQ-UHFFFAOYSA-N", // 73, R = CF3
-                "XJAINSGUJFLKAL-UHFFFAOYSA-N", // 73, R = CN
-                "CUINWIDXCKNPQP-UHFFFAOYSA-N")), // 73, R = NO2
-        "the last legend column must reach product 73: " + inchiKeys);
+  /**
+   * m27252839-i71 numbers three catalyst lines 1 to 3 ("1. [(IPr)CuCl] R = 2,6-iPr2C6H3"). They are
+   * one legend for the NHC drawn beside them. Product 187 carries its own caption and an R of its
+   * own, and takes none of the catalysts' values.
+   */
+  @Test
+  public void testCaptionedProductDoesNotTakeAnotherCompoundsLegend() throws IOException {
+    assertEquals(
+        Set.of(
+            "NJLYZISHBSABMZ-UHFFFAOYSA-N", // 1, IPr
+            "RSTLYZXJMXWXEI-UHFFFAOYSA-N", // 2, IMes
+            "HHSNIRLXHJNXAK-UHFFFAOYSA-N"), // 3, IiPr
+        markushKeys("m27252839-i71.cdx"),
+        "only the NHC takes the catalyst legend");
+  }
+
+  /** The InChIKeys of the structures a file's legends build. */
+  private Set<String> markushKeys(String fileName) throws IOException {
+    return xtract(fileName).stream()
+        .filter(BCXSubstance::isMarkush)
+        .map(BCXSubstance::getInchiKey)
+        .collect(Collectors.toSet());
   }
 
   /**

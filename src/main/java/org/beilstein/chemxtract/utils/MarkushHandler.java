@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.vecmath.Point2d;
@@ -241,6 +242,9 @@ public class MarkushHandler {
    */
   private Map<CDRectangle, String> compoundNumbers;
 
+  /** The caption number of each drawn structure that has a caption; see {@link #captionNumber}. */
+  private Map<CDRectangle, String> captionNumbers;
+
   /**
    * The cost of pairing a scaffold with a block numbered for other compounds in {@link #owners}:
    * more than any distance on a page, so the pairing is made only when nothing else is left, and
@@ -317,6 +321,7 @@ public class MarkushHandler {
     }
     drawn.add(bounds);
     compoundNumbers = null;
+    captionNumbers = null;
     if (!labels.isEmpty()) {
       scaffolds.add(new Scaffold(bounds, Set.copyOf(labels)));
       remerge();
@@ -416,40 +421,63 @@ public class MarkushHandler {
    */
   private String compoundNumber(CDRectangle bounds) {
     if (compoundNumbers == null) {
-      compoundNumbers = new IdentityHashMap<>();
       Set<String> named = new HashSet<>();
       blocks.forEach(block -> named.addAll(block.compoundNumbers()));
-      List<TextVisitor.Caption> placed =
-          captions.stream()
-              .filter(caption -> named.contains(caption.number()))
-              .filter(
-                  caption ->
-                      drawn.stream()
-                          .allMatch(
-                              structure -> rectangleDistance(structure, caption.bounds()) > 0))
-              .toList();
-      if (!drawn.isEmpty() && !placed.isEmpty()) {
-        double[][] cost = new double[drawn.size()][placed.size()];
-        for (int i = 0; i < drawn.size(); i++) {
-          for (int j = 0; j < placed.size(); j++) {
-            cost[i][j] = rectangleDistance(drawn.get(i), placed.get(j).bounds());
-          }
-        }
-        int[] assigned = leastCostAssignment(cost);
-        for (int i = 0; i < drawn.size(); i++) {
-          if (assigned[i] >= 0) {
-            compoundNumbers.put(drawn.get(i), placed.get(assigned[i]).number());
-          }
-        }
-      }
+      compoundNumbers = pairCaptions(caption -> named.contains(caption.number()));
     }
     return compoundNumbers.get(bounds);
   }
 
   /**
+   * The caption number of a drawn structure, whether or not a legend names it; see {@link
+   * #compoundNumber}.
+   */
+  private String captionNumber(CDRectangle bounds) {
+    if (captionNumbers == null) {
+      captionNumbers = pairCaptions(caption -> true);
+    }
+    return captionNumbers.get(bounds);
+  }
+
+  /**
+   * Pairs the captions that pass the filter with the drawn structures, one caption per structure,
+   * so that the paired distances add up to the least. A caption within a structure's bounds is left
+   * out.
+   */
+  private Map<CDRectangle, String> pairCaptions(Predicate<TextVisitor.Caption> filter) {
+    Map<CDRectangle, String> numbers = new IdentityHashMap<>();
+    List<TextVisitor.Caption> placed =
+        captions.stream()
+            .filter(filter)
+            .filter(
+                caption ->
+                    drawn.stream()
+                        .allMatch(structure -> rectangleDistance(structure, caption.bounds()) > 0))
+            .toList();
+    if (!drawn.isEmpty() && !placed.isEmpty()) {
+      double[][] cost = new double[drawn.size()][placed.size()];
+      for (int i = 0; i < drawn.size(); i++) {
+        for (int j = 0; j < placed.size(); j++) {
+          cost[i][j] = rectangleDistance(drawn.get(i), placed.get(j).bounds());
+        }
+      }
+      int[] assigned = leastCostAssignment(cost);
+      for (int i = 0; i < drawn.size(); i++) {
+        if (assigned[i] >= 0) {
+          numbers.put(drawn.get(i), placed.get(assigned[i]).number());
+        }
+      }
+    }
+    return numbers;
+  }
+
+  /**
    * Whether a block may define labels for a structure: unless both carry compound numbers and the
    * block's lines do not name the structure's. A legend whose lines read {@code 42a: R = ...} is
-   * not the legend of the structure captioned {@code 43}, however near it is.
+   * not the legend of the structure captioned {@code 43}, however near it is. A structure whose
+   * caption no legend names takes a numbered legend only when that legend numbers a structure drawn
+   * on the page: starting material 35 shares the legend of its products 36a–h, but product 187 does
+   * not take catalyst lines numbered 1 to 3 that no drawing carries.
    *
    * @param bounds bounding box of the structure
    * @param block the definition block
@@ -460,7 +488,12 @@ public class MarkushHandler {
       return true;
     }
     String number = compoundNumber(bounds);
-    return number == null || block.compoundNumbers().contains(number);
+    if (number != null) {
+      return block.compoundNumbers().contains(number);
+    }
+    return captionNumber(bounds) == null
+        || captions.stream()
+            .anyMatch(caption -> block.compoundNumbers().contains(caption.number()));
   }
 
   /**
@@ -1061,9 +1094,10 @@ public class MarkushHandler {
       return List.of();
     }
     if (choices.isEmpty()) {
-      if (present.stream().anyMatch(label -> nearestBlockDefining(label, scaffoldBounds) != null)) {
+      if (present.stream().anyMatch(this::placedBlockDefines)) {
         // The nearest legend names the label but gives its value as a drawing ("a: R =" beside a
-        // structure), which the text cannot supply. Another legend's values would be wrong here.
+        // structure), which the text cannot supply, or every legend naming it was written for
+        // other structures. Another legend's values would be wrong here.
         return List.of();
       }
       // No legend defines any of this scaffold's labels; defer to the page-wide union.
@@ -3398,11 +3432,21 @@ public class MarkushHandler {
     for (Map.Entry<String, List<String>> entry : residueLabels.entrySet()) {
       String label = entry.getKey();
       RGroupDefinitionBlock nearest = nearestBlockDefining(label, scaffoldBounds);
+      if (nearest == null && placedBlockDefines(label)) {
+        // Every legend defining the label was written for other structures.
+        continue;
+      }
       List<String> values = nearest != null ? nearest.definitions().get(label) : entry.getValue();
       scoped.put(label, new ArrayList<>(values));
     }
     structuralDefinitions.forEach((label, values) -> scoped.put(label, new ArrayList<>(values)));
     return scoped;
+  }
+
+  /** Whether a legend with a position on the page defines the label. */
+  private boolean placedBlockDefines(String label) {
+    return blocks.stream()
+        .anyMatch(block -> block.bounds() != null && block.definitions().containsKey(label));
   }
 
   /**
@@ -3422,7 +3466,8 @@ public class MarkushHandler {
       if (block.bounds() == null
           || !block.definitions().containsKey(label)
           || !numberedFor(scaffoldBounds, block)
-          || belongsToAnother(scaffoldBounds, block, List.of(label))) {
+          || belongsToAnother(scaffoldBounds, block, List.of(label))
+          || writtenForRowAbove(scaffoldBounds, block, label)) {
         continue;
       }
       if (best == null || isNearer(scaffoldBounds, block, best)) {
@@ -3449,6 +3494,25 @@ public class MarkushHandler {
     return blockOwner != null
         && blockOwner.bounds() != scaffoldBounds
         && owner.values().stream().anyMatch(scaffold -> scaffold.bounds() == scaffoldBounds);
+  }
+
+  /**
+   * Whether the block sits right under the scaffold it was drawn for and this scaffold lies below
+   * the block. A legend written under a row of structures is that row's; a structure further down,
+   * such as a mechanism drawn with the same label for another group, does not take it.
+   *
+   * @param scaffoldBounds bounding box of this scaffold
+   * @param block the definition block
+   * @param label the label the block would define for this scaffold
+   * @return {@code true} if the block belongs to the row above this scaffold
+   */
+  private boolean writtenForRowAbove(
+      CDRectangle scaffoldBounds, RGroupDefinitionBlock block, String label) {
+    Scaffold owner = owners(List.of(label)).get(block);
+    return owner != null
+        && owner.bounds() != scaffoldBounds
+        && rightUnder(block, owner)
+        && scaffoldBounds.getTop() >= block.bounds().getBottom();
   }
 
   /**
