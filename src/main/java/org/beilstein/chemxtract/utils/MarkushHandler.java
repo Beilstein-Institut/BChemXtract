@@ -118,6 +118,12 @@ public class MarkushHandler {
       Pattern.compile("(\\d{1,2}(?:,\\d{1,2})*|ortho|meta|para|[omp])-(.+)");
 
   /**
+   * The hyphen between two positional groups of one value, before the next group's locants: the
+   * second hyphen of {@code 2-NO2-5-F}.
+   */
+  private static final String HYPHEN_BEFORE_LOCANTS = "-(?=\\d{1,2}(?:,\\d{1,2})*-)";
+
+  /**
    * A substituted phenyl group named by its substituent's ring position, e.g. {@code o-Cl-Ph-},
    * {@code 4-OMe-Ph}, {@code para-BrPh}: the whole value is the group, with the substituent on the
    * phenyl's ortho/meta/para carbon, written as {@code o}/{@code m}/{@code p}, {@code 2}-{@code 4}
@@ -2357,6 +2363,37 @@ public class MarkushHandler {
     if (!matcher.matches() || phenylGroup(value) != null) {
       return null;
     }
+    PositionalValue single = parseSinglePositional(matcher);
+    if (single != null) {
+      return single;
+    }
+    // Several groups joined by a hyphen before the next locants, 2-NO2-5-F, as the comma joins
+    // them in 2-NO2, 4-Cl.
+    String[] parts = value.split(HYPHEN_BEFORE_LOCANTS);
+    if (parts.length < 2) {
+      return null;
+    }
+    List<Integer> positions = new ArrayList<>();
+    List<String> smiles = new ArrayList<>();
+    for (String part : parts) {
+      PositionalValue positional = parsePositional(part);
+      if (positional == null) {
+        return null;
+      }
+      positions.addAll(positional.positions());
+      smiles.addAll(positional.smiles());
+    }
+    return new PositionalValue(positions, smiles);
+  }
+
+  /**
+   * One group at one or more positions, {@code 2-NO2} or {@code 3,4-OMe}.
+   *
+   * @param matcher a {@link #POSITIONAL_SUBSTITUENT} match of the whole value
+   * @return the positions and their group, or {@code null} if the group does not resolve
+   * @throws IOException if reading SMILES definitions fails
+   */
+  private PositionalValue parseSinglePositional(Matcher matcher) throws IOException {
     List<Integer> positions = new ArrayList<>();
     for (String token : matcher.group(1).split(",")) {
       positions.add(ringPosition(token));
