@@ -123,7 +123,7 @@ final class DrawnRGroupValues {
       Part foundCut = null;
       int ends = 0;
       for (CDAtom atom : fragment.getAtoms()) {
-        if (!isEnd(atom) || degree(fragment, atom) != 1) {
+        if (!isEnd(atom) || AttachmentHandler.incidentBonds(fragment, atom).size() != 1) {
           continue;
         }
         for (Part cut : cuts) {
@@ -158,8 +158,8 @@ final class DrawnRGroupValues {
       if (bond.getBondDisplay() == CDBondDisplay.Wavy
           && isBareCarbon(bond.getBegin())
           && isBareCarbon(bond.getEnd())
-          && degree(fragment, bond.getBegin()) == 1
-          && degree(fragment, bond.getEnd()) == 1) {
+          && AttachmentHandler.incidentBonds(fragment, bond.getBegin()).size() == 1
+          && AttachmentHandler.incidentBonds(fragment, bond.getEnd()).size() == 1) {
         if (found != null) {
           return null;
         }
@@ -186,10 +186,11 @@ final class DrawnRGroupValues {
    */
   static String smiles(Drawing drawing, IChemObjectBuilder builder) {
     try {
-      IAtomContainer group = new FragmentConverter(builder).convert(drawing.group());
+      FragmentConverter converter = new FragmentConverter(builder);
+      IAtomContainer group = converter.convert(drawing.group());
       IPseudoAtom star = builder.newInstance(IPseudoAtom.class, "*");
       star.setImplicitHydrogenCount(0);
-      IAtom attachment = atomAt(group, drawing.end());
+      IAtom attachment = converter.convertedAtom(group, drawing.end());
       if (attachment != null) {
         if (group.getConnectedBondsCount(attachment) != 1) {
           return null;
@@ -199,7 +200,7 @@ final class DrawnRGroupValues {
       } else {
         // The converter leaves out an attachment point node and its bond: bond the * to the atom
         // the node was bonded to.
-        IAtom bonded = atomAt(group, neighbour(drawing.group(), drawing.end()));
+        IAtom bonded = converter.convertedAtom(group, neighbour(drawing.group(), drawing.end()));
         if (bonded == null) {
           return null;
         }
@@ -218,24 +219,6 @@ final class DrawnRGroupValues {
       LOGGER.debug("Drawn substituent does not convert.", e);
       return null;
     }
-  }
-
-  /**
-   * The converted atom drawn at a ChemDraw atom's position; the converter keeps ChemDraw's
-   * coordinates with y flipped.
-   */
-  private static IAtom atomAt(IAtomContainer group, CDAtom drawn) {
-    if (drawn == null || drawn.getPosition2D() == null) {
-      return null;
-    }
-    Point2d at = flipped(drawn);
-    for (IAtom atom : group.atoms()) {
-      Point2d point = atom.getPoint2d();
-      if (point != null && Math.abs(point.x - at.x) < 1e-3 && Math.abs(point.y - at.y) < 1e-3) {
-        return atom;
-      }
-    }
-    return null;
   }
 
   private static Point2d flipped(CDAtom atom) {
@@ -307,16 +290,6 @@ final class DrawnRGroupValues {
             || atom.getText().getText().getText() == null
             || atom.getText().getText().getText().isBlank())
         && atom.getPosition2D() != null;
-  }
-
-  private static int degree(CDFragment fragment, CDAtom atom) {
-    int degree = 0;
-    for (CDBond bond : fragment.getBonds()) {
-      if (bond.getBegin() == atom || bond.getEnd() == atom) {
-        degree++;
-      }
-    }
-    return degree;
   }
 
   /** Whether the atom lies on the wavy line, within 0.4 of the line's length. */

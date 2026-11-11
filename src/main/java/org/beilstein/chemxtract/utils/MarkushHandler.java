@@ -2382,31 +2382,19 @@ public class MarkushHandler {
    * @throws IOException if reading SMILES definitions fails
    */
   private PositionalValue parsePositional(String value) throws IOException {
-    if (value.contains(TextVisitor.SUBSTITUENT_JOINER)) {
-      // Several groups of one compound, each at its own positions.
-      List<Integer> positions = new ArrayList<>();
-      List<String> smiles = new ArrayList<>();
-      for (String part : value.split(TextVisitor.SUBSTITUENT_JOINER)) {
-        PositionalValue positional = parsePositional(part);
-        if (positional == null) {
-          return null;
-        }
-        positions.addAll(positional.positions());
-        smiles.addAll(positional.smiles());
+    if (!value.contains(TextVisitor.SUBSTITUENT_JOINER)) {
+      Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
+      if (!matcher.matches() || phenylGroup(value) != null) {
+        return null;
       }
-      return new PositionalValue(positions, smiles);
+      PositionalValue single = parseSinglePositional(matcher);
+      if (single != null) {
+        return single;
+      }
     }
-    Matcher matcher = POSITIONAL_SUBSTITUENT.matcher(value);
-    if (!matcher.matches() || phenylGroup(value) != null) {
-      return null;
-    }
-    PositionalValue single = parseSinglePositional(matcher);
-    if (single != null) {
-      return single;
-    }
-    // Several groups joined by a hyphen before the next locants, 2-NO2-5-F, as the comma joins
-    // them in 2-NO2, 4-Cl.
-    String[] parts = value.split(HYPHEN_BEFORE_LOCANTS);
+    // Several groups of one compound, each at its own positions: joined into one value (2-NO2,
+    // 4-Cl), or by a hyphen before the next locants (2-NO2-5-F).
+    String[] parts = value.split(TextVisitor.SUBSTITUENT_JOINER + "|" + HYPHEN_BEFORE_LOCANTS);
     if (parts.length < 2) {
       return null;
     }

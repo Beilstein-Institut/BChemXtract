@@ -96,7 +96,7 @@ final class RingLetterTable {
     for (CDFragment fragment : fragments) {
       if (fragment.getAtoms().size() == 1) {
         CDAtom atom = fragment.getAtoms().get(0);
-        String label = label(atom);
+        String label = AttachmentHandler.label(atom);
         if (label.matches("[A-Z]") && atom.getPosition2D() != null) {
           letters.add(new Letter(label, atom.getPosition2D()));
         }
@@ -135,7 +135,8 @@ final class RingLetterTable {
       return null; // a variable group the table does not place
     }
     for (int i = 0; i < table.rings().size(); i++) {
-      if (!namesOneGroup(table.rows(), i, label(rings.get(table.rings().get(i)).group()))) {
+      if (!namesOneGroup(
+          table.rows(), i, AttachmentHandler.label(rings.get(table.rings().get(i)).group()))) {
         LOGGER.debug("Ring table column {} names more than the drawn group.", i);
         return null;
       }
@@ -159,7 +160,11 @@ final class RingLetterTable {
         for (Map.Entry<LetteredRing, List<CDAtom>> copy : copies.entrySet()) {
           for (CDAtom extra : copy.getValue()) {
             if (!copyGroup(
-                structure, copy.getKey().positions(), targets.get(copy.getKey().node()), extra)) {
+                converter,
+                structure,
+                copy.getKey().positions(),
+                targets.get(copy.getKey().node()),
+                extra)) {
               return null;
             }
           }
@@ -214,7 +219,7 @@ final class RingLetterTable {
           if (found != null) {
             return null;
           }
-          List<CDBond> incident = incident(fragment, node);
+          List<CDBond> incident = AttachmentHandler.incidentBonds(fragment, node);
           if (incident.size() != 1) {
             return null;
           }
@@ -308,7 +313,8 @@ final class RingLetterTable {
     String[] locants = matcher.group(1).split(",");
     String name = groupName(matcher);
     if (locants.length > 1
-        && (name.equals(matcher.group(2).strip()) || !label(ring.group()).equalsIgnoreCase(name))) {
+        && (name.equals(matcher.group(2).strip())
+            || !AttachmentHandler.label(ring.group()).equalsIgnoreCase(name))) {
       return null; // copies need a multiplier matching the positions, of the drawn group
     }
     List<CDAtom> atoms = new ArrayList<>();
@@ -371,12 +377,16 @@ final class RingLetterTable {
    * reached from the first ring atom's substituent without passing back through the ring.
    */
   private static boolean copyGroup(
-      IAtomContainer structure, List<CDAtom> ring, CDAtom from, CDAtom to) {
-    IAtom source = atomAt(structure, from);
-    IAtom target = atomAt(structure, to);
+      FragmentConverter converter,
+      IAtomContainer structure,
+      List<CDAtom> ring,
+      CDAtom from,
+      CDAtom to) {
+    IAtom source = converter.convertedAtom(structure, from);
+    IAtom target = converter.convertedAtom(structure, to);
     List<IAtom> ringAtoms = new ArrayList<>();
     for (CDAtom atom : ring) {
-      ringAtoms.add(atomAt(structure, atom));
+      ringAtoms.add(converter.convertedAtom(structure, atom));
     }
     if (source == null || target == null || ringAtoms.contains(null)) {
       return false;
@@ -437,19 +447,6 @@ final class RingLetterTable {
     return true;
   }
 
-  private static IAtom atomAt(IAtomContainer structure, CDAtom drawn) {
-    CDPoint2D at = drawn.getPosition2D();
-    for (IAtom atom : structure.atoms()) {
-      Point2d point = atom.getPoint2d();
-      if (point != null
-          && Math.abs(point.x - at.getX()) < 1e-3
-          && Math.abs(point.y + at.getY()) < 1e-3) {
-        return atom;
-      }
-    }
-    return null;
-  }
-
   private static List<CDAtom> neighbours(CDFragment fragment, CDAtom atom, Set<CDAtom> within) {
     List<CDAtom> neighbours = new ArrayList<>();
     for (CDBond bond : fragment.getBonds()) {
@@ -460,18 +457,5 @@ final class RingLetterTable {
       }
     }
     return neighbours;
-  }
-
-  private static List<CDBond> incident(CDFragment fragment, CDAtom atom) {
-    return fragment.getBonds().stream()
-        .filter(bond -> bond.getBegin() == atom || bond.getEnd() == atom)
-        .toList();
-  }
-
-  private static String label(CDAtom atom) {
-    if (atom == null || atom.getText() == null || atom.getText().getText() == null) {
-      return "";
-    }
-    return atom.getText().getText().getText().strip();
   }
 }

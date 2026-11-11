@@ -309,7 +309,7 @@ public final class AttachmentHandler {
   }
 
   /** The atom's text label, or the empty string when it carries none. */
-  private static String label(CDAtom atom) {
+  static String label(CDAtom atom) {
     if (atom == null || atom.getText() == null || atom.getText().getText() == null) {
       return "";
     }
@@ -804,7 +804,7 @@ public final class AttachmentHandler {
   }
 
   /** Returns all bonds in the fragment incident to the given atom (by object identity). */
-  private static List<CDBond> incidentBonds(CDFragment fragment, CDAtom atom) {
+  static List<CDBond> incidentBonds(CDFragment fragment, CDAtom atom) {
     return fragment.getBonds().stream()
         .filter(bond -> atom.equals(bond.getBegin()) || atom.equals(bond.getEnd()))
         .toList();
