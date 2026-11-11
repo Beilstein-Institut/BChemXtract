@@ -255,6 +255,42 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * Pr (propyl), Np (naphthyl or neopentyl) and Ac (acetyl) spell actinoid and lanthanoid symbols.
+   * Such a value resolves through the abbreviation table (Ac) or not at all; it is never put on the
+   * scaffold as praseodymium, neptunium or actinium.
+   */
+  @Test
+  public void groupAbbreviationsSpellingElementsAreNotElements()
+      throws IOException, CloneNotSupportedException, CDKException {
+    CDPage page = new CDPage();
+    page.addText(textAt(rect(0, 0, 50, 50), "R = Me, Pr, Np, Ac"));
+    MarkushHandler handler = new MarkushHandler(page, SilentChemObjectBuilder.getInstance());
+
+    IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+    IAtomContainer scaffold = builder.newAtomContainer();
+    IAtom c0 = builder.newInstance(IAtom.class, "C");
+    c0.setPoint2d(new Point2d(0.0, 0.0));
+    IPseudoAtom r = builder.newInstance(IPseudoAtom.class, "R");
+    r.setLabel("R");
+    r.setPoint2d(new Point2d(1.5, 0.0));
+    scaffold.addAtom(c0);
+    scaffold.addAtom(r);
+    scaffold.addBond(0, 1, IBond.Order.SINGLE);
+
+    List<IAtomContainer> results = handler.replaceRGroups(scaffold, rect(0, 0, 40, 40));
+
+    for (IAtomContainer product : results) {
+      for (IAtom atom : product.atoms()) {
+        Integer z = atom.getAtomicNumber();
+        assertFalse(
+            z != null && (z == 59 || z == 93 || z == 89),
+            "Pr, Np or Ac read as an element: " + atom.getSymbol());
+      }
+    }
+    assertEquals(2, results.size(), "Me and Ac (acetyl) resolve; Pr and Np are not in the table");
+  }
+
+  /**
    * A substrate-scope legend split into two adjacent columns is one list for the scaffold. Geometry
    * mirrors {@code volumeTest/markush/mantis11158/20-14-i2}: two blocks spanning the same rows, a
    * gutter narrow relative to the columns, 6 + 5 values.

@@ -145,10 +145,12 @@ public class MarkushHandler {
 
   /**
    * Legend values that spell an element symbol but name a group: {@code Ts} is tosyl, not
-   * tennessine, and {@code Ar} is any aryl, not argon. Such a value is never put on the scaffold as
-   * that element; it resolves through the abbreviation table or not at all.
+   * tennessine, {@code Ar} is any aryl, not argon, {@code Ac} is acetyl, {@code Pr} propyl and
+   * {@code Np} naphthyl or neopentyl. Such a value is never put on the scaffold as that element; it
+   * resolves through the abbreviation table or not at all.
    */
-  private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS = Set.of("Ts", "Ar");
+  private static final Set<String> ABBREVIATIONS_NOT_ELEMENTS =
+      Set.of("Ts", "Ar", "Ac", "Pr", "Np");
 
   /**
    * A straight-chain alkyl group written as its formula, {@code n-C8H17}. Read as a chain only when
