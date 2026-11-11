@@ -1460,6 +1460,24 @@ public class MarkushHandlerTest {
   }
 
   /**
+   * {@code 4-BrCH2C6H4} reads as a phenyl carrying a bromomethyl group at 4, not as 4-bromobenzyl.
+   * The value is left unresolved rather than grafted as the benzyl.
+   */
+  @Test
+  public void substituentBeforeCh2C6h4IsNotABenzyl() throws Exception {
+    SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    String bromobenzyl = canonicalSmiles(parser.parseSmiles("CC(=O)Cc1ccc(Br)cc1"));
+    List<IAtomContainer> results =
+        handlerWith(Map.of("R", List.of("4-BrCH2C6H4")))
+            .replaceRGroups(scaffoldFromSmiles("CC=O", "R", 1), rect(0, 0, 40, 40));
+
+    for (IAtomContainer product : results) {
+      assertFalse(
+          bromobenzyl.equals(canonicalSmiles(product)), "4-BrCH2C6H4 grafted as 4-bromobenzyl");
+    }
+  }
+
+  /**
    * {@code n-C8H17} is a straight-chain alkyl group written as a formula (m50167957-14, 77b). The
    * hydrogen count must be that of an alkyl group, 2n+1; anything else is not read as a chain.
    */
