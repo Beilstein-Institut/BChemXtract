@@ -782,6 +782,20 @@ public class MarkushBugTest {
         "only the NHC takes the catalyst legend");
   }
 
+  /**
+   * m35370432-10 heads a table column with a lone X, and a legend gives "81: X = O". The heading is
+   * no structure and must not come out as water.
+   */
+  @Test
+  public void testLoneLabelIsNotExpanded() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m35370432-10.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertFalse(inchiKeys.contains("XLYOFNOQVPJJNP-UHFFFAOYSA-N"), "water from the X heading");
+  }
+
   /** The InChIKeys of the structures a file's legends build. */
   private Set<String> markushKeys(String fileName) throws IOException {
     return xtract(fileName).stream()
