@@ -471,10 +471,19 @@ public class MarkushBugTest {
    */
   @Test
   public void testRepeatCountWithoutRGroups() throws IOException {
+    List<BCXSubstance> substances = xtract("m50167957-8.cdx");
     Set<String> inchiKeys =
-        xtract("m50167957-8.cdx").stream()
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet());
+    Set<String> markushKeys =
+        substances.stream()
+            .filter(BCXSubstance::isMarkush)
             .map(BCXSubstance::getInchiKey)
             .collect(Collectors.toSet());
+    assertTrue(
+        markushKeys.containsAll(
+            Set.of("XWEFUSDSVPPVHJ-UHFFFAOYSA-N", "KPZRTSZGLDBHRP-UHFFFAOYSA-N")),
+        "32a-b are built from the legend's repeat counts and must count as Markush: "
+            + markushKeys);
 
     assertTrue(
         inchiKeys.containsAll(
