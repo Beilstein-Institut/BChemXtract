@@ -107,6 +107,12 @@ public class StereoHandler {
    * a neighbour, as in a fragment drawn all in one colour, or with no plain neighbour, keeps its
    * reading. An uncoloured bond counts as black.
    *
+   * <p>Known limitation: a stereo bond coloured for emphasis looks the same and loses its stereo,
+   * such as the new stereocentre of an enantioselective step drawn as a blue bold methyl. On the
+   * BJOC corpus (2026-11) this happens in about 15 of the 199 files whose InChIKeys the rule
+   * changes; the drawing gives nothing that separates the two, and flattening less would give
+   * racemic C–H functionalisation products a made-up configuration far more often.
+   *
    * @param bondMap mapping of {@link CDBond} to {@link IBond} giving each bond's drawn style
    * @return the atoms of the bonds drawn plain, which may carry a label ChemDraw derived from them
    */
