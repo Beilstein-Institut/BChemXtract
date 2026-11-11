@@ -21,6 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -41,6 +42,15 @@ class RingLetterTableTest {
   void columnNamingTheDrawnGroupFits() {
     assertTrue(RingLetterTable.namesOneGroup(ROWS.subList(0, 2), 0, ""), "triazolyl in each row");
     assertTrue(RingLetterTable.namesOneGroup(ROWS, 1, "OMe"), "OMe is the drawn label");
+  }
+
+  /** A multiplier before or after the group, or as a digit, leaves the group's name. */
+  @Test
+  void multiplierIsTakenOffTheGroupName() {
+    assertEquals("OMe", RingLetterTable.groupName(RingLetterTable.value("3,4-diOMe")));
+    assertEquals("OMe", RingLetterTable.groupName(RingLetterTable.value("3,4-(OMe)2")));
+    assertEquals("Me", RingLetterTable.groupName(RingLetterTable.value("3,5-Me2")));
+    assertEquals("triazolyl", RingLetterTable.groupName(RingLetterTable.value("3-triazolyl")));
   }
 
   /**

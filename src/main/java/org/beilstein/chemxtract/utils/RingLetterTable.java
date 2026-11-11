@@ -61,12 +61,10 @@ final class RingLetterTable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RingLetterTable.class);
 
   /**
-   * A value of a ring column: positions, an optional multiplier, the group's name. A multiplier
-   * stands before a capital or a bracket ({@code diOMe}), so the {@code tri} of {@code triazolyl}
-   * is part of the name.
+   * A value of a ring column: positions, then the group with any multiplier ({@code 3-triazolyl},
+   * {@code 3,4-diOMe}, {@code 3,4-(OMe)2}); see {@link MarkushHandler#stripMultiplier}.
    */
-  private static final Pattern VALUE =
-      Pattern.compile("(\\d(?:,\\d)*)-(?:(di|tri)(?=[A-Z(]))?(.+)");
+  private static final Pattern VALUE = Pattern.compile("(\\d(?:,\\d)*)-(.+)");
 
   /**
    * A ring letter drawn inside a ring.
@@ -194,7 +192,7 @@ final class RingLetterTable {
       if (!matcher.matches()) {
         return false;
       }
-      String name = matcher.group(3).strip().toLowerCase(Locale.ROOT);
+      String name = groupName(matcher).toLowerCase(Locale.ROOT);
       if (!name.equals(drawnLabel.toLowerCase(Locale.ROOT))) {
         names.add(name);
       }
@@ -308,15 +306,10 @@ final class RingLetterTable {
       return null;
     }
     String[] locants = matcher.group(1).split(",");
-    int multiplier = matcher.group(2) == null ? 1 : matcher.group(2).equals("di") ? 2 : 3;
-    if (locants.length != multiplier) {
-      return null;
-    }
-    if (multiplier > 1
-        && !label(ring.group())
-            .toLowerCase(Locale.ROOT)
-            .equals(matcher.group(3).strip().toLowerCase(Locale.ROOT))) {
-      return null;
+    String name = groupName(matcher);
+    if (locants.length > 1
+        && (name.equals(matcher.group(2).strip()) || !label(ring.group()).equalsIgnoreCase(name))) {
+      return null; // copies need a multiplier matching the positions, of the drawn group
     }
     List<CDAtom> atoms = new ArrayList<>();
     for (String locant : locants) {
@@ -327,6 +320,21 @@ final class RingLetterTable {
       atoms.add(ring.positions().get(position - 1));
     }
     return atoms;
+  }
+
+  /**
+   * The group a {@link #VALUE} names, without the multiplier its positions account for: {@code OMe}
+   * for {@code 3,4-diOMe} and {@code 3,4-(OMe)2}, {@code triazolyl} for {@code 3-triazolyl}.
+   */
+  static String groupName(Matcher value) {
+    return MarkushHandler.stripMultiplier(value.group(2).strip(), value.group(1).split(",").length)
+        .strip();
+  }
+
+  /** The matched {@link #VALUE}, or {@code null} if the text is not one. */
+  static Matcher value(String text) {
+    Matcher matcher = VALUE.matcher(text.strip());
+    return matcher.matches() ? matcher : null;
   }
 
   /** The fragment with each variable group bonded to its target, the nodes left out. */

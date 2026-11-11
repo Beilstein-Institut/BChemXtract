@@ -138,7 +138,11 @@ final class SubstituentNames {
     return new Ring(matcher.group(matcher.groupCount()).equals("benzyl"), substituents);
   }
 
-  private static int multiplier(String multiplier) {
+  /**
+   * How often a multiplier puts its group on the ring: {@code di} twice, {@code tri} three times,
+   * none once.
+   */
+  static int multiplier(String multiplier) {
     if (multiplier == null) {
       return 1;
     }
