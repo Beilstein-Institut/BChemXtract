@@ -2,6 +2,70 @@
 
 > **Note:** All commits to this repository should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification (e.g. `feat:`, `fix:`, `build:`, `chore:`). This keeps the changelog accurate and enables automated tooling.
 
+## [1.4.4](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.3...v1.4.4) (2026-11-11)
+
+
+### Features
+
+* read R values drawn beside a legend line ([987a64b](https://github.com/Beilstein-Institut/BChemXtract/commit/987a64b505cb480a8cc6997bcdeaded69d488a0b))
+
+
+### Bug Fixes
+
+* build a Markush scaffold once per repeat count its legend gives ([4d89d61](https://github.com/Beilstein-Institut/BChemXtract/commit/4d89d615e4d5fad92a6895baa620fa54530db794))
+* build a ring table only when each column names the group drawn on its ring ([edc3fff](https://github.com/Beilstein-Institut/BChemXtract/commit/edc3fff8495dc78bfc23771b4571d669c42b74d6))
+* catch NumberFormatException when reading an alkyl formula ([b280d13](https://github.com/Beilstein-Institut/BChemXtract/commit/b280d13108d3e657fcac48632d41c2895b77bfee))
+* do not expand a lone R-group label as a structure ([413abb7](https://github.com/Beilstein-Institut/BChemXtract/commit/413abb7745a38b0dbaf202764addb1bd50dfe3b4))
+* do not extract groups cut off at a wavy line as substances ([e3c8cd9](https://github.com/Beilstein-Institut/BChemXtract/commit/e3c8cd9a0a2c5b3dcb15f26da540728f997faaad))
+* do not extract Roman numerals typed with the structure tool ([4750ee6](https://github.com/Beilstein-Institut/BChemXtract/commit/4750ee6d65a97ca9bc5955e33277b98a7869ad66))
+* do not read a drawing with three ends on wavy lines as one substituent ([666336e](https://github.com/Beilstein-Institut/BChemXtract/commit/666336e67e70742283cc9e4cb810cc6d0d6018fa))
+* do not read a highlighted bold bond as a wedge ([dcb59e5](https://github.com/Beilstein-Institut/BChemXtract/commit/dcb59e56ab1e68a472f989aec30860abe0929879))
+* do not read a substituent before CH2C6H4 as a substituted benzyl ([fc07828](https://github.com/Beilstein-Institut/BChemXtract/commit/fc07828c708eb24571909b11d2b1e518b3ecc7fd))
+* do not read a Ts legend value as tennessine ([de9b005](https://github.com/Beilstein-Institut/BChemXtract/commit/de9b0057f5fa0156484e69b80305a864e34d66f6))
+* do not read an Ar legend value as argon ([b79c953](https://github.com/Beilstein-Institut/BChemXtract/commit/b79c953985b47ff86f554cd934ea116940ba69b4))
+* do not read Pr, Np or Ac legend values as elements ([46123fa](https://github.com/Beilstein-Institut/BChemXtract/commit/46123fa0f3e17e40db5d1de8bd8468dbc0e4627c))
+* do not read Th, Am, Fl or R-group names such as Ra and Rf as elements ([aaf5a90](https://github.com/Beilstein-Institut/BChemXtract/commit/aaf5a90e5788c67ea907bf1af130f458bbc941f2))
+* expand R-groups written into a label such as SAr or CO2R ([686916e](https://github.com/Beilstein-Institut/BChemXtract/commit/686916e0cb1a60b55a4c984c7241a9f0f551802c))
+* flag structures built from a legend's repeat count as Markush ([84f9a09](https://github.com/Beilstein-Institut/BChemXtract/commit/84f9a0999a3f21fb9ca1e5df66e5df96383f064e))
+* give rings drawn with aromatic bonds their double bonds ([8caf282](https://github.com/Beilstein-Institut/BChemXtract/commit/8caf282ea6d1abd18730a2ff051971da0d0359ea))
+* keep a legend from structures below its row and from captioned compounds it does not name ([1ca85a9](https://github.com/Beilstein-Institut/BChemXtract/commit/1ca85a9ac65c48fa19ad617449a01b0cba564d67))
+* keep a legend of one compound per numbered line together ([3e7c200](https://github.com/Beilstein-Institut/BChemXtract/commit/3e7c2002ea1dd62a35185a922e7edc18659538d1))
+* keep a numbered series split over two scaffolds apart ([78e73e2](https://github.com/Beilstein-Institut/BChemXtract/commit/78e73e2076d1fd38a6cd2822a10a9e9fa45a3328))
+* keep numbered legends together and tie legend columns to the scaffold above (1.4.x) ([ac94fea](https://github.com/Beilstein-Institut/BChemXtract/commit/ac94fea3343a04429ab87283319eeabf490c6d94))
+* keep R-group values within the nearest legend ([933d5e2](https://github.com/Beilstein-Institut/BChemXtract/commit/933d5e2360acc38e9b6d5dda1362993f7a48392d))
+* keep R-group values within the nearest legend (1.4.x) ([a9d0af4](https://github.com/Beilstein-Institut/BChemXtract/commit/a9d0af416a07ce0b4f343e7797a9e7b642684f8f))
+* keep side-by-side Markush legends apart when each sits under its scaffold ([faeb07d](https://github.com/Beilstein-Institut/BChemXtract/commit/faeb07da6eddcfd14528db0818fca352ebec0273))
+* keep the group of a labelled stub drawn across a ring bond ([c4db82c](https://github.com/Beilstein-Institut/BChemXtract/commit/c4db82cfcfff859b2a5bad28840723656895d194))
+* let Markush series without a legend of their own share an unnumbered one ([7083c9c](https://github.com/Beilstein-Institut/BChemXtract/commit/7083c9cdeec9137a624c87c341746d04486137a3))
+* Markush review fixes for legend scoping, ring numbering and value parsing (1.4.x) ([5023858](https://github.com/Beilstein-Institut/BChemXtract/commit/50238587b1525c2ccb05b7ee3c893c4128d3cd67))
+* merge lettered legend columns and stop drawn R legends borrowing ([421fc44](https://github.com/Beilstein-Institut/BChemXtract/commit/421fc44d34dbeb0d8c2f3deb9683122f481f713e))
+* number a single ring in one direction for multi-locant values ([ec582be](https://github.com/Beilstein-Institut/BChemXtract/commit/ec582be21691b02e897b4fe6467063db41c68b31))
+* number a single ring with a heteroatom from the heteroatom ([06b31df](https://github.com/Beilstein-Institut/BChemXtract/commit/06b31df64e0ec4ae9732e31d65a6e541c1742d03))
+* place each lettered ring's group by a Markush ring table ([7ce2eed](https://github.com/Beilstein-Institut/BChemXtract/commit/7ce2eed6c3264d36f9e2b496fb14eb15c0fc2020))
+* read a Markush legend set out as a table of drawings ([266bdc5](https://github.com/Beilstein-Institut/BChemXtract/commit/266bdc5ff6067324297917afae05ac2a12635d0e))
+* read allyl and propargyl as Markush substituent names ([cfd32d3](https://github.com/Beilstein-Institut/BChemXtract/commit/cfd32d37bbafe95a68fbfcb682bf85287bbb1b4f))
+* read drawn Markush values grouped with their wavy line ([08fc0dd](https://github.com/Beilstein-Institut/BChemXtract/commit/08fc0ddd14a0bc1df00b2af0366d9201e97037b2))
+* read multipliers written in front of a Markush substituent ([f0c6da1](https://github.com/Beilstein-Institut/BChemXtract/commit/f0c6da1286f858ffd5f37a153378ba52ea48f061))
+* read one compound's ring substituents and written-out alkyl chains ([05979c6](https://github.com/Beilstein-Institut/BChemXtract/commit/05979c6d1530ccb7dd17fa08f410deddd0c1f722))
+* read ring substituents joined by a hyphen, such as 2-NO2-5-F ([a568d23](https://github.com/Beilstein-Institut/BChemXtract/commit/a568d23a2847f4fc076b85d16fb2b11855ae6fe8))
+* read ring table multipliers the way legend values are read ([9cce731](https://github.com/Beilstein-Institut/BChemXtract/commit/9cce7317e3cd4a20f9edaafb6621661343b0a73c))
+* read substituents written as names from a fixed prefix table ([faaefe0](https://github.com/Beilstein-Institut/BChemXtract/commit/faaefe03728abc0615b7627fedd783807b0709f4))
+* tie a legend column to the scaffold above it ([46b7306](https://github.com/Beilstein-Institut/BChemXtract/commit/46b7306f3d7333a84e6822848e7f8202cb59b9bd))
+* tie Markush legends to their scheme by compound number ([cc5f027](https://github.com/Beilstein-Institut/BChemXtract/commit/cc5f027cc4501d92eea6d54a9fc3974835a0bfde))
+* tie Markush scaffolds to their legends by caption number ([9a022aa](https://github.com/Beilstein-Institut/BChemXtract/commit/9a022aae63a2bdae1cbde70699a6ebe7abea8b6b))
+* treat a legend line numbered with its compound as one compound ([9848c47](https://github.com/Beilstein-Institut/BChemXtract/commit/9848c4777002577d4be39c3c44c94f4cb9627d90))
+
+
+### Miscellaneous Chores
+
+* release 1.4.4 ([46ad02f](https://github.com/Beilstein-Institut/BChemXtract/commit/46ad02f8c557e9e0c0b07be9d8608714dabbf286))
+* release 1.4.4 ([1c7e7fe](https://github.com/Beilstein-Institut/BChemXtract/commit/1c7e7feecf046f508ea03ce57ba2c6389c2ed216))
+
+
+### Documentation
+
+* note that a coloured stereo bond is read as a highlight ([bd0be6e](https://github.com/Beilstein-Institut/BChemXtract/commit/bd0be6e353b6acbe0eda60514dec59e1ec21608c))
+
 ## [1.4.3](https://github.com/Beilstein-Institut/BChemXtract/compare/v1.4.2...v1.4.3) (2026-10-29)
 
 
