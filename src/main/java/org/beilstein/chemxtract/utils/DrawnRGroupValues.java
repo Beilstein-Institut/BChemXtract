@@ -121,16 +121,14 @@ final class DrawnRGroupValues {
       }
       Drawing found = null;
       Part foundCut = null;
+      int ends = 0;
       for (CDAtom atom : fragment.getAtoms()) {
         if (!isEnd(atom) || degree(fragment, atom) != 1) {
           continue;
         }
         for (Part cut : cuts) {
           if (!usedCuts.contains(cut) && liesOn(atom, cut.fragment())) {
-            if (found != null) {
-              found = null; // two ends on wavy lines: not a single substituent
-              break;
-            }
+            ends++;
             Set<CDFragment> drawn = Collections.newSetFromMap(new IdentityHashMap<>());
             drawn.add(group.source());
             drawn.add(cut.source());
@@ -139,7 +137,8 @@ final class DrawnRGroupValues {
           }
         }
       }
-      if (found != null) {
+      // A group with more than one end on a wavy line is not a single substituent.
+      if (ends == 1) {
         usedCuts.add(foundCut);
         drawings.add(found);
       }
