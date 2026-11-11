@@ -736,6 +736,25 @@ public class MarkushBugTest {
   }
 
   /**
+   * The published version of m19546377-i17 captions starting material 35 and product 36 and letters
+   * the legend 36a-h. The legend names product 36 only, but starting material 35 is the same
+   * reaction's and takes its values too.
+   */
+  @Test
+  public void testStartingMaterialSharesItsProductsNumberedLegend() throws IOException {
+    Set<String> keys = markushKeys("m19546377-i17-captioned.cdx");
+
+    assertTrue(
+        keys.containsAll(
+            Set.of(
+                "QUHOIGLGSORZDD-UHFFFAOYSA-N", // 35a, R = CH3
+                "XCRKAXWZVHTFNF-UHFFFAOYSA-N", // 35d, R = Ph
+                "GNOBSDSRABCCJJ-UHFFFAOYSA-N", // 36a, R = CH3
+                "BJLBKTKCAVWISZ-UHFFFAOYSA-N")), // 36d, R = Ph
+        "starting material 35 and product 36 take the legend: " + keys);
+  }
+
+  /**
    * m30810289-i26 sets the legend of product 73 in four columns in a row under products 72 and 73.
    * A mechanism drawing with the same R lies 1 pt nearer below one column than product 73 above it,
    * which split the legend so that its last column (R = CF3, CN) reached no scaffold. A legend
