@@ -754,4 +754,24 @@ public class MarkushBugTest {
                 "CUINWIDXCKNPQP-UHFFFAOYSA-N")), // 73, R = NO2
         "the last legend column must reach product 73: " + inchiKeys);
   }
+
+  /**
+   * 63i and 63j of m50167957-12 write two ring substituents in one value joined by a hyphen, "R =
+   * 2-NO2-5-F", where other legends use a comma ("2-NO2, 4-Cl"). Both groups go on the ring at
+   * their own positions. The keys are computed from hand-written SMILES.
+   */
+  @Test
+  public void testTwoSubstituentsJoinedByAHyphen() throws IOException {
+    Set<String> inchiKeys =
+        xtract("m50167957-12.cdx").stream()
+            .map(BCXSubstance::getInchiKey)
+            .collect(Collectors.toSet());
+
+    assertTrue(
+        inchiKeys.containsAll(
+            Set.of(
+                "MBROATSVDAZAKS-UHFFFAOYSA-N", // 63i, 2-NO2-5-F
+                "PSGUJSJDWDBPPG-UHFFFAOYSA-N")), // 63j, 2-NO2-4-F
+        "63i and 63j must be extracted: " + inchiKeys);
+  }
 }
