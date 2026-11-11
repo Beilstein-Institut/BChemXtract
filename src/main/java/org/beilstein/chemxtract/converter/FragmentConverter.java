@@ -45,6 +45,7 @@ import org.beilstein.chemxtract.lookups.SmilesAbbreviations;
 import org.beilstein.chemxtract.utils.StereoHandler;
 import org.beilstein.chemxtract.visitor.AtomVisitor;
 import org.beilstein.chemxtract.visitor.BondVisitor;
+import org.openscience.cdk.aromaticity.Kekulization;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
@@ -189,6 +190,8 @@ public class FragmentConverter {
     setRadicals(atomContainer, atomConverter.getAtomMap());
     // add implicit hydrogens (ligands are still free of their coordinating metal here)
     addImplicitHydrogens(atomContainer);
+    // bonds drawn with order 1.5 are aromatic singles; give them their double bonds
+    kekulizeAromaticBonds(atomContainer);
     // perceive atom types and configure atoms
     AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(atomContainer);
     // restore connectivity for coordination bonds now that ligand valences are fixed
@@ -570,6 +573,31 @@ public class FragmentConverter {
       }
     } catch (CDKException e) {
       LOGGER.error("Unable to add implicit hydrogens", e);
+    }
+  }
+
+  /**
+   * Assigns double bonds to rings drawn with aromatic (order 1.5) bonds, which are converted as
+   * single bonds flagged aromatic. Without this every atom of such a ring keeps one valence open
+   * and is read as a radical. A ring that has no Kekulé structure is left as it is.
+   *
+   * @param container the converted structure
+   */
+  private static void kekulizeAromaticBonds(IAtomContainer container) {
+    boolean aromaticSingles = false;
+    for (IBond bond : container.bonds()) {
+      if (bond.isAromatic() && bond.getOrder() == IBond.Order.SINGLE) {
+        aromaticSingles = true;
+        break;
+      }
+    }
+    if (!aromaticSingles) {
+      return;
+    }
+    try {
+      Kekulization.kekulize(container);
+    } catch (CDKException e) {
+      LOGGER.debug("Aromatic bonds have no Kekulé structure.", e);
     }
   }
 

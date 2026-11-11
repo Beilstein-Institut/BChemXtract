@@ -49,9 +49,12 @@ import org.beilstein.chemxtract.utils.AttachmentHandler;
 import org.beilstein.chemxtract.utils.ChemicalUtils;
 import org.beilstein.chemxtract.utils.Definitions;
 import org.beilstein.chemxtract.utils.MarkushHandler;
+import org.beilstein.chemxtract.utils.RepeatUnit;
+import org.beilstein.chemxtract.utils.RomanNumeralLabels;
 import org.beilstein.chemxtract.utils.SgroupHandler;
 import org.beilstein.chemxtract.visitor.AltGroupVisitor;
 import org.beilstein.chemxtract.visitor.FragmentVisitor;
+import org.beilstein.chemxtract.visitor.TextVisitor;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.interfaces.IAtom;
@@ -162,10 +165,19 @@ public class SubstanceXtractor {
       // variable-attachment expansion below sees them.
       List<CDFragment> fragments =
           AttachmentHandler.normalizeVariableAttachmentBonds(fragmentVisitor.getFragments());
+      // Roman numerals typed with the structure tool ("III", "IV") are labels, not compounds.
+      fragments = RomanNumeralLabels.without(fragments, page);
       MarkushHandler markushHandler = null;
       if (resolveRGroups) {
         markushHandler = new MarkushHandler(page, this.builder, unrestrictedMarkush);
         markushHandler.addResidueDefinitions(resolveAltGroupDefinitions(page));
+        // Groups drawn as a legend's values ("a: R =" and a drawing ending at a wavy line) become
+        // R values; they and their wavy lines are no substances of their own, nor is a group
+        // ending at a wavy line that no legend line takes.
+        Set<CDFragment> drawnValues = markushHandler.adoptDrawnValues(fragments);
+        if (!drawnValues.isEmpty()) {
+          fragments = fragments.stream().filter(f -> !drawnValues.contains(f)).toList();
+        }
         for (CDFragment fragment : fragments) {
           markushHandler.addScaffold(fragment.getBounds(), fragment.getRGroupLabels());
         }
@@ -346,7 +358,61 @@ public class SubstanceXtractor {
     // Materialise multicenter (haptic) bonds in place before conversion.
     AttachmentHandler.resolveMultiAttachments(fragment);
 
+    // A bracket whose repeat count the legend gives per entry ("26g: n = 2") is built once per
+    // count, smallest first, each time with the bracketed atom repeated that often.
+    RepeatUnit repeatUnit = markushHandler == null ? null : RepeatUnit.find(fragment, page);
+    if (repeatUnit == null) {
+      return buildSubstances(fragment, markushHandler, Map.of());
+    }
+    List<String> counts = markushHandler.repeatCounts(fragment.getBounds());
+    if (counts.isEmpty()) {
+      return buildSubstances(fragment, markushHandler, Map.of());
+    }
+    List<Integer> ordered = new ArrayList<>();
+    for (String count : counts) {
+      try {
+        ordered.add(Integer.parseInt(count));
+      } catch (NumberFormatException e) {
+        LOGGER.debug("Repeat count {} is not a number.", count);
+      }
+    }
+    ordered.sort(null);
+    for (int count : ordered) {
+      if (repeatUnit.repeat(count)) {
+        substances.addAll(
+            buildSubstances(
+                fragment, markushHandler, Map.of(TextVisitor.REPEAT, String.valueOf(count))));
+      }
+    }
+    return substances;
+  }
+
+  /**
+   * Converts a prepared fragment, one structure per position-variation candidate, and resolves its
+   * R-groups when the page defines them.
+   *
+   * @param fragment the fragment, its brackets and multicenter bonds already applied
+   * @param markushHandler the handler resolving R-groups, or {@code null}
+   * @param fixed labels whose value the fragment already carries, e.g. the repeat count it was
+   *     built with
+   * @return the substances built
+   */
+  private List<BCXSubstance> buildSubstances(
+      CDFragment fragment, MarkushHandler markushHandler, Map<String, String> fixed)
+      throws IOException, CDKException {
+    List<BCXSubstance> substances = new ArrayList<>();
     FragmentConverter fragmentConverter = new FragmentConverter(this.builder);
+    // A scaffold whose lettered rings carry its position-variation groups, placed per compound by
+    // a ring table ("A ring   B ring"), is built once per line rather than at every position.
+    if (markushHandler != null && !fragment.hasRGroup()) {
+      List<IAtomContainer> rows = markushHandler.ringTableStructures(fragment, fragmentConverter);
+      if (rows != null) {
+        for (IAtomContainer row : rows) {
+          addIfBuilt(substances, row, fragment, true);
+        }
+        return substances;
+      }
+    }
     // Position-variation nodes expand to one fragment per candidate atom; structures without a
     // variable attachment yield the original fragment unchanged. The candidates are converted
     // together and expanded in one go: a legend that gives a substituent by ring position moves the
@@ -374,7 +440,8 @@ public class SubstanceXtractor {
         // one whose every container is skipped for unresolved pseudo-atoms, must still fall back
         // to emitting the unexpanded scaffold below.
         for (IAtomContainer container :
-            markushHandler.replaceRGroups(candidates, fragment.getBounds(), new HashSet<>())) {
+            markushHandler.replaceRGroups(
+                candidates, fragment.getBounds(), new HashSet<>(), fixed)) {
           expandedRGroups |= addIfBuilt(substances, container, fragment, true);
         }
       } catch (IOException | CloneNotSupportedException e) {
@@ -382,8 +449,10 @@ public class SubstanceXtractor {
       }
     }
     if (!expandedRGroups) {
+      // A structure built with a value the legend gives, such as a repeat count, is a Markush
+      // entry even without R-groups to replace.
       for (IAtomContainer container : candidates) {
-        addIfBuilt(substances, container, fragment, false);
+        addIfBuilt(substances, container, fragment, !fixed.isEmpty());
       }
     }
     return variablePosition ? withoutDoubleBondStereoTwins(substances) : substances;
@@ -421,7 +490,8 @@ public class SubstanceXtractor {
    *
    * @param atomContainer the CDK atom container for the substance
    * @param fragment the source fragment providing occurrence bounds and abbreviations
-   * @param isMarkush when {@code true}, the substance results from Markush R-group replacement
+   * @param isMarkush when {@code true}, the substance results from Markush R-group replacement or
+   *     was built with a value the legend gives, such as a repeat count
    * @return {@code true} if a substance was built and added, {@code false} if it was skipped
    * @throws IOException if abbreviation resolution fails
    * @throws CDKException if InChI generation or nested fragment conversion fails

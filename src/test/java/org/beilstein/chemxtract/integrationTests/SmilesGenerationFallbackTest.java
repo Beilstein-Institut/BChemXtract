@@ -67,7 +67,10 @@ class SmilesGenerationFallbackTest {
   void rheniumCarbonylComplexesAllExtract() throws Exception {
     List<BCXSubstance> substances = xtract("m12743226-i45.cdx");
 
-    assertThat(substances).as("every structure on the page must survive").hasSize(18);
+    // 15, not 18: the NHC-gold complex (as Au-H and Au-Me) and the R-H reagent (as H2) used to
+    // borrow "R = H, Me" from scheme a); their own legend, "R = aromatic, aliphatic", names no
+    // structure.
+    assertThat(substances).as("every structure on the page must survive").hasSize(15);
     assertThat(substances)
         .as("the decacarbonyl dirhenium must be among them")
         .extracting(BCXSubstance::getInchiKey)

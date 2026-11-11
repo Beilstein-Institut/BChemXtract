@@ -22,12 +22,21 @@
 package org.beilstein.chemxtract.visitor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.beilstein.chemxtract.cdx.CDAtom;
+import org.beilstein.chemxtract.cdx.CDObjectTag;
 import org.beilstein.chemxtract.cdx.CDPage;
+import org.beilstein.chemxtract.cdx.CDRectangle;
 import org.beilstein.chemxtract.cdx.CDText;
 import org.beilstein.chemxtract.cdx.CDVisitor;
 import org.beilstein.chemxtract.utils.Definitions;
@@ -38,8 +47,128 @@ public class TextVisitor extends CDVisitor {
   /** A ring position, or the several a locant set names: the {@code 5,7} of {@code 5,7-Me2}. */
   private static final String LOCANT_SET = "\\d{1,2}(?:,\\d{1,2})*";
 
+  /** A ring substituent named by number: {@code 2-CH3}, {@code 3,5-Me2}. */
+  private static final Pattern RING_SUBSTITUENT = Pattern.compile("(" + LOCANT_SET + ")-.+");
+
+  /**
+   * A ring substituent ending in the formula of a benzene ring with fewer than four hydrogens,
+   * which therefore carries more substituents than this one: the {@code 3-MeOC6H3} of {@code 4-OH,
+   * 3-MeOC6H3}. Group 2 is the ring's hydrogen count.
+   */
+  private static final Pattern RING_FORMULA = Pattern.compile("(" + LOCANT_SET + ")-.*?C6H([0-3])");
+
+  /**
+   * What several ring substituents of one compound are joined with into one value. A list separator
+   * never survives value splitting, so the joined value cannot be mistaken for anything a legend
+   * wrote.
+   */
+  public static final String SUBSTITUENT_JOINER = "; ";
+
+  /**
+   * The letter a legend line opens with when it names its compound by letter: {@code a: R = H},
+   * {@code (b) R = Me}, {@code c) R = Et}.
+   */
+  private static final Pattern ENTRY_LETTER = Pattern.compile("^\\(?([a-z])\\)?\\s*[:.)]\\s*\\S");
+
+  /**
+   * The letter of a legend line that names one compound by number and letter: the {@code a} of
+   * {@code 64a: R1 = ...}. A line naming a range ({@code 40a–m}) has none.
+   */
+  private static final Pattern NUMBERED_ENTRY_LETTER =
+      Pattern.compile("^\\(?\\d{1,4}([a-z])\\)?\\s*[:.)]\\s*\\S");
+
+  /**
+   * The compound number a legend line opens with: the {@code 36} of {@code 36a: Ar = ...}, or of a
+   * line naming a range of the series, {@code 40a–m: R1 = H}. Group 2 is the range's last letter.
+   */
+  private static final Pattern COMPOUND_NUMBER =
+      Pattern.compile(
+          "^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?([a-z]))?)?\\)?\\s*[:.)]\\s*\\S");
+
+  /**
+   * A text that is a compound number alone, the caption under a drawn structure: {@code 43}, {@code
+   * 42a–l}, {@code (12)}. Group 1 is the number.
+   */
+  /**
+   * The run of single letters a {@link LetterRow} ends with, each set apart by spaces; group 1
+   * starts at its first letter.
+   */
+  private static final Pattern LETTER_RUN = Pattern.compile("(?:^|\\s)([a-z](?:\\s+[a-z])+)\\s*$");
+
+  /** The label of a bracket's repeat count, as legend lines give it: {@code 26g: n = 2, R = H}. */
+  public static final String REPEAT = "n";
+
+  /** A repeat count {@code n = 2} in a legend line; group 1 is the count. */
+  private static final Pattern REPEAT_COUNT =
+      Pattern.compile("(?:^|[\\s,;:(])n\\s*=\\s*(\\d{1,2})(?![\\d.,–-]*\\d)");
+
+  /** One ring letter of a {@link RingTable} header: {@code A ring}, {@code B-ring}. */
+  private static final Pattern RING_LETTER = Pattern.compile("\\b([A-Z])(?:\\s*-\\s*|\\s+)ring\\b");
+
+  /** A {@link RingTable} header: ring letters and nothing else. */
+  private static final Pattern RING_HEADER =
+      Pattern.compile("\\s*[A-Z](?:\\s*-\\s*|\\s+)ring(?:\\s+[A-Z](?:\\s*-\\s*|\\s+)ring)*\\s*");
+
+  /** A compound line of a {@link RingTable}: {@code 20a: 3-triazolyl 3,4-diOMe}. */
+  private static final Pattern RING_ROW =
+      Pattern.compile("\\(?(\\d{1,4}[a-z]?)\\)?\\s*[:.)]\\s*(\\S.*)");
+
+  private static final Pattern CAPTION =
+      Pattern.compile("^\\(?(\\d{1,4})(?:[a-z](?:\\s*[–-]\\s*(?:\\d{1,4})?[a-z])?)?\\)?$");
+
+  /**
+   * A compound number standing alone as the caption of a drawn structure.
+   *
+   * @param bounds the bounding box of the caption text
+   * @param number the compound number, without letters, e.g. {@code 42} for {@code 42a–l}
+   */
+  public record Caption(CDRectangle bounds, String number) {}
+
+  /**
+   * One line of entry letters set out under a row of drawings, e.g. {@code a b c}, possibly after
+   * the definition that holds for its entries ({@code R = NO2 g h i}).
+   *
+   * @param bounds the bounding box of the text
+   * @param letters each letter with the estimated x of its centre, from left to right
+   */
+  public record LetterRow(CDRectangle bounds, List<Letter> letters) {}
+
+  /**
+   * A letter of a {@link LetterRow}.
+   *
+   * @param letter the entry letter
+   * @param x the estimated x of its centre on the page
+   */
+  public record Letter(char letter, double x) {}
+
+  /**
+   * A table naming, per compound, where each lettered ring of the scaffold carries its variable
+   * group: a header of ring letters ({@code A ring B ring}) and one line per compound giving a
+   * value per ring ({@code 20a: 3-triazolyl 3,4-diOMe}).
+   *
+   * @param bounds the bounding box of the text
+   * @param rings the ring letters, in column order
+   * @param rows the compound lines, in order
+   */
+  public record RingTable(CDRectangle bounds, List<String> rings, List<RingRow> rows) {}
+
+  /**
+   * A compound line of a {@link RingTable}.
+   *
+   * @param entry the compound, e.g. {@code 20a}
+   * @param values one value per ring, in column order
+   */
+  public record RingRow(String entry, List<String> values) {}
+
+  private final List<RingTable> ringTables = new ArrayList<>();
+
   private final Map<String, List<String>> rgroups;
+  private final List<LetterRow> letterRows = new ArrayList<>();
   private final List<RGroupDefinitionBlock> blocks;
+  private final List<Caption> captions;
+
+  /** Texts that belong to a drawing rather than the page: atom labels and object tags. */
+  private final Set<CDText> drawingTexts = Collections.newSetFromMap(new IdentityHashMap<>());
 
   /**
    * Constructs a {@code TextVisitor} and traverses the given page to collect R-group definitions.
@@ -49,7 +178,31 @@ public class TextVisitor extends CDVisitor {
   public TextVisitor(CDPage page) {
     rgroups = new LinkedHashMap<>();
     blocks = new ArrayList<>();
+    captions = new ArrayList<>();
     page.accept(this);
+  }
+
+  /**
+   * Notes the atom's label as part of its drawing: a number on an atom is no caption. An atom is
+   * visited before its label.
+   *
+   * @param atom the atom being visited
+   */
+  @Override
+  public void visitAtom(CDAtom atom) {
+    if (atom.getText() != null) {
+      drawingTexts.add(atom.getText());
+    }
+  }
+
+  /**
+   * Notes the tag's texts as part of the drawing, e.g. the repeat count of a bracket.
+   *
+   * @param tag the object tag being visited
+   */
+  @Override
+  public void visitObjectTag(CDObjectTag tag) {
+    drawingTexts.addAll(tag.getTexts());
   }
 
   /**
@@ -64,6 +217,22 @@ public class TextVisitor extends CDVisitor {
     if (cdText == null || cdText.getText() == null || cdText.getText().getText() == null) {
       return;
     }
+    LetterRow row = letterRow(cdText);
+    if (row != null) {
+      letterRows.add(row);
+    }
+    RingTable ringTable = ringTable(cdText);
+    if (ringTable != null) {
+      ringTables.add(ringTable);
+      return;
+    }
+    Matcher caption = CAPTION.matcher(cdText.getText().getText().strip());
+    if (caption.matches()) {
+      if (cdText.getBounds() != null && !drawingTexts.contains(cdText)) {
+        captions.add(new Caption(cdText.getBounds(), caption.group(1)));
+      }
+      return;
+    }
     ParsedDefinitions parsed = extractDefinitions(cdText.getText().getText());
     if (parsed.independent().isEmpty() && parsed.correlatedGroups().isEmpty()) {
       return;
@@ -73,18 +242,112 @@ public class TextVisitor extends CDVisitor {
             cdText.getBounds(),
             parsed.independent(),
             parsed.correlatedGroups(),
-            lineHeight(cdText)));
+            lineHeight(cdText),
+            entryLetters(cdText.getText().getText()),
+            compoundNumbers(cdText.getText().getText()),
+            parsed.seriesAssignments()));
     // Keep a page-wide union as a fallback; merge rather than drop on label collisions. Correlated
     // values are flattened into the union too so the fallback/guard still see them (the union path
-    // over-enumerates by design; the scoped path preserves the tuples).
+    // over-enumerates by design; the scoped path preserves the tuples). A label defined with no
+    // values adds nothing to it.
     for (Map.Entry<String, List<String>> entry : parsed.independent().entrySet()) {
-      mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      if (!entry.getValue().isEmpty()) {
+        mergeSubstituents(rgroups, entry.getKey(), entry.getValue());
+      }
     }
     for (CorrelatedGroup group : parsed.correlatedGroups()) {
       for (Map<String, String> tuple : group.tuples()) {
         tuple.forEach((label, value) -> mergeSubstituents(rgroups, label, List.of(value)));
       }
     }
+  }
+
+  /**
+   * Reads a single-line text ending in two or more consecutive entry letters set apart by spaces.
+   * Where each letter sits is estimated from the advance widths of the characters before it, scaled
+   * to the text's width: the page gives the bounds of a text, not of its characters.
+   */
+  private static LetterRow letterRow(CDText cdText) {
+    String text = cdText.getText().getText();
+    if (cdText.getBounds() == null || text.contains("\r") || text.contains("\n")) {
+      return null;
+    }
+    Matcher matcher = LETTER_RUN.matcher(text);
+    if (!matcher.find()) {
+      return null;
+    }
+    List<Integer> positions = new ArrayList<>();
+    for (int i = matcher.start(1); i < text.length(); i++) {
+      if (!Character.isWhitespace(text.charAt(i))) {
+        positions.add(i);
+      }
+    }
+    for (int i = 1; i < positions.size(); i++) {
+      if (text.charAt(positions.get(i)) != text.charAt(positions.get(i - 1)) + 1) {
+        return null;
+      }
+    }
+    double total = advance(text, text.length());
+    CDRectangle bounds = cdText.getBounds();
+    double width = bounds.getRight() - bounds.getLeft();
+    if (total <= 0 || width <= 0) {
+      return null;
+    }
+    List<Letter> letters = new ArrayList<>();
+    for (int position : positions) {
+      double centre =
+          advance(text, position) + advance(text.substring(position, position + 1), 1) / 2;
+      letters.add(new Letter(text.charAt(position), bounds.getLeft() + width * centre / total));
+    }
+    return new LetterRow(bounds, List.copyOf(letters));
+  }
+
+  /**
+   * Reads a {@link RingTable}: a header line of ring letters followed by compound lines with one
+   * value per ring, the columns set apart by two or more spaces.
+   */
+  private static RingTable ringTable(CDText cdText) {
+    if (cdText.getBounds() == null) {
+      return null;
+    }
+    List<String> lines =
+        Arrays.stream(cdText.getText().getText().split("\\r\\n|\\r|\\n"))
+            .filter(line -> !line.isBlank())
+            .toList();
+    if (lines.size() < 2 || !RING_HEADER.matcher(lines.get(0)).matches()) {
+      return null;
+    }
+    List<String> rings = new ArrayList<>();
+    Matcher letter = RING_LETTER.matcher(lines.get(0));
+    while (letter.find()) {
+      rings.add(letter.group(1));
+    }
+    List<RingRow> rows = new ArrayList<>();
+    for (String line : lines.subList(1, lines.size())) {
+      Matcher matcher = RING_ROW.matcher(line.strip());
+      if (!matcher.matches()) {
+        return null;
+      }
+      List<String> values = List.of(matcher.group(2).strip().split("\\s{2,}"));
+      if (values.size() != rings.size()) {
+        return null;
+      }
+      rows.add(new RingRow(matcher.group(1), values));
+    }
+    return new RingTable(cdText.getBounds(), List.copyOf(rings), List.copyOf(rows));
+  }
+
+  /**
+   * The estimated advance width of the first {@code end} characters, in ems: a space is narrow, a
+   * capital wide, anything else average. Only the proportions matter.
+   */
+  private static double advance(String text, int end) {
+    double advance = 0;
+    for (int i = 0; i < end; i++) {
+      char c = text.charAt(i);
+      advance += Character.isWhitespace(c) ? 0.278 : Character.isUpperCase(c) ? 0.667 : 0.556;
+    }
+    return advance;
   }
 
   /** Height of one line of the text: its bounds' height over its number of lines. */
@@ -96,9 +359,45 @@ public class TextVisitor extends CDVisitor {
     return Math.abs(cdText.getBounds().getHeight()) / lines;
   }
 
-  /** Independent per-label lists plus correlated (positional-table) groups from one text node. */
+  /**
+   * The letters the text's lines open with, in order, also after a compound number ({@code 64a:});
+   * empty if none is lettered.
+   */
+  private static String entryLetters(String text) {
+    StringBuilder letters = new StringBuilder();
+    for (String line : text.split("[\\r\\n]+")) {
+      Matcher matcher = ENTRY_LETTER.matcher(line.strip());
+      if (!matcher.find()) {
+        matcher = NUMBERED_ENTRY_LETTER.matcher(line.strip());
+        if (!matcher.find()) {
+          continue;
+        }
+      }
+      letters.append(matcher.group(1));
+    }
+    return letters.toString();
+  }
+
+  /** The compound numbers the text's lines open with, in order of first appearance. */
+  private static Set<String> compoundNumbers(String text) {
+    Set<String> numbers = new LinkedHashSet<>();
+    for (String line : text.split("[\\r\\n]+")) {
+      Matcher matcher = COMPOUND_NUMBER.matcher(line.strip());
+      if (matcher.find()) {
+        numbers.add(matcher.group(1));
+      }
+    }
+    return numbers;
+  }
+
+  /**
+   * Independent per-label lists, correlated (positional-table) groups, and the values lines naming
+   * a range of a series assign to it, from one text node.
+   */
   private record ParsedDefinitions(
-      Map<String, List<String>> independent, List<CorrelatedGroup> correlatedGroups) {}
+      Map<String, List<String>> independent,
+      List<CorrelatedGroup> correlatedGroups,
+      Map<String, Map<String, String>> seriesAssignments) {}
 
   /** One {@code label = values} assignment, kept in source order (repeats preserved). */
   private record Assignment(String label, List<String> values) {}
@@ -135,9 +434,40 @@ public class TextVisitor extends CDVisitor {
     Map<String, List<String>> independent = new LinkedHashMap<>();
     // Correlated rows keyed by their (sorted) label set, so rows of the same table accumulate.
     Map<List<String>, List<Map<String, String>>> tables = new LinkedHashMap<>();
+    Map<String, Map<String, String>> series = new LinkedHashMap<>();
 
     for (String row : toLogicalRows(input)) {
-      List<Assignment> assignments = parseAssignments(row);
+      List<Assignment> assignments =
+          parseAssignments(row).stream().map(TextVisitor::oneRing).toList();
+      if (ENTRY_LETTER.matcher(row).find() || COMPOUND_NUMBER.matcher(row).find()) {
+        // "26g: n = 2, R = H": the repeat count of the scaffold's bracket varies with the entry.
+        // Lines giving only n run on into one row, so each n found is an entry of its own.
+        Matcher repeat = REPEAT_COUNT.matcher(row);
+        List<Assignment> counts = new ArrayList<>();
+        while (repeat.find()) {
+          counts.add(new Assignment(REPEAT, List.of(repeat.group(1))));
+        }
+        if (!counts.isEmpty()
+            && assignments.stream().noneMatch(assignment -> assignment.label().equals(REPEAT))) {
+          assignments = new ArrayList<>(assignments);
+          assignments.addAll(counts);
+        }
+      }
+      Matcher number = COMPOUND_NUMBER.matcher(row);
+      if (number.find()
+          && number.group(2) != null
+          && !assignments.isEmpty()
+          && assignments.stream().allMatch(assignment -> assignment.values().size() == 1)) {
+        // "40a–m: R1 = H": every compound of the series 40 has R1 = H.
+        Map<String, String> fixed =
+            series.computeIfAbsent(number.group(1), _ -> new LinkedHashMap<>());
+        assignments.forEach(
+            assignment -> fixed.put(assignment.label(), assignment.values().getFirst()));
+      }
+      // A lettered line names one compound, with or without its number ("f:", "30f:").
+      if (ENTRY_LETTER.matcher(row).find() || NUMBERED_ENTRY_LETTER.matcher(row).find()) {
+        assignments = assignments.stream().map(TextVisitor::oneCompound).toList();
+      }
       if (assignments.isEmpty()) {
         continue;
       }
@@ -166,7 +496,68 @@ public class TextVisitor extends CDVisitor {
 
     List<CorrelatedGroup> groups = new ArrayList<>();
     tables.forEach((labels, tuples) -> groups.add(new CorrelatedGroup(labels, tuples)));
-    return new ParsedDefinitions(independent, groups);
+    return new ParsedDefinitions(independent, groups, series);
+  }
+
+  /**
+   * Rejoins the substituents of one benzene ring that the value split separated. A value whose ring
+   * formula has fewer hydrogens than its own substituents leave ({@code 3-MeOC6H3} has room for one
+   * more) takes as many of the ring substituents just before it: {@code 4-OH, 3-MeOC6H3} is one
+   * 4-hydroxy-3-methoxyphenyl, not two values.
+   */
+  private static Assignment oneRing(Assignment assignment) {
+    List<String> values = new ArrayList<>();
+    for (String value : assignment.values()) {
+      Matcher formula = RING_FORMULA.matcher(value);
+      if (formula.matches()) {
+        // The pattern admits a single digit 0-3 only.
+        int others =
+            5
+                - Character.digit(formula.group(2).charAt(0), 10)
+                - formula.group(1).split(",").length;
+        int from = values.size() - others;
+        if (others > 0
+            && from >= 0
+            && values.subList(from, values.size()).stream()
+                .allMatch(
+                    other -> RING_SUBSTITUENT.matcher(other).matches() && !other.contains("C6H"))) {
+          List<String> parts = new ArrayList<>(values.subList(from, values.size()));
+          parts.add(value);
+          values.subList(from, values.size()).clear();
+          values.add(String.join(", ", parts));
+          continue;
+        }
+      }
+      values.add(value);
+    }
+    return values.equals(assignment.values())
+        ? assignment
+        : new Assignment(assignment.label(), List.copyOf(values));
+  }
+
+  /**
+   * The values of a lettered line, which names one compound: ring substituents listed at different
+   * positions ({@code 2-CH3, 5-NO2}) are all on that compound, so they make one value. Any other
+   * list is left as alternatives.
+   */
+  private static Assignment oneCompound(Assignment assignment) {
+    List<String> values = assignment.values();
+    if (values.size() < 2) {
+      return assignment;
+    }
+    Set<String> positions = new HashSet<>();
+    for (String value : values) {
+      Matcher matcher = RING_SUBSTITUENT.matcher(value);
+      if (!matcher.matches()) {
+        return assignment;
+      }
+      for (String position : matcher.group(1).split(",")) {
+        if (!positions.add(position)) {
+          return assignment;
+        }
+      }
+    }
+    return new Assignment(assignment.label(), List.of(String.join(SUBSTITUENT_JOINER, values)));
   }
 
   /**
@@ -265,6 +656,14 @@ public class TextVisitor extends CDVisitor {
       chainedLabels.clear();
     }
 
+    // A line whose only assignment has nothing after it ("a: R =") gives the value as a drawn
+    // structure. The label is still defined there, with no values the text can supply.
+    if (result.isEmpty()) {
+      for (String label : chainedLabels) {
+        result.add(new Assignment(label, List.of()));
+      }
+    }
+
     return result;
   }
 
@@ -357,5 +756,32 @@ public class TextVisitor extends CDVisitor {
    */
   public List<RGroupDefinitionBlock> getBlocks() {
     return blocks;
+  }
+
+  /**
+   * Returns the compound numbers that stand alone on the page, the captions of drawn structures.
+   *
+   * @return the captions, in page order
+   */
+  public List<Caption> getCaptions() {
+    return captions;
+  }
+
+  /**
+   * Returns the lines of entry letters set out under rows of drawings.
+   *
+   * @return the letter rows, in page order
+   */
+  public List<LetterRow> getLetterRows() {
+    return letterRows;
+  }
+
+  /**
+   * Returns the tables naming where each lettered ring carries its variable group.
+   *
+   * @return the ring tables, in page order
+   */
+  public List<RingTable> getRingTables() {
+    return ringTables;
   }
 }
