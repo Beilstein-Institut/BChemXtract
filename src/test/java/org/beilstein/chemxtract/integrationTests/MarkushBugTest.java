@@ -40,7 +40,10 @@ import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.junit.jupiter.api.Test;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.inchi.InChIGeneratorFactory;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmilesParser;
 
 /** Regression tests for R-group definitions the text parser currently mishandles. */
 public class MarkushBugTest {
@@ -868,6 +871,34 @@ public class MarkushBugTest {
             "JYYNAJVZFGKDEQ-UHFFFAOYSA-N", // 2,4-lutidine
             "MWQMHHLIYVQKNM-UHFFFAOYSA-N")) { // 5-methoxy-2-nitropyridine
       assertFalse(inchiKeys.contains(wrong), "counted from the drawn H: " + wrong);
+    }
+  }
+
+  /**
+   * A residue grafted at a stereocentre takes the drawn residue's place in the centre's
+   * configuration. m30177584-2 draws one catalyst twice, as its (E) and (Z) amide rotamers, with R
+   * wedged at the pyrrolidine C2 in opposite senses and the naphthyl wedged against it; the legend
+   * gives R = H and R = Me. Both drawings describe the same centre, R for R = Me. The stereo
+   * element used to keep the removed residue (read as an implicit hydrogen), so the SMILES gave S,
+   * the R = H centre was lost, and the InChI followed wherever the layout put the new methyl.
+   */
+  @Test
+  public void testGraftAtStereocentreKeepsConfiguration() throws IOException, CDKException {
+    List<BCXSubstance> substances = xtract("m30177584-2.cdx");
+
+    assertEquals(
+        Set.of(
+            "HHHJIMMFAOJRPW-ANHUGMMASA-N", // R = H
+            "CQYCKTNKJYWUGM-ZLHGTEGGSA-N"), // R = Me, C2 is R
+        substances.stream().map(BCXSubstance::getInchiKey).collect(Collectors.toSet()),
+        "both rotamer drawings give the same two products");
+    SmilesParser smilesParser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    for (BCXSubstance substance : substances) {
+      String fromSmiles =
+          InChIGeneratorFactory.getInstance()
+              .getInChIGenerator(smilesParser.parseSmiles(substance.getSmiles()))
+              .getInchi();
+      assertEquals(substance.getInchi(), fromSmiles, "SMILES and InChI disagree");
     }
   }
 }

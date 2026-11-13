@@ -68,6 +68,7 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IRingSet;
+import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -3166,6 +3167,7 @@ public class MarkushHandler {
       throws CloneNotSupportedException {
     List<IBond> bondsToRemove = new ArrayList<>();
     List<IAtom> atomsToRemove = new ArrayList<>();
+    List<Graft> grafts = new ArrayList<>();
     for (IAtom atom : atomContainer.atoms()) {
       if (!(atom instanceof IPseudoAtom pseudoAtom)) {
         continue;
@@ -3175,11 +3177,14 @@ public class MarkushHandler {
       }
       IAtomContainer extendedClone = extendedStructure.clone();
       if (extendedClone.getAtomCount() == 1) {
-        replaceSingleAtom(atomContainer, pseudoAtom, extendedClone.getAtom(0), atomsToRemove);
+        replaceSingleAtom(
+            atomContainer, pseudoAtom, extendedClone.getAtom(0), atomsToRemove, grafts);
       } else {
-        replaceMultiAtom(atomContainer, pseudoAtom, extendedClone, bondsToRemove, atomsToRemove);
+        replaceMultiAtom(
+            atomContainer, pseudoAtom, extendedClone, bondsToRemove, atomsToRemove, grafts);
       }
     }
+    carryStereo(atomContainer, grafts);
     for (IBond bond : bondsToRemove) {
       atomContainer.removeBond(bond);
     }
@@ -3202,6 +3207,7 @@ public class MarkushHandler {
     Set<IAtom> visitedAtoms = new HashSet<>();
     Set<IBond> bondsToRemove = new HashSet<>();
     Set<IAtom> atomsToRemove = new HashSet<>();
+    List<Graft> grafts = new ArrayList<>();
 
     for (IAtom atom : atomContainer.atoms()) {
       if (!(atom instanceof IPseudoAtom pseudoAtom)) {
@@ -3231,8 +3237,9 @@ public class MarkushHandler {
         }
       }
 
-      reconnectResidue(atomContainer, extendedClone, pseudos, bondsToRemove, atomsToRemove);
+      reconnectResidue(atomContainer, extendedClone, pseudos, bondsToRemove, atomsToRemove, grafts);
     }
+    carryStereo(atomContainer, grafts);
     for (IBond bond : bondsToRemove) {
       atomContainer.removeBond(bond);
     }
@@ -3252,13 +3259,15 @@ public class MarkushHandler {
    * @param pseudoAtoms pseudo-atoms to replace
    * @param bondsToRemove list of bonds to remove after reconnection
    * @param atomsToRemove list of atoms to remove after reconnection
+   * @param grafts collector for the attachments made, see {@link #carryStereo}
    */
   private void reconnectResidue(
       IAtomContainer atomContainer,
       IAtomContainer extendedStructure,
       List<IAtom> pseudoAtoms,
       Set<IBond> bondsToRemove,
-      Set<IAtom> atomsToRemove) {
+      Set<IAtom> atomsToRemove,
+      List<Graft> grafts) {
     record Attachment(IAtom residue, IBond bond) {}
 
     List<IAtom> connectionPoints = new ArrayList<>();
@@ -3291,7 +3300,9 @@ public class MarkushHandler {
       IAtom conPoint = connectionPoints.get(i);
       IBond bondAbbr = conPoint.bonds().iterator().next();
       IAtom atomAbbr = bondAbbr.getOther(conPoint);
-      atomContainer.addBond(new Bond(atomOrigin, atomAbbr, bondOrigin.getOrder()));
+      IBond attachment = new Bond(atomOrigin, atomAbbr, bondOrigin.getOrder());
+      atomContainer.addBond(attachment);
+      grafts.add(new Graft(atomOrigin, rAtom, atomAbbr, bondOrigin, attachment));
       bondsToRemove.add(bondOrigin);
       bondsToRemove.add(bondAbbr);
       atomsToRemove.add(rAtom);
@@ -3314,14 +3325,23 @@ public class MarkushHandler {
    * @param pseudoAtom abbreviation/R atom (IAtom) to be replaced
    * @param newAtom IAtom to replace the rAtom
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
+   * @param grafts collector for the attachments made, see {@link #carryStereo}
    */
   private void replaceSingleAtom(
-      IAtomContainer atomContainer, IAtom pseudoAtom, IAtom newAtom, List<IAtom> atomsToRemove) {
+      IAtomContainer atomContainer,
+      IAtom pseudoAtom,
+      IAtom newAtom,
+      List<IAtom> atomsToRemove,
+      List<Graft> grafts) {
     atomContainer.addAtom(newAtom);
 
     List<IBond> connectedBonds = new ArrayList<>();
     pseudoAtom.bonds().forEach(connectedBonds::add);
-    connectedBonds.forEach(bond -> bond.setAtoms(new IAtom[] {bond.getOther(pseudoAtom), newAtom}));
+    for (IBond bond : connectedBonds) {
+      IAtom origin = bond.getOther(pseudoAtom);
+      bond.setAtoms(new IAtom[] {origin, newAtom});
+      grafts.add(new Graft(origin, pseudoAtom, newAtom, bond, bond));
+    }
     newAtom.setValency(connectedBonds.size());
     int bondOrderSum = 0;
     for (IBond bond : connectedBonds) {
@@ -3342,13 +3362,15 @@ public class MarkushHandler {
    * @param expandedStructure IAtomContainer of the structure parsed from the abbreviation SMILES
    * @param bondsToRemove list of bonds that will be removed from the IAtomContainer
    * @param atomsToRemove list of atoms that will be removed from the IAtomContainer
+   * @param grafts collector for the attachments made, see {@link #carryStereo}
    */
   private void replaceMultiAtom(
       IAtomContainer atomContainer,
       IAtom pseudoAtom,
       IAtomContainer expandedStructure,
       List<IBond> bondsToRemove,
-      List<IAtom> atomsToRemove) {
+      List<IAtom> atomsToRemove,
+      List<Graft> grafts) {
     List<IAtom> connectionPoints = new ArrayList<>();
     for (IAtom atom : expandedStructure.atoms()) {
       if (atom instanceof IPseudoAtom) {
@@ -3382,11 +3404,56 @@ public class MarkushHandler {
 
     atomContainer.add(expandedStructure);
     atomContainer.addBond(newBond);
+    grafts.add(new Graft(originAtom, pseudoAtom, atomInsideAbbr, bondOrigin, newBond));
 
     bondsToRemove.add(bondOrigin);
     bondsToRemove.add(bondInsideAbbr);
     atomsToRemove.add(pseudoAtom);
     atomsToRemove.add(connectionPoint);
+  }
+
+  /**
+   * One attachment made by a graft: {@code replacement} took the place of {@code residue} next to
+   * {@code origin}, and {@code newBond} the place of {@code oldBond} (the same bond when it was
+   * only moved).
+   */
+  private record Graft(
+      IAtom origin, IAtom residue, IAtom replacement, IBond oldBond, IBond newBond) {}
+
+  /**
+   * Moves the scaffold's stereo onto the grafted atoms. Stereo is perceived on the scaffold as
+   * drawn, with the residue as a ligand. Removing the residue would leave each stereo element with
+   * the centre itself in its place, which reads as an implicit hydrogen and gives a wedged
+   * residue's centre the wrong configuration (or none). Each centre instead takes the atom grafted
+   * next to it in the residue's place, and bond-based stereo takes the bond that replaced the old
+   * one.
+   *
+   * <p>Must run before the residues are removed.
+   *
+   * @param container the structure being substituted
+   * @param grafts the attachments made
+   */
+  private static void carryStereo(IAtomContainer container, List<Graft> grafts) {
+    if (grafts.isEmpty() || !container.stereoElements().iterator().hasNext()) {
+      return;
+    }
+    Map<IBond, IBond> bonds = new HashMap<>();
+    for (Graft graft : grafts) {
+      bonds.put(graft.oldBond(), graft.newBond());
+    }
+    List<IStereoElement> carried = new ArrayList<>();
+    for (IStereoElement<?, ?> element : container.stereoElements()) {
+      // A residue bonded to two centres (a bivalent ring member) is replaced by a different atom
+      // at each, so the atom mapping is made per centre.
+      Map<IAtom, IAtom> atoms = new HashMap<>();
+      for (Graft graft : grafts) {
+        if (graft.origin().equals(element.getFocus())) {
+          atoms.put(graft.residue(), graft.replacement());
+        }
+      }
+      carried.add(element.map(atoms, bonds));
+    }
+    container.setStereoElements(carried);
   }
 
   /**

@@ -179,7 +179,8 @@ public class MultiAttachmentTest {
             .containsAll(
                 Set.of(
                     "UXNBGVUKBFZULV-UHFFFAOYSA-N",
-                    "ANVCWQKIKMBTSL-VIFPVBQESA-N",
+                    // R1 = Me grafted at the CH its bold bond starts from: R, as drawn
+                    "ANVCWQKIKMBTSL-SECBINFHSA-N",
                     "MTGOGSQUOYTZNN-UHFFFAOYSA-N",
                     "JTEYFTMDXBRRJY-UHFFFAOYSA-N",
                     "DSOBKSCOEWTDIZ-UHFFFAOYSA-N")),
