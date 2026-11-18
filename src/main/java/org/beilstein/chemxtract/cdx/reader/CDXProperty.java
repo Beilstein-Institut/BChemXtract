@@ -176,6 +176,18 @@ public class CDXProperty {
     return CDXUtils.readInt32(data, 0);
   }
 
+  /** Reads a list of INT32 values with no count prefix; the length must be a multiple of 4. */
+  public List<Integer> getDataAsInt32List() throws IOException {
+    if (length == 0 || length % 4 != 0) {
+      throw new IOException("Property size unexpected:" + length + " at " + getPositionAsString());
+    }
+    List<Integer> list = new ArrayList<>(length / 4);
+    for (int i = 0; i < length; i += 4) {
+      list.add(CDXUtils.readInt32(data, i));
+    }
+    return list;
+  }
+
   public long getDataAsInt64() throws IOException {
     checkPropSize(8);
     return CDXUtils.readInt64(data, 0);

@@ -24,11 +24,15 @@ package org.beilstein.chemxtract.cdx.reader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDBracket;
+import org.beilstein.chemxtract.cdx.CDChemicalProperty;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -69,5 +73,32 @@ public class CDXMLReaderTest {
 
     List<CDBracket> brackets = CDDocumentUtils.getBrackets(document);
     assertThat(brackets.size()).isEqualTo(3);
+  }
+
+  @Test
+  public void readsAndWritesChemicalPropertyWithSeveralTypes() throws Exception {
+    // ChemDraw writes a space-separated list when one property box shows several values.
+    String cdxml =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CDXML><page id=\"1\">"
+            + "<chemicalproperty id=\"2\" ChemicalPropertyType=\"2 3 6\"/>"
+            + "</page></CDXML>";
+
+    CDDocument document =
+        CDXMLReader.readDocument(new ByteArrayInputStream(cdxml.getBytes(StandardCharsets.UTF_8)));
+    assertNotNull(document);
+    assertThat(singleChemicalProperty(document).getTypes()).containsExactly(2, 3, 6);
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    CDXMLWriter.writeDocument(document, out);
+    CDDocument reread = CDXMLReader.readDocument(new ByteArrayInputStream(out.toByteArray()));
+    assertThat(singleChemicalProperty(reread).getTypes())
+        .as("types survive a CDXML round trip")
+        .containsExactly(2, 3, 6);
+  }
+
+  private static CDChemicalProperty singleChemicalProperty(CDDocument document) {
+    List<CDChemicalProperty> properties = document.getPages().get(0).getChemicalProperties();
+    assertThat(properties).hasSize(1);
+    return properties.get(0);
   }
 }

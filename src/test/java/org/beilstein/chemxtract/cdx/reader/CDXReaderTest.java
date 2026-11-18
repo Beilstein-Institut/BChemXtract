@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDBracket;
+import org.beilstein.chemxtract.cdx.CDChemicalProperty;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDDocumentUtils;
 import org.beilstein.chemxtract.cdx.CDFragment;
@@ -68,5 +69,20 @@ public class CDXReaderTest {
 
     List<CDBracket> brackets = CDDocumentUtils.getBrackets(document);
     assertThat(brackets.size()).isEqualTo(3);
+  }
+
+  @Test
+  public void readsChemicalPropertyWithSeveralTypes() throws Exception {
+    // An analysis box showing formula and exact mass stores two INT32 type codes (8 bytes).
+    InputStream in =
+        CDXReaderTest.class.getResourceAsStream("/cheminf/bugs/corruptedCDX/m51167382-i1.cdx");
+    assertNotNull(in);
+
+    CDDocument document = CDXReader.readDocument(in);
+    assertNotNull(document);
+
+    List<CDChemicalProperty> properties = document.getPages().get(0).getChemicalProperties();
+    assertThat(properties).hasSize(3);
+    assertThat(properties).extracting(CDChemicalProperty::getTypes).containsOnly(List.of(2, 3));
   }
 }
