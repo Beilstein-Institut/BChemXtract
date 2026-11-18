@@ -21,19 +21,26 @@
  */
 package org.beilstein.chemxtract.integrationTests;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.beilstein.chemxtract.cdx.CDAtom;
 import org.beilstein.chemxtract.cdx.CDDocument;
+import org.beilstein.chemxtract.cdx.CDFragment;
+import org.beilstein.chemxtract.cdx.CDPage;
 import org.beilstein.chemxtract.cdx.reader.CDXReader;
 import org.beilstein.chemxtract.model.BCXSubstance;
 import org.beilstein.chemxtract.model.BCXSubstanceInfo;
+import org.beilstein.chemxtract.utils.SgroupHandler;
+import org.beilstein.chemxtract.visitor.FragmentVisitor;
 import org.beilstein.chemxtract.xtractor.SubstanceXtractor;
 import org.junit.jupiter.api.Test;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -166,5 +173,39 @@ public class SgroupTest {
         s -> {
           assertTrue(expectedInChIKeys.contains(s));
         });
+  }
+
+  /**
+   * The copies of a multiple group come out in the same atom order on every read. InChI-numbered
+   * SMILES break ties between symmetric atoms by input order, so an order that changes between
+   * reads changes the SMILES of a structure with, for example, an explicit H on one of two
+   * equivalent methyls.
+   */
+  @Test
+  public void multipleGroupCopiesKeepTheirAtomOrderAcrossReads() throws Exception {
+    List<String> first = expandedAtomOrder();
+    for (int read = 2; read <= 5; read++) {
+      assertThat(expandedAtomOrder()).as("expanded atom order on read %d", read).isEqualTo(first);
+    }
+  }
+
+  private static List<String> expandedAtomOrder() throws IOException {
+    try (InputStream in =
+        SgroupTest.class.getResourceAsStream(
+            "/integrationTests/sgroups/decamethylpentadecane_MUL5.cdx")) {
+      assertNotNull(in, "fixture must be on the classpath");
+      CDDocument document = CDXReader.readDocument(in);
+      assertNotNull(document, "document must parse");
+      List<String> order = new ArrayList<>();
+      for (CDPage page : document.getPages()) {
+        for (CDFragment fragment : new FragmentVisitor(page).getFragments()) {
+          SgroupHandler.addMultipleGroupBrackets(fragment, page);
+          for (CDAtom atom : fragment.getAtoms()) {
+            order.add(String.valueOf(atom.getPosition2D()));
+          }
+        }
+      }
+      return order;
+    }
   }
 }
