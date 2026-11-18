@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.DataFormatException;
@@ -740,7 +740,7 @@ public class CDXMLReader {
         bond.getSettings().setShowBondStereo(root.getAttributeAsBoolean(name));
       } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_CrossingBonds)) {
         bond.setCrossingBonds(
-            new HashSet<CDBond>(
+            new LinkedHashSet<CDBond>(
                 CDXMLUtils.convertStringToObjectRefList(
                     root.getAttribute(name), CDBond.class, refManager)));
       } else if (name.equals(CDXMLConstants.CDXMLProp_Bond_ShowRxn)) {
