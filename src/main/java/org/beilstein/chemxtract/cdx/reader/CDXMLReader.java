@@ -2438,7 +2438,7 @@ public class CDXMLReader {
             CDXMLUtils.convertStringToObjectRefList(
                 root.getAttribute(name), Object.class, refManager));
       } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalPropertyType)) {
-        chemicalProperty.setType(root.getAttributeAsInt(name));
+        chemicalProperty.setTypes(CDXMLUtils.convertStringToIntList(root.getAttribute(name)));
       } else if (name.equals(CDXMLConstants.CDXMLProp_ChemicalPropertyDisplayID)) {
         chemicalProperty.setDisplay(
             CDXMLUtils.convertStringToObjectRef(root.getAttribute(name), Object.class, refManager));

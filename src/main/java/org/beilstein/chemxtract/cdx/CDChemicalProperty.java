@@ -30,7 +30,7 @@ import java.util.List;
 public class CDChemicalProperty implements Serializable {
 
   private List<Object> basisObjects;
-  private long type;
+  private List<Integer> types = new ArrayList<>();
   private Object display;
   private boolean active = false;
 
@@ -42,12 +42,26 @@ public class CDChemicalProperty implements Serializable {
     this.basisObjects = basisObjects == null ? null : new ArrayList<>(basisObjects);
   }
 
-  public long getType() {
-    return type;
+  /**
+   * Returns the property type codes. ChemDraw stores one code per value shown in the property box,
+   * so a box showing formula and exact mass has two codes.
+   */
+  public List<Integer> getTypes() {
+    return Collections.unmodifiableList(types);
   }
 
+  public void setTypes(List<Integer> types) {
+    this.types = types == null ? new ArrayList<>() : new ArrayList<>(types);
+  }
+
+  /** Returns the first type code, or 0 if there is none. */
+  public long getType() {
+    return types.isEmpty() ? 0 : types.get(0);
+  }
+
+  /** Replaces the type codes with this single code. */
   public void setType(long type) {
-    this.type = type;
+    setTypes(List.of((int) type));
   }
 
   public Object getDisplay() {

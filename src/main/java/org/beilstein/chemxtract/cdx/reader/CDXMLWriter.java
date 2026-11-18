@@ -2669,7 +2669,7 @@ public class CDXMLWriter {
     AttributesImpl attributes = new AttributesImpl();
     addReferenceAttribute(attributes, CDXMLConstants.CDXMLProp_Id, chemicalProperty);
     addAttribute(
-        attributes, CDXMLConstants.CDXMLProp_ChemicalPropertyType, chemicalProperty.getType());
+        attributes, CDXMLConstants.CDXMLProp_ChemicalPropertyType, chemicalProperty.getTypes());
     addReferenceAttribute(
         attributes,
         CDXMLConstants.CDXMLProp_ChemicalPropertyDisplayID,

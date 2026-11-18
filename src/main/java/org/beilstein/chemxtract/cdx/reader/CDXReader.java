@@ -2855,7 +2855,7 @@ public class CDXReader {
               property.getDataAsObjectRefArray(Object.class, refManager));
           break;
         case CDXConstants.CDXProp_ChemicalPropertyType:
-          chemicalProperty.setType(property.getDataAsInt32());
+          chemicalProperty.setTypes(property.getDataAsInt32List());
           break;
         case CDXConstants.CDXProp_ChemicalPropertyDisplayID:
           chemicalProperty.setDisplay(property.getDataAsObjectRef(Object.class, refManager));
