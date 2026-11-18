@@ -24,7 +24,7 @@ package org.beilstein.chemxtract.cdx.reader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 import org.beilstein.chemxtract.cdx.CDAltGroup;
@@ -881,7 +881,8 @@ public class CDXReader {
           break;
         case CDXConstants.CDXProp_Bond_CrossingBonds:
           bond.setCrossingBonds(
-              new HashSet<CDBond>(property.getDataAsObjectRefArray(CDBond.class, refManager)));
+              new LinkedHashSet<CDBond>(
+                  property.getDataAsObjectRefArray(CDBond.class, refManager)));
           break;
         case CDXConstants.CDXProp_Bond_ShowRxn:
           bond.getSettings().setShowBondReaction(property.getDataAsBoolean());

@@ -24,9 +24,12 @@ package org.beilstein.chemxtract.cdx.reader;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.beilstein.chemxtract.cdx.CDBond;
 import org.beilstein.chemxtract.cdx.CDBracket;
 import org.beilstein.chemxtract.cdx.CDDocument;
 import org.beilstein.chemxtract.cdx.CDDocumentUtils;
@@ -68,5 +71,40 @@ public class CDXReaderTest {
 
     List<CDBracket> brackets = CDDocumentUtils.getBrackets(document);
     assertThat(brackets.size()).isEqualTo(3);
+  }
+
+  /**
+   * Crossing bonds come back in the same order on every read. Position-variation candidates are
+   * collected in this order, so an order that changes between reads changes which of two equivalent
+   * ring atoms a substituent lands on, and with it the SMILES.
+   */
+  @Test
+  public void crossingBondsKeepTheirOrderAcrossReads() throws Exception {
+    List<String> first = crossingBondOrder();
+    assertThat(first).as("the fixture must carry crossing bonds").isNotEmpty();
+    for (int read = 2; read <= 5; read++) {
+      assertThat(crossingBondOrder()).as("crossing-bond order on read %d", read).isEqualTo(first);
+    }
+  }
+
+  private static List<String> crossingBondOrder() throws IOException {
+    try (InputStream in =
+        CDXReaderTest.class.getResourceAsStream("/cheminf/bugs/m8881674-i73.cdx")) {
+      assertThat(in).as("fixture must be on the classpath").isNotNull();
+      CDDocument document = CDXReader.readDocument(in);
+      assertThat(document).as("document must parse").isNotNull();
+      List<String> order = new ArrayList<>();
+      for (CDFragment fragment : CDDocumentUtils.getListOfFragments(document)) {
+        for (CDBond bond : fragment.getBonds()) {
+          if (bond.getCrossingBonds() == null) {
+            continue;
+          }
+          for (CDBond crossed : bond.getCrossingBonds()) {
+            order.add(crossed.getBegin().getPosition2D() + "-" + crossed.getEnd().getPosition2D());
+          }
+        }
+      }
+      return order;
+    }
   }
 }
