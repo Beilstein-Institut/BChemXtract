@@ -23,7 +23,7 @@ package org.beilstein.chemxtract.cdx;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.beilstein.chemxtract.cdx.datatypes.CDBondCIPType;
@@ -238,7 +238,8 @@ public class CDBond extends CDObject {
     this.bondDisplay2 = other.bondDisplay2;
     this.bondDoublePosition = other.bondDoublePosition;
     this.bondOrder = other.bondOrder;
-    this.crossingBonds = other.crossingBonds != null ? new HashSet<>(other.crossingBonds) : null;
+    this.crossingBonds =
+        other.crossingBonds != null ? new LinkedHashSet<>(other.crossingBonds) : null;
     this.reactionParticipation = other.reactionParticipation;
     this.stereochemistry = other.stereochemistry;
     this.topology = other.topology;

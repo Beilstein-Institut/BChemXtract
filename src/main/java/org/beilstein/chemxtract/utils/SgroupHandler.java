@@ -21,7 +21,7 @@
  */
 package org.beilstein.chemxtract.utils;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.beilstein.chemxtract.cdx.CDAtom;
@@ -159,7 +159,7 @@ public class SgroupHandler {
         i < repeatCount - 1;
         i++) { // repeat count -1, as the multiple group already exists once
       // Map to ensure unique copies of atoms
-      Map<CDAtom, CDAtom> atomMap = new HashMap<>();
+      Map<CDAtom, CDAtom> atomMap = new LinkedHashMap<>();
 
       // Copy bonds and corresponding atoms
       for (CDBond bond : bracketBonds) {
